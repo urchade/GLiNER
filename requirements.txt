@@ -1,0 +1,6 @@
+torch==1.10.1
+allennlp==2.8.0
+transformers==4.29.1
+flair==0.11.3
+seqeval
+tqdm
