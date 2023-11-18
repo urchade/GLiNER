@@ -1,6 +1,3 @@
-# GLiNER
+# GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer
 
-I will release code soon
-
-
-you can email me at urchade.zaratiana@gmail.com if need help
+you can email me at urchade.zaratiana@gmail.com if you need help
