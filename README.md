@@ -3,7 +3,7 @@
 ![GLiNER Logo](image.png)
 
 ## Overview
-Welcome to GLiNER (Generalist Model for Named Entity Recognition), a powerful tool for Named Entity Recognition (NER) powered by Bidirectional Transformer models. This repository provides you with access to pre-trained weights, training data, evaluation data, and the associated paper.
+Named Entity Recognition (NER) is essential in various Natural Language Processing (NLP) applications. Traditional NER models are effective but limited to a set of predefined entity types. In contrast, Large Language Models (LLMs) can extract arbitrary entities through natural language instructions, offering greater flexibility. However, their size and cost, particularly for those accessed via APIs like ChatGPT, make them impractical in resource-limited scenarios. In this paper, we introduce a compact NER model trained to identify any type of entity. Leveraging a bidirectional transformer encoder, our model, GLiNER, facilitates parallel entity extraction, an advantage over the slow sequential token generation of LLMs. Through comprehensive testing, GLiNER demonstrate strong performance, outperforming both ChatGPT and fine-tuned LLMs in zero-shot evaluations on various NER benchmarks. 
 
 ## Pretrained Weight
 - Download the pre-trained weights for GLiNER using the following link: [Pretrained Weight](https://drive.google.com/file/d/1xEVyHZ1eOByA84RygkKcDt4UqAkoQ1D5/view?usp=sharing)
