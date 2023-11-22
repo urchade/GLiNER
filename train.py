@@ -64,8 +64,8 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
         if (step + 1) % eval_every == 0:
             current_path = os.path.join(log_dir, f'model_{step + 1}')
             save_model(model, current_path)
-
-            get_for_all_path(model, step, log_dir)
+            # eval_data_dir =  "directory from the datasets" can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
+            # get_for_all_path(model, step, log_dir, eval_data_dir)  # you can remove this comment if you want to evaluate the model
 
             model.train()
 
