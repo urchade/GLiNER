@@ -48,10 +48,7 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
             if isinstance(v, torch.Tensor):
                 x[k] = v.to(device)
 
-        try:
-            loss = model(x)  # Forward pass
-        except:
-            continue
+        loss = model(x)  # Forward pass
 
         # check if loss is nan
         if torch.isnan(loss):
