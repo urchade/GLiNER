@@ -12,7 +12,7 @@ Named Entity Recognition (NER) is essential in various Natural Language Processi
 - Find the training data used for training GLiNER here: [Training Data](https://drive.google.com/file/d/1MKDx73hzm9sFByJMBJhHqEuBeJzW5TsL/view?usp=sharing)
 
 ## Evaluation Data
-- Evaluate the performance of GLiNER using the provided evaluation data: [Evaluation Data](https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view)
+- Evaluate the performance of GLiNER using the provided evaluation data (provided by instruction_IE): [Evaluation Data](https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view)
 
 ## Paper
 - Explore the details of the GLiNER model and its performance in the accompanying paper: [GLiNER Paper](https://arxiv.org/abs/2311.08526)
