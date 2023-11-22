@@ -94,11 +94,8 @@ def get_for_one_path(path, model):
     return data_name, results, f1
 
 
-def get_for_all_path(model, steps, log_dir, data_paths=None):
-    if data_paths is None:
-        all_paths = glob.glob("/gpfswork/rech/ohy/upa43yu/NER_datasets/*")
-    else:
-        all_paths = glob.glob(f"{data_paths}/*")
+def get_for_all_path(model, steps, log_dir, data_paths):
+    all_paths = glob.glob(f"{data_paths}/*")
 
     all_paths = sorted(all_paths)
 
@@ -164,11 +161,8 @@ def get_for_all_path(model, steps, log_dir, data_paths=None):
         f.write("##############################################\n\n")
 
 
-def sample_train_data(data_paths=None, sample_size=10000):
-    if data_paths is None:
-        all_paths = glob.glob("/gpfswork/rech/ohy/upa43yu/NER_datasets/*")
-    else:
-        all_paths = glob.glob(f"{data_paths}/*")
+def sample_train_data(data_paths, sample_size=10000):
+    all_paths = glob.glob(f"{data_paths}/*")
 
     all_paths = sorted(all_paths)
 
