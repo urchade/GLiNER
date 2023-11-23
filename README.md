@@ -23,12 +23,12 @@ If you have any questions or need further assistance, please feel free to email 
 We hope GLiNER proves to be a valuable resource for your Named Entity Recognition tasks. Thank you for your interest in our project!
 
 ```bibtex
-@article{Zaratiana2023GLiNERGM,
-  title={GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer},
-  author={Urchade Zaratiana and Nadi Tomeh and Pierre Holat and Thierry Charnois},
-  journal={ArXiv},
-  year={2023},
-  volume={abs/2311.08526},
-  url={https://api.semanticscholar.org/CorpusID:265213162}
+@misc{zaratiana2023gliner,
+      title={GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer}, 
+      author={Urchade Zaratiana and Nadi Tomeh and Pierre Holat and Thierry Charnois},
+      year={2023},
+      eprint={2311.08526},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL}
 }
 ```
