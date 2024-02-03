@@ -22,8 +22,17 @@ class InstructBase(nn.Module):
         return dict_tag
 
     def preprocess_spans(self, tokens, ner, classes_to_id):
+
+        max_len = self.base_config.max_len
+
+        if len(tokens) > max_len:
+            length = max_len
+            tokens = tokens[:max_len]
+        else:
+            length = len(tokens)
+
         spans_idx = []
-        for i in range(len(tokens)):
+        for i in range(length):
             spans_idx.extend([(i, i + j) for j in range(self.max_width)])
 
         dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
@@ -33,7 +42,7 @@ class InstructBase(nn.Module):
         spans_idx = torch.LongTensor(spans_idx)
 
         # mask for valid spans
-        valid_span_mask = spans_idx[:, 1] > len(tokens) - 1
+        valid_span_mask = spans_idx[:, 1] > length - 1
 
         # mask invalid positions
         span_label = span_label.masked_fill(valid_span_mask, -1)
@@ -42,7 +51,7 @@ class InstructBase(nn.Module):
             'tokens': tokens,
             'span_idx': spans_idx,
             'span_label': span_label,
-            'seq_length': len(tokens),
+            'seq_length': length,
             'entities': ner,
         }
 
@@ -79,8 +88,13 @@ class InstructBase(nn.Module):
 
                 if len(types) != 0:
                     # prob of higher number shoul
-                    num_ents = random.randint(1, len(types))
-                    types = types[:num_ents]
+                    # random drop
+                    if self.base_config.random_drop:
+                        num_ents = random.randint(1, len(types))
+                        types = types[:num_ents]
+
+                # maximum number of entities types
+                types = types[:int(self.base_config.max_types)]
 
                 # supervised training
                 if "label" in b:
