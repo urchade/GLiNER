@@ -26,7 +26,12 @@ prev_path: "none"
 
 
 # Training Specifics
+size_sup: -1
+max_types: 25
+shuffle_types: true
+random_drop: true
 max_neg_type_ratio: 1
+max_len: 384
 
 name: "large"
 
