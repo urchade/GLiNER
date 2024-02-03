@@ -20,7 +20,6 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
 
     # initialize data loaders
     train_loader = model.create_dataloader(train_data, batch_size=train_batch_size, shuffle=True)
-    # val_loader = model.create_dataloader(val_data, batch_size=val_batch_size, shuffle=False)
 
     pbar = tqdm(range(num_steps))
 
@@ -48,7 +47,10 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
             if isinstance(v, torch.Tensor):
                 x[k] = v.to(device)
 
-        loss = model(x)  # Forward pass
+        try:
+            loss = model(x)  # Forward pass
+        except:
+            continue
 
         # check if loss is nan
         if torch.isnan(loss):
@@ -64,8 +66,8 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
         if (step + 1) % eval_every == 0:
             current_path = os.path.join(log_dir, f'model_{step + 1}')
             save_model(model, current_path)
-            # eval_data_dir =  "directory from the datasets" can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
-            # get_for_all_path(model, step, log_dir, eval_data_dir)  # you can remove this comment if you want to evaluate the model
+            #val_data_dir =  "/gpfswork/rech/ohy/upa43yu/NER_datasets" # can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
+            #get_for_all_path(model, step, log_dir, val_data_dir)  # you can remove this comment if you want to evaluate the model
 
             model.train()
 
