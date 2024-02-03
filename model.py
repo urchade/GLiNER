@@ -1,6 +1,6 @@
 import torch
 import torch.nn.functional as F
-from allennlp.modules.seq2seq_encoders import LstmSeq2SeqEncoder
+from modules.layers import LstmSeq2SeqEncoder
 from modules.base import InstructBase
 from modules.evaluator import Evaluator, greedy_search
 from modules.span_rep import SpanRepLayer
