@@ -1,3 +1,7 @@
+# Google colab demo:
+
+https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing
+
 # GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer
 
 ![GLiNER Logo](image.png)
