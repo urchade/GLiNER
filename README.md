@@ -22,7 +22,7 @@ Named Entity Recognition (NER) is essential in various Natural Language Processi
 - Explore the details of the GLiNER model and its performance in the accompanying paper: [GLiNER Paper](https://arxiv.org/abs/2311.08526)
 
 ## Contact
-If you have any questions or need further assistance, please feel free to email us at [urchade.zaratiana@gmail.com](mailto:urchade.zaratiana@gmail.com).
+If you have any questions or need further assistance please raise an issue.
 
 We hope GLiNER proves to be a valuable resource for your Named Entity Recognition tasks. Thank you for your interest in our project!
 
