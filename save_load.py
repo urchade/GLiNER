@@ -8,7 +8,7 @@ def save_model(current_model, path):
     torch.save(dict_save, path)
 
 
-def load_model(path, model_name=None):
+def load_model(path, model_name=None, device=None):
     dict_load = torch.load(path, map_location=torch.device('cpu'))
     config = dict_load["config"]
 
@@ -17,4 +17,4 @@ def load_model(path, model_name=None):
 
     loaded_model = GLiNER(config)
     loaded_model.load_state_dict(dict_load["model_weights"])
-    return loaded_model
+    return loaded_model.to(device) if device is not None else loaded_model

@@ -161,11 +161,11 @@ class GLiNER(InstructBase):
         all_losses = all_losses * mask_label.float() * weight_c
         return all_losses.sum()
 
-    def compute_score_eval(self, x):
+    def compute_score_eval(self, x, device):
         # check if classes_to_id is dict
         assert isinstance(x['classes_to_id'], dict), "classes_to_id must be a dict"
 
-        span_idx = x['span_idx'] * x['span_mask'].unsqueeze(-1)
+        span_idx = (x['span_idx'] * x['span_mask'].unsqueeze(-1)).to(device)
 
         all_types = list(x['classes_to_id'].keys())
         # multiple entity types in all_types. Prompt is appended at the start of tokens
@@ -210,7 +210,7 @@ class GLiNER(InstructBase):
 
     @torch.no_grad()
     def predict(self, x, flat_ner=False, threshold=0.5):
-        local_scores = self.compute_score_eval(x)
+        local_scores = self.compute_score_eval(x, device=next(self.parameters()).device)
         spans = []
         for i, _ in enumerate(x["tokens"]):
             local_i = local_scores[i]
