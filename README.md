@@ -64,9 +64,7 @@ for k, v in result.items():
 - [Training Data](https://drive.google.com/file/d/1MKDx73hzm9sFByJMBJhHqEuBeJzW5TsL/view?usp=sharing)
 - [Evaluation Data](https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view)
 
-## Contact
-If you have any questions or need further assistance please raise an issue.
-
+## Citation
 ```bibtex
 @misc{zaratiana2023gliner,
       title={GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer}, 
