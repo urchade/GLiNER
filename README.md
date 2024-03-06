@@ -65,7 +65,7 @@ for k, v in result.items():
 
 
 ## Ressources
-- [Pretrained Weight](https://drive.google.com/file/d/100aMdyzk5EC6Rl2kzLmLvMKbHz3Btt34/view?usp=sharing)
+- [Pretrained Weights are available on Huggingface](https://huggingface.co/urchade)
 - [Training Data](https://drive.google.com/file/d/1MKDx73hzm9sFByJMBJhHqEuBeJzW5TsL/view?usp=sharing)
 - [Evaluation Data](https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view)
 
