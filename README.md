@@ -1,10 +1,3 @@
----
-license: apache-2.0
-language:
-  - en
-pipeline_tag: token-classification
----
-
 # Model Card for GLiNER-base
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
