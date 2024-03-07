@@ -1,14 +1,30 @@
-# GLiNER
+---
+license: apache-2.0
+language:
+  - en
+pipeline_tag: token-classification
+---
 
-
-## Overview
+# Model Card for GLiNER-base
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
-- Detail about the model: https://arxiv.org/abs/2311.08526
-- Google colab demo: https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing
+## Links
+
+* Paper: https://arxiv.org/abs/2311.08526
+* Repository: https://github.com/urchade/GLiNER
+
+## Installation
+To use this model, you must download the GLiNER repository and install its dependencies:
+```
+!git clone https://github.com/urchade/GLiNER.git
+%cd GLiNER
+!pip install -r requirements.txt
+```
 
 ## Usage
+Once you've downloaded the GLiNER repository, you can import the GLiNER class from the `model` file. You can then load this model using `GLiNER.from_pretrained` and predict entities with `predict_entities`.
+
 ```python
 from model import GLiNER
 
@@ -27,28 +43,30 @@ for entity in entities:
 ```
 
 ```
-- Cristiano Ronaldo dos Santos Aveiro => person
-- 5 February 1985 => date
-- Al Nassr => teams
-- Portugal national team => teams
-- Ballon d'Or => award
-- UEFA Men's Player of the Year Awards => award
-- European Golden Shoes => award
-- UEFA Champions Leagues => competitions
-- UEFA European Championship => competitions
-- UEFA Nations League => competitions
-- Champions League => competitions
-- European Championship => competitions
+Cristiano Ronaldo dos Santos Aveiro => person
+5 February 1985 => date
+Al Nassr => teams
+Portugal national team => teams
+Ballon d'Or => award
+UEFA Men's Player of the Year Awards => award
+European Golden Shoes => award
+UEFA Champions Leagues => competitions
+UEFA European Championship => competitions
+UEFA Nations League => competitions
+Champions League => competitions
+European Championship => competitions
 ```
 
 ## Named Entity Recognition benchmark result
-![GLiNER Logo](image.png)
 
+![image/png](https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png)
 
-## Resources
-- [Pretrained Weights are available on Huggingface](https://huggingface.co/urchade)
-- [Training Data](https://drive.google.com/file/d/1MKDx73hzm9sFByJMBJhHqEuBeJzW5TsL/view?usp=sharing)
-- [Evaluation Data](https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view)
+## Model Authors
+The model authors are:
+* [Urchade Zaratiana](https://huggingface.co/urchade)
+* Nadi Tomeh
+* Pierre Holat
+* Thierry Charnois
 
 ## Citation
 ```bibtex
