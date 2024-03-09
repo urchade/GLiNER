@@ -2,6 +2,17 @@
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
+## Models Status
+
+### Available Models on Hugging Face
+- [x] [GLiNER-Base](https://huggingface.co/urchade/gliner_base) - Available
+- [x] [GLiNER-Multi](https://huggingface.co/urchade/gliner_multi) - Available
+
+### To Release
+- [ ] GLiNER-Small
+- [ ] GLiNER-Large
+
+
 ## Links
 
 * Paper: https://arxiv.org/abs/2311.08526
