@@ -5,13 +5,12 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 ## Models Status
 
 ### Available Models on Hugging Face
-- [x] [GLiNER-Base](https://huggingface.co/urchade/gliner_base) - Available
-- [x] [GLiNER-Multi](https://huggingface.co/urchade/gliner_multi) - Available
+- [x] [GLiNER-Base](https://huggingface.co/urchade/gliner_base)
+- [x] [GLiNER-Multi](https://huggingface.co/urchade/gliner_multi)
 
 ### To Release
-- [ ] GLiNER-Small
-- [ ] GLiNER-Large
-
+- [ ] ⏳ GLiNER-Small
+- [ ] ⏳ GLiNER-Large
 
 ## Links
 
