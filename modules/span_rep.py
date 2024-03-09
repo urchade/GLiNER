@@ -1,7 +1,20 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
-from .layers import create_projection_layer
+
+def create_projection_layer(hidden_size: int, dropout: float, out_dim: int = None) -> nn.Sequential:
+    """
+    Creates a projection layer with specified configurations.
+    """
+    if out_dim is None:
+        out_dim = hidden_size
+
+    return nn.Sequential(
+        nn.Linear(hidden_size, out_dim * 4),
+        nn.ReLU(),
+        nn.Dropout(dropout),
+        nn.Linear(out_dim * 4, out_dim)
+    )
 
 
 class SpanQuery(nn.Module):
