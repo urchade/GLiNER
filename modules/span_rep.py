@@ -1,6 +1,7 @@
 import torch
 import torch.nn.functional as F
 from torch import nn
+from .layers import create_projection_layer
 
 
 class SpanQuery(nn.Module):
@@ -258,6 +259,33 @@ class SpanMarker(nn.Module):
         return cat.view(B, L, self.max_width, D)
 
 
+class SpanMarkerV0(nn.Module):
+    """
+    Marks and projects span endpoints using an MLP.
+    """
+
+    def __init__(self, hidden_size: int, max_width: int, dropout: float = 0.4):
+        super().__init__()
+        self.max_width = max_width
+        self.project_start = create_projection_layer(hidden_size, dropout)
+        self.project_end = create_projection_layer(hidden_size, dropout)
+
+        self.out_project = create_projection_layer(hidden_size * 2, dropout, hidden_size)
+
+    def forward(self, h: torch.Tensor, span_idx: torch.Tensor) -> torch.Tensor:
+        B, L, D = h.size()
+
+        start_rep = self.project_start(h)
+        end_rep = self.project_end(h)
+
+        start_span_rep = extract_elements(start_rep, span_idx[:, :, 0])
+        end_span_rep = extract_elements(end_rep, span_idx[:, :, 1])
+
+        cat = torch.cat([start_span_rep, end_span_rep], dim=-1).relu()
+
+        return self.out_project(cat).view(B, L, self.max_width, D)
+
+
 class ConvShareV2(nn.Module):
     def __init__(self, hidden_size, max_width):
         super().__init__()
@@ -297,6 +325,8 @@ class SpanRepLayer(nn.Module):
 
         if span_mode == 'marker':
             self.span_rep_layer = SpanMarker(hidden_size, max_width, **kwargs)
+        elif span_mode == 'markerV0':
+            self.span_rep_layer = SpanMarkerV0(hidden_size, max_width, **kwargs)
         elif span_mode == 'query':
             self.span_rep_layer = SpanQuery(
                 hidden_size, max_width, trainable=True)
