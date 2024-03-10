@@ -16,6 +16,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 ### To Release
 - [ ] ⏳ GLiNER-Multiv2
+- [ ] ⏳ GLiNER-Sup (trained on mixture of NER datasets)
 
 ## Links
 
