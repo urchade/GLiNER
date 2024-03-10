@@ -32,7 +32,8 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
                                              subtoken_pooling=config.subtoken_pooling, hidden_size=config.hidden_size,
                                              add_tokens=[self.entity_token, self.sep_token])
 
-        # hierarchical representation of tokens
+        # hierarchical representation of tokens (zaratiana et al, 2022)
+        # https://arxiv.org/pdf/2203.14710.pdf
         self.rnn = LstmSeq2SeqEncoder(
             input_size=config.hidden_size,
             hidden_size=config.hidden_size // 2,
@@ -41,6 +42,8 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         )
 
         # span representation
+        # we have a paper to study span representation for ner
+        # zaratiana et al, 2022: https://aclanthology.org/2022.umios-1.1/
         self.span_rep_layer = SpanRepLayer(
             span_mode=config.span_mode,
             hidden_size=config.hidden_size,
