@@ -148,3 +148,21 @@ class InstructBase(nn.Module):
 
     def create_dataloader(self, data, entity_types=None, **kwargs):
         return DataLoader(data, collate_fn=lambda x: self.collate_fn(x, entity_types), **kwargs)
+
+    def set_sampling_params(self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len):
+        """
+        Sets sampling parameters on the given model.
+
+        Parameters:
+        - model: The model object to update.
+        - max_types: Maximum types parameter.
+        - shuffle_types: Boolean indicating whether to shuffle types.
+        - random_drop: Boolean indicating whether to randomly drop elements.
+        - max_neg_type_ratio: Maximum negative type ratio.
+        - max_len: Maximum length parameter.
+        """
+        self.base_config.max_types = max_types
+        self.base_config.shuffle_types = shuffle_types
+        self.base_config.random_drop = random_drop
+        self.base_config.max_neg_type_ratio = max_neg_type_ratio
+        self.base_config.max_len = max_len

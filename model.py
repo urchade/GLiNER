@@ -59,6 +59,33 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             nn.Linear(config.hidden_size * 4, config.hidden_size)
         )
 
+    def get_optimizer(self, lr_encoder, lr_others, freeze_token_rep=False):
+        """
+        Parameters:
+        - lr_encoder: Learning rate for the encoder layer.
+        - lr_others: Learning rate for all other layers.
+        - freeze_token_rep: whether the token representation layer should be frozen.
+        """
+        param_groups = [
+            # encoder
+            {'params': self.rnn.parameters(), 'lr': lr_others},
+            # projection layers
+            {'params': self.span_rep_layer.parameters(), 'lr': lr_others},
+            {'params': self.prompt_rep_layer.parameters(), 'lr': lr_others},
+        ]
+
+        if not freeze_token_rep:
+            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate
+            param_groups.append({'params': self.token_rep_layer.parameters(), 'lr': lr_encoder})
+        else:
+            # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
+            for param in self.token_rep_layer.parameters():
+                param.requires_grad = False
+
+        optimizer = torch.optim.AdamW(param_groups)
+
+        return optimizer
+
     def compute_score_train(self, x):
         span_idx = x['span_idx'] * x['span_mask'].unsqueeze(-1)
 
