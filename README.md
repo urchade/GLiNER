@@ -2,7 +2,8 @@
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
-- Demo: https://huggingface.co/spaces/tomaarsen/gliner_base
+* Paper: https://arxiv.org/abs/2311.08526 (by Urchade Zaratiana, Nadi Tomeh, Pierre Holat, Thierry Charnois)
+* Demo: https://huggingface.co/spaces/tomaarsen/gliner_base
 
 <img src="demo.jpg" alt="Demo Image" width="50%"/>
 
@@ -19,16 +20,25 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - [x] [GLiNER-medium](https://huggingface.co/urchade/gliner_medium) (CC BY NC 4.0)
 - [x] [GLiNER-medium-v2](https://huggingface.co/urchade/gliner_mediumv2) (Apache)
 - [x] [GLiNER-large](https://huggingface.co/urchade/gliner_large) (CC BY NC 4.0)
-- [x] [GLiNER-ledium-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
+- [x] [GLiNER-medium-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
 
 ### To Release
 - [ ] ⏳ GLiNER-Multiv2
 - [ ] ⏳ GLiNER-Sup (trained on mixture of NER datasets)
 
-## Links
+## Area of improvements / research
 
-* Paper: https://arxiv.org/abs/2311.08526
-* Repository: https://github.com/urchade/GLiNER
+- [ ] Allow longer context (eg. train with long context transformers such as Longformer, LED, etc.)
+- [ ] Use Bi-encoder (entity encoder and span encoder) allowing precompute entity embeddings
+- [ ] Filtering mechanism to reduce number of spans before final classification to save memory and computation when the number entity types is large
+- [ ] Improve understanding of more detailled prompts/instruction, eg. "Find the first name of the person in the text"
+- [ ] Better loss function: for instance use ```Focal Loss``` (see [this paper](https://proceedings.neurips.cc/paper/2020/file/aeb7b30ef1d024a76f21a1d40e30c302-Paper.pdf)) instead of ```BCE``` to handle class imbalance, as some entity types are more frequent than others
+- [ ] Improve multi-lingual capabilities: train on more languages, and use multi-lingual training data
+- [ ] Decoding: allow a span to have multiple labels, eg: "Cristiano Ronaldo" is both a "person" and "football player"
+- [ ] Dynamic thresholding (in ```model.predict_entities(text, labels, threshold=0.5)```): allow the model to predict more entities, or less entities, depending on the context. Actually, the model tend to predict less entities where the entity type or the domain are not well represented in the training data.
+- [ ] Train with EMAs (Exponential Moving Averages) or merge multiple checkpoints to improve model robustness (see [this paper](https://openreview.net/forum?id=tq_J_MqB3UB)
+- [ ] Extend the model to relation extraction but need dataset with relation annotations. Our preliminary work [ATG](https://github.com/urchade/ATG).
+
 
 ## Installation
 To use this model, you must download the GLiNER repository and install its dependencies:
@@ -52,7 +62,7 @@ Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu �
 
 labels = ["person", "award", "date", "competitions", "teams"]
 
-entities = model.predict_entities(text, labels)
+entities = model.predict_entities(text, labels, threshold=0.5)
 
 for entity in entities:
     print(entity["text"], "=>", entity["label"])
