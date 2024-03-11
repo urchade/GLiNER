@@ -4,6 +4,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 * Paper: https://arxiv.org/abs/2311.08526 (by Urchade Zaratiana, Nadi Tomeh, Pierre Holat, Thierry Charnois)
 * Demo: https://huggingface.co/spaces/tomaarsen/gliner_base
+* Colab: https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing
 
 <img src="demo.jpg" alt="Demo Image" width="50%"/>
 
