@@ -5,6 +5,7 @@ import re
 from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
+import yaml
 from gliner.modules.layers import LstmSeq2SeqEncoder
 from gliner.modules.base import InstructBase
 from gliner.modules.evaluator import Evaluator, greedy_search
@@ -350,8 +351,6 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             return model
 
         # 2. Newer format: Use "pytorch_model.bin" and "gliner_config.json"
-        from train import load_config_as_namespace
-
         model_file = Path(model_id) / "pytorch_model.bin"
         if not model_file.exists():
             model_file = hf_hub_download(
@@ -440,3 +439,9 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         flair.device = device
         return self
+
+
+def load_config_as_namespace(config_file):
+    with open(config_file, 'r') as f:
+        config_dict = yaml.safe_load(f)
+    return argparse.Namespace(**config_dict)

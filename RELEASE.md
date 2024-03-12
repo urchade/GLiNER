@@ -73,7 +73,7 @@ rm -rf build && rm -rf dist
 Then run:
 
 ```bash
-python setup.py bdist_wheel && python setup.py sdist
+python -m build
 ```
 
 This will create two folders, `build` and a `dist` with the new versions of your package. These contain a 1) source distribution and a 2) wheel.
