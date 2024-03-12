@@ -42,18 +42,16 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 
 ## Installation
-To use this model, you must download the GLiNER repository and install its dependencies:
+To use this model, you must install the GLiNER Python library:
 ```
-!git clone https://github.com/urchade/GLiNER.git
-%cd GLiNER
-!pip install -r requirements.txt
+!pip install gliner
 ```
 
 ## Usage
-Once you've downloaded the GLiNER repository, you can import the GLiNER class from the `model` file. You can then load this model using `GLiNER.from_pretrained` and predict entities with `predict_entities`.
+Once you've downloaded the GLiNER library, you can import the GLiNER class. You can then load this model using `GLiNER.from_pretrained` and predict entities with `predict_entities`.
 
 ```python
-from model import GLiNER
+from gliner import GLiNER
 
 model = GLiNER.from_pretrained("urchade/gliner_base")
 

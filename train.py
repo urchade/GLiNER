@@ -7,9 +7,8 @@ from tqdm import tqdm
 from transformers import get_cosine_schedule_with_warmup
 
 # from model_nested import NerFilteredSemiCRF
-from model import GLiNER
-from modules.run_evaluation import get_for_all_path, sample_train_data
-from save_load import save_model, load_model
+from gliner import GLiNER
+from gliner.modules.run_evaluation import sample_train_data
 import json
 
 
@@ -65,7 +64,7 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
 
         if (step + 1) % eval_every == 0:
             current_path = os.path.join(log_dir, f'model_{step + 1}')
-            save_model(model, current_path)
+            model.save_pretrained(current_path)
             #val_data_dir =  "/gpfswork/rech/ohy/upa43yu/NER_datasets" # can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
             #get_for_all_path(model, step, log_dir, val_data_dir)  # you can remove this comment if you want to evaluate the model
 
@@ -104,7 +103,7 @@ if __name__ == "__main__":
         data = sample_train_data(config.train_data, 10000)
 
     if config.prev_path != "none":
-        model = load_model(config.prev_path)
+        model = GLiNER.from_pretrained(config.prev_path)
         model.config = config
     else:
         model = GLiNER(config)

@@ -5,11 +5,11 @@ import re
 from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
-from modules.layers import LstmSeq2SeqEncoder
-from modules.base import InstructBase
-from modules.evaluator import Evaluator, greedy_search
-from modules.span_rep import SpanRepLayer
-from modules.token_rep import TokenRepLayer
+from gliner.modules.layers import LstmSeq2SeqEncoder
+from gliner.modules.base import InstructBase
+from gliner.modules.evaluator import Evaluator, greedy_search
+from gliner.modules.span_rep import SpanRepLayer
+from gliner.modules.token_rep import TokenRepLayer
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
