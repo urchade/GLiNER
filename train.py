@@ -2,13 +2,13 @@ import argparse
 import os
 
 import torch
-import yaml
 from tqdm import tqdm
 from transformers import get_cosine_schedule_with_warmup
 
 # from model_nested import NerFilteredSemiCRF
 from gliner import GLiNER
 from gliner.modules.run_evaluation import sample_train_data
+from gliner.model import load_config_as_namespace
 import json
 
 
@@ -78,12 +78,6 @@ def create_parser():
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to config file")
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
     return parser
-
-
-def load_config_as_namespace(config_file):
-    with open(config_file, 'r') as f:
-        config_dict = yaml.safe_load(f)
-    return argparse.Namespace(**config_dict)
 
 
 if __name__ == "__main__":
