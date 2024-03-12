@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["gliner"]
+
+[tool.setuptools.dynamic]
+version = {attr = "gliner.__version__"}
+
+[project]
+name = "gliner"
+description = "Generalist model for NER (Extract any entity types from texts)"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+keywords = [
+    "named-entity-recognition",
+    "ner",
+    "data-science",
+    "natural-language-processing",
+    "artificial-intelligence",
+    "nlp",
+    "machine-learning",
+    "transformers"
+]
+authors = [
+    {name = "Urchade Zaratiana"},
+    {name = "Nadi Tomeh"},
+    {name = "Pierre Holat"},
+    {name = "Thierry Charnois"},
+]
+maintainers = [
+    {name = "Urchade Zaratiana"},
+]
+dependencies = [
+    "torch",
+    "transformers",
+    "huggingface_hub",
+    "flair",
+    "seqeval",
+    "tqdm",
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/urchade/GLiNER"
