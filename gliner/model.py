@@ -288,6 +288,46 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             })
         return entities
 
+    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5):
+        """
+        Predict entities for a batch of texts.
+        texts:  List of texts | List[str]
+        labels: List of labels | List[str]
+        ...
+        """
+
+        all_tokens = []
+
+        for text in texts:
+            tokens = []
+            start_token_idx_to_text_idx = []
+            end_token_idx_to_text_idx = []
+            for match in re.finditer(r'\w+(?:[-_]\w+)*|\S', text):
+                tokens.append(match.group())
+                start_token_idx_to_text_idx.append(match.start())
+                end_token_idx_to_text_idx.append(match.end())
+            all_tokens.append(tokens)
+
+        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+        x = self.collate_fn(input_x, labels)
+        outputs = self.predict(x, flat_ner=flat_ner, threshold=threshold)
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            entities = []
+            for start_token_idx, end_token_idx, ent_type in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append({
+                    "start": start_token_idx_to_text_idx[start_token_idx],
+                    "end": end_token_idx_to_text_idx[end_token_idx],
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                })
+            all_entities.append(entities)
+
+        return all_entities
+
     def evaluate(self, test_data, flat_ner=False, threshold=0.5, batch_size=12, entity_types=None):
         self.eval()
         data_loader = self.create_dataloader(test_data, batch_size=batch_size, entity_types=entity_types, shuffle=False)
