@@ -32,7 +32,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - [ ] Allow longer context (eg. train with long context transformers such as Longformer, LED, etc.)
 - [ ] Use Bi-encoder (entity encoder and span encoder) allowing precompute entity embeddings
 - [ ] Filtering mechanism to reduce number of spans before final classification to save memory and computation when the number entity types is large
-- [ ] Improve understanding of more detailled prompts/instruction, eg. "Find the first name of the person in the text"
+- [ ] Improve understanding of more detailed prompts/instruction, eg. "Find the first name of the person in the text"
 - [ ] Better loss function: for instance use ```Focal Loss``` (see [this paper](https://proceedings.neurips.cc/paper/2020/file/aeb7b30ef1d024a76f21a1d40e30c302-Paper.pdf)) instead of ```BCE``` to handle class imbalance, as some entity types are more frequent than others
 - [ ] Improve multi-lingual capabilities: train on more languages, and use multi-lingual training data
 - [ ] Decoding: allow a span to have multiple labels, eg: "Cristiano Ronaldo" is both a "person" and "football player"
