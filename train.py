@@ -103,7 +103,7 @@ if __name__ == "__main__":
         model = GLiNER(config)
 
     if torch.cuda.is_available():
-        model = model.cuda()
+        model = model.to('cuda')
 
     lr_encoder = float(config.lr_encoder)
     lr_others = float(config.lr_others)
