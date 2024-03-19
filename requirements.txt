@@ -4,3 +4,4 @@ huggingface_hub
 flair
 seqeval
 tqdm
+spacy
