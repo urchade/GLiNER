@@ -69,6 +69,8 @@ for entity in entities:
     print(entity["text"], "=>", entity["label"])
 ```
 
+### Expected Output
+
 ```
 Cristiano Ronaldo dos Santos Aveiro => person
 5 February 1985 => date
@@ -82,6 +84,35 @@ UEFA European Championship => competitions
 UEFA Nations League => competitions
 Champions League => competitions
 European Championship => competitions
+```
+
+## Usage with spaCy
+
+You can also use GliNER with spaCy with the Gliner-spaCy library. To install it, you can use pip:
+
+```bash
+pip install gliner-spacy
+```
+Once installed, you then load GliNER into a regular NLP pipeline. Here's an example using a blank English pipeline, but you can use any spaCy model.
+
+```python
+import spacy
+from gliner_spacy.pipeline import GlinerSpacy
+
+nlp = spacy.blank("en")
+nlp.add_pipe("gliner_spacy")
+text = "This is a text about Bill Gates and Microsoft."
+doc = nlp(text)
+
+for ent in doc.ents:
+    print(ent.text, ent.label_)
+```
+
+### Expected Output
+
+```
+Bill Gates person
+Microsoft organization
 ```
 
 ## Named Entity Recognition benchmark result
