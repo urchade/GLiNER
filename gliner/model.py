@@ -5,11 +5,12 @@ import re
 from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
-from modules.layers import LstmSeq2SeqEncoder
-from modules.base import InstructBase
-from modules.evaluator import Evaluator, greedy_search
-from modules.span_rep import SpanRepLayer
-from modules.token_rep import TokenRepLayer
+import yaml
+from gliner.modules.layers import LstmSeq2SeqEncoder
+from gliner.modules.base import InstructBase
+from gliner.modules.evaluator import Evaluator, greedy_search
+from gliner.modules.span_rep import SpanRepLayer
+from gliner.modules.token_rep import TokenRepLayer
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
@@ -263,29 +264,53 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         return spans
 
     def predict_entities(self, text, labels, flat_ner=True, threshold=0.5):
-        tokens = []
-        start_token_idx_to_text_idx = []
-        end_token_idx_to_text_idx = []
-        for match in re.finditer(r'\w+(?:[-_]\w+)*|\S', text):
-            tokens.append(match.group())
-            start_token_idx_to_text_idx.append(match.start())
-            end_token_idx_to_text_idx.append(match.end())
+        return self.batch_predict_entities([text], labels, flat_ner=flat_ner, threshold=threshold)[0]
 
-        input_x = {"tokenized_text": tokens, "ner": None}
-        x = self.collate_fn([input_x], labels)
-        output = self.predict(x, flat_ner=flat_ner, threshold=threshold)
+    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5):
+        """
+        Predict entities for a batch of texts.
+        texts:  List of texts | List[str]
+        labels: List of labels | List[str]
+        ...
+        """
 
-        entities = []
-        for start_token_idx, end_token_idx, ent_type in output[0]:
-            start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-            end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-            entities.append({
-                "start": start_token_idx_to_text_idx[start_token_idx],
-                "end": end_token_idx_to_text_idx[end_token_idx],
-                "text": text[start_text_idx:end_text_idx],
-                "label": ent_type,
-            })
-        return entities
+        all_tokens = []
+        all_start_token_idx_to_text_idx = []
+        all_end_token_idx_to_text_idx = []
+
+        for text in texts:
+            tokens = []
+            start_token_idx_to_text_idx = []
+            end_token_idx_to_text_idx = []
+            for match in re.finditer(r'\w+(?:[-_]\w+)*|\S', text):
+                tokens.append(match.group())
+                start_token_idx_to_text_idx.append(match.start())
+                end_token_idx_to_text_idx.append(match.end())
+            all_tokens.append(tokens)
+            all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
+            all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
+
+        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+        x = self.collate_fn(input_x, labels)
+        outputs = self.predict(x, flat_ner=flat_ner, threshold=threshold)
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append({
+                    "start": start_token_idx_to_text_idx[start_token_idx],
+                    "end": end_token_idx_to_text_idx[end_token_idx],
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                })
+            all_entities.append(entities)
+
+        return all_entities
 
     def evaluate(self, test_data, flat_ner=False, threshold=0.5, batch_size=12, entity_types=None):
         self.eval()
@@ -350,8 +375,6 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             return model
 
         # 2. Newer format: Use "pytorch_model.bin" and "gliner_config.json"
-        from train import load_config_as_namespace
-
         model_file = Path(model_id) / "pytorch_model.bin"
         if not model_file.exists():
             model_file = hf_hub_download(
@@ -440,3 +463,9 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         flair.device = device
         return self
+
+
+def load_config_as_namespace(config_file):
+    with open(config_file, 'r') as f:
+        config_dict = yaml.safe_load(f)
+    return argparse.Namespace(**config_dict)
