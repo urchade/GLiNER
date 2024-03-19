@@ -369,7 +369,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             state_dict = dict_load["model_weights"]
             config.model_name = "microsoft/deberta-v3-base" if filename == "gliner_base.pt" else "microsoft/mdeberta-v3-base"
             model = cls(config)
-            model.load_state_dict(state_dict, strict=strict, assign=True)
+            model.load_state_dict(state_dict, strict=strict)
             # Required to update flair's internals as well:
             model.to(map_location)
             return model
