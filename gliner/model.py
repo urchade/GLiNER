@@ -14,7 +14,6 @@ from gliner.modules.token_rep import TokenRepLayer
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
-from huggingface_hub.utils import HfHubHTTPError
 
 
 
@@ -362,7 +361,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
                         token=token,
                         local_files_only=local_files_only,
                     )
-                except HfHubHTTPError:
+                except Exception:
                     continue
             dict_load = torch.load(model_file, map_location=torch.device(map_location))
             config = dict_load["config"]
