@@ -14,7 +14,7 @@ model_name: microsoft/deberta-v3-large # hugging face model
 fine_tune: true
 subtoken_pooling: first
 hidden_size: 768
-span_mode: marker
+span_mode: markerV0
 dropout: 0.4
 
 # Directory Paths
