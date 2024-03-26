@@ -299,7 +299,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
-            for start_token_idx, end_token_idx, ent_type in output:
+            for start_token_idx, end_token_idx, ent_type,ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
                 entities.append({
@@ -307,6 +307,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
                     "end": end_token_idx_to_text_idx[end_token_idx],
                     "text": texts[i][start_text_idx:end_text_idx],
                     "label": ent_type,
+                    "score": ent_score
                 })
             all_entities.append(entities)
 

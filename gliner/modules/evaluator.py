@@ -147,6 +147,9 @@ def greedy_search(spans, flat_ner=True):  # start, end, class, score
                 flag = True
                 break
         if not flag:
-            new_list.append(b[:-1])
+            start,end,label,score = b
+            score = torch.sigmoid(score).detach().numpy().tolist()
+            new_list.append((start,end,label,score))
+            
     new_list = sorted(new_list, key=lambda x: x[0])
     return new_list
