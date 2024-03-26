@@ -138,7 +138,8 @@ def greedy_search(spans, flat_ner=True):  # start, end, class, score
         has_ov = has_overlapping_nested
 
     new_list = []
-    span_prob = sorted(spans, key=lambda x: -x[-1])
+    span_prob = sorted(spans, key=lambda x: x[-1])
+    
     for i in range(len(spans)):
         b = span_prob[i]
         flag = False
@@ -147,9 +148,7 @@ def greedy_search(spans, flat_ner=True):  # start, end, class, score
                 flag = True
                 break
         if not flag:
-            start,end,label,score = b
-            score = torch.sigmoid(score).detach().numpy().tolist()
-            new_list.append((start,end,label,score))
+            new_list.append(b)
             
     new_list = sorted(new_list, key=lambda x: x[0])
     return new_list

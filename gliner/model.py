@@ -254,11 +254,15 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         spans = []
         for i, _ in enumerate(x["tokens"]):
             local_i = local_scores[i]
-            wh_i = [i.tolist() for i in torch.where(torch.sigmoid(local_i) > threshold)]
+            local_i_sigmoid = torch.sigmoid(local_i)
+            
+            wh_i = [i.tolist() for i in torch.where(local_i_sigmoid > threshold)]
             span_i = []
+            
             for s, k, c in zip(*wh_i):
                 if s + k < len(x["tokens"][i]):
-                    span_i.append((s, s + k, x["id_to_classes"][c + 1], local_i[s, k, c]))
+                    span_i.append((s, s + k, x["id_to_classes"][c + 1], local_i_sigmoid[s, k, c].item()))
+            
             span_i = greedy_search(span_i, flat_ner)
             spans.append(span_i)
         return spans
