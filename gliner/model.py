@@ -253,11 +253,15 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         spans = []
         for i, _ in enumerate(x["tokens"]):
             local_i = local_scores[i]
-            wh_i = [i.tolist() for i in torch.where(torch.sigmoid(local_i) > threshold)]
+            local_i_sigmoid = torch.sigmoid(local_i)
+            
+            wh_i = [i.tolist() for i in torch.where(local_i_sigmoid > threshold)]
             span_i = []
+            
             for s, k, c in zip(*wh_i):
                 if s + k < len(x["tokens"][i]):
-                    span_i.append((s, s + k, x["id_to_classes"][c + 1], local_i[s, k, c]))
+                    span_i.append((s, s + k, x["id_to_classes"][c + 1], local_i_sigmoid[s, k, c].item()))
+            
             span_i = greedy_search(span_i, flat_ner)
             spans.append(span_i)
         return spans
@@ -298,7 +302,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
-            for start_token_idx, end_token_idx, ent_type in output:
+            for start_token_idx, end_token_idx, ent_type,ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
                 entities.append({
@@ -306,6 +310,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
                     "end": end_token_idx_to_text_idx[end_token_idx],
                     "text": texts[i][start_text_idx:end_text_idx],
                     "label": ent_type,
+                    "score": ent_score
                 })
             all_entities.append(entities)
 
