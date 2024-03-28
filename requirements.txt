@@ -1,7 +1,6 @@
-torch
-transformers
-huggingface_hub
-flair
+torch>=2.0.0
+transformers>=4.38.2
+huggingface_hub>=0.21.4
+flair==0.13.1
 seqeval
 tqdm
-spacy
