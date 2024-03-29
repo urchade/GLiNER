@@ -11,6 +11,7 @@ from gliner.modules.base import InstructBase
 from gliner.modules.evaluator import Evaluator, greedy_search
 from gliner.modules.span_rep import SpanRepLayer
 from gliner.modules.token_rep import TokenRepLayer
+from gliner.modules.tokenizer import WhitespaceTokenizer, MecabKoTokenizer
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
@@ -22,6 +23,11 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         super().__init__(config)
 
         self.config = config
+
+        if 'tokenizer' not in self.config:
+            self.tokenizer = WhitespaceTokenizer()
+        elif self.config.tokenizer == 'mecab-ko':
+            self.tokenizer = MecabKoTokenizer()
 
         # [ENT] token
         self.entity_token = "<<ENT>>"
@@ -286,10 +292,10 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             tokens = []
             start_token_idx_to_text_idx = []
             end_token_idx_to_text_idx = []
-            for match in re.finditer(r'\w+(?:[-_]\w+)*|\S', text):
-                tokens.append(match.group())
-                start_token_idx_to_text_idx.append(match.start())
-                end_token_idx_to_text_idx.append(match.end())
+            for token, start, end in self.tokenizer(text):
+                tokens.append(token)
+                start_token_idx_to_text_idx.append(start)
+                end_token_idx_to_text_idx.append(end)
             all_tokens.append(tokens)
             all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
             all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
