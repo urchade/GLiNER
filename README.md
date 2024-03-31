@@ -10,19 +10,20 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 ## Models Status
 ### 📢 Updates
-- `gliner_mediumv2.1` is available under the Apache 2.0 license. It should be better/on par with `gliner_base` and `gliner_medium`.
+- `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
+- `gliner_mediumv2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
 - 📝 Finetuning notebook is available: examples/finetune.ipynb
 - 🗂 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) 📚 and [NuNER](https://huggingface.co/datasets/numind/NuNER) 📘 datasets.
 
 ### Available Models on Hugging Face
-- [x] [GLiNER-Base](https://huggingface.co/urchade/gliner_base) (CC BY NC 4.0)
+- [x] [GLiNER-B](https://huggingface.co/urchade/gliner_base) (CC BY NC 4.0)
 - [x] [GLiNER-Multi](https://huggingface.co/urchade/gliner_multi) (CC BY NC 4.0)
-- [x] [GLiNER-small](https://huggingface.co/urchade/gliner_small) (CC BY NC 4.0)
-- [x] [GLiNER-small-v2](https://huggingface.co/urchade/gliner_smallv2) (Apache)
-- [x] [GLiNER-medium](https://huggingface.co/urchade/gliner_medium) (CC BY NC 4.0)
-- [x] [GLiNER-medium-v2](https://huggingface.co/urchade/gliner_mediumv2) (Apache)
-- [x] [GLiNER-large](https://huggingface.co/urchade/gliner_large) (CC BY NC 4.0)
-- [x] [GLiNER-large-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
+- [x] [GLiNER-S](https://huggingface.co/urchade/gliner_small) (CC BY NC 4.0)
+- [x] [GLiNER-S-v2](https://huggingface.co/urchade/gliner_smallv2) (Apache)
+- [x] [GLiNER-M](https://huggingface.co/urchade/gliner_medium) (CC BY NC 4.0)
+- [x] [GLiNER-M-v2](https://huggingface.co/urchade/gliner_mediumv2) (Apache)
+- [x] [GLiNER-L](https://huggingface.co/urchade/gliner_large) (CC BY NC 4.0)
+- [x] [GLiNER-L-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
 
 ### To Release
 - [ ] ⏳ GLiNER-Multiv2
