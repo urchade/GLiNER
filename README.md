@@ -99,8 +99,8 @@ Once installed, you then load GliNER into a regular NLP pipeline. Here's an exam
 import spacy
 from gliner_spacy.pipeline import GlinerSpacy
 
-nlp = spacy.blank("en")
-nlp.add_pipe("gliner_spacy")
+custom_spacy_config = { "gliner_model": "urchade/gliner_multi", "chunk_size": 250, "labels": ["people","company","punctuation"], "style": "ent" }
+
 text = "This is a text about Bill Gates and Microsoft."
 doc = nlp(text)
 
