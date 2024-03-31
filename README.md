@@ -10,7 +10,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 ## Models Status
 ### 📢 Updates
-- `gliner-spacy`is available. Install it with `pip install gliner-spacy`. See Example of usage below.
+- [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage below.
 - `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
 - `gliner_mediumv2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
 - 📝 Finetuning notebook is available: examples/finetune.ipynb
