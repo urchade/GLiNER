@@ -88,13 +88,19 @@ class Evaluator:
             all_ents.append([lab, (s, e)])
         return all_ents
 
+    def get_entities_pr(self, ents):
+        all_ents = []
+        for s, e, lab, _ in ents:
+            all_ents.append([lab, (s, e)])
+        return all_ents
+
     def transform_data(self):
         all_true_ent = []
         all_outs_ent = []
         for i, j in zip(self.all_true, self.all_outs):
             e = self.get_entities_fr(i)
             all_true_ent.append(e)
-            e = self.get_entities_fr(j)
+            e = self.get_entities_pr(j)
             all_outs_ent.append(e)
         return all_true_ent, all_outs_ent
 
