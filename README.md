@@ -16,14 +16,14 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - 🗂 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) 📚 and [NuNER](https://huggingface.co/datasets/numind/NuNER) 📘 datasets.
 
 ### Available Models on Hugging Face
-- [x] [GLiNER-B](https://huggingface.co/urchade/gliner_base) (CC BY NC 4.0)
+- [x] [GLiNER-Base](https://huggingface.co/urchade/gliner_base) (CC BY NC 4.0)
 - [x] [GLiNER-Multi](https://huggingface.co/urchade/gliner_multi) (CC BY NC 4.0)
-- [x] [GLiNER-S](https://huggingface.co/urchade/gliner_small) (CC BY NC 4.0)
-- [x] [GLiNER-S-v2](https://huggingface.co/urchade/gliner_smallv2) (Apache)
-- [x] [GLiNER-M](https://huggingface.co/urchade/gliner_medium) (CC BY NC 4.0)
-- [x] [GLiNER-M-v2](https://huggingface.co/urchade/gliner_mediumv2) (Apache)
-- [x] [GLiNER-L](https://huggingface.co/urchade/gliner_large) (CC BY NC 4.0)
-- [x] [GLiNER-L-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
+- [x] [GLiNER-Small](https://huggingface.co/urchade/gliner_small) (CC BY NC 4.0)
+- [x] [GLiNER-Small-v2](https://huggingface.co/urchade/gliner_smallv2) (Apache)
+- [x] [GLiNER-Medium](https://huggingface.co/urchade/gliner_medium) (CC BY NC 4.0)
+- [x] [GLiNER-Medium-v2](https://huggingface.co/urchade/gliner_mediumv2) (Apache)
+- [x] [GLiNER-Large](https://huggingface.co/urchade/gliner_large) (CC BY NC 4.0)
+- [x] [GLiNER-Large-v2](https://huggingface.co/urchade/gliner_largev2) (Apache)
 
 ### To Release
 - [ ] ⏳ GLiNER-Multiv2
