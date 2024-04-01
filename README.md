@@ -2,20 +2,19 @@
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
-* **Paper**: [GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer
-](https://arxiv.org/abs/2311.08526)
+* **Paper**: 📄 [GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer](https://arxiv.org/abs/2311.08526)
 * **Getting Started:** &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
-* **Demo:** [Hugging Face](https://huggingface.co/spaces/tomaarsen/gliner_base)
+* **Demo:** 🤗 [Hugging Face](https://huggingface.co/spaces/urchade/gliner_mediumv2.1)
 
 ## Models Status
 ### 📢 Updates
-- [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage below.
-- `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
-- `gliner_mediumv2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
-- 📝 Finetuning notebook is available: examples/finetune.ipynb
-- 🗂 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) 📚 and [NuNER](https://huggingface.co/datasets/numind/NuNER) 📘 datasets.
+- 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage below.
+- 🧬 `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
+- 🚀 `gliner_mediumv2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
+- 📘 Finetuning notebook is available: examples/finetune.ipynb
+- 📚 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) and [NuNER](https://huggingface.co/datasets/numind/NuNER) datasets.
 
-### Available Models on Hugging Face
+### 🌟 Available Models on Hugging Face
 
 #### 🇬🇧 For English
 - **GLiNER Base**: `urchade/gliner_base` *(CC BY NC 4.0)*
@@ -35,17 +34,15 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 #### 🔬 Domain Specific Models
 - **Biomedical**: `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
 
-## 🛠 Installation
+## 🛠 Installation & Usage
 
-To begin using the GLiNER model, you must first install the GLiNER Python library through pip:
+To begin using the GLiNER model, first install the GLiNER Python library through pip:
 
 ```bash
 !pip install gliner
 ```
 
-## 🚀 Usage
-
-### Basic Use Case
+### 🚀 Basic Use Case
 
 After the installation of the GLiNER library, import the `GLiNER` class. Following this, you can load your chosen model with `GLiNER.from_pretrained` and utilize `predict_entities` to discern entities within your text.
 
@@ -88,7 +85,7 @@ Champions League => competitions
 European Championship => competitions
 ```
 
-### Usage with spaCy
+### 🔌 Usage with spaCy
 
 GLiNER can be seamlessly integrated with spaCy. To begin, install the `gliner-spacy` library via pip:
 
@@ -132,11 +129,11 @@ Bill Gates => person
 Microsoft => organization
 ```
 
-## Named Entity Recognition benchmark result
+##  📊 NER Benchmark Results
 
 <img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
 
-## Area of improvements / research
+## 🛠️ Areas of Improvements / research
 
 - [ ] Allow longer context (eg. train with long context transformers such as Longformer, LED, etc.)
 - [ ] Use Bi-encoder (entity encoder and span encoder) allowing precompute entity embeddings
@@ -146,18 +143,21 @@ Microsoft => organization
 - [ ] Improve multi-lingual capabilities: train on more languages, and use multi-lingual training data
 - [ ] Decoding: allow a span to have multiple labels, eg: "Cristiano Ronaldo" is both a "person" and "football player"
 - [ ] Dynamic thresholding (in ```model.predict_entities(text, labels, threshold=0.5)```): allow the model to predict more entities, or less entities, depending on the context. Actually, the model tend to predict less entities where the entity type or the domain are not well represented in the training data.
-- [ ] Train with EMAs (Exponential Moving Averages) or merge multiple checkpoints to improve model robustness (see [this paper](https://openreview.net/forum?id=tq_J_MqB3UB)
+- [ ] Train with EMAs (Exponential Moving Averages) or merge multiple checkpoints to improve model robustness (see [this paper](https://openreview.net/forum?id=tq_J_MqB3UB))
 - [ ] Extend the model to relation extraction but need dataset with relation annotations. Our preliminary work [ATG](https://github.com/urchade/ATG).
 
 
-## Model Authors
+## 👨‍💻 Model Authors
 The model authors are:
 * [Urchade Zaratiana](https://huggingface.co/urchade)
 * Nadi Tomeh
 * Pierre Holat
 * Thierry Charnois
 
-## Citation
+## 📚 Citation
+
+If you find GLiNER useful in your research, please consider citing our paper:
+
 ```bibtex
 @misc{zaratiana2023gliner,
       title={GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer}, 
@@ -168,3 +168,4 @@ The model authors are:
       primaryClass={cs.CL}
 }
 ```
+We appreciate your support!
