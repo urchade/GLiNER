@@ -1,7 +1,7 @@
 import re
 
 
-class TokenizerBase():
+class TokenSplitterBase():
     def __init__(self):
         pass
 
@@ -9,7 +9,7 @@ class TokenizerBase():
         pass
 
 
-class WhitespaceTokenizer(TokenizerBase):
+class WhitespaceTokenSplitter(TokenSplitterBase):
     def __init__(self):
         self.whitespace_pattern = re.compile(r'\w+(?:[-_]\w+)*|\S')
     
@@ -18,7 +18,7 @@ class WhitespaceTokenizer(TokenizerBase):
             yield match.group(), match.start(), match.end()
 
 
-class MecabKoTokenizer(TokenizerBase):
+class MecabKoTokenSplitter(TokenSplitterBase):
     def __init__(self):
         try:
             import mecab  # noqa
