@@ -134,7 +134,7 @@ Microsoft => organization
 
 ## Named Entity Recognition benchmark result
 
-![image/png](https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png)
+<img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
 
 ## Area of improvements / research
 
