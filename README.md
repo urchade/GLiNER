@@ -16,7 +16,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - 📝 Finetuning notebook is available: examples/finetune.ipynb
 - 🗂 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) 📚 and [NuNER](https://huggingface.co/datasets/numind/NuNER) 📘 datasets.
 
-### 🌐 Available Models on Hugging Face
+### Available Models on Hugging Face
 
 #### 🇬🇧 For English
 - **GLiNER Base**: `urchade/gliner_base` *(CC BY NC 4.0)*
@@ -29,9 +29,9 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - **GLiNER Large v2**: `urchade/gliner_largev2` *(Apache 2.0)*
 
 #### 🌍 For Other Languages
-- **Korean**: `taeminlee/gliner_ko`
-- **Italian**: `DeepMount00/universal_ner_ita`
-- **Multilingual**: `urchade/gliner_multi` *(CC BY NC 4.0)*
+- **Korean**: 🇰🇷 `taeminlee/gliner_ko`
+- **Italian**: 🇮🇹 `DeepMount00/universal_ner_ita`
+- **Multilingual**: 🌐 `urchade/gliner_multi` *(CC BY NC 4.0)*
 
 #### 🔬 Domain Specific Models
 - **Biomedical**: `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
