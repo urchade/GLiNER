@@ -48,11 +48,11 @@ class InstructBase(nn.Module):
         span_label = span_label.masked_fill(valid_span_mask, -1)
 
         return {
-            'tokens': tokens,
-            'span_idx': spans_idx,
-            'span_label': span_label,
-            'seq_length': length,
-            'entities': ner,
+            "tokens": tokens,
+            "span_idx": spans_idx,
+            "span_label": span_label,
+            "seq_length": length,
+            "entities": ner,
         }
 
     def collate_fn(self, batch_list, entity_types=None):
@@ -78,10 +78,10 @@ class InstructBase(nn.Module):
                     # no negatives
                     negs_i = []
                 else:
-                    negs_i = negs[:len(b['ner']) * neg_type_ratio]
+                    negs_i = negs[:len(b["ner"]) * neg_type_ratio]
 
                 # this is the list of all possible entity types (positive and negative)
-                types = list(set([el[-1] for el in b['ner']] + negs_i))
+                types = list(set([el[-1] for el in b["ner"]] + negs_i))
 
                 # shuffle (every epoch)
                 random.shuffle(types)
@@ -117,29 +117,29 @@ class InstructBase(nn.Module):
             ]
 
         span_idx = pad_sequence(
-            [b['span_idx'] for b in batch], batch_first=True, padding_value=0
+            [b["span_idx"] for b in batch], batch_first=True, padding_value=0
         )
 
         span_label = pad_sequence(
-            [el['span_label'] for el in batch], batch_first=True, padding_value=-1
+            [el["span_label"] for el in batch], batch_first=True, padding_value=-1
         )
 
         return {
-            'seq_length': torch.LongTensor([el['seq_length'] for el in batch]),
-            'span_idx': span_idx,
-            'tokens': [el['tokens'] for el in batch],
-            'span_mask': span_label != -1,
-            'span_label': span_label,
-            'entities': [el['entities'] for el in batch],
-            'classes_to_id': class_to_ids,
-            'id_to_classes': id_to_classes,
+            "seq_length": torch.LongTensor([el["seq_length"] for el in batch]),
+            "span_idx": span_idx,
+            "tokens": [el["tokens"] for el in batch],
+            "span_mask": span_label != -1,
+            "span_label": span_label,
+            "entities": [el["entities"] for el in batch],
+            "classes_to_id": class_to_ids,
+            "id_to_classes": id_to_classes,
         }
 
     @staticmethod
     def get_negatives(batch_list, sampled_neg=5):
         ent_types = []
         for b in batch_list:
-            types = set([el[-1] for el in b['ner']])
+            types = set([el[-1] for el in b["ner"]])
             ent_types.extend(list(types))
         ent_types = list(set(ent_types))
         # sample negatives

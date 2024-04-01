@@ -24,9 +24,9 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         self.config = config
 
-        if 'token_splitter' not in self.config:
+        if "token_splitter" not in self.config:
             self.token_splitter = WhitespaceTokenSplitter()
-        elif self.config.token_splitter == 'mecab-ko':
+        elif self.config.token_splitter == "mecab-ko":
             self.token_splitter = MecabKoTokenSplitter()
 
         # [ENT] token
@@ -74,15 +74,15 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         """
         param_groups = [
             # encoder
-            {'params': self.rnn.parameters(), 'lr': lr_others},
+            {"params": self.rnn.parameters(), "lr": lr_others},
             # projection layers
-            {'params': self.span_rep_layer.parameters(), 'lr': lr_others},
-            {'params': self.prompt_rep_layer.parameters(), 'lr': lr_others},
+            {"params": self.span_rep_layer.parameters(), "lr": lr_others},
+            {"params": self.prompt_rep_layer.parameters(), "lr": lr_others},
         ]
 
         if not freeze_token_rep:
             # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate
-            param_groups.append({'params': self.token_rep_layer.parameters(), 'lr': lr_encoder})
+            param_groups.append({"params": self.token_rep_layer.parameters(), "lr": lr_encoder})
         else:
             # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
             for param in self.token_rep_layer.parameters():
@@ -93,16 +93,16 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         return optimizer
 
     def compute_score_train(self, x):
-        span_idx = x['span_idx'] * x['span_mask'].unsqueeze(-1)
+        span_idx = x["span_idx"] * x["span_mask"].unsqueeze(-1)
 
-        new_length = x['seq_length'].clone()
+        new_length = x["seq_length"].clone()
         new_tokens = []
         all_len_prompt = []
         num_classes_all = []
 
         # add prompt to the tokens
-        for i in range(len(x['tokens'])):
-            all_types_i = list(x['classes_to_id'][i].keys())
+        for i in range(len(x["tokens"])):
+            all_types_i = list(x["classes_to_id"][i].keys())
             # multiple entity types in all_types. Prompt is appended at the start of tokens
             entity_prompt = []
             num_classes_all.append(len(all_types_i))
@@ -116,7 +116,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             # [ENT] entity_type [ENT] entity_type ... [ENT] entity_type [SEP]
 
             # add prompt to the tokens
-            tokens_p = entity_prompt + x['tokens'][i]
+            tokens_p = entity_prompt + x["tokens"][i]
 
             # input format:
             # [ENT] entity_type_1 [ENT] entity_type_2 ... [ENT] entity_type_m [SEP] token_1 token_2 ... token_n
@@ -131,9 +131,9 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         # create a mask using num_classes_all (0, if it exceeds the number of classes, 1 otherwise)
         max_num_classes = max(num_classes_all)
         entity_type_mask = torch.arange(max_num_classes).unsqueeze(0).expand(len(num_classes_all), -1).to(
-            x['span_mask'].device)
+            x["span_mask"].device)
         entity_type_mask = entity_type_mask < torch.tensor(num_classes_all).unsqueeze(-1).to(
-            x['span_mask'].device)  # [batch_size, max_num_classes]
+            x["span_mask"].device)  # [batch_size, max_num_classes]
 
         # compute all token representations
         bert_output = self.token_rep_layer(new_tokens, new_length)
@@ -144,12 +144,12 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         word_rep = []  # word representation (after [SEP])
         mask = []  # mask (after [SEP])
         entity_type_rep = []  # entity type representation (before [SEP])
-        for i in range(len(x['tokens'])):
+        for i in range(len(x["tokens"])):
             prompt_entity_length = all_len_prompt[i]  # length of prompt for this example
             # get word representation (after [SEP])
-            word_rep.append(word_rep_w_prompt[i, prompt_entity_length:prompt_entity_length + x['seq_length'][i]])
+            word_rep.append(word_rep_w_prompt[i, prompt_entity_length:prompt_entity_length + x["seq_length"][i]])
             # get mask (after [SEP])
-            mask.append(mask_w_prompt[i, prompt_entity_length:prompt_entity_length + x['seq_length'][i]])
+            mask.append(mask_w_prompt[i, prompt_entity_length:prompt_entity_length + x["seq_length"][i]])
 
             # get entity type representation (before [SEP])
             entity_rep = word_rep_w_prompt[i, :prompt_entity_length - 1]  # remove [SEP]
@@ -170,7 +170,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         num_classes = entity_type_rep.shape[1]  # number of entity types
 
         # similarity score
-        scores = torch.einsum('BLKD,BCD->BLKC', span_rep, entity_type_rep)
+        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, entity_type_rep)
 
         return scores, num_classes, entity_type_mask
 
@@ -193,7 +193,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         # compute loss (without reduction)
         all_losses = F.binary_cross_entropy_with_logits(logits_label, labels_one_hot,
-                                                        reduction='none')
+                                                        reduction="none")
         # mask loss using entity_type_mask (B, C)
         masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -207,11 +207,11 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
     def compute_score_eval(self, x, device):
         # check if classes_to_id is dict
-        assert isinstance(x['classes_to_id'], dict), "classes_to_id must be a dict"
+        assert isinstance(x["classes_to_id"], dict), "classes_to_id must be a dict"
 
-        span_idx = (x['span_idx'] * x['span_mask'].unsqueeze(-1)).to(device)
+        span_idx = (x["span_idx"] * x["span_mask"].unsqueeze(-1)).to(device)
 
-        all_types = list(x['classes_to_id'].keys())
+        all_types = list(x["classes_to_id"].keys())
         # multiple entity types in all_types. Prompt is appended at the start of tokens
         entity_prompt = []
 
@@ -225,8 +225,8 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         prompt_entity_length = len(entity_prompt)
 
         # add prompt
-        tokens_p = [entity_prompt + tokens for tokens in x['tokens']]
-        seq_length_p = x['seq_length'] + prompt_entity_length
+        tokens_p = [entity_prompt + tokens for tokens in x["tokens"]]
+        seq_length_p = x["seq_length"] + prompt_entity_length
 
         out = self.token_rep_layer(tokens_p, seq_length_p)
 
@@ -248,7 +248,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         span_rep = self.span_rep_layer(word_rep, span_idx)
 
-        local_scores = torch.einsum('BLKD,BCD->BLKC', span_rep, entity_type_rep)
+        local_scores = torch.einsum("BLKD,BCD->BLKC", span_rep, entity_type_rep)
 
         return local_scores
 
@@ -477,6 +477,6 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
 
 def load_config_as_namespace(config_file):
-    with open(config_file, 'r') as f:
+    with open(config_file, "r") as f:
         config_dict = yaml.safe_load(f)
     return argparse.Namespace(**config_dict)
