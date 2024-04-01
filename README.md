@@ -2,11 +2,10 @@
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
-* Paper is available on [Arxiv](https://arxiv.org/abs/2311.08526) (by Urchade Zaratiana, Nadi Tomeh, Pierre Holat, Thierry Charnois)
-* Demo on [HuggingFace](https://huggingface.co/spaces/tomaarsen/gliner_base)
-* Try it on [Google Colab](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
-
-<img src="demo.jpg" alt="Demo Image" width="50%"/>
+* **Paper**: [GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer
+](https://arxiv.org/abs/2311.08526)
+* **Getting Started:** &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
+* **Demo:** [Hugging Face](https://huggingface.co/spaces/tomaarsen/gliner_base)
 
 ## Models Status
 ### 📢 Updates
