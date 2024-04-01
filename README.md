@@ -32,7 +32,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - **Multilingual**: 🌐 `urchade/gliner_multi` *(CC BY NC 4.0)*
 
 #### 🔬 Domain Specific Models
-- **Biomedical**: `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
+- **Biomedical**: 🧬 `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
 
 ## 🛠 Installation & Usage
 
