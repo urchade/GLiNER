@@ -103,7 +103,7 @@ from gliner_spacy.pipeline import GlinerSpacy
 custom_spacy_config = {
     "gliner_model": "urchade/gliner_multi",
     "chunk_size": 250,
-    "labels": ["people", "company", "punctuation"],
+    "labels": ["person", "organization", "email"],
     "style": "ent"
 }
 
