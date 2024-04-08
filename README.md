@@ -104,7 +104,8 @@ custom_spacy_config = {
     "gliner_model": "urchade/gliner_multi",
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
-    "style": "ent"
+    "style": "ent",
+    "threshold": 0.3
 }
 
 # Initialize a blank English spaCy pipeline and add GLiNER
