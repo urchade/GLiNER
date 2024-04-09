@@ -8,7 +8,8 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 ## Models Status
 ### 📢 Updates
-- 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage below.(https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy).
+- **[08/04]** - Some pretrained weights contained a **bug** which caused performance degradation. For now use base or multi versions.
+- 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage [below](https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy).
 - 🧬 `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
 - 🚀 `gliner_mediumv2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
 - 📘 Finetuning notebook is available: examples/finetune.ipynb
@@ -104,7 +105,8 @@ custom_spacy_config = {
     "gliner_model": "urchade/gliner_multi",
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
-    "style": "ent"
+    "style": "ent",
+    "threshold": 0.3
 }
 
 # Initialize a blank English spaCy pipeline and add GLiNER
