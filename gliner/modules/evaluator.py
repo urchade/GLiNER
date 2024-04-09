@@ -144,7 +144,7 @@ def greedy_search(spans, flat_ner=True):  # start, end, class, score
         has_ov = has_overlapping_nested
 
     new_list = []
-    span_prob = sorted(spans, key=lambda x: x[-1])
+    span_prob = sorted(spans, key=lambda x: -x[-1])
     
     for i in range(len(spans)):
         b = span_prob[i]
