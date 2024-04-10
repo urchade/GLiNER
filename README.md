@@ -53,7 +53,7 @@ After the installation of the GLiNER library, import the `GLiNER` class. Followi
 from gliner import GLiNER
 
 # Initialize GLiNER with the base model
-model = GLiNER.from_pretrained("urchade/gliner_base")
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
 
 # Sample text for entity prediction
 text = """
@@ -84,7 +84,6 @@ European Golden Shoes => award
 UEFA Champions Leagues => competitions
 UEFA European Championship => competitions
 UEFA Nations League => competitions
-Champions League => competitions
 European Championship => competitions
 ```
 
@@ -104,7 +103,7 @@ from gliner_spacy.pipeline import GlinerSpacy
 
 # Configuration for GLiNER integration
 custom_spacy_config = {
-    "gliner_model": "urchade/gliner_multi",
+    "gliner_model": "urchade/gliner_multi-v2.1",
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
     "style": "ent",
