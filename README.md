@@ -9,10 +9,9 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 ## Models Status
 ### 📢 Updates
 
-- 🌍 `gliner_multi-v2.1` is available under the Apache 2.0 license.
+- 🚀 `gliner_multi-v2.1`, `gliner_small-v2.1`, `gliner_medium-v2.1`, and `gliner_large-v2.1` are available under the Apache 2.0 license.
 - 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage [below](https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy).
 - 🧬 `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
-- 🚀 `gliner_medium-v2.1` is available under the Apache 2.0 license. It should have similar performance as `gliner_base` and `gliner_medium`.
 - 📘 Finetuning notebook is available: examples/finetune.ipynb
 - 📚 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) and [NuNER](https://huggingface.co/datasets/numind/NuNER) datasets.
 
@@ -61,7 +60,7 @@ Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu �
 """
 
 # Labels for entity prediction
-labels = ["person", "award", "date", "competitions", "teams"]
+labels = ["Person", "Award", "Date", "Competitions", "Teams"] # for v2.1 use capital case for better performance
 
 # Perform entity prediction
 entities = model.predict_entities(text, labels, threshold=0.5)
