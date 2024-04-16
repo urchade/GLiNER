@@ -11,7 +11,7 @@ from gliner.modules.base import InstructBase
 from gliner.modules.evaluator import Evaluator, greedy_search
 from gliner.modules.span_rep import SpanRepLayer
 from gliner.modules.token_rep import TokenRepLayer
-from gliner.modules.token_splitter import WhitespaceTokenSplitter, MecabKoTokenSplitter
+from gliner.modules.token_splitter import WhitespaceTokenSplitter, MecabKoTokenSplitter, SpaCyTokenSplitter
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
@@ -26,6 +26,9 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         if "token_splitter" not in self.config:
             self.token_splitter = WhitespaceTokenSplitter()
+        elif self.config.token_splitter == "spacy":
+            lang = getattr(self.config, 'token_splitter_lang', None)
+            self.token_splitter = SpaCyTokenSplitter(lang=lang)
         elif self.config.token_splitter == "mecab-ko":
             self.token_splitter = MecabKoTokenSplitter()
 

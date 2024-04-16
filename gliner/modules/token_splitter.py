@@ -1,5 +1,5 @@
 import re
-
+import spacy
 
 class TokenSplitterBase():
     def __init__(self):
@@ -16,6 +16,18 @@ class WhitespaceTokenSplitter(TokenSplitterBase):
     def __call__(self, text):
         for match in self.whitespace_pattern.finditer(text):
             yield match.group(), match.start(), match.end()
+
+
+class SpaCyTokenSplitter(TokenSplitterBase):
+    def __init__(self, lang=None):
+        if lang is None:
+            lang = 'en'  # Default to English if no language is specified
+        self.nlp = spacy.blank(lang)
+
+    def __call__(self, text):
+        doc = self.nlp(text)
+        for token in doc:
+            yield token.text, token.idx, token.idx + len(token.text)            
 
 
 class MecabKoTokenSplitter(TokenSplitterBase):
