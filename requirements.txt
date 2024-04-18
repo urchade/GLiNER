@@ -4,4 +4,4 @@ huggingface_hub>=0.21.4
 flair==0.13.1
 seqeval
 tqdm
-scipy==1.12
+scipy<=1.12
