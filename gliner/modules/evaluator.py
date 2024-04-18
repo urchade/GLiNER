@@ -9,10 +9,10 @@ def extract_tp_actual_correct(y_true, y_pred):
     entities_true = defaultdict(set)
     entities_pred = defaultdict(set)
 
-    for type_name, (start, end), idx in y_true:
-        entities_true[type_name].add((start, end, idx))
-    for type_name, (start, end), idx in y_pred:
-        entities_pred[type_name].add((start, end, idx))
+    for type_name, (start, end) in y_true:
+        entities_true[type_name].add((start, end))
+    for type_name, (start, end) in y_pred:
+        entities_pred[type_name].add((start, end))
 
     target_names = sorted(set(entities_true.keys()) | set(entities_pred.keys()))
 
@@ -33,9 +33,9 @@ def flatten_for_eval(y_true, y_pred):
     all_true = []
     all_pred = []
 
-    for i, (true, pred) in enumerate(zip(y_true, y_pred)):
-        all_true.extend([t + [i] for t in true])
-        all_pred.extend([p + [i] for p in pred])
+    for (true, pred) in zip(y_true, y_pred):
+        all_true.extend([t for t in true])
+        all_pred.extend([p for p in pred])
 
     return all_true, all_pred
 
