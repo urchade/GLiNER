@@ -41,6 +41,7 @@ dependencies = [
     "flair==0.13.1",
     "seqeval",
     "tqdm",
+    "scipy==1.12",
 ]
 
 dynamic = ["version"]
