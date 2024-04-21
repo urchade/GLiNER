@@ -23,6 +23,16 @@ class InstructBase(nn.Module):
 
     def preprocess_spans(self, tokens, ner, classes_to_id):
 
+        # if no tokens
+        if len(tokens) == 0:
+            return {
+                "tokens": ["[PAD]"],  # default token
+                "span_idx": torch.LongTensor([[0, 0]]),
+                "span_label": torch.LongTensor([-1]),
+                "seq_length": 1,
+                "entities": [],
+            }
+
         max_len = self.base_config.max_len
 
         if len(tokens) > max_len:
