@@ -1,11 +1,11 @@
+import random
+import warnings
 from collections import defaultdict
-from typing import List, Tuple, Dict
 
 import torch
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
-import random
 
 
 class InstructBase(nn.Module):
@@ -29,6 +29,8 @@ class InstructBase(nn.Module):
         max_len = self.base_config.max_len
 
         if len(tokens) > max_len:
+            # add warning to say that sentence has been truncated
+            warnings.warn(f"Sentence of length {len(tokens)} has been truncated to {max_len}")
             length = max_len
             tokens = tokens[:max_len]
         else:
