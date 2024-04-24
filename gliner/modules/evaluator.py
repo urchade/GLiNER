@@ -117,35 +117,37 @@ def is_nested(idx1, idx2):
     return (idx1[0] <= idx2[0] and idx1[1] >= idx2[1]) or (idx2[0] <= idx1[0] and idx2[1] >= idx1[1])
 
 
-def has_overlapping(idx1, idx2):
-    overlapping = True
-    if idx1[:2] == idx2[:2]:
-        return overlapping
-    if (idx1[0] > idx2[1] or idx2[0] > idx1[1]):
-        overlapping = False
-    return overlapping
-
-
-def has_overlapping_nested(idx1, idx2):
-    # Return True if idx1 and idx2 overlap, but neither is nested inside the other
-    if idx1[:2] == idx2[:2]:
-        return True
-    if ((idx1[0] > idx2[1] or idx2[0] > idx1[1]) or is_nested(idx1, idx2)) and idx1 != idx2:
+def has_overlapping(idx1, idx2, multi_label=False):
+    # Check for any overlap between two spans
+    if idx1[:2] == idx2[:2]:  # Exact same boundaries can be considered as overlapping
+        return not multi_label
+    if idx1[0] > idx2[1] or idx2[0] > idx1[1]:
         return False
-    else:
-        return True
+    return True
 
 
-def greedy_search(spans, flat_ner=True):  # start, end, class, score
+def has_overlapping_nested(idx1, idx2, multi_label=False):
+    # Return True if idx1 and idx2 overlap, but neither is nested inside the other
+    if idx1[:2] == idx2[:2]:  # Exact same boundaries, not considering labels here
+        return not multi_label
+    if (idx1[0] > idx2[1] or idx2[0] > idx1[1]) or is_nested(idx1, idx2):
+        return False
+    return True
+
+
+from functools import partial
+
+
+def greedy_search(spans, flat_ner=True, multi_label=False):  # start, end, class, score
 
     if flat_ner:
-        has_ov = has_overlapping
+        has_ov = partial(has_overlapping, multi_label=multi_label)
     else:
-        has_ov = has_overlapping_nested
+        has_ov = partial(has_overlapping_nested, multi_label=multi_label)
 
     new_list = []
     span_prob = sorted(spans, key=lambda x: -x[-1])
-    
+
     for i in range(len(spans)):
         b = span_prob[i]
         flag = False
@@ -155,6 +157,6 @@ def greedy_search(spans, flat_ner=True):  # start, end, class, score
                 break
         if not flag:
             new_list.append(b)
-            
+
     new_list = sorted(new_list, key=lambda x: x[0])
     return new_list

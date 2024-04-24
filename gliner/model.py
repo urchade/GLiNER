@@ -256,7 +256,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         return local_scores
 
     @torch.no_grad()
-    def predict(self, x, flat_ner=False, threshold=0.5):
+    def predict(self, x, flat_ner=False, threshold=0.5, multi_label=False):
         self.eval()
         local_scores = self.compute_score_eval(x, device=next(self.parameters()).device)
         probs = torch.sigmoid(local_scores)
@@ -272,14 +272,14 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
                 if s + k < len(x["tokens"][i]):
                     span_i.append((s, s + k, x["id_to_classes"][c + 1], probs_i[s, k, c].item()))
             
-            span_i = greedy_search(span_i, flat_ner)
+            span_i = greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
         return spans
 
-    def predict_entities(self, text, labels, flat_ner=True, threshold=0.5):
-        return self.batch_predict_entities([text], labels, flat_ner=flat_ner, threshold=threshold)[0]
+    def predict_entities(self, text, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        return self.batch_predict_entities([text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)[0]
 
-    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5):
+    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False):
         """
         Predict entities for a batch of texts.
         texts:  List of texts | List[str]
@@ -305,7 +305,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
         x = self.collate_fn(input_x, labels)
-        outputs = self.predict(x, flat_ner=flat_ner, threshold=threshold)
+        outputs = self.predict(x, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)
 
         all_entities = []
         for i, output in enumerate(outputs):
@@ -326,7 +326,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         return all_entities
 
-    def evaluate(self, test_data, flat_ner=False, threshold=0.5, batch_size=12, entity_types=None):
+    def evaluate(self, test_data, flat_ner=False, multi_label=False, threshold=0.5, batch_size=12, entity_types=None):
         self.eval()
         data_loader = self.create_dataloader(test_data, batch_size=batch_size, entity_types=entity_types, shuffle=False)
         device = next(self.parameters()).device
@@ -336,7 +336,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             for k, v in x.items():
                 if isinstance(v, torch.Tensor):
                     x[k] = v.to(device)
-            batch_predictions = self.predict(x, flat_ner, threshold)
+            batch_predictions = self.predict(x, flat_ner, threshold, multi_label)
             all_preds.extend(batch_predictions)
             all_trues.extend(x["entities"])
         evaluator = Evaluator(all_trues, all_preds)

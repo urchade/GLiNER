@@ -23,6 +23,9 @@ class InstructBase(nn.Module):
 
     def preprocess_spans(self, tokens, ner, classes_to_id):
 
+        if len(tokens) == 0:
+            tokens = ["[PAD]"]
+
         max_len = self.base_config.max_len
 
         if len(tokens) > max_len:
