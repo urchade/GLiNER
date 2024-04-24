@@ -1,5 +1,5 @@
 import re
-import spacy
+
 
 class TokenSplitterBase():
     def __init__(self):
@@ -20,6 +20,12 @@ class WhitespaceTokenSplitter(TokenSplitterBase):
 
 class SpaCyTokenSplitter(TokenSplitterBase):
     def __init__(self, lang=None):
+        try:
+            import spacy # noqa
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install spacy with: `pip install spacy`"
+            )
         if lang is None:
             lang = 'en'  # Default to English if no language is specified
         self.nlp = spacy.blank(lang)
