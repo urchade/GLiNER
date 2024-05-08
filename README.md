@@ -29,6 +29,16 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - **GLiNER Medium v2.1**: `urchade/gliner_medium-v2.1` *(Apache 2.0)*
 - **GLiNER Large**: `urchade/gliner_large` *(CC BY NC 4.0)*
 - **GLiNER Large v2**: `urchade/gliner_large-v2` *(Apache 2.0)*
+- **GLiNER Large v2.1**: `urchade/gliner_large-v2.1` *(Apache 2.0)*
+
+
+- **GLiNER NuNerZero span**: `numind/NuNER_Zero-span`  *(MIT)* - +4.5% more powerful GLiNER Large v2.1
+
+##### 🇬🇧 English word-level Entity Recognition
+
+Word-level models work **better for finding multi-word entities, highlighting sentences or paragraphs**. They require additional output postprocessing that can be found in the corresponding model card.
+- **GLiNER NuNerZero**: `numind/NuNER_Zero`  *(MIT)* - +3% more powerful GLiNER Large v2.1, better suitable to detect multi-word entities
+- **GLiNER NuNerZero 4k context**: `numind/NuNER_Zero-4k`  *(MIT)* - 4k-long-context NuNerZero
 
 #### 🌍 For Other Languages
 - **Korean**: 🇰🇷 `taeminlee/gliner_ko`
@@ -141,7 +151,7 @@ Microsoft => organization
 
 <img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
 
-## 🛠️ Areas of Improvements / research
+## 🛠 Areas of Improvements / research
 
 - [ ] Allow longer context (eg. train with long context transformers such as Longformer, LED, etc.)
 - [ ] Use Bi-encoder (entity encoder and span encoder) allowing precompute entity embeddings
