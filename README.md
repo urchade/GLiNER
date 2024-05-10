@@ -10,7 +10,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 ### 📢 Updates
 - 🔍 Join the GLiNER **discord** server: [https://discord.gg/Y2yVxpSQnG](https://discord.gg/Y2yVxpSQnG)
 - 🆕 `gliner_multi_pii-v1` is available. This version has been optimized to recognize and classify Personally Identifiable Information (PII) within text. This version has been finetuned on six languages (English, French, German, Spanish, Italian, Portugese).
-- ⚙️ `pip install gliner>=0.1.7`: Some of the previous versions contain a bug that causes bad performance. Please use version the newest version.
+- ⚙️ `pip install gliner>=0.1.12`: Some of the previous versions contain a bug that causes bad performance. Please use version the newest version.
 - 🚀 `gliner_multi-v2.1`, `gliner_small-v2.1`, `gliner_medium-v2.1`, and `gliner_large-v2.1` are available under the Apache 2.0 license.
 - 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage [below](https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy).
 - 🧬 `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
@@ -29,6 +29,16 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - **GLiNER Medium v2.1**: `urchade/gliner_medium-v2.1` *(Apache 2.0)*
 - **GLiNER Large**: `urchade/gliner_large` *(CC BY NC 4.0)*
 - **GLiNER Large v2**: `urchade/gliner_large-v2` *(Apache 2.0)*
+- **GLiNER Large v2.1**: `urchade/gliner_large-v2.1` *(Apache 2.0)*
+
+
+- **GLiNER NuNerZero span**: `numind/NuNER_Zero-span`  *(MIT)* - +4.5% more powerful GLiNER Large v2.1
+
+##### 🇬🇧 English word-level Entity Recognition
+
+Word-level models work **better for finding multi-word entities, highlighting sentences or paragraphs**. They require additional output postprocessing that can be found in the corresponding model card.
+- **GLiNER NuNerZero**: `numind/NuNER_Zero`  *(MIT)* - +3% more powerful GLiNER Large v2.1, better suitable to detect multi-word entities
+- **GLiNER NuNerZero 4k context**: `numind/NuNER_Zero-4k`  *(MIT)* - 4k-long-context NuNerZero
 
 #### 🌍 For Other Languages
 - **Korean**: 🇰🇷 `taeminlee/gliner_ko`
@@ -141,8 +151,9 @@ Microsoft => organization
 
 <img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
 
-## 🛠️ Areas of Improvements / research
+## 🛠 Areas of Improvements / research
 
+- [ ] Extend the model to relation extraction. Our preliminary work [GraphER](https://github.com/urchade/GraphER).
 - [ ] Allow longer context (eg. train with long context transformers such as Longformer, LED, etc.)
 - [ ] Use Bi-encoder (entity encoder and span encoder) allowing precompute entity embeddings
 - [ ] Filtering mechanism to reduce number of spans before final classification to save memory and computation when the number entity types is large
@@ -152,7 +163,6 @@ Microsoft => organization
 - [ ] Decoding: allow a span to have multiple labels, eg: "Cristiano Ronaldo" is both a "person" and "football player"
 - [ ] Dynamic thresholding (in ```model.predict_entities(text, labels, threshold=0.5)```): allow the model to predict more entities, or less entities, depending on the context. Actually, the model tend to predict less entities where the entity type or the domain are not well represented in the training data.
 - [ ] Train with EMAs (Exponential Moving Averages) or merge multiple checkpoints to improve model robustness (see [this paper](https://openreview.net/forum?id=tq_J_MqB3UB))
-- [ ] Extend the model to relation extraction but need dataset with relation annotations. Our preliminary work [ATG](https://github.com/urchade/ATG).
 
 
 ## 👨‍💻 Model Authors

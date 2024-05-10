@@ -36,6 +36,7 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
     iter_train_loader = iter(train_loader)
 
     for step in pbar:
+        optimizer.zero_grad()  # Reset gradients  
         try:
             x = next(iter_train_loader)
         except StopIteration:
@@ -58,7 +59,7 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
         loss.backward()  # Compute gradients
         optimizer.step()  # Update parameters
         scheduler.step()  # Update learning rate schedule
-        optimizer.zero_grad()  # Reset gradients
+        
 
         description = f"step: {step} | epoch: {step // len(train_loader)} | loss: {loss.item():.2f}"
 
