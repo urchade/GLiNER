@@ -68,7 +68,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             nn.Linear(config.hidden_size * 4, config.hidden_size)
         )
 
-    def get_optimizer(self, lr_encoder, lr_others, freeze_token_rep=False):
+    def get_optimizer(self, lr_encoder, lr_others, freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
         - lr_encoder: Learning rate for the encoder layer.
@@ -91,7 +91,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             for param in self.token_rep_layer.parameters():
                 param.requires_grad = False
 
-        optimizer = torch.optim.AdamW(param_groups)
+        optimizer = torch.optim.AdamW(param_groups,optimizer_kwargs)
 
         return optimizer
 
