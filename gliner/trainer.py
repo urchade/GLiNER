@@ -75,26 +75,10 @@ class GlinerTrainer(Module):
             random_drop=random_drop, 
             max_neg_type_ratio=max_neg_type_ratio, 
             max_len=max_len
-        )
-        
-        param_groups = [ 
-            {"params": model.rnn.parameters(), "lr": lr_others}, 
-            {"params": model.span_rep_layer.parameters(), "lr": lr_others},
-            {"params": model.prompt_rep_layer.parameters(), "lr": lr_others},
-        ]
-
-        if not freeze_token_rep:
-            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate
-            param_groups.append({"params": model.token_rep_layer.parameters(), "lr": lr_encoder})
-        else:
-            # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
-            for param in self.token_rep_layer.parameters():
-                param.requires_grad = False
-                
-        self.optimizer = torch.optim.AdamW(param_groups, **optimizer_kwargs) 
+        ) 
+        self.optimizer = model.get_optimizer(lr_encoder, lr_others, freeze_token_rep=freeze_token_rep, **optimizer_kwargs) 
         self.train_loader = model.create_dataloader(train_data, batch_size=batch_size, shuffle=True)
-
-        
+ 
         self.should_validate = exists(val_data) 
         if self.should_validate:
             assert len(val_data) > 0, 'your validation dataset is empty' 
