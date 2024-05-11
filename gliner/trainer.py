@@ -222,7 +222,7 @@ class GlinerTrainer(Module):
                 
                 step += 1
                 self.step.add_(1) 
-                progress_bar.set_postfix(loss=current_loss, average_loss= min(1,total_epoch_loss) / (batch_idx + 1), step=step) 
+                progress_bar.set_postfix(loss=current_loss, average_loss= max(1,total_epoch_loss) / (batch_idx + 1), step=step) 
                     
                 self.scheduler.step() 
                 if is_last or (batch_idx + 1 == len(self.train_loader)): 
