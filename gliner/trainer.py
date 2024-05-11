@@ -189,11 +189,11 @@ class GlinerTrainer(Module):
               num_warmup_steps: int = 1000):
         assert not (num_epochs is None and num_steps is None) , 'you must specify either num_epochs or num_steps'  
         step = self.step.item()
-        
         total_steps = num_epochs * len(self.train_loader) if num_steps is None else num_steps
         num_epochs = default(num_epochs, total_steps // len(self.train_loader))
         
         total_steps += default(step, 0)
+        avg_epoch_loss = 0
          
         self.print(f"Training for {total_steps} steps which is {num_epochs} epochs.") 
         epoch_size = len(self.train_loader)
