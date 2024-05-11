@@ -91,7 +91,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             for param in self.token_rep_layer.parameters():
                 param.requires_grad = False
 
-        optimizer = torch.optim.AdamW(param_groups,optimizer_kwargs)
+        optimizer = torch.optim.AdamW(param_groups, **optimizer_kwargs)
 
         return optimizer
 
