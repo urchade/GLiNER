@@ -24,7 +24,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
         self.config = config
 
-        if "token_splitter" not in self.config:
+        if not hasattr(self.config, 'token_splitter'):
             self.token_splitter = WhitespaceTokenSplitter()
         elif self.config.token_splitter == "spacy":
             lang = getattr(self.config, 'token_splitter_lang', None)

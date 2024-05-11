@@ -1,0 +1,38 @@
+# Model Configuration
+model_name: microsoft/deberta-v3-small  # Hugging Face model
+name: "large"
+max_width: 12
+hidden_size: 768
+dropout: 0.4
+fine_tune: true
+subtoken_pooling: first
+span_mode: markerV0
+
+# Training Parameters
+num_steps: 30000
+train_batch_size: 3
+eval_every: 5000
+warmup_ratio: 0.1
+
+# Learning Rate Configuration
+lr_encoder: 1e-5
+lr_others: 5e-5
+
+# Directory Paths
+root_dir: gliner_logs
+train_data: "data.json" # see https://github.com/urchade/GLiNER/tree/main/data
+val_data_dir: "none"
+# "NER_datasets": val data from the paper can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
+
+# Pretrained Model Path
+# Use "none" if no pretrained model is being used
+prev_path: "none"
+
+# Advanced Training Settings
+size_sup: -1
+max_types: 25
+shuffle_types: true
+random_drop: true
+max_neg_type_ratio: 1
+max_len: 384
+freeze_token_rep: false
