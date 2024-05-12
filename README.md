@@ -1,4 +1,4 @@
-# 🚀 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
+# 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
@@ -14,8 +14,10 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 - 🚀 `gliner_multi-v2.1`, `gliner_small-v2.1`, `gliner_medium-v2.1`, and `gliner_large-v2.1` are available under the Apache 2.0 license.
 - 🆕 [gliner-spacy](https://github.com/theirstory/gliner-spacy) is available. Install it with `pip install gliner-spacy`. See Example of usage [below](https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy).
 - 🧬 `gliner_large_bio-v0.1` is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.
-- 📘 Finetuning notebook is available: examples/finetune.ipynb
 - 📚 Training dataset preprocessing scripts are now available in the `data/` directory, covering both [Pile-NER](https://huggingface.co/datasets/Universal-NER/Pile-NER-type) and [NuNER](https://huggingface.co/datasets/numind/NuNER) datasets.
+
+### Finetuning GLiNER
+- 📘 See this [directory](https://github.com/urchade/GLiNER/tree/main/examples/finetuning)
 
 ### 🌟 Available Models on Hugging Face
 
