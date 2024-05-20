@@ -36,6 +36,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 
 - **GLiNER NuNerZero span**: `numind/NuNER_Zero-span`  *(MIT)* - +4.5% more powerful GLiNER Large v2.1
+- **GLiNER News**: `EmergentMethods/gliner_medium_news-v2.1` *(Apache 2.0)* 9.5% improvement over GLiNER Large v2.1 on 18 benchmark datasets
 
 ##### 🇬🇧 English word-level Entity Recognition
 
