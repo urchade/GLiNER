@@ -1,7 +1,7 @@
 import argparse
 import json
 from pathlib import Path
-import re
+from types import SimpleNamespace
 from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
@@ -457,7 +457,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         if config is None:
             config = self.config
         if config is not None:
-            if isinstance(config, argparse.Namespace):
+            if isinstance(config, argparse.Namespace) or isinstance(config, SimpleNamespace):
                 config = vars(config)
             (save_directory / "gliner_config.json").write_text(json.dumps(config, indent=2))
 
