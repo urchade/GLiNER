@@ -1,4 +1,5 @@
 import argparse
+import warnings
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -6,11 +7,12 @@ from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
 import yaml
-from gliner.modules.layers import LstmSeq2SeqEncoder
+from gliner.modules.layers import LstmSeq2SeqEncoder, create_projection_layer
 from gliner.modules.base import InstructBase
 from gliner.modules.evaluator import Evaluator, greedy_search
 from gliner.modules.span_rep import SpanRepLayer
 from gliner.modules.token_rep import TokenRepLayer
+from gliner.modules.loss_functions import focal_loss
 from gliner.modules.token_splitter import WhitespaceTokenSplitter, MecabKoTokenSplitter, SpaCyTokenSplitter
 from torch import nn
 from torch.nn.utils.rnn import pad_sequence
@@ -61,12 +63,8 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         )
 
         # prompt representation (FFN)
-        self.prompt_rep_layer = nn.Sequential(
-            nn.Linear(config.hidden_size, config.hidden_size * 4),
-            nn.Dropout(config.dropout),
-            nn.ReLU(),
-            nn.Linear(config.hidden_size * 4, config.hidden_size)
-        )
+        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
+
 
     def get_optimizer(self, lr_encoder, lr_others, freeze_token_rep=False, **optimizer_kwargs):
         """
@@ -189,24 +187,29 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         labels.masked_fill_(~mask_label, 0)  # Set the labels of padding tokens to 0
 
         # one-hot encoding
-        labels_one_hot = torch.zeros(labels.size(0), num_classes + 1, dtype=torch.float32).to(scores.device)
-        labels_one_hot.scatter_(1, labels.unsqueeze(1), 1)  # Set the corresponding index to 1
+        labels_one_hot = F.one_hot(labels, num_classes+1)
         labels_one_hot = labels_one_hot[:, 1:]  # Remove the first column
         # Shape of labels_one_hot: (batch_size * num_spans, num_classes)
 
         # compute loss (without reduction)
-        all_losses = F.binary_cross_entropy_with_logits(logits_label, labels_one_hot,
-                                                        reduction="none")
+        all_losses = focal_loss(logits_label, labels_one_hot, 
+                                            alpha=self.config.loss_alpha,
+                                            gamma=self.config.loss_gamma)
         # mask loss using entity_type_mask (B, C)
         masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
         # expand mask_label to all_losses
         mask_label = mask_label.unsqueeze(-1).expand_as(all_losses)
-        # put lower loss for in label_one_hot (2 for positive, 1 for negative)
-        weight_c = labels_one_hot + 1
         # apply mask
-        all_losses = all_losses * mask_label.float() * weight_c
-        return all_losses.sum()
+        all_losses = all_losses * mask_label.float()
+        if self.config.loss_reduction == "mean":
+            loss = all_losses.mean()
+        elif self.config.loss_reduction == 'sum':
+            loss = all_losses.sum()
+        else:
+            warnings.warn(f"Invalid Value for config 'loss_reduction': '{self.config.loss_reduction} \n Supported reduction modes: 'none', 'mean', 'sum'. It will be used 'sum' instead.")
+            loss = all_losses.sum()
+        return loss
 
     def compute_score_eval(self, x, device):
         # check if classes_to_id is dict

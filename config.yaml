@@ -14,6 +14,10 @@ train_batch_size: 3
 eval_every: 5000
 warmup_ratio: 0.1
 
+# loss function
+loss_alpha: 0.75
+loss_gamma: 2
+loss_reduction: "sum"
 # Learning Rate Configuration
 lr_encoder: 1e-5
 lr_others: 5e-5
