@@ -8,8 +8,10 @@ path = 'train.json'
 with open(path, 'r') as f:
     data = json.load(f)
 
+
 def tokenize_text(text):
     return re.findall(r'\w+(?:[-_]\w+)*|\S', text)
+
 
 def extract_entity_spans(entry):
     text = ""
@@ -52,12 +54,13 @@ def extract_entity_spans(entry):
 
     return entity_spans, tokenized_text
 
+
 # Usage:
 # Replace 'entry' with the specific entry from your JSON data
 entry = data[17818]  # For example, taking the first entry
 entity_spans, tokenized_text = extract_entity_spans(entry)
 print("Entity Spans:", entity_spans)
-#print("Tokenized Text:", tokenized_text)
+# print("Tokenized Text:", tokenized_text)
 
 # create a dict: {"tokenized_text": tokenized_text, "entity_spans": entity_spans}
 
@@ -67,7 +70,5 @@ for entry in tqdm(data):
     entity_spans, tokenized_text = extract_entity_spans(entry)
     all_data.append({"tokenized_text": tokenized_text, "ner": entity_spans})
 
-
 with open('train_instruct.json', 'w') as f:
     json.dump(all_data, f)
-

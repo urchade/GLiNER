@@ -1,158 +1,121 @@
-import random
-import warnings
-from collections import defaultdict
+import argparse
+import json
+from abc import abstractmethod
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Optional, Union, Dict
 
 import torch
+import yaml
+from gliner.modules.data import SpanData, TokenData
+from gliner.modules.evaluator import Evaluator
+from gliner.modules.token_splitter import WhitespaceTokenSplitter, MecabKoTokenSplitter, SpaCyTokenSplitter
+from huggingface_hub import hf_hub_download
 from torch import nn
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
+from huggingface_hub import PyTorchModelHubMixin
 
 
-class InstructBase(nn.Module):
+class InstructBase(nn.Module, PyTorchModelHubMixin):
     def __init__(self, config):
         super().__init__()
-        self.max_width = config.max_width
-        self.base_config = config
+        self.config = config
 
-    def get_dict(self, spans, classes_to_id):
-        dict_tag = defaultdict(int)
-        for span in spans:
-            if span[2] in classes_to_id:
-                dict_tag[(span[0], span[1])] = classes_to_id[span[2]]
-        return dict_tag
-
-    def preprocess_spans(self, tokens, ner, classes_to_id):
-
-        if len(tokens) == 0:
-            tokens = ["[PAD]"]
-
-        max_len = self.base_config.max_len
-
-        if len(tokens) > max_len:
-            # add warning to say that sentence has been truncated
-            warnings.warn(f"Sentence of length {len(tokens)} has been truncated to {max_len}")
-            length = max_len
-            tokens = tokens[:max_len]
+        if config.span_mode == 'token_level':
+            self.data_proc = TokenData(config)
         else:
-            length = len(tokens)
+            self.data_proc = SpanData(config)
 
-        spans_idx = []
-        for i in range(length):
-            spans_idx.extend([(i, i + j) for j in range(self.max_width)])
+        if not hasattr(config, 'token_splitter'):
+            self.token_splitter = WhitespaceTokenSplitter()
+        elif self.config.token_splitter == "spacy":
+            lang = getattr(config, 'token_splitter_lang', None)
+            self.token_splitter = SpaCyTokenSplitter(lang=lang)
+        elif self.config.token_splitter == "mecab-ko":
+            self.token_splitter = MecabKoTokenSplitter()
 
-        dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
+    # you have to implement forward and predict methods (not implemented here)
+    @abstractmethod
+    def forward(self, x):
+        """Returns the loss for the given input."""
+        pass
 
-        # 0 for null labels
-        span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
-        spans_idx = torch.LongTensor(spans_idx)
+    @abstractmethod
+    def predict(self, x, flat_ner=True, threshold=0.5, multi_label=False):
+        """Returns the predicted entities for the given input."""
+        pass
 
-        # mask for valid spans
-        valid_span_mask = spans_idx[:, 1] > length - 1
+    def create_dataloader(self, data, entity_types=None, **kwargs) -> DataLoader:
+        return self.data_proc.create_dataloader(data, entity_types, **kwargs)
 
-        # mask invalid positions
-        span_label = span_label.masked_fill(valid_span_mask, -1)
+    def predict_entities(self, text, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        return self.batch_predict_entities(
+            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+        )[0]
 
-        return {
-            "tokens": tokens,
-            "span_idx": spans_idx,
-            "span_label": span_label,
-            "seq_length": length,
-            "entities": ner,
-        }
+    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        """
+        Predict entities for a batch of texts.
+        texts:  List of texts | List[str]
+        labels: List of labels | List[str]
+        ...
+        """
 
-    def collate_fn(self, batch_list, entity_types=None):
-        # batch_list: list of dict containing tokens, ner
-        if entity_types is None:
-            negs = self.get_negatives(batch_list, 100)
-            class_to_ids = []
-            id_to_classes = []
-            for b in batch_list:
-                # negs = b["negative"]
-                random.shuffle(negs)
+        all_tokens = []
+        all_start_token_idx_to_text_idx = []
+        all_end_token_idx_to_text_idx = []
 
-                # negs = negs[:sampled_neg]
-                max_neg_type_ratio = int(self.base_config.max_neg_type_ratio)
+        for text in texts:
+            tokens = []
+            start_token_idx_to_text_idx = []
+            end_token_idx_to_text_idx = []
+            for token, start, end in self.token_splitter(text):
+                tokens.append(token)
+                start_token_idx_to_text_idx.append(start)
+                end_token_idx_to_text_idx.append(end)
+            all_tokens.append(tokens)
+            all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
+            all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
 
-                if max_neg_type_ratio == 0:
-                    # no negatives
-                    neg_type_ratio = 0
-                else:
-                    neg_type_ratio = random.randint(0, max_neg_type_ratio)
+        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+        x = self.data_proc.collate_fn(input_x, labels)
+        outputs = self.predict(x, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)
 
-                if neg_type_ratio == 0:
-                    # no negatives
-                    negs_i = []
-                else:
-                    negs_i = negs[:len(b["ner"]) * neg_type_ratio]
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append({
+                    "start": start_token_idx_to_text_idx[start_token_idx],
+                    "end": end_token_idx_to_text_idx[end_token_idx],
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score
+                })
+            all_entities.append(entities)
 
-                # this is the list of all possible entity types (positive and negative)
-                types = list(set([el[-1] for el in b["ner"]] + negs_i))
+        return all_entities
 
-                # shuffle (every epoch)
-                random.shuffle(types)
-
-                if len(types) != 0:
-                    # prob of higher number shoul
-                    # random drop
-                    if self.base_config.random_drop:
-                        num_ents = random.randint(1, len(types))
-                        types = types[:num_ents]
-
-                # maximum number of entities types
-                types = types[:int(self.base_config.max_types)]
-
-                # supervised training
-                if "label" in b:
-                    types = sorted(b["label"])
-
-                class_to_id = {k: v for v, k in enumerate(types, start=1)}
-                id_to_class = {k: v for v, k in class_to_id.items()}
-                class_to_ids.append(class_to_id)
-                id_to_classes.append(id_to_class)
-
-            batch = [
-                self.preprocess_spans(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in enumerate(batch_list)
-            ]
-
-        else:
-            class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
-            id_to_classes = {k: v for v, k in class_to_ids.items()}
-            batch = [
-                self.preprocess_spans(b["tokenized_text"], b["ner"], class_to_ids) for b in batch_list
-            ]
-
-        span_idx = pad_sequence(
-            [b["span_idx"] for b in batch], batch_first=True, padding_value=0
-        )
-
-        span_label = pad_sequence(
-            [el["span_label"] for el in batch], batch_first=True, padding_value=-1
-        )
-
-        return {
-            "seq_length": torch.LongTensor([el["seq_length"] for el in batch]),
-            "span_idx": span_idx,
-            "tokens": [el["tokens"] for el in batch],
-            "span_mask": span_label != -1,
-            "span_label": span_label,
-            "entities": [el["entities"] for el in batch],
-            "classes_to_id": class_to_ids,
-            "id_to_classes": id_to_classes,
-        }
-
-    @staticmethod
-    def get_negatives(batch_list, sampled_neg=5):
-        ent_types = []
-        for b in batch_list:
-            types = set([el[-1] for el in b["ner"]])
-            ent_types.extend(list(types))
-        ent_types = list(set(ent_types))
-        # sample negatives
-        random.shuffle(ent_types)
-        return ent_types[:sampled_neg]
-
-    def create_dataloader(self, data, entity_types=None, **kwargs):
-        return DataLoader(data, collate_fn=lambda x: self.collate_fn(x, entity_types), **kwargs)
+    def evaluate(self, test_data, flat_ner=False, multi_label=False, threshold=0.5, batch_size=12, entity_types=None):
+        self.eval()
+        data_loader = self.create_dataloader(test_data, batch_size=batch_size, entity_types=entity_types, shuffle=False)
+        device = next(self.parameters()).device
+        all_preds = []
+        all_trues = []
+        for x in data_loader:
+            for k, v in x.items():
+                if isinstance(v, torch.Tensor):
+                    x[k] = v.to(device)
+            batch_predictions = self.predict(x, flat_ner, threshold, multi_label)
+            all_preds.extend(batch_predictions)
+            all_trues.extend(x["entities"])
+        evaluator = Evaluator(all_trues, all_preds)
+        out, f1 = evaluator.evaluate()
+        return out, f1
 
     def set_sampling_params(self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len):
         """
@@ -166,8 +129,120 @@ class InstructBase(nn.Module):
         - max_neg_type_ratio: Maximum negative type ratio.
         - max_len: Maximum length parameter.
         """
-        self.base_config.max_types = max_types
-        self.base_config.shuffle_types = shuffle_types
-        self.base_config.random_drop = random_drop
-        self.base_config.max_neg_type_ratio = max_neg_type_ratio
-        self.base_config.max_len = max_len
+        self.config.max_types = max_types
+        self.config.shuffle_types = shuffle_types
+        self.config.random_drop = random_drop
+        self.config.max_neg_type_ratio = max_neg_type_ratio
+        self.config.max_len = max_len
+
+    def save_pretrained(
+            self,
+            save_directory: Union[str, Path],
+            *,
+            config: Optional[Union[dict, "DataclassInstance"]] = None,
+            repo_id: Optional[str] = None,
+            push_to_hub: bool = False,
+            **push_to_hub_kwargs,
+    ) -> Optional[str]:
+        """
+        Save weights in local directory.
+
+        Args:
+            save_directory (`str` or `Path`):
+                Path to directory in which the model weights and configuration will be saved.
+            config (`dict` or `DataclassInstance`, *optional*):
+                Model configuration specified as a key/value dictionary or a dataclass instance.
+            push_to_hub (`bool`, *optional*, defaults to `False`):
+                Whether or not to push your model to the Huggingface Hub after saving it.
+            repo_id (`str`, *optional*):
+                ID of your repository on the Hub. Used only if `push_to_hub=True`. Will default to the folder name if
+                not provided.
+            kwargs:
+                Additional key word arguments passed along to the [`~ModelHubMixin.push_to_hub`] method.
+        """
+        save_directory = Path(save_directory)
+        save_directory.mkdir(parents=True, exist_ok=True)
+
+        # save model weights/files
+        torch.save(self.state_dict(), save_directory / "pytorch_model.bin")
+
+        # save config (if provided)
+        if config is None:
+            config = self.config
+        if config is not None:
+            if isinstance(config, argparse.Namespace) or isinstance(config, SimpleNamespace):
+                config = vars(config)
+            (save_directory / "gliner_config.json").write_text(json.dumps(config, indent=2))
+
+        # push to the Hub if required
+        if push_to_hub:
+            kwargs = push_to_hub_kwargs.copy()  # soft-copy to avoid mutating input
+            if config is not None:  # kwarg for `push_to_hub`
+                kwargs["config"] = config
+            if repo_id is None:
+                repo_id = save_directory.name  # Defaults to `save_directory` name
+            return self.push_to_hub(repo_id=repo_id, **kwargs)
+        return None
+
+    @classmethod
+    def _from_pretrained(
+            cls,
+            *,
+            model_id: str,
+            revision: Optional[str],
+            cache_dir: Optional[Union[str, Path]],
+            force_download: bool,
+            proxies: Optional[Dict],
+            resume_download: bool,
+            local_files_only: bool,
+            token: Union[str, bool, None],
+            map_location: str = "cpu",
+            strict: bool = False,
+            **model_kwargs,
+    ):
+
+        # Newer format: Use "pytorch_model.bin" and "gliner_config.json"
+        model_file = Path(model_id) / "pytorch_model.bin"
+        if not model_file.exists():
+            model_file = hf_hub_download(
+                repo_id=model_id,
+                filename="pytorch_model.bin",
+                revision=revision,
+                cache_dir=cache_dir,
+                force_download=force_download,
+                proxies=proxies,
+                resume_download=resume_download,
+                token=token,
+                local_files_only=local_files_only,
+            )
+        config_file = Path(model_id) / "gliner_config.json"
+        if not config_file.exists():
+            config_file = hf_hub_download(
+                repo_id=model_id,
+                filename="gliner_config.json",
+                revision=revision,
+                cache_dir=cache_dir,
+                force_download=force_download,
+                proxies=proxies,
+                resume_download=resume_download,
+                token=token,
+                local_files_only=local_files_only,
+            )
+        config = load_config_as_namespace(config_file)
+        model = cls(config)
+        state_dict = torch.load(model_file, map_location=torch.device(map_location))
+        model.load_state_dict(state_dict, strict=strict)
+        model.to(map_location)
+        return model
+
+    def to(self, device):
+        super().to(device)
+        import flair
+        flair.device = device
+        return self
+
+
+def load_config_as_namespace(config_file):
+    with open(config_file, "r") as f:
+        config_dict = yaml.safe_load(f)
+    return argparse.Namespace(**config_dict)

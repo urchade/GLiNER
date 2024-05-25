@@ -16,8 +16,8 @@ warmup_ratio: 0.1
 scheduler_type: "cosine"
 
 # loss function
-loss_alpha: 0.75
-loss_gamma: 2
+loss_alpha: 0
+loss_gamma: 0
 loss_reduction: "sum"
 
 # Learning Rate and weight decay Configuration

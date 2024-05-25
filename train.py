@@ -12,7 +12,7 @@ from transformers import (get_cosine_schedule_with_warmup,
                                 get_inverse_sqrt_schedule)
 
 from gliner import GLiNER
-from gliner.model import load_config_as_namespace
+from gliner.modules.base import load_config_as_namespace
 from gliner.modules.run_evaluation import get_for_all_path
 
 
