@@ -22,7 +22,6 @@ from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
 
 
-
 class GLiNER(InstructBase, PyTorchModelHubMixin):
     def __init__(self, config):
         super().__init__(config)
@@ -289,20 +288,21 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         spans = []
         for i, _ in enumerate(x["tokens"]):
             probs_i = probs[i]
-            
+
             wh_i = [i.tolist() for i in torch.where(probs_i > threshold)]
             span_i = []
-            
+
             for s, k, c in zip(*wh_i):
                 if s + k < len(x["tokens"][i]):
                     span_i.append((s, s + k, x["id_to_classes"][c + 1], probs_i[s, k, c].item()))
-            
+
             span_i = greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
         return spans
 
     def predict_entities(self, text, labels, flat_ner=True, threshold=0.5, multi_label=False):
-        return self.batch_predict_entities([text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)[0]
+        return \
+        self.batch_predict_entities([text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)[0]
 
     def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False):
         """
@@ -337,7 +337,7 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
-            for start_token_idx, end_token_idx, ent_type,ent_score in output:
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
                 entities.append({
@@ -370,19 +370,19 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
 
     @classmethod
     def _from_pretrained(
-        cls,
-        *,
-        model_id: str,
-        revision: Optional[str],
-        cache_dir: Optional[Union[str, Path]],
-        force_download: bool,
-        proxies: Optional[Dict],
-        resume_download: bool,
-        local_files_only: bool,
-        token: Union[str, bool, None],
-        map_location: str = "cpu",
-        strict: bool = False,
-        **model_kwargs,
+            cls,
+            *,
+            model_id: str,
+            revision: Optional[str],
+            cache_dir: Optional[Union[str, Path]],
+            force_download: bool,
+            proxies: Optional[Dict],
+            resume_download: bool,
+            local_files_only: bool,
+            token: Union[str, bool, None],
+            map_location: str = "cpu",
+            strict: bool = False,
+            **model_kwargs,
     ):
         # 1. Backwards compatibility: Use "gliner_base.pt" and "gliner_multi.pt" with all data
         filenames = ["gliner_base.pt", "gliner_multi.pt"]
@@ -448,13 +448,13 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         return model
 
     def save_pretrained(
-        self,
-        save_directory: Union[str, Path],
-        *,
-        config: Optional[Union[dict, "DataclassInstance"]] = None,
-        repo_id: Optional[str] = None,
-        push_to_hub: bool = False,
-        **push_to_hub_kwargs,
+            self,
+            save_directory: Union[str, Path],
+            *,
+            config: Optional[Union[dict, "DataclassInstance"]] = None,
+            repo_id: Optional[str] = None,
+            push_to_hub: bool = False,
+            **push_to_hub_kwargs,
     ) -> Optional[str]:
         """
         Save weights in local directory.
