@@ -13,14 +13,18 @@ num_steps: 30000
 train_batch_size: 3
 eval_every: 5000
 warmup_ratio: 0.1
+scheduler_type: "cosine"
 
 # loss function
 loss_alpha: 0.75
 loss_gamma: 2
 loss_reduction: "sum"
-# Learning Rate Configuration
+
+# Learning Rate and weight decay Configuration
 lr_encoder: 1e-5
 lr_others: 5e-5
+weight_decay_encoder: 0.01
+weight_decay_other: 0.01
 
 # Directory Paths
 root_dir: gliner_logs

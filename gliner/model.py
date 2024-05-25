@@ -7,14 +7,17 @@ from typing import Dict, Optional, Union
 import torch
 import torch.nn.functional as F
 import yaml
+from transformers.trainer import (
+    get_parameter_names,
+    ALL_LAYERNORM_LAYERS,
+)
 from gliner.modules.layers import LstmSeq2SeqEncoder, create_projection_layer
 from gliner.modules.base import InstructBase
 from gliner.modules.evaluator import Evaluator, greedy_search
 from gliner.modules.span_rep import SpanRepLayer
 from gliner.modules.token_rep import TokenRepLayer
-from gliner.modules.loss_functions import focal_loss
+from gliner.modules.loss_functions import focal_loss_with_logits
 from gliner.modules.token_splitter import WhitespaceTokenSplitter, MecabKoTokenSplitter, SpaCyTokenSplitter
-from torch import nn
 from torch.nn.utils.rnn import pad_sequence
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download
 
@@ -66,24 +69,43 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
 
-    def get_optimizer(self, lr_encoder, lr_others, freeze_token_rep=False, **optimizer_kwargs):
+    def get_params(self, opt_model, lr, weight_decay):
+        decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+        decay_parameters = [name for name in decay_parameters if "bias" not in name]
+        grouped_parameters = [
+            {
+                "params": [
+                    p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
+                ],
+                "weight_decay": weight_decay,
+                "lr": lr,
+            },
+            {
+                "params": [
+                    p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
+                ],
+                "weight_decay": 0.0,
+                "lr": lr,
+            }
+        ]
+        return grouped_parameters
+    
+    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others, 
+                                                    freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
         - lr_encoder: Learning rate for the encoder layer.
         - lr_others: Learning rate for all other layers.
         - freeze_token_rep: whether the token representation layer should be frozen.
         """
-        param_groups = [
-            # encoder
-            {"params": self.rnn.parameters(), "lr": lr_others},
-            # projection layers
-            {"params": self.span_rep_layer.parameters(), "lr": lr_others},
-            {"params": self.prompt_rep_layer.parameters(), "lr": lr_others},
-        ]
+        param_groups = []
+        param_groups += self.get_params(self.rnn, lr_others, weight_decay_others)
+        param_groups += self.get_params(self.span_rep_layer, lr_others, weight_decay_others)
+        param_groups += self.get_params(self.prompt_rep_layer, lr_others, weight_decay_others)
 
         if not freeze_token_rep:
-            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate
-            param_groups.append({"params": self.token_rep_layer.parameters(), "lr": lr_encoder})
+            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate and weight decay
+            param_groups += self.get_params(self.token_rep_layer, lr_encoder, weight_decay_encoder)
         else:
             # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
             for param in self.token_rep_layer.parameters():
@@ -187,12 +209,12 @@ class GLiNER(InstructBase, PyTorchModelHubMixin):
         labels.masked_fill_(~mask_label, 0)  # Set the labels of padding tokens to 0
 
         # one-hot encoding
-        labels_one_hot = F.one_hot(labels, num_classes+1)
+        labels_one_hot = F.one_hot(labels, num_classes+1).to(dtype=scores.dtype)
         labels_one_hot = labels_one_hot[:, 1:]  # Remove the first column
         # Shape of labels_one_hot: (batch_size * num_spans, num_classes)
 
         # compute loss (without reduction)
-        all_losses = focal_loss(logits_label, labels_one_hot, 
+        all_losses = focal_loss_with_logits(logits_label, labels_one_hot, 
                                             alpha=self.config.loss_alpha,
                                             gamma=self.config.loss_gamma)
         # mask loss using entity_type_mask (B, C)
