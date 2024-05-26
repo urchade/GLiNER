@@ -130,8 +130,9 @@ def create_projection_layer(hidden_size: int, dropout: float, out_dim: int = Non
         nn.Linear(out_dim * 4, out_dim)
     )
 
+
 class Scorer(nn.Module):
-    def __init__(self, hidden_size):
+    def __init__(self, hidden_size, dropout=0.1):
         super().__init__()
 
         self.proj_token = nn.Linear(hidden_size, hidden_size * 2)
@@ -139,8 +140,9 @@ class Scorer(nn.Module):
 
         self.out_mlp = nn.Sequential(
             nn.Linear(hidden_size * 3, hidden_size * 4),
+            nn.Dropout(dropout),
             nn.ReLU(),
-            nn.Linear(hidden_size * 4, 3)
+            nn.Linear(hidden_size * 4, 3)  # start, end, score
         )
 
     def forward(self, token_rep, label_rep):

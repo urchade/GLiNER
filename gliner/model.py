@@ -109,6 +109,11 @@ class SpanGLiNER(InstructBase):
 
     def compute_score_train(self, x):
 
+        # get device
+        device = next(self.token_rep_layer.parameters()).device
+
+        span_idx = (x["span_idx"] * x["span_mask"].unsqueeze(-1)).to(device)
+
         # compute token representation
         word_rep, mask, entity_type_rep, entity_type_mask = self.token_prompt_processor.process(
             x, self.token_rep_layer, "train"
@@ -116,7 +121,7 @@ class SpanGLiNER(InstructBase):
 
         # compute span representation
         word_rep = self.rnn(word_rep, mask)
-        span_rep = self.span_rep_layer(word_rep, x["span_idx"])
+        span_rep = self.span_rep_layer(word_rep, span_idx)
 
         # compute final entity type representation (FFN)
         entity_type_rep = self.prompt_rep_layer(entity_type_rep)  # (batch_size, len_types, hidden_size)
@@ -233,7 +238,7 @@ class TokenGLiNER(InstructBase):
         self.token_prompt_processor = TokenPromptProcessor(self.entity_token, self.sep_token)
 
         # span representation (FFN)
-        self.scorer = Scorer(config.hidden_size)
+        self.scorer = Scorer(config.hidden_size, config.dropout)
 
     def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others,
                       freeze_token_rep=False, **optimizer_kwargs):
@@ -332,7 +337,7 @@ class TokenGLiNER(InstructBase):
         return scores_start, scores_end, scores_inside
 
     @torch.no_grad()
-    def predict(self, x, flat_ner=False, threshold=0.50):
+    def predict(self, x, flat_ner=False, threshold=0.5, multi_label=False):
         scores_start, scores_end, scores_inside = self.compute_score_eval(x)
         # shape: (batch_size, seq_len, num_classes)
 
@@ -356,6 +361,6 @@ class TokenGLiNER(InstructBase):
                         span_i.append(
                             (st, ed, x["id_to_classes"][cls_st + 1], ins.mean().item())
                         )
-            span_i = greedy_search(span_i, flat_ner)
+            span_i = greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
         return spans

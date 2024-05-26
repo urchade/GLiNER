@@ -5,11 +5,11 @@ from types import SimpleNamespace
 
 import torch
 from tqdm import tqdm
-from transformers import (get_cosine_schedule_with_warmup, 
-                                get_linear_schedule_with_warmup,
-                                get_constant_schedule_with_warmup,
-                                get_polynomial_decay_schedule_with_warmup,
-                                get_inverse_sqrt_schedule)
+from transformers import (get_cosine_schedule_with_warmup,
+                          get_linear_schedule_with_warmup,
+                          get_constant_schedule_with_warmup,
+                          get_polynomial_decay_schedule_with_warmup,
+                          get_inverse_sqrt_schedule)
 
 from gliner import GLiNER
 from gliner.modules.base import load_config_as_namespace
@@ -18,7 +18,7 @@ from gliner.modules.run_evaluation import get_for_all_path
 
 # train function
 def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir="logs", val_data_dir="none",
-          warmup_ratio=0.1, train_batch_size=8, scheduler_type = "cosine", device='cuda'):
+          warmup_ratio=0.1, train_batch_size=8, scheduler_type="cosine", device='cuda'):
     # Set the model to training mode
     model.train()
 
@@ -54,7 +54,7 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
             optimizer,
             num_warmup_steps=num_warmup_steps,
             num_training_steps=num_steps
-        ) 
+        )
     elif scheduler_type == "inverse_sqrt":
         scheduler = get_inverse_sqrt_schedule(
             optimizer,
@@ -157,10 +157,10 @@ if __name__ == "__main__":
         subtoken_pooling=config.subtoken_pooling,
         span_mode=config.span_mode,
 
-        #loss parameters
-        loss_alpha = config.loss_alpha,
-        loss_gamma = config.loss_gamma,
-        loss_reduction = config.loss_reduction,
+        # loss parameters
+        loss_alpha=config.loss_alpha,
+        loss_gamma=config.loss_gamma,
+        loss_reduction=config.loss_reduction,
 
         # sampling parameters
         max_types=config.max_types,
@@ -186,11 +186,11 @@ if __name__ == "__main__":
     weight_decay_encoder = float(config.weight_decay_encoder)
     weight_decay_others = float(config.weight_decay_other)
 
-    optimizer = model.get_optimizer(lr_encoder, lr_others, 
-                                     weight_decay_encoder, weight_decay_others,
-                                        freeze_token_rep=config.freeze_token_rep)
+    optimizer = model.get_optimizer(lr_encoder, lr_others,
+                                    weight_decay_encoder, weight_decay_others,
+                                    freeze_token_rep=config.freeze_token_rep)
 
     # Start the training process with the specified configuration
     train(model, optimizer, data, num_steps=config.num_steps, eval_every=config.eval_every,
           log_dir=config.log_dir, val_data_dir=config.val_data_dir, warmup_ratio=config.warmup_ratio,
-          train_batch_size=config.train_batch_size, scheduler_type = config.scheduler_type, device=device)
+          train_batch_size=config.train_batch_size, scheduler_type=config.scheduler_type, device=device)
