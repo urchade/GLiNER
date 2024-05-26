@@ -22,7 +22,7 @@ def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k
     Save the top-k checkpoints (latest k checkpoints) of a model and tokenizer.
 
     Parameters:
-        model (PreTrainedModel): The model to save.
+        model (GLiNER): The model to save.
         save_path (str): The directory path to save the checkpoints.
         top_k (int): The number of top checkpoints to keep. Defaults to 5.
     """
