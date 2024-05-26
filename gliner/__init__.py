@@ -1,4 +1,4 @@
-__version__ = "0.1.14"
+__version__ = "0.2.0"
 
 from .model import GLiNER
 

@@ -1,12 +1,13 @@
 import torch
 import torch.nn.functional as F
 
+
 def focal_loss_with_logits(
-    inputs: torch.Tensor,
-    targets: torch.Tensor,
-    alpha: float = 0.25,
-    gamma: float = 2,
-    reduction: str = "none",
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
+        alpha: float = 0.25,
+        gamma: float = 2,
+        reduction: str = "none",
 ) -> torch.Tensor:
     """
     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
@@ -52,4 +53,3 @@ def focal_loss_with_logits(
             f"Invalid Value for arg 'reduction': '{reduction} \n Supported reduction modes: 'none', 'mean', 'sum'"
         )
     return loss
-

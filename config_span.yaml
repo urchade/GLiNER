@@ -10,14 +10,14 @@ span_mode: markerV0
 
 # Training Parameters
 num_steps: 30000
-train_batch_size: 3
+train_batch_size: 8
 eval_every: 5000
 warmup_ratio: 0.1
 scheduler_type: "cosine"
 
 # loss function
-loss_alpha: 0
-loss_gamma: 0
+loss_alpha: -1 # focal loss alpha, if -1, no focal loss
+loss_gamma: 0 # focal loss gamma, if 0, no focal loss
 loss_reduction: "sum"
 
 # Learning Rate and weight decay Configuration
@@ -27,7 +27,7 @@ weight_decay_encoder: 0.01
 weight_decay_other: 0.01
 
 # Directory Paths
-root_dir: gliner_logs
+root_dir: span_gliner_logs
 train_data: "data.json" # see https://github.com/urchade/GLiNER/tree/main/data
 val_data_dir: "none"
 # "NER_datasets": val data from the paper can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
