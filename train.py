@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import re
 from types import SimpleNamespace
 
 import torch
@@ -16,9 +17,39 @@ from gliner.modules.base import load_config_as_namespace
 from gliner.modules.run_evaluation import get_for_all_path
 
 
+def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k: int = 5):
+    """
+    Save the top-k checkpoints (latest k checkpoints) of a model and tokenizer.
+
+    Parameters:
+        model (PreTrainedModel): The model to save.
+        save_path (str): The directory path to save the checkpoints.
+        top_k (int): The number of top checkpoints to keep. Defaults to 5.
+    """
+    # Save the current model and tokenizer
+    model.save_pretrained(os.path.join(save_path, checkpoint))
+    # tokenizer.save_pretrained(save_path)
+
+    # List all files in the directory
+    files = os.listdir(save_path)
+
+    # Filter files to keep only the model checkpoints
+    checkpoint_folders = [file for file in files if re.search('model\\_\\d+', file)]
+
+    # Sort checkpoint files by modification time (latest first)
+    checkpoint_folders.sort(key=lambda x: os.path.getmtime(os.path.join(save_path, x)), reverse=True)
+
+    # Keep only the top-k checkpoints
+    for checkpoint_folder in checkpoint_folders[top_k:]:
+        checkpoint_folder = os.path.join(save_path, checkpoint_folder)
+        checkpoint_files = [os.path.join(checkpoint_folder, f) for f in os.listdir(checkpoint_folder)]
+        for file in checkpoint_files:
+            os.remove(file)
+        os.rmdir(os.path.join(checkpoint_folder))
+
 # train function
 def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir="logs", val_data_dir="none",
-          warmup_ratio=0.1, train_batch_size=8, scheduler_type="cosine", device='cuda'):
+          warmup_ratio=0.1, train_batch_size=8, scheduler_type="cosine", save_total_limit = 5, device='cuda'):
     # Set the model to training mode
     model.train()
 
@@ -114,9 +145,8 @@ def train(model, optimizer, train_data, num_steps=1000, eval_every=100, log_dir=
 
         # Periodically evaluate the model and save a checkpoint
         if (step + 1) % eval_every == 0:
-            current_path = os.path.join(log_dir, f'model_{step + 1}')
-            model.save_pretrained(current_path)
-
+            checkpoint =  f'model_{step + 1}'
+            save_top_k_checkpoints(model, log_dir, checkpoint, save_total_limit)
             # Perform validation if a directory is provided
             if val_data_dir != "none":
                 get_for_all_path(model, step, log_dir, val_data_dir)
@@ -193,4 +223,5 @@ if __name__ == "__main__":
     # Start the training process with the specified configuration
     train(model, optimizer, data, num_steps=config.num_steps, eval_every=config.eval_every,
           log_dir=config.log_dir, val_data_dir=config.val_data_dir, warmup_ratio=config.warmup_ratio,
-          train_batch_size=config.train_batch_size, scheduler_type=config.scheduler_type, device=device)
+          train_batch_size=config.train_batch_size, scheduler_type=config.scheduler_type, 
+          save_total_limit=config.save_total_limit,device=device)

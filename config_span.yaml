@@ -36,6 +36,8 @@ val_data_dir: "none"
 # Use "none" if no pretrained model is being used
 prev_path: "none"
 
+save_total_limit: 10 #maximum amount of checkpoints to save
+
 # Advanced Training Settings
 size_sup: -1
 max_types: 25
