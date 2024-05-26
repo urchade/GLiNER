@@ -141,7 +141,10 @@ class TokenData(BaseData):
             tokens = tokens[:max_len]
 
         # Generate entity IDs based on the NER spans provided and their classes
-        entities_id = [[i, j, classes_to_id[k]] for i, j, k in ner if k in classes_to_id]
+        try: # 'NoneType' object is not iterable
+            entities_id = [[i, j, classes_to_id[k]] for i, j, k in ner if k in classes_to_id]
+        except TypeError:
+            entities_id = []
 
         return {
             'tokens': tokens,
