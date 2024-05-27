@@ -73,7 +73,7 @@ def setup_model_and_optimizer(model_config, lr_encoder, lr_others,
     model = GLiNER(model_config).to(device)
     
     if rank is not None:
-        ddp_model = DDP(model, device_ids=[rank],output_device=rank, find_unused_parameters=True)
+        ddp_model = DDP(model, device_ids=[rank],output_device=rank, find_unused_parameters=False)
     else:
         ddp_model = model
 
@@ -92,7 +92,7 @@ def train_dist(rank, world_size, dataset, train_batch_size, model_config, lr_enc
     sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=False)
     train_loader = model.module.create_dataloader(dataset, batch_size=train_batch_size, shuffle=False, sampler=sampler)
 
-    num_steps /= world_size
+    num_steps //= world_size
     train(model, optimizer, train_loader, train_batch_size, num_steps, rank = rank, *args, **kwargs)
     cleanup()
 
