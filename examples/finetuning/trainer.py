@@ -40,7 +40,7 @@ class GlinerTrainer(Module):
     @beartype
     def __init__(
             self,
-            model: GLiNER,
+            model,
             train_data: list,
             batch_size: int,
 
