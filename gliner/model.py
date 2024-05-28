@@ -291,6 +291,10 @@ class TokenGLiNER(InstructBase):
                 st, ed, sp_label = ent
                 sp_label = sp_label - 1
 
+                # prevent indexing errors
+                if st >= seq_len or ed >= seq_len:
+                    continue
+
                 word_labels[0, i, st, sp_label] = 1  # start
                 word_labels[1, i, ed, sp_label] = 1  # end
                 word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
