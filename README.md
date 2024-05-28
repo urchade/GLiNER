@@ -126,7 +126,8 @@ custom_spacy_config = {
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
     "style": "ent",
-    "threshold": 0.3
+    "threshold": 0.3,
+    "map_location": "cpu" # only available in v.0.0.7
 }
 
 # Initialize a blank English spaCy pipeline and add GLiNER
@@ -141,7 +142,7 @@ doc = nlp(text)
 
 # Output detected entities
 for ent in doc.ents:
-    print(ent.text, ent.label_)
+    print(ent.text, ent.label_, ent._.score) # ent._.score only available in v. 0.0.7
 ```
 
 #### Expected Output
