@@ -82,7 +82,7 @@ class SpanGLiNER(InstructBase):
         # prompt representation (FFN)
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others,
+    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
                       freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
@@ -163,9 +163,12 @@ class SpanGLiNER(InstructBase):
         mask_label = mask_label.unsqueeze(-1).expand_as(all_losses)
         # apply mask
         all_losses = all_losses * mask_label.float()
-        if self.config.loss_reduction == "mean":
+
+        reduction = getattr(self.config, 'loss_reduction', 'sum')
+
+        if reduction == "mean":
             loss = all_losses.mean()
-        elif self.config.loss_reduction == 'sum':
+        elif reduction == 'sum':
             loss = all_losses.sum()
         else:
             warnings.warn(
@@ -244,7 +247,7 @@ class TokenGLiNER(InstructBase):
         # span representation (FFN)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others,
+    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
                       freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
@@ -319,9 +322,12 @@ class TokenGLiNER(InstructBase):
 
     def forward(self, x):
         all_losses = self.compute_score_train(x)
-        if self.config.loss_reduction == "mean":
+
+        reduction = getattr(self.config, 'loss_reduction', 'sum')
+
+        if reduction == "mean":
             loss = all_losses.mean()
-        elif self.config.loss_reduction == 'sum':
+        elif reduction == 'sum':
             loss = all_losses.sum()
         else:
             warnings.warn(
