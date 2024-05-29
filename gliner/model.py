@@ -149,9 +149,13 @@ class SpanGLiNER(InstructBase):
         # Shape of labels_one_hot: (batch_size * num_spans, num_classes)
 
         # compute loss (without reduction)
+        alpha = getattr(self.config, 'loss_alpha', -1)
+        gamma = getattr(self.config, 'loss_gamma', 0)
+
         all_losses = focal_loss_with_logits(logits_label, labels_one_hot,
-                                            alpha=self.config.loss_alpha,
-                                            gamma=self.config.loss_gamma)
+                                            alpha=alpha,
+                                            gamma=gamma)
+
         # mask loss using entity_type_mask (B, C)
         masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -302,9 +306,12 @@ class TokenGLiNER(InstructBase):
         # compute scores for start, end and inside
         all_scores = self.scorer(word_rep, entity_type_rep)  # (3, batch_size, seq_len, num_classes)
 
+        alpha = getattr(self.config, 'loss_alpha', -1)
+        gamma = getattr(self.config, 'loss_gamma', 0)
+
         all_losses = focal_loss_with_logits(all_scores, word_labels,
-                                            alpha=self.config.loss_alpha,
-                                            gamma=self.config.loss_gamma)
+                                            alpha=alpha,
+                                            gamma=gamma)
 
         all_losses = all_losses * entity_type_mask.unsqueeze(1) * mask.unsqueeze(-1)
 
