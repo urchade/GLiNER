@@ -16,7 +16,7 @@ warmup_ratio: 0.1
 scheduler_type: "cosine"
 
 # loss function
-loss_alpha: 0
+loss_alpha: -1
 loss_gamma: 0
 loss_reduction: "sum"
 
