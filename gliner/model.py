@@ -82,7 +82,7 @@ class SpanGLiNER(InstructBase):
         # prompt representation (FFN)
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others,
+    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
                       freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
@@ -149,9 +149,13 @@ class SpanGLiNER(InstructBase):
         # Shape of labels_one_hot: (batch_size * num_spans, num_classes)
 
         # compute loss (without reduction)
+        alpha = getattr(self.config, 'loss_alpha', -1)
+        gamma = getattr(self.config, 'loss_gamma', 0)
+
         all_losses = focal_loss_with_logits(logits_label, labels_one_hot,
-                                            alpha=self.config.loss_alpha,
-                                            gamma=self.config.loss_gamma)
+                                            alpha=alpha,
+                                            gamma=gamma)
+
         # mask loss using entity_type_mask (B, C)
         masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -159,9 +163,12 @@ class SpanGLiNER(InstructBase):
         mask_label = mask_label.unsqueeze(-1).expand_as(all_losses)
         # apply mask
         all_losses = all_losses * mask_label.float()
-        if self.config.loss_reduction == "mean":
+
+        reduction = getattr(self.config, 'loss_reduction', 'sum')
+
+        if reduction == "mean":
             loss = all_losses.mean()
-        elif self.config.loss_reduction == 'sum':
+        elif reduction == 'sum':
             loss = all_losses.sum()
         else:
             warnings.warn(
@@ -240,7 +247,7 @@ class TokenGLiNER(InstructBase):
         # span representation (FFN)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder, weight_decay_others,
+    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
                       freeze_token_rep=False, **optimizer_kwargs):
         """
         Parameters:
@@ -291,6 +298,10 @@ class TokenGLiNER(InstructBase):
                 st, ed, sp_label = ent
                 sp_label = sp_label - 1
 
+                # prevent indexing errors
+                if st >= seq_len or ed >= seq_len:
+                    continue
+
                 word_labels[0, i, st, sp_label] = 1  # start
                 word_labels[1, i, ed, sp_label] = 1  # end
                 word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
@@ -298,9 +309,12 @@ class TokenGLiNER(InstructBase):
         # compute scores for start, end and inside
         all_scores = self.scorer(word_rep, entity_type_rep)  # (3, batch_size, seq_len, num_classes)
 
+        alpha = getattr(self.config, 'loss_alpha', -1)
+        gamma = getattr(self.config, 'loss_gamma', 0)
+
         all_losses = focal_loss_with_logits(all_scores, word_labels,
-                                            alpha=self.config.loss_alpha,
-                                            gamma=self.config.loss_gamma)
+                                            alpha=alpha,
+                                            gamma=gamma)
 
         all_losses = all_losses * entity_type_mask.unsqueeze(1) * mask.unsqueeze(-1)
 
@@ -308,9 +322,12 @@ class TokenGLiNER(InstructBase):
 
     def forward(self, x):
         all_losses = self.compute_score_train(x)
-        if self.config.loss_reduction == "mean":
+
+        reduction = getattr(self.config, 'loss_reduction', 'sum')
+
+        if reduction == "mean":
             loss = all_losses.mean()
-        elif self.config.loss_reduction == 'sum':
+        elif reduction == 'sum':
             loss = all_losses.sum()
         else:
             warnings.warn(

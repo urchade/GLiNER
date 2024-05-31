@@ -40,7 +40,7 @@ class GlinerTrainer(Module):
     @beartype
     def __init__(
             self,
-            model: GLiNER,
+            model,
             train_data: list,
             batch_size: int,
 
@@ -85,6 +85,7 @@ class GlinerTrainer(Module):
             max_len=max_len
         )
         self.optimizer = model.get_optimizer(lr_encoder, lr_others, freeze_token_rep=freeze_token_rep,
+                                             weight_decay_encoder=1e-2, weight_decay_others=1e-2,
                                              **optimizer_kwargs)
         self.train_loader = model.create_dataloader(train_data, batch_size=batch_size, shuffle=True)
 
