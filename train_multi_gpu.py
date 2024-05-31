@@ -88,7 +88,6 @@ class Trainer:
 
         self.allow_distributed = allow_distributed
 
-
     def setup_distributed(self, rank, world_size):
         os.environ['MASTER_ADDR'] = 'localhost'
         os.environ['MASTER_PORT'] = '12356'
@@ -106,7 +105,7 @@ class Trainer:
             model.config = self.model_config
         else:
             model = GLiNER(self.model_config).to(device)
-        
+
         if rank is not None:
             model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=False)
             optimizer = model.module.get_optimizer(self.lr_encoder, self.lr_others,
@@ -121,20 +120,21 @@ class Trainer:
     def train_dist(self, rank, world_size, dataset):
         # Init distributed process group
         self.setup_distributed(rank, world_size)
-        
+
         device = f'cuda:{rank}'
 
         model, optimizer = self.setup_model_and_optimizer(rank, device=device)
-        
+
         sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=False)
-        
-        train_loader = model.module.create_dataloader(dataset, batch_size=self.config.train_batch_size, shuffle=False, sampler=sampler)
-        
+
+        train_loader = model.module.create_dataloader(dataset, batch_size=self.config.train_batch_size, shuffle=False,
+                                                      sampler=sampler)
+
         num_steps = self.config.num_steps // world_size
 
-        self.train(model=model, optimizer=optimizer, train_loader=train_loader, 
-                        num_steps=num_steps, device=device, rank=rank)
-        
+        self.train(model=model, optimizer=optimizer, train_loader=train_loader,
+                   num_steps=num_steps, device=device, rank=rank)
+
         self.cleanup_distributed()
 
     def init_scheduler(self, scheduler_type, optimizer, num_warmup_steps, num_steps):
@@ -236,19 +236,20 @@ class Trainer:
         if torch.cuda.device_count() > 1 and self.allow_distributed:
             world_size = torch.cuda.device_count()
             mp.spawn(self.train_dist, args=(world_size, data), nprocs=world_size, join=True)
-        else:            
+        else:
             model, optimizer = self.setup_model_and_optimizer()
-                                                    
+
             train_loader = model.create_dataloader(data, batch_size=self.config.train_batch_size, shuffle=True)
 
-            self.train(model, optimizer, train_loader, num_steps = self.config.num_steps, device=self.device)
+            self.train(model, optimizer, train_loader, num_steps=self.config.num_steps, device=self.device)
 
 
 def create_parser():
     parser = argparse.ArgumentParser(description="Span-based NER")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to config file")
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
-    parser.add_argument('--allow_distributed', type=bool, default=False, help='Whether to allow distributed training if there are more than one GPU available')
+    parser.add_argument('--allow_distributed', type=bool, default=False,
+                        help='Whether to allow distributed training if there are more than one GPU available')
     return parser
 
 
@@ -258,5 +259,6 @@ if __name__ == "__main__":
     config = load_config_as_namespace(args.config)
     config.log_dir = args.log_dir
 
-    trainer = Trainer(config, allow_distributed = args.allow_distributed, device='cuda' if torch.cuda.is_available() else 'cpu')
+    trainer = Trainer(config, allow_distributed=args.allow_distributed,
+                      device='cuda' if torch.cuda.is_available() else 'cpu')
     trainer.run()
