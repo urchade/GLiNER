@@ -55,6 +55,8 @@ Word-level models work **better for finding multi-word entities, highlighting se
 - **Biomedical**: 🧬 `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
 - **Birds attribute extraction**: 🐦 `wjbmattingly/gliner-large-v2.1-bird`  *(Apache 2.0)*
 
+#### 📚 Multi-task Models
+- **GLiNER multi-task large** `knowledgator/gliner-multitask-large-v0.5` *(Apache 2.0)* - +4.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization and question-answering tasks.
 
 ## 🛠 Installation & Usage
 
