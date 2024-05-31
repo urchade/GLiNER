@@ -237,9 +237,7 @@ class Trainer:
             world_size = torch.cuda.device_count()
             mp.spawn(self.train_dist, args=(world_size, data), nprocs=world_size, join=True)
         else:            
-            model, optimizer = self.setup_model_and_optimizer(self.lr_encoder, self.lr_others, 
-                                                              self.weight_decay_encoder, self.weight_decay_others, 
-                                                              self.config.freeze_token_rep, self.config.prev_path)
+            model, optimizer = self.setup_model_and_optimizer()
                                                     
             train_loader = model.create_dataloader(data, batch_size=self.config.train_batch_size, shuffle=True)
 
@@ -250,7 +248,7 @@ def create_parser():
     parser = argparse.ArgumentParser(description="Span-based NER")
     parser.add_argument("--config", type=str, default="config.yaml", help="Path to config file")
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
-    parser.add_argument('--allow_distributed', type=bool, default=True, help='Whether to allow distributed training if there are more than one GPU available')
+    parser.add_argument('--allow_distributed', type=bool, default=False, help='Whether to allow distributed training if there are more than one GPU available')
     return parser
 
 
