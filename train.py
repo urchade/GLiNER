@@ -63,7 +63,7 @@ class Trainer:
         self.lr_encoder = float(self.config.lr_encoder)
         self.lr_others = float(self.config.lr_others)
         self.weight_decay_encoder = float(self.config.weight_decay_encoder)
-        self.weight_decay_others = float(self.config.weight_decay_others)
+        self.weight_decay_other = float(self.config.weight_decay_other)
 
         self.device = device
 
@@ -110,11 +110,11 @@ class Trainer:
         if rank is not None:
             model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=False)
             optimizer = model.module.get_optimizer(self.lr_encoder, self.lr_others,
-                                                   self.weight_decay_encoder, self.weight_decay_others,
+                                                   self.weight_decay_encoder, self.weight_decay_other,
                                                    freeze_token_rep=self.config.freeze_token_rep)
         else:
             optimizer = model.get_optimizer(self.lr_encoder, self.lr_others,
-                                            self.weight_decay_encoder, self.weight_decay_others,
+                                            self.weight_decay_encoder, self.weight_decay_other,
                                             freeze_token_rep=self.config.freeze_token_rep)
         return model, optimizer
 
