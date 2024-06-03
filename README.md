@@ -193,4 +193,16 @@ If you find GLiNER useful in your research, please consider citing our paper:
       primaryClass={cs.CL}
 }
 ```
-We appreciate your support!
+## Support and funding
+
+This project has been supported and funded by **FI Group** and **Laboratoire Informatique de Paris Nord**.
+
+Over the past 20 years, [FI Group](https://fr.fi-group.com) has become a specialist in public funding strategies for R&D&I² (Research and Development, Innovation and Investment). FI Group's consultants, all engineers or PhDs, support customers from R&D through to the production of their innovations.
+
+<p align="center">
+  <img src="logo/FI Group.png" alt="FI Group" width="200"/>
+</p>
+
+
+
+
