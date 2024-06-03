@@ -203,6 +203,6 @@ Over the past 20 years, [FI Group](https://fr.fi-group.com) has become a special
   <img src="logo/FI Group.png" alt="FI Group" width="200"/>
 </p>
 
-
+We also extend our heartfelt gratitude to the open-source community for their invaluable contributions, which have been instrumental in the success of this project.
 
 
