@@ -60,10 +60,14 @@ Word-level models work **better for finding multi-word entities, highlighting se
 
 ## 🛠 Installation & Usage
 
-To begin using the GLiNER model, first install the GLiNER Python library through pip:
+To begin using the GLiNER model, first install the GLiNER Python library through pip or conda:
 
 ```bash
 !pip install gliner
+```
+
+```bash
+conda install -c conda-forge gliner
 ```
 
 ### 🚀 Basic Use Case
