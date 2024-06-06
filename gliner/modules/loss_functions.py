@@ -8,6 +8,7 @@ def focal_loss_with_logits(
         alpha: float = 0.25,
         gamma: float = 2,
         reduction: str = "none",
+        label_smoothing: float = 0.0
 ) -> torch.Tensor:
     """
     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
@@ -26,11 +27,15 @@ def focal_loss_with_logits(
                 ``'none'``: No reduction will be applied to the output.
                 ``'mean'``: The output will be averaged.
                 ``'sum'``: The output will be summed. Default: ``'none'``.
+        label_smoothing (float): Specifies the amount of smoothing when computing the loss, 
+                                                                where 0.0 means no smoothing.
     Returns:
         Loss tensor with the reduction option applied.
     """
     # Original implementation from https://github.com/facebookresearch/fvcore/blob/master/fvcore/nn/focal_loss.py
-
+    if label_smoothing !=0:
+        with torch.no_grad():
+            targets = targets * (1 - label_smoothing) + 0.5 * label_smoothing
     p = torch.sigmoid(inputs)
     loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
     if gamma > 0:

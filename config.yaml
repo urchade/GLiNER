@@ -18,6 +18,7 @@ scheduler_type: "cosine"
 # loss function
 loss_alpha: -1
 loss_gamma: 0
+label_smoothing: 0
 loss_reduction: "sum"
 
 # Learning Rate and weight decay Configuration

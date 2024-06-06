@@ -151,10 +151,12 @@ class SpanGLiNER(InstructBase):
         # compute loss (without reduction)
         alpha = getattr(self.config, 'loss_alpha', -1)
         gamma = getattr(self.config, 'loss_gamma', 0)
+        label_smoothing = getattr(self.config, 'label_smoothing', 0)
 
         all_losses = focal_loss_with_logits(logits_label, labels_one_hot,
                                             alpha=alpha,
-                                            gamma=gamma)
+                                            gamma=gamma,
+                                            label_smoothing=label_smoothing)
 
         # mask loss using entity_type_mask (B, C)
         masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
@@ -311,10 +313,12 @@ class TokenGLiNER(InstructBase):
 
         alpha = getattr(self.config, 'loss_alpha', -1)
         gamma = getattr(self.config, 'loss_gamma', 0)
+        label_smoothing = getattr(self.config, 'label_smoothing', 0)
 
         all_losses = focal_loss_with_logits(all_scores, word_labels,
                                             alpha=alpha,
-                                            gamma=gamma)
+                                            gamma=gamma,
+                                            label_smoothing=label_smoothing)
 
         all_losses = all_losses * entity_type_mask.unsqueeze(1) * mask.unsqueeze(-1)
 

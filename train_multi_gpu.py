@@ -78,6 +78,7 @@ class Trainer:
             span_mode=config.span_mode,
             loss_alpha=config.loss_alpha,
             loss_gamma=config.loss_gamma,
+            label_smoothing=config.label_smoothing,
             loss_reduction=config.loss_reduction,
             max_types=config.max_types,
             shuffle_types=config.shuffle_types,
