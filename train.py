@@ -190,6 +190,7 @@ if __name__ == "__main__":
         # loss parameters
         loss_alpha=config.loss_alpha,
         loss_gamma=config.loss_gamma,
+        label_smoothing=config.label_smoothing,
         loss_reduction=config.loss_reduction,
 
         # sampling parameters
