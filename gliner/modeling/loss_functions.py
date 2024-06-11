@@ -8,7 +8,8 @@ def focal_loss_with_logits(
         alpha: float = 0.25,
         gamma: float = 2,
         reduction: str = "none",
-        label_smoothing: float = 0.0
+        label_smoothing: float = 0.0,
+        ignore_index: int = -100  # default value for ignored index
 ) -> torch.Tensor:
     """
     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.
@@ -29,32 +30,47 @@ def focal_loss_with_logits(
                 ``'sum'``: The output will be summed. Default: ``'none'``.
         label_smoothing (float): Specifies the amount of smoothing when computing the loss, 
                                                                 where 0.0 means no smoothing.
+        ignore_index (int): Specifies a target value that is ignored and does not contribute
+                            to the input gradient. Default: ``-100``.
     Returns:
         Loss tensor with the reduction option applied.
     """
-    # Original implementation from https://github.com/facebookresearch/fvcore/blob/master/fvcore/nn/focal_loss.py
-    if label_smoothing !=0:
+    # Create a mask to ignore specified index
+    valid_mask = targets != ignore_index
+    
+    # Apply label smoothing if needed
+    if label_smoothing != 0:
         with torch.no_grad():
             targets = targets * (1 - label_smoothing) + 0.5 * label_smoothing
+
+    # Apply sigmoid activation to inputs
     p = torch.sigmoid(inputs)
+
+    # Compute the binary cross-entropy loss without reduction
     loss = F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
+
+    # Apply the valid mask to the loss
+    loss = loss * valid_mask
+
+    # Apply focal loss modulation if gamma is greater than 0
     if gamma > 0:
         p_t = p * targets + (1 - p) * (1 - targets)
         loss = loss * ((1 - p_t) ** gamma)
 
+    # Apply alpha weighting if alpha is specified
     if alpha >= 0:
         alpha_t = alpha * targets + (1 - alpha) * (1 - targets)
         loss = alpha_t * loss
 
-    # Check reduction option and return loss accordingly
+    # Apply reduction method
     if reduction == "none":
-        pass
+        return loss
     elif reduction == "mean":
-        loss = loss.mean()
+        return loss.sum() / valid_mask.sum()  # Normalize by the number of valid (non-ignored) elements
     elif reduction == "sum":
-        loss = loss.sum()
+        return loss.sum()
     else:
         raise ValueError(
-            f"Invalid Value for arg 'reduction': '{reduction} \n Supported reduction modes: 'none', 'mean', 'sum'"
+            f"Invalid value for argument 'reduction': '{reduction}'. "
+            f"Supported reduction modes: 'none', 'mean', 'sum'"
         )
-    return loss

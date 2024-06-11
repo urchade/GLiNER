@@ -5,14 +5,18 @@ from collections import defaultdict
 from typing import List, Tuple, Dict
 
 import torch
-from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import DataLoader
-
+from torch.nn.utils.rnn import pad_sequence
+import torch.nn.functional as F
 
 # Abstract base class for handling data processing
-class BaseData(ABC):
-    def __init__(self, config):
+class BaseProcessor(ABC):
+    def __init__(self, config, tokenizer, words_splitter):
         self.config = config
+        self.transformer_tokenizer = tokenizer
+        self.words_splitter = words_splitter
+        self.ent_token = config.ent_token
+        self.sep_token = config.sep_token
 
     @staticmethod
     def get_dict(spans: List[Tuple[int, int, str]], classes_to_id: Dict[str, int]) -> Dict[Tuple[int, int], int]:
@@ -23,9 +27,17 @@ class BaseData(ABC):
         return dict_tag
 
     @abstractmethod
-    def preprocess_spans(self, tokens: List[str], ner: List[Tuple[int, int, str]],
+    def preprocess_example(self, tokens: List[str], ner: List[Tuple[int, int, str]],
                          classes_to_id: Dict[str, int]) -> Dict:
         raise NotImplementedError("Subclasses should implement this method")
+
+    @abstractmethod
+    def create_labels(self) -> torch.Tensor:
+        raise NotImplementedError("Subclasses should implement this method")
+    
+    @abstractmethod
+    def tokenize_and_prepare_labels(self):
+        pass
 
     @staticmethod
     def get_negatives(batch_list: List[Dict], sampled_neg: int = 5) -> List[str]:
@@ -36,6 +48,45 @@ class BaseData(ABC):
         ent_types = list(set(ent_types))
         random.shuffle(ent_types)
         return ent_types[:sampled_neg]
+
+    def tokenize_inputs(self, texts, entities):
+        input_texts = []
+        for id, text in enumerate(texts):
+            input_text = []
+            if type(entities)==dict:
+                entities_=entities
+            else:
+                entities_=entities[id]
+            for ent in entities_:
+                input_text.append(self.ent_token)
+                input_text.append(ent)
+            input_text.append(self.sep_token)
+            prompt_length = len(input_text)
+            input_text.extend(text)
+            input_texts.append(input_text)
+
+        tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
+                                                                                truncation=True, padding="longest")
+        words_masks = []
+        for id in range(len(texts)):
+            words_mask = []
+            prev_word_id=None
+            words_count=0
+            for word_id in tokenized_inputs.word_ids(id):
+                if word_id is None:
+                    words_mask.append(0)
+                elif word_id != prev_word_id:
+                    if words_count<prompt_length:
+                        words_mask.append(0)
+                    else:
+                        words_mask.append(1)
+                    words_count+=1
+                else:
+                    words_mask.append(0)
+                prev_word_id = word_id
+            words_masks.append(words_mask)
+        tokenized_inputs['words_mask'] = torch.tensor(words_masks)
+        return tokenized_inputs
 
     def batch_generate_class_mappings(self, batch_list: List[Dict]) -> Tuple[
         List[Dict[str, int]], List[Dict[int, str]]]:
@@ -62,18 +113,22 @@ class BaseData(ABC):
 
         return class_to_ids, id_to_classes
 
-    def collate_fn(self, batch_list: List[Dict], entity_types: List[str] = None) -> Dict:
+    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None) -> Dict:
         if entity_types is None:
             class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list)
-            batch = [self.preprocess_spans(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
+            batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
                      enumerate(batch_list)]
         else:
             class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
             id_to_classes = {k: v for v, k in class_to_ids.items()}
-            batch = [self.preprocess_spans(b["tokenized_text"], b["ner"], class_to_ids) for b in batch_list]
+            batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) for b in batch_list]
 
         return self.create_batch_dict(batch, class_to_ids, id_to_classes)
 
+    def collate_fn(self, batch, prepare_labels=True):
+        model_input_batch = self.tokenize_and_prepare_labels(batch, prepare_labels)
+        return model_input_batch
+    
     @abstractmethod
     def create_batch_dict(self, batch: List[Dict], class_to_ids: List[Dict[str, int]],
                           id_to_classes: List[Dict[int, str]]) -> Dict:
@@ -84,8 +139,8 @@ class BaseData(ABC):
 
 
 # Implementation of BaseData for a specific dataset
-class SpanData(BaseData):
-    def preprocess_spans(self, tokens, ner, classes_to_id):
+class SpanProcessor(BaseProcessor):    
+    def preprocess_example(self, tokens, ner, classes_to_id):
         if len(tokens) == 0:
             tokens = ["[PAD]"]
         max_len = self.config.max_len
@@ -113,7 +168,7 @@ class SpanData(BaseData):
         entities = [el["entities"] for el in batch]
         span_idx = pad_sequence([b["span_idx"] for b in batch], batch_first=True, padding_value=0)
         span_label = pad_sequence([el["span_label"] for el in batch], batch_first=True, padding_value=-1)
-        seq_length = torch.LongTensor([el["seq_length"] for el in batch])
+        seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
         span_mask = span_label != -1
 
         return {
@@ -127,9 +182,35 @@ class SpanData(BaseData):
             "id_to_classes": id_to_classes,
         }
 
-
-class TokenData(BaseData):
-    def preprocess_spans(self, tokens, ner, classes_to_id):
+    def create_labels(self, batch):
+        labels_batch = []
+        for id in range(len(batch['tokens'])):
+            tokens = batch['tokens'][id]
+            classes_to_id = batch['classes_to_id'][id]
+            ner = batch['entities'][id]
+            num_classes = len(classes_to_id)
+            spans_idx = [(i, i + j) for i in range(len(tokens)) for j in range(self.config.max_width)]
+            dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
+            span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
+            spans_idx = torch.LongTensor(spans_idx)
+            valid_span_mask = spans_idx[:, 1] > len(tokens) - 1
+            span_label = span_label.masked_fill(valid_span_mask, 0)
+            labels_one_hot = F.one_hot(span_label, num_classes + 1).float()
+            labels_one_hot = labels_one_hot[:, 1:]
+            labels_batch.append(labels_one_hot)
+        if len(labels_batch)==1:
+            labels_batch=labels_batch[0]
+        return labels_batch
+    
+    def tokenize_and_prepare_labels(self, batch, prepare_labels):
+        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
+        if prepare_labels:
+            labels = self.create_labels(batch)
+            tokenized_input['labels'] = labels
+        return tokenized_input
+    
+class TokenProcessor(BaseProcessor):
+    def preprocess_example(self, tokens, ner, classes_to_id):
         # Ensure there is always a token list, even if it's empty
         if len(tokens) == 0:
             tokens = ["[PAD]"]
@@ -146,22 +227,28 @@ class TokenData(BaseData):
         except TypeError:
             entities_id = []
 
-        return {
+
+        example = {
             'tokens': tokens,
             'seq_length': len(tokens),
             'entities': ner,
             'entities_id': entities_id
         }
+        return example
 
     def create_batch_dict(self, batch, class_to_ids, id_to_classes):
         # Extract relevant data from batch for batch processing
         tokens = [el["tokens"] for el in batch]
-        seq_length = torch.LongTensor([el["seq_length"] for el in batch])
+        seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
         entities = [el["entities"] for el in batch]
         entities_id = [el["entities_id"] for el in batch]
 
+        batch_size = len(tokens)
+        seq_len = seq_length.max()
+        num_classes = max([len(cid) for cid in class_to_ids])
+
         # Assemble and return the batch dictionary
-        return {
+        batch_dict = {
             "tokens": tokens,
             "seq_length": seq_length,
             "entities": entities,
@@ -170,51 +257,35 @@ class TokenData(BaseData):
             "id_to_classes": id_to_classes,
         }
 
+        return batch_dict
 
-# if __name__ == "__main__":
-#     # config
-#     from gliner.model import load_config_as_namespace
-#
-#     config = load_config_as_namespace("/Users/urchadezaratiana/Documents/remote-server/TokenGLiNER/configs/config_van.yaml")
-#
-#     from gliner.modules.base import InstructBase
-#
-#     import json
-#     with open("/Users/urchadezaratiana/Documents/remote-server/instruct_ner/nuner_train.json", 'r') as f:
-#         data = json.load(f)[:5]
-#
-#     mo_base = InstructBase(config)
-#
-#     loader_base = mo_base.create_dataloader(data, batch_size=2, shuffle=False)
-#
-#     x_1 = next(iter(loader_base))
-#
-#     mo_gliner = GLiNERData(config)
-#
-#     loader_gliner = mo_gliner.create_dataloader(data, batch_size=2, shuffle=False)
-#
-#     x_2 = next(iter(loader_gliner))
-#
-#     #print(x_1)
-#
-#     #print(x_2)
-#
-#     # is equal ? iterate over the keys and compare the values
-#     for key in x_1.keys():
-#         print(x_1[key])
-#         print(x_2[key])
-#         print("Above are the values for key: ", key)
-#
-#
-#     # show for token gliner
-#
-#     token_gliner = TokenGLiNERData(config)
-#
-#     loader_token_gliner = token_gliner.create_dataloader(data, batch_size=2, shuffle=False)
-#
-#     x_3 = next(iter(loader_token_gliner))
-#
-#     for key in x_3.keys():
-#         print(key)
-#         print(x_3[key])
-#         print("Above are the values for key: ", key)
+    def create_labels(self, entities_id, batch_size, seq_len, num_classes):
+        word_labels = torch.zeros(
+            3, batch_size, seq_len, num_classes, dtype=torch.float
+        )
+        # get batch_nums and span_pos
+        for i, element in enumerate(entities_id):
+            for ent in element:
+                st, ed, sp_label = ent
+                sp_label = sp_label - 1
+
+                # prevent indexing errors
+                if st >= seq_len or ed >= seq_len:
+                    continue
+
+                word_labels[0, i, st, sp_label] = 1  # start
+                word_labels[1, i, ed, sp_label] = 1  # end
+                word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
+        return word_labels
+
+    def tokenize_and_prepare_labels(self, batch, prepare_labels):
+        batch_size = len(batch['tokens'])
+        seq_len = batch['seq_length'].max()
+        num_classes = max([len(cid) for cid in batch['classes_to_id']])
+
+        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
+        
+        if prepare_labels:
+            labels = self.create_labels(batch['entities_id'], batch_size, seq_len, num_classes)
+            tokenized_input['labels'] = labels
+        return tokenized_input

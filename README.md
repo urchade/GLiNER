@@ -162,6 +162,28 @@ Microsoft => organization
 
 <img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
 
+## ONNX convertion:
+To convert previously trained GLiNER models to ONNX format, you can use the `convert_to_onnx.py` script. You need to provide the `model_path` and `save_path` arguments to specify the location of the model and where to save the ONNX file, respectively. Additionally, if you wish to quantize the model, set the `quantize` argument to True (it quantizes to *IntU8* by default).
+
+Example usage:
+
+```bash
+
+python convert_to_onnx.py --model_path /path/to/your/model --save_path /path/to/save/onnx --quantize True
+```
+
+To load the converted ONNX models, you can use the following code snippet:
+
+```python
+
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("path_to_your_model", load_onnx_model=True, load_tokenizer=True)
+
+```
+The `load_onnx_model` argument ensures that the GLiNER class recognizes that it should load the ONNX model instead of a PyTorch model.
+Setting the `load_tokenizer`` argument to True loads the tokenizer from your model directory, including any additional tokens that were added during training.
+
 ## 🛠 Areas of Improvements / research
 
 - [ ] Extend the model to relation extraction. Our preliminary work [GraphER](https://github.com/urchade/GraphER).
