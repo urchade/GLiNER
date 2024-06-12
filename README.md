@@ -78,7 +78,7 @@ After the installation of the GLiNER library, import the `GLiNER` class. Followi
 from gliner import GLiNER
 
 # Initialize GLiNER with the base model
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+model = GLiNER.from_pretrained("EmergentMethods/gliner_medium_news-v2.1")
 
 # Sample text for entity prediction
 text = """
@@ -86,7 +86,7 @@ Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu �
 """
 
 # Labels for entity prediction
-labels = ["Person", "Award", "Date", "Competitions", "Teams"] # for v2.1 use capital case for better performance
+labels = ["Person", "Award", "Date", "Competitions", "Teams"]
 
 # Perform entity prediction
 entities = model.predict_entities(text, labels, threshold=0.5)
@@ -128,7 +128,7 @@ from gliner_spacy.pipeline import GlinerSpacy
 
 # Configuration for GLiNER integration
 custom_spacy_config = {
-    "gliner_model": "urchade/gliner_multi-v2.1",
+    "gliner_model": "EmergentMethods/gliner_medium_news-v2.1",
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
     "style": "ent",
