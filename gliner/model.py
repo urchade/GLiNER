@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import warnings
 from pathlib import Path
@@ -157,7 +158,22 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     def compile(self):
         self.model = torch.compile(self.model)
-        
+
+    def compile_for_training(self):
+        print('Compiling transformer encoder...')
+        self.model.token_rep_layer = torch.compile(self.model.token_rep_layer)
+        print('Compiling RNN...')
+        self.model.rnn = torch.compile(self.model.rnn)
+        if hasattr(self.model, "span_rep_layer"):
+            print('Compiling span representation layer...')
+            self.model.span_rep_layer = torch.compile(self.model.span_rep_layer)
+        if hasattr(self.model, "prompt_rep_layer"):
+            print('Compiling prompt representation layer...')
+            self.model.prompt_rep_layer = torch.compile(self.model.prompt_rep_layer)
+        if hasattr(self.model, "scorer"):
+            print('Compiling scorer...')
+            self.model.scorer = torch.compile(self.model.scorer)
+
     def set_sampling_params(self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len):
         """
         Sets sampling parameters on the given model.
@@ -176,6 +192,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         self.config.max_neg_type_ratio = max_neg_type_ratio
         self.config.max_len = max_len
 
+    def prepare_state_dict(self, state_dict):
+        new_state_dict = {}
+        for key, tensor in state_dict.items():
+            key = re.sub("_orig_mod\.", "", key)
+            new_state_dict[key] = tensor
+        return new_state_dict
+    
     def save_pretrained(
             self,
             save_directory: Union[str, Path],
@@ -205,7 +228,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         save_directory.mkdir(parents=True, exist_ok=True)
 
         # save model weights/files
-        torch.save(self.model.state_dict(), save_directory / "pytorch_model.bin")
+        torch.save(self.prepare_state_dict(self.model.state_dict()), save_directory / "pytorch_model.bin")
 
         # save config (if provided)
         if config is None:
@@ -279,9 +302,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             state_dict = torch.load(model_file, map_location=torch.device(map_location))
             gliner.model.load_state_dict(state_dict, strict=strict)
             gliner.model.to(map_location)
-            if compile_torch_model:
+            if compile_torch_model and 'cuda' in map_location:
                 print("Compiling torch model...")
                 gliner.compile()
+            elif compile_torch_model:
+                warnings.warn("It's not possible to compile this model putting it to CPU, you should set `map_location` to `cuda`.")
             gliner.eval()
         else:
             import onnxruntime as ort
