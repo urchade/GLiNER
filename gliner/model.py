@@ -279,9 +279,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             state_dict = torch.load(model_file, map_location=torch.device(map_location))
             gliner.model.load_state_dict(state_dict, strict=strict)
             gliner.model.to(map_location)
-            if compile_torch_model:
+            if compile_torch_model and 'cuda' in map_location:
                 print("Compiling torch model...")
                 gliner.compile()
+            elif compile_torch_model:
+                warnings.warn("It's not possible to compile this model putting it to CPU, you should set `map_location` to `cuda`.")
             gliner.eval()
         else:
             import onnxruntime as ort
