@@ -55,7 +55,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         if isinstance(self.model, BaseORTModel):
             self.onnx_model = True
         else:
-            self.onnx_model = True
+            self.onnx_model = False
 
     def forward(self, *args, **kwargs):
         output = self.model(*args, **kwargs)
@@ -155,6 +155,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return all_entities
 
+    def compile(self):
+        self.model = torch.compile(self.model)
+        
     def set_sampling_params(self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len):
         """
         Sets sampling parameters on the given model.
@@ -239,6 +242,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Optional[bool]=True,
             load_onnx_model: Optional[bool]=False,
             onnx_model_file: Optional[str] = 'model.onnx',
+            compile_torch_model: Optional[bool] = False,
             **model_kwargs,
     ):
 
@@ -275,15 +279,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             state_dict = torch.load(model_file, map_location=torch.device(map_location))
             gliner.model.load_state_dict(state_dict, strict=strict)
             gliner.model.to(map_location)
-
+            if compile_torch_model:
+                print("Compiling torch model...")
+                gliner.compile()
+            gliner.eval()
         else:
             import onnxruntime as ort
 
             model_file = Path(model_dir) / onnx_model_file
             if not os.path.exists(model_file):
                 raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
-            
-            ort_session = ort.InferenceSession(model_file)
+            session_options = ort.SessionOptions()
+            session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            ort_session = ort.InferenceSession(model_file, session_options)
             if config.span_mode=='token_level':
                 model = TokenORTModel(ort_session)
             else:
