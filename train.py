@@ -44,7 +44,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default= "config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
-    parser.add_argument('--compile_model', type=bool, default = True)
+    parser.add_argument('--compile_model', type=bool, default = False)
     args = parser.parse_args()
 
     config = load_config_as_namespace(args.config)
