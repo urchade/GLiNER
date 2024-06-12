@@ -105,7 +105,7 @@ class BaseModel(ABC, nn.Module):
         pass
 
     def _loss(self, logits: torch.Tensor, labels: torch.Tensor, 
-                    alpha: float, gamma: float, label_smoothing: float):
+                    alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0):
         
         all_losses = focal_loss_with_logits(logits, labels,
                                             alpha=alpha,
@@ -167,7 +167,8 @@ class SpanModel(BaseModel):
         return output
     
     def loss(self, scores, labels, prompts_embedding_mask, mask,
-                        alpha, gamma, label_smoothing, reduction, **kwargs):
+                        alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, 
+                        reduction: str = 'sum', **kwargs):
         
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -224,7 +225,8 @@ class TokenModel(BaseModel):
         return output
     
     def loss(self, scores, labels, prompts_embedding_mask, mask, 
-                            alpha, gamma, label_smoothing, reduction, **kwargs):
+                        alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, 
+                        reduction: str = 'sum', **kwargs):
         all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing)
 
         all_losses = all_losses * prompts_embedding_mask.unsqueeze(1) * mask.unsqueeze(-1)

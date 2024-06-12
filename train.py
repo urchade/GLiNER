@@ -6,6 +6,7 @@ import json
 
 from transformers import AutoTokenizer
 from torch.utils.data import Dataset
+import torch
 
 from gliner import GLiNERConfig, GLiNER
 from gliner.training import Trainer, TrainingArguments
@@ -43,6 +44,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default= "config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
+    parser.add_argument('--compile_model', type=bool, default = True)
     args = parser.parse_args()
 
     config = load_config_as_namespace(args.config)
@@ -80,6 +82,10 @@ if __name__ == '__main__':
     model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
                                   set_class_token_index = False,
                                   add_tokens_to_tokenizer=False)
+
+    if args.compile_model:
+        torch.set_float32_matmul_precision('high')
+        model.compile()
 
     training_args = TrainingArguments(
         output_dir=config.log_dir,
