@@ -44,8 +44,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default= "config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
-    parser.add_argument('--compile_model', type=bool, default = False)
+    parser.add_argument('--compile_model', type=bool, default = True)
     args = parser.parse_args()
+    
+    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
 
     config = load_config_as_namespace(args.config)
     config.log_dir = args.log_dir
@@ -85,7 +87,9 @@ if __name__ == '__main__':
 
     if args.compile_model:
         torch.set_float32_matmul_precision('high')
-        model.compile()
+        model.to(device)
+        model.compile_for_training()
+        
 
     training_args = TrainingArguments(
         output_dir=config.log_dir,
