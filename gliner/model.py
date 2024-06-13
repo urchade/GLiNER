@@ -382,7 +382,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config_file = Path(model_dir) / "gliner_config.json"
 
         if load_tokenizer:
-            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            except Exception as e:
+                print(f"Error {e} loading tokenizer from {model_dir}")
+                tokenizer = None
         else:
             tokenizer = None
         config_ = json.load(open(config_file))
