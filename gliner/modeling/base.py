@@ -154,7 +154,7 @@ class SpanModel(BaseModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
 
         output = GLiNERModelOutput(
             logits=scores,
@@ -166,7 +166,7 @@ class SpanModel(BaseModel):
         )
         return output
     
-    def loss(self, scores, labels, prompts_embedding_mask, mask,
+    def loss(self, scores, labels, prompts_embedding_mask, mask_label,
                         alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, 
                         reduction: str = 'sum', **kwargs):
         
@@ -180,6 +180,10 @@ class SpanModel(BaseModel):
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
+
+        mask_label = mask_label.view(-1, 1)
+        
+        all_losses = all_losses * mask_label.float()
 
         if reduction == "mean":
             loss = all_losses.mean()
