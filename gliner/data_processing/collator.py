@@ -30,7 +30,7 @@ class DataCollatorWithPadding:
     def __call__(self, batch):
         if not batch:
             raise ValueError("Batch cannot be empty")
-
+        batch = [item for item in batch if item is not None]
         # Extract all keys from the first item
         keys = batch[0].keys()
 
@@ -38,13 +38,21 @@ class DataCollatorWithPadding:
         padded_batch = {key: [] for key in keys}
 
         for key in keys:
+            if key in {'tokens', 'id_to_classes', 'entities'}:
+                padded_batch[key] = [item[key] for item in batch]
+                continue
             # Collect data for the current key
             key_data = [item[key].squeeze(0) for item in batch]
 
             if isinstance(key_data[0], torch.Tensor):
                 if key_data[0].dim() == 1:
                     # For 1D tensors, use pad_sequence
-                    padded_batch[key] = pad_sequence(key_data, batch_first=True)
+                    if key == 'span_label':
+                        span_label = pad_sequence(key_data, batch_first=True, padding_value=-1)
+                        span_mask = span_label != -1
+                        padded_batch[key] = span_mask
+                    else:
+                        padded_batch[key] = pad_sequence(key_data, batch_first=True)
                 elif key_data[0].dim() == 2: # span_idx case
                     padded_batch[key] = self.pad_2d_tensor(key_data)
                 elif key == 'labels' and self.config.span_mode == 'token_level':

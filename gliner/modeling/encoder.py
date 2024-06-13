@@ -13,6 +13,7 @@ class Transformer(nn.Module):
                 encoder_config = AutoConfig.from_pretrained(config.model_name)
                 if config.vocab_size!=-1:
                     encoder_config.vocab_size = config.vocab_size
+   
             else:
                 encoder_config = config.encoder_config 
             self.model = AutoModel.from_config(encoder_config)

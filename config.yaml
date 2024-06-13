@@ -11,7 +11,7 @@ span_mode: markerV0
 # Training Parameters
 num_steps: 30000
 train_batch_size: 3
-eval_every: 5000
+eval_every: 1000
 warmup_ratio: 0.1
 scheduler_type: "cosine"
 

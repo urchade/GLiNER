@@ -243,10 +243,6 @@ class TokenProcessor(BaseProcessor):
         entities = [el["entities"] for el in batch]
         entities_id = [el["entities_id"] for el in batch]
 
-        batch_size = len(tokens)
-        seq_len = seq_length.max()
-        num_classes = max([len(cid) for cid in class_to_ids])
-
         # Assemble and return the batch dictionary
         batch_dict = {
             "tokens": tokens,

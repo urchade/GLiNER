@@ -5,46 +5,20 @@ import random
 import json
 
 from transformers import AutoTokenizer
-from torch.utils.data import Dataset
 import torch
 
 from gliner import GLiNERConfig, GLiNER
 from gliner.training import Trainer, TrainingArguments
 from gliner.data_processing.collator import DataCollatorWithPadding
 from gliner.utils import load_config_as_namespace
-from gliner.data_processing import TokenProcessor, SpanProcessor, WordsSplitter
-
-class GLiNERDataset(Dataset):
-    def __init__(self, examples, config, tokenizer, words_splitter):
-        self._data = examples
-        self.config=config
-        if config.span_mode == "token_level":
-            self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
-        else:
-            self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
-
-    def __len__(self):
-        return len(self._data)
-
-    def __getitem__(self, idx):
-        example = self._data[idx]
-        raw_batch = self.data_processor.collate_raw_batch([example])
-        
-        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=True)
-        if 'span_idx' in raw_batch:
-            model_input['span_idx'] = raw_batch['span_idx']
-        if 'span_mask' in raw_batch:
-            model_input['span_mask'] = raw_batch['span_mask']
-        if 'seq_length' in raw_batch:
-            model_input['text_lengths'] = raw_batch['seq_length']
-        return model_input
+from gliner.data_processing import WordsSplitter, GLiNERDataset
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--config', type=str, default= "config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
-    parser.add_argument('--compile_model', type=bool, default = True)
+    parser.add_argument('--compile_model', type=bool, default = False)
     args = parser.parse_args()
     
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')

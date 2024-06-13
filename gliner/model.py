@@ -13,9 +13,11 @@ import numpy as np
 
 from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
-from .data_processing import SpanProcessor, TokenProcessor
+from .data_processing import SpanProcessor, TokenProcessor, GLiNERDataset
 from .data_processing.tokenizer import WordsSplitter
+from .data_processing.collator import DataCollatorWithPadding
 from .decoding import SpanDecoder, TokenDecoder
+from .evaluation import Evaluator
 from .config import GLiNERConfig
 
 from huggingface_hub import PyTorchModelHubMixin, snapshot_download
@@ -25,17 +27,15 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         model: Optional[Union[BaseModel, BaseORTModel]] = None,
                         tokenizer: Optional[Union[str, AutoTokenizer]] = None, 
                         words_splitter: Optional[Union[str, WordsSplitter]] = None, 
+                        data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None, 
                         encoder_from_pretrained: bool = True):
         super().__init__()
         self.config = config
 
-        if tokenizer is None:
+        if tokenizer is None and data_processor is None:
             tokenizer = AutoTokenizer.from_pretrained(config.model_name)
 
-        if config.vocab_size !=-1 and config.vocab_size!=len(tokenizer):
-            warnings.warn(f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(tokenizer)}). 
-                            You should to consider manually add new tokens to tokenizer or to load tokenizer with added tokens.""")
-        if words_splitter is None:
+        if words_splitter is None and data_processor is None:
             words_splitter = WordsSplitter(config.words_splitter_type)
 
         if config.span_mode == "token_level":
@@ -43,16 +43,26 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 self.model = TokenModel(config, encoder_from_pretrained)
             else:
                 self.model = model
-            self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+            if data_processor is None:
+                self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+            else:
+                self.data_processor = data_processor
             self.decoder = TokenDecoder(config)
         else:
             if model is None:
                 self.model = SpanModel(config, encoder_from_pretrained)
             else:
                 self.model = model
-            self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+            if data_processor is None:
+                self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+            else:
+                self.data_processor = data_processor
             self.decoder = SpanDecoder(config)
 
+        if config.vocab_size !=-1 and config.vocab_size!=len(self.data_processor.transformer_tokenizer):
+            warnings.warn(f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(self.data_processor.transformer_tokenizer)}). 
+                            You should to consider manually add new tokens to tokenizer or to load tokenizer with added tokens.""")
+            
         if isinstance(self.model, BaseORTModel):
             self.onnx_model = True
         else:
@@ -62,6 +72,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         output = self.model(*args, **kwargs)
         return output
 
+    @property
+    def device(self):
+        device = next(self.model.parameters()).device
+        return device
+    
     def resize_token_embeddings(self, add_tokens, 
                                     set_class_token_index = True, 
                                     add_tokens_to_tokenizer = True, 
@@ -106,7 +121,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                             "text_lengths": raw_batch['seq_length']})
         
         if not self.onnx_model:
-            device = next(self.model.parameters()).device
+            device = self.device
             for key in model_input:
                 if model_input[key] is not None and isinstance(model_input[key], torch.Tensor):
                     model_input[key] = model_input[key].to(device)
@@ -155,6 +170,87 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             all_entities.append(entities)
 
         return all_entities
+
+    def evaluate(self, test_data, flat_ner=False, multi_label=False, threshold=0.5, batch_size=12, entity_types=None):
+        """
+        Evaluate the model on a given test dataset.
+
+        Args:
+            test_data (List[Dict]): The test data containing text and entity annotations.
+            flat_ner (bool): Whether to use flat NER. Defaults to False.
+            multi_label (bool): Whether to use multi-label classification. Defaults to False.
+            threshold (float): The threshold for predictions. Defaults to 0.5.
+            batch_size (int): The batch size for evaluation. Defaults to 12.
+            entity_types (Optional[List[str]]): List of entity types to consider. Defaults to None.
+
+        Returns:
+            tuple: A tuple containing the evaluation output and the F1 score.
+        """
+        self.eval()
+        
+        # Create the dataset and data loader
+        dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
+                                                    return_tokens = True, return_id_to_classes = True,
+                                                    prepare_labels= False, return_entities = True,
+                                                    entities=entity_types)
+        
+        collator = DataCollatorWithPadding(self.config)
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
+
+        device = self.device
+        all_preds = []
+        all_trues = []
+
+        # Iterate over data batches
+        for batch in data_loader:
+            # Move the batch to the appropriate device
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(device)
+
+                # Perform predictions
+            model_output = self.model(**batch)[0]
+
+            if not isinstance(model_output, torch.Tensor):
+                model_output = torch.from_numpy(model_output)
+
+            decoded_outputs = self.decoder.decode(
+                batch['tokens'], batch['id_to_classes'][0],
+                model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+            )
+            all_preds.extend(decoded_outputs)
+            all_trues.extend(batch["entities"])
+
+        # Evaluate the predictions
+        evaluator = Evaluator(all_trues, all_preds)
+        out, f1 = evaluator.evaluate()
+
+        return out, f1
+
+    def predict(self, batch, flat_ner=False, threshold=0.5, multi_label=False):
+        """
+        Predict the entities for a given batch of data.
+
+        Args:
+            batch (Dict): A batch of data containing tokenized text and other relevant fields.
+            flat_ner (bool): Whether to use flat NER. Defaults to False.
+            threshold (float): The threshold for predictions. Defaults to 0.5.
+            multi_label (bool): Whether to use multi-label classification. Defaults to False.
+
+        Returns:
+            List: Predicted entities for each example in the batch.
+        """
+        model_output = self.model(**batch)[0]
+
+        if not isinstance(model_output, torch.Tensor):
+            model_output = torch.from_numpy(model_output)
+
+        decoded_outputs = self.decoder.decode(
+            batch['tokens'], batch['id_to_classes'],
+            model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+        )
+
+        return decoded_outputs
 
     def compile(self):
         self.model = torch.compile(self.model)
@@ -286,7 +382,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config_file = Path(model_dir) / "gliner_config.json"
 
         if load_tokenizer:
-            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            try:
+                tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            except Exception as e:
+                print(f"Error {e} loading tokenizer from {model_dir}")
+                tokenizer = None
         else:
             tokenizer = None
         config_ = json.load(open(config_file))
