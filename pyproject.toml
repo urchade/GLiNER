@@ -40,6 +40,8 @@ dependencies = [
     "huggingface_hub>=0.21.4",
     "seqeval",
     "tqdm",
+    "onnxruntime",
+    "sentencepiece",
 ]
 
 dynamic = ["version"]
