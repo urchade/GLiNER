@@ -14,9 +14,32 @@ class BaseProcessor(ABC):
     def __init__(self, config, tokenizer, words_splitter):
         self.config = config
         self.transformer_tokenizer = tokenizer
+
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
         self.sep_token = config.sep_token
+
+        # Check if the tokenizer has unk_token and pad_token
+        self._check_and_set_special_tokens()
+
+    def _check_and_set_special_tokens(self):
+        # Check for unk_token
+        if self.transformer_tokenizer.unk_token is None:
+            default_unk_token = '[UNK]'
+            warnings.warn(
+                f"The tokenizer is missing an 'unk_token'. Setting default '{default_unk_token}'.",
+                UserWarning
+            )
+            self.transformer_tokenizer.unk_token = default_unk_token
+
+        # Check for pad_token
+        if self.transformer_tokenizer.pad_token is None:
+            default_pad_token = '[PAD]'
+            warnings.warn(
+                f"The tokenizer is missing a 'pad_token'. Setting default '{default_pad_token}'.",
+                UserWarning
+            )
+            self.transformer_tokenizer.pad_token = default_pad_token
 
     @staticmethod
     def get_dict(spans: List[Tuple[int, int, str]], classes_to_id: Dict[str, int]) -> Dict[Tuple[int, int], int]:
@@ -49,6 +72,25 @@ class BaseProcessor(ABC):
         random.shuffle(ent_types)
         return ent_types[:sampled_neg]
 
+    def prepare_text(self, text):
+        new_text = []
+        for token in text:
+            if not token.strip():
+                new_text.append(self.transformer_tokenizer.pad_token)
+            else:
+                redecoded = self.transformer_tokenizer.decode(
+                                    self.transformer_tokenizer.encode(token), 
+                                                    skip_special_tokens=True)
+                if token!=redecoded:
+                    new_text.append(self.transformer_tokenizer.unk_token)
+                else:
+                    new_text.append(token)
+        return new_text
+    
+    def prepare_texts(self, texts):
+        texts = [self.prepare_text(text) for text in texts]
+        return texts
+    
     def tokenize_inputs(self, texts, entities):
         input_texts = []
         for id, text in enumerate(texts):
@@ -65,6 +107,7 @@ class BaseProcessor(ABC):
             input_text.extend(text)
             input_texts.append(input_text)
 
+        input_texts = self.prepare_texts(input_texts)
         tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
                                                                                 truncation=True, padding="longest")
         words_masks = []
@@ -84,6 +127,7 @@ class BaseProcessor(ABC):
                 else:
                     words_mask.append(0)
                 prev_word_id = word_id
+
             words_masks.append(words_mask)
         tokenized_inputs['words_mask'] = torch.tensor(words_masks)
         return tokenized_inputs
