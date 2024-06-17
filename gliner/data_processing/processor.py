@@ -9,14 +9,39 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
 
+from .utils import pad_2d_tensor
+
 # Abstract base class for handling data processing
 class BaseProcessor(ABC):
     def __init__(self, config, tokenizer, words_splitter):
         self.config = config
         self.transformer_tokenizer = tokenizer
+
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
         self.sep_token = config.sep_token
+
+        # Check if the tokenizer has unk_token and pad_token
+        self._check_and_set_special_tokens()
+
+    def _check_and_set_special_tokens(self):
+        # Check for unk_token
+        if self.transformer_tokenizer.unk_token is None:
+            default_unk_token = '[UNK]'
+            warnings.warn(
+                f"The tokenizer is missing an 'unk_token'. Setting default '{default_unk_token}'.",
+                UserWarning
+            )
+            self.transformer_tokenizer.unk_token = default_unk_token
+
+        # Check for pad_token
+        if self.transformer_tokenizer.pad_token is None:
+            default_pad_token = '[PAD]'
+            warnings.warn(
+                f"The tokenizer is missing a 'pad_token'. Setting default '{default_pad_token}'.",
+                UserWarning
+            )
+            self.transformer_tokenizer.pad_token = default_pad_token
 
     @staticmethod
     def get_dict(spans: List[Tuple[int, int, str]], classes_to_id: Dict[str, int]) -> Dict[Tuple[int, int], int]:
@@ -49,8 +74,28 @@ class BaseProcessor(ABC):
         random.shuffle(ent_types)
         return ent_types[:sampled_neg]
 
+    def prepare_text(self, text):
+        new_text = []
+        for token in text:
+            if not token.strip():
+                new_text.append(self.transformer_tokenizer.pad_token)
+            else:
+                redecoded = self.transformer_tokenizer.decode(
+                                    self.transformer_tokenizer.encode(token), 
+                                                    skip_special_tokens=True)
+                if token!=redecoded:
+                    new_text.append(self.transformer_tokenizer.unk_token)
+                else:
+                    new_text.append(token)
+        return new_text
+    
+    def prepare_texts(self, texts):
+        texts = [self.prepare_text(text) for text in texts]
+        return texts
+    
     def tokenize_inputs(self, texts, entities):
         input_texts = []
+        prompt_lengths = []
         for id, text in enumerate(texts):
             input_text = []
             if type(entities)==dict:
@@ -62,13 +107,16 @@ class BaseProcessor(ABC):
                 input_text.append(ent)
             input_text.append(self.sep_token)
             prompt_length = len(input_text)
+            prompt_lengths.append(prompt_length)
             input_text.extend(text)
             input_texts.append(input_text)
 
+        input_texts = self.prepare_texts(input_texts)
         tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
                                                                                 truncation=True, padding="longest")
         words_masks = []
         for id in range(len(texts)):
+            prompt_length = prompt_lengths[id]
             words_mask = []
             prev_word_id=None
             words_count=0
@@ -88,16 +136,16 @@ class BaseProcessor(ABC):
         tokenized_inputs['words_mask'] = torch.tensor(words_masks)
         return tokenized_inputs
 
-    def batch_generate_class_mappings(self, batch_list: List[Dict]) -> Tuple[
+    def batch_generate_class_mappings(self, batch_list: List[Dict], negatives: List[str]=None) -> Tuple[
         List[Dict[str, int]], List[Dict[int, str]]]:
-        negs = self.get_negatives(batch_list, 100)
+        if negatives is None:
+            negatives = self.get_negatives(batch_list, 100)
         class_to_ids = []
         id_to_classes = []
         for b in batch_list:
-            random.shuffle(negs)
             max_neg_type_ratio = int(self.config.max_neg_type_ratio)
             neg_type_ratio = random.randint(0, max_neg_type_ratio) if max_neg_type_ratio else 0
-            negs_i = negs[:len(b["ner"]) * neg_type_ratio] if neg_type_ratio else []
+            negs_i = negatives[:len(b["ner"]) * neg_type_ratio] if neg_type_ratio else []
 
             types = list(set([el[-1] for el in b["ner"]] + negs_i))
             random.shuffle(types)
@@ -113,9 +161,9 @@ class BaseProcessor(ABC):
 
         return class_to_ids, id_to_classes
 
-    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None) -> Dict:
-        if entity_types is None:
-            class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list)
+    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None, negatives: List[str]=None) -> Dict:
+        if entity_types is None or negatives is not None:
+            class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
             batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
                      enumerate(batch_list)]
         else:
@@ -182,6 +230,7 @@ class SpanProcessor(BaseProcessor):
             "id_to_classes": id_to_classes,
         }
 
+
     def create_labels(self, batch):
         labels_batch = []
         for id in range(len(batch['tokens'])):
@@ -198,8 +247,13 @@ class SpanProcessor(BaseProcessor):
             labels_one_hot = F.one_hot(span_label, num_classes + 1).float()
             labels_one_hot = labels_one_hot[:, 1:]
             labels_batch.append(labels_one_hot)
-        if len(labels_batch)==1:
-            labels_batch=labels_batch[0]
+        
+        # Convert the list of tensors to a single tensor
+        if len(labels_batch) > 1:
+            labels_batch = pad_2d_tensor(labels_batch)
+        else:
+            labels_batch = labels_batch[0]
+
         return labels_batch
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels):

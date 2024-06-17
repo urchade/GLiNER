@@ -11,6 +11,9 @@ __pycache__/
 #data
 data.json
 
+#logs
+logs/
+
 # Distribution / packaging
 .Python
 build/

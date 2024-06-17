@@ -78,6 +78,7 @@ class Trainer(transformers.Trainer):
         except Exception as e:
             print(f"Skipping iteration due to error: {e}")
             model.zero_grad(set_to_none=True)
+            torch.cuda.empty_cache()
             return torch.tensor(0.0, requires_grad=True).to(model.device) 
 
     def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):

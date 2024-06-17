@@ -75,6 +75,7 @@ if __name__ == '__main__':
         warmup_ratio=config.warmup_ratio,
         per_device_train_batch_size=config.train_batch_size,
         per_device_eval_batch_size=config.train_batch_size,
+        max_grad_norm=config.max_grad_norm,
         max_steps=config.num_steps,
         evaluation_strategy="epoch",
         save_steps = config.eval_every,

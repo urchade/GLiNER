@@ -192,7 +192,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
                                                     return_tokens = True, return_id_to_classes = True,
                                                     prepare_labels= False, return_entities = True,
-                                                    entities=entity_types)
+                                                    entities=entity_types, get_negatives=False)
         
         collator = DataCollatorWithPadding(self.config)
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
@@ -382,11 +382,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config_file = Path(model_dir) / "gliner_config.json"
 
         if load_tokenizer:
-            try:
-                tokenizer = AutoTokenizer.from_pretrained(model_dir)
-            except Exception as e:
-                print(f"Error {e} loading tokenizer from {model_dir}")
-                tokenizer = None
+            tokenizer = AutoTokenizer.from_pretrained(model_dir)
         else:
             tokenizer = None
         config_ = json.load(open(config_file))
