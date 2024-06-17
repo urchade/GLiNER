@@ -355,7 +355,7 @@ def create_parser():
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
     parser.add_argument('--allow_distributed', type=bool, default=False,
                         help='Whether to allow distributed training if there are more than one GPU available')
-    parser.add_argument('--compile_model', type=bool, default=True,
+    parser.add_argument('--compile_model', type=bool, default=False,
                         help='Whether to apply torch.compile to a modell or not')
     return parser
 
