@@ -2,10 +2,9 @@ import argparse
 import json
 import os
 import re
-from types import SimpleNamespace
 import random
-
 from tqdm import tqdm
+
 from transformers import (
     get_cosine_schedule_with_warmup,
     get_linear_schedule_with_warmup,
@@ -17,7 +16,7 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from transformers.trainer import (
@@ -28,7 +27,7 @@ from transformers.trainer import (
 from transformers import AutoTokenizer
 
 from gliner import GLiNER, GLiNERConfig
-from gliner.data_processing import GLiNERDataset,SpanProcessor, TokenProcessor
+from gliner.data_processing import GLiNERDataset, SpanProcessor, TokenProcessor
 from gliner.data_processing.tokenizer import WordsSplitter
 from gliner.data_processing.collator import DataCollatorWithPadding, DataCollator
 from gliner.utils import load_config_as_namespace
@@ -207,16 +206,15 @@ class Trainer:
         optimizer = self.create_optimizer(model.model)
 
         if self.compile_model:
-            model = torch.compile(model)
+            model.compile_for_training()
 
         return model, optimizer
 
     def create_dataloader(self, dataset, sampler=None, shuffle=True):
         # dataset = GLiNERDataset(dataset, config = self.config, data_processor=self.data_processor)
-        
         # collator = DataCollatorWithPadding(self.config)
         collator = DataCollator(self.config, data_processor=self.data_processor, prepare_labels=True)
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.config.train_batch_size, num_workers=12,
+        data_loader = DataLoader(dataset, batch_size=self.config.train_batch_size, num_workers=12,
                                                         shuffle=shuffle, collate_fn=collator, sampler=sampler)
         return data_loader
     
@@ -316,7 +314,7 @@ class Trainer:
                     continue
 
                 scaler.scale(loss).backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.max_grad_norm)
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
