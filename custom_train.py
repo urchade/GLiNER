@@ -2,9 +2,9 @@ import argparse
 import json
 import os
 import re
-from types import SimpleNamespace
-
+import random
 from tqdm import tqdm
+
 from transformers import (
     get_cosine_schedule_with_warmup,
     get_linear_schedule_with_warmup,
@@ -16,7 +16,7 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
 from transformers.trainer import (
@@ -27,11 +27,11 @@ from transformers.trainer import (
 from transformers import AutoTokenizer
 
 from gliner import GLiNER, GLiNERConfig
-from gliner.data_processing import GLiNERDataset,SpanProcessor, TokenProcessor
+from gliner.data_processing import GLiNERDataset, SpanProcessor, TokenProcessor
 from gliner.data_processing.tokenizer import WordsSplitter
-from gliner.data_processing.collator import DataCollatorWithPadding
+from gliner.data_processing.collator import DataCollatorWithPadding, DataCollator
 from gliner.utils import load_config_as_namespace
-from eval import get_for_all_path
+from gliner.evaluation import get_for_all_path
 
 
 def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k: int = 5):
@@ -48,7 +48,7 @@ def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k
         model.module.save_pretrained(os.path.join(save_path, str(checkpoint)))
     else:
         model.save_pretrained(os.path.join(save_path, str(checkpoint)))
-
+    
     # List all files in the directory
     files = os.listdir(save_path)
 
@@ -68,12 +68,14 @@ def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k
 
 
 class Trainer:
-    def __init__(self, config, allow_distributed, device='cuda'):
+    def __init__(self, config, allow_distributed, compile_model=False, device='cuda'):
         self.config = config
         self.lr_encoder = float(self.config.lr_encoder)
         self.lr_others = float(self.config.lr_others)
         self.weight_decay_encoder = float(self.config.weight_decay_encoder)
         self.weight_decay_other = float(self.config.weight_decay_other)
+
+        self.compile_model = compile_model
 
         self.device = device
 
@@ -128,7 +130,6 @@ class Trainer:
         We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
         Trainer's init through `optimizers`, or subclass and override this method in a subclass.
         """
-
         if self.optimizer is None:
             decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
             decay_parameters = [name for name in decay_parameters if "bias" not in name]
@@ -154,12 +155,14 @@ class Trainer:
                             p for n, p in opt_model.named_parameters() if (n in decay_parameters and n in encoder_parameters and p.requires_grad)
                         ],
                         "weight_decay": self.weight_decay_encoder,
+                        "lr": self.lr_encoder,
                     },
                     {
                         "params": [
                             p for n, p in opt_model.named_parameters() if (n not in decay_parameters and n in encoder_parameters and p.requires_grad)
                         ],
                         "weight_decay": 0.0,
+                        "lr": self.lr_encoder,
                     },
                 ]
             else:
@@ -169,12 +172,14 @@ class Trainer:
                             p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
                         ],
                         "weight_decay": self.weight_decay_encoder,
+                        "lr": self.lr_encoder,
                     },
                     {
                         "params": [
                             p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
                         ],
                         "weight_decay": 0.0,
+                        "lr": self.lr_encoder,
                     },
                 ]
 
@@ -190,18 +195,26 @@ class Trainer:
             model.config = self.model_config
         else:
             model = GLiNER(self.model_config, data_processor=self.data_processor).to(device)
-
+            model.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+                                set_class_token_index = False,
+                                add_tokens_to_tokenizer=False)
         if rank is not None:
             model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=False)
+            model.module.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+                                set_class_token_index = False,
+                                add_tokens_to_tokenizer=False)
+        optimizer = self.create_optimizer(model.model)
 
-        optimizer = self.create_optimizer(model)
+        if self.compile_model:
+            model.compile_for_training()
+
         return model, optimizer
 
     def create_dataloader(self, dataset, sampler=None, shuffle=True):
-        dataset = GLiNERDataset(dataset, config = self.config, data_processor=self.data_processor)
-        
-        collator = DataCollatorWithPadding(self.config)
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=self.config.train_batch_size, 
+        # dataset = GLiNERDataset(dataset, config = self.config, data_processor=self.data_processor)
+        # collator = DataCollatorWithPadding(self.config)
+        collator = DataCollator(self.config, data_processor=self.data_processor, prepare_labels=True)
+        data_loader = DataLoader(dataset, batch_size=self.config.train_batch_size, num_workers=12,
                                                         shuffle=shuffle, collate_fn=collator, sampler=sampler)
         return data_loader
     
@@ -287,16 +300,21 @@ class Trainer:
             for k, v in x.items():
                 if isinstance(v, torch.Tensor):
                     x[k] = v.to(device)
-
+            
             try:
                 with torch.cuda.amp.autocast(dtype=torch.float16):
-                    loss = model(**x).loss
+                    loss = model(alpha = self.config.loss_alpha,
+                                    gamma = self.config.loss_gamma,
+                                    label_smoothing = self.config.label_smoothing,
+                                    reduction = self.config.loss_reduction,
+                                    **x).loss
 
                 if torch.isnan(loss).any():
                     print("Warning: NaN loss detected")
                     continue
 
                 scaler.scale(loss).backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.max_grad_norm)
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
@@ -319,7 +337,7 @@ class Trainer:
     def run(self):
         with open(self.config.train_data, 'r') as f:
             data = json.load(f)
-
+        random.shuffle(data) 
         if torch.cuda.device_count() > 1 and self.allow_distributed:
             world_size = torch.cuda.device_count()
             mp.spawn(self.train_dist, args=(world_size, data), nprocs=world_size, join=True)
@@ -337,6 +355,8 @@ def create_parser():
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
     parser.add_argument('--allow_distributed', type=bool, default=False,
                         help='Whether to allow distributed training if there are more than one GPU available')
+    parser.add_argument('--compile_model', type=bool, default=True,
+                        help='Whether to apply torch.compile to a modell or not')
     return parser
 
 
@@ -347,5 +367,6 @@ if __name__ == "__main__":
     config.log_dir = args.log_dir
 
     trainer = Trainer(config, allow_distributed=args.allow_distributed,
+                      compile_model = args.compile_model,
                       device='cuda' if torch.cuda.is_available() else 'cpu')
     trainer.run()

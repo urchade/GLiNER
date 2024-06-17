@@ -1,3 +1,5 @@
+import random
+from tqdm import tqdm 
 from typing import Optional, List
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
@@ -15,7 +17,8 @@ class GLiNERDataset(Dataset):
                         return_id_to_classes: bool = False,
                         return_entities: bool = False,
                         prepare_labels: bool = True,
-                        entities: List[str] = None):
+                        entities: List[str] = None,
+                        get_negatives=True):
         self._data = examples
         self.config=config
         if data_processor is not None:
@@ -30,15 +33,44 @@ class GLiNERDataset(Dataset):
         self.return_id_to_classes = return_id_to_classes
         self.prepare_labels = prepare_labels
         self.return_entities = return_entities
-        self.entities = entities
+        self.max_neg_type_ratio = int(self.config.max_neg_type_ratio)
+        if not entities:
+            self.all_entities = self._collect_all_entities()
+        else:
+            self.all_entities = entities
+        self.get_negatives = get_negatives
 
+    def _get_entities_from_example(self, example):
+        entities = {ner[-1] for ner in example['ner']}
+        return entities
+    
+    def _collect_all_entities(self):
+        print("Collecting all entities...")
+        all_entities = set()
+        for example in tqdm(self._data):
+            curr_entities = self._get_entities_from_example(example)
+            all_entities.update(curr_entities)
+        print('Total number of entity classes: ', len(all_entities))
+        return all_entities
+
+    def _get_negatives(self):
+        negatives = random.sample(self.all_entities, k=50)
+        random.shuffle(negatives)
+        return negatives
+    
     def __len__(self):
         return len(self._data)
 
     def __getitem__(self, idx):
         try:
             example = self._data[idx]
-            raw_batch = self.data_processor.collate_raw_batch([example], entity_types=self.entities)
+            if self.get_negatives:
+                curr_negatives = self._get_negatives()
+            else:
+                curr_negatives = None
+
+            raw_batch = self.data_processor.collate_raw_batch([example], entity_types = self.all_entities,
+                                                                                negatives=curr_negatives)
             
             model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=self.prepare_labels)
             if 'span_idx' in raw_batch:

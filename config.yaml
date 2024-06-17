@@ -11,7 +11,7 @@ span_mode: markerV0
 # Training Parameters
 num_steps: 30000
 train_batch_size: 3
-eval_every: 1000
+eval_every: 3000
 warmup_ratio: 0.1
 scheduler_type: "cosine"
 
@@ -26,6 +26,8 @@ lr_encoder: 1e-5
 lr_others: 5e-5
 weight_decay_encoder: 0.01
 weight_decay_other: 0.01
+
+max_grad_norm: 1.0
 
 # Directory Paths
 root_dir: gliner_logs

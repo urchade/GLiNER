@@ -17,8 +17,8 @@ from .span_rep import SpanRepLayer
 
 @dataclass
 class GLiNERModelOutput(ModelOutput):
-    logits: torch.FloatTensor
     loss: Optional[torch.FloatTensor] = None
+    logits: Optional[torch.FloatTensor] = None
     prompts_embedding: Optional[torch.FloatTensor] = None
     prompts_embedding_mask: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
