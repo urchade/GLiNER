@@ -106,9 +106,9 @@ class Trainer:
         words_splitter = WordsSplitter()
 
         if config.span_mode == "token_level":
-            self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter)
+            self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
         else:
-            self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter)
+            self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
 
         self.allow_distributed = allow_distributed
 
@@ -355,7 +355,7 @@ def create_parser():
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
     parser.add_argument('--allow_distributed', type=bool, default=False,
                         help='Whether to allow distributed training if there are more than one GPU available')
-    parser.add_argument('--compile_model', type=bool, default=True,
+    parser.add_argument('--compile_model', type=bool, default=False,
                         help='Whether to apply torch.compile to a modell or not')
     return parser
 

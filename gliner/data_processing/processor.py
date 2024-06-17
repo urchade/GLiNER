@@ -3,6 +3,7 @@ import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from typing import List, Tuple, Dict
+from concurrent.futures import ProcessPoolExecutor
 
 import torch
 from torch.utils.data import DataLoader
@@ -13,13 +14,15 @@ from .utils import pad_2d_tensor
 
 # Abstract base class for handling data processing
 class BaseProcessor(ABC):
-    def __init__(self, config, tokenizer, words_splitter):
+    def __init__(self, config, tokenizer, words_splitter, preprocess_text=False):
         self.config = config
         self.transformer_tokenizer = tokenizer
 
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
         self.sep_token = config.sep_token
+
+        self.preprocess_text = preprocess_text
 
         # Check if the tokenizer has unk_token and pad_token
         self._check_and_set_special_tokens()
@@ -92,7 +95,7 @@ class BaseProcessor(ABC):
     def prepare_texts(self, texts):
         texts = [self.prepare_text(text) for text in texts]
         return texts
-    
+
     def tokenize_inputs(self, texts, entities):
         input_texts = []
         prompt_lengths = []
@@ -111,7 +114,9 @@ class BaseProcessor(ABC):
             input_text.extend(text)
             input_texts.append(input_text)
 
-        input_texts = self.prepare_texts(input_texts)
+        if self.preprocess_text:
+            input_texts = self.prepare_texts(input_texts)
+            
         tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
                                                                                 truncation=True, padding="longest")
         words_masks = []
