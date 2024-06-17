@@ -25,9 +25,9 @@ class GLiNERDataset(Dataset):
             self.data_processor = data_processor
         else:
             if config.span_mode == "token_level":
-                self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+                self.data_processor = TokenProcessor(config, tokenizer, words_splitter, preprocess_text=True)
             else:
-                self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+                self.data_processor = SpanProcessor(config, tokenizer, words_splitter, preprocess_text=True)
         
         self.return_tokens = return_tokens
         self.return_id_to_classes = return_id_to_classes
