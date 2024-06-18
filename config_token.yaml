@@ -27,6 +27,8 @@ lr_others: 5e-5
 weight_decay_encoder: 0.01
 weight_decay_other: 0.01
 
+max_grad_norm: 1.0
+
 # Directory Paths
 root_dir: gliner_logs
 train_data: "train.json" # see https://github.com/urchade/GLiNER/tree/main/data

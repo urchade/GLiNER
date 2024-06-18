@@ -60,15 +60,78 @@ Word-level models work **better for finding multi-word entities, highlighting se
 
 ## 🛠 Installation & Usage
 
-To begin using the GLiNER model, first install the GLiNER Python library through pip or conda:
+To provide instructions on how to install the GLiNER model from source, you can add steps for cloning the repository and installing it manually. Here’s how you can incorporate those instructions:
+
+---
+
+## 🛠 Installation & Usage
+
+To begin using the GLiNER model, you can install the GLiNER Python library through pip, conda, or directly from the source.
+
+### Install via Pip
 
 ```bash
 !pip install gliner
 ```
 
+### Install via Conda
+
 ```bash
 conda install -c conda-forge gliner
 ```
+
+### Install from Source
+
+To install the GLiNER library from source, follow these steps:
+
+1. **Clone the Repository:**
+
+   First, clone the GLiNER repository from GitHub:
+
+   ```bash
+   git clone https://github.com/Knowledgator/GLiNER
+   ```
+
+2. **Navigate to the Project Directory:**
+
+   Change to the directory containing the cloned repository:
+
+   ```bash
+   cd GLiNER
+   ```
+
+3. **Install Dependencies:**
+
+   It's a good practice to create and activate a virtual environment before installing dependencies:
+
+   ```bash
+   python -m venv venv
+   source venv/bin/activate   # On Windows use: venv\Scripts\activate
+   ```
+
+   Install the required dependencies listed in the `requirements.txt` file:
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Install the GLiNER Package:**
+
+   Finally, install the GLiNER package using the setup script:
+
+   ```bash
+   pip install .
+   ```
+
+5. **Verify Installation:**
+
+   You can verify the installation by importing the library in a Python script:
+
+   ```python
+   import gliner
+   print(gliner.__version__)
+   ```
+---
 
 ### 🚀 Basic Use Case
 
@@ -161,6 +224,28 @@ Microsoft => organization
 ##  📊 NER Benchmark Results
 
 <img align="center" src="https://cdn-uploads.huggingface.co/production/uploads/6317233cc92fd6fee317e030/Y5f7tK8lonGqeeO6L6bVI.png" />
+
+## ONNX convertion:
+To convert previously trained GLiNER models to ONNX format, you can use the `convert_to_onnx.py` script. You need to provide the `model_path` and `save_path` arguments to specify the location of the model and where to save the ONNX file, respectively. Additionally, if you wish to quantize the model, set the `quantize` argument to True (it quantizes to *IntU8* by default).
+
+Example usage:
+
+```bash
+
+python convert_to_onnx.py --model_path /path/to/your/model --save_path /path/to/save/onnx --quantize True
+```
+
+To load the converted ONNX models, you can use the following code snippet:
+
+```python
+
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("path_to_your_model", load_onnx_model=True, load_tokenizer=True)
+
+```
+The `load_onnx_model` argument ensures that the GLiNER class recognizes that it should load the ONNX model instead of a PyTorch model.
+Setting the `load_tokenizer`` argument to True loads the tokenizer from your model directory, including any additional tokens that were added during training.
 
 ## 🛠 Areas of Improvements / research
 

@@ -2,9 +2,9 @@ import argparse
 import json
 import os
 import re
-from types import SimpleNamespace
-
+import random
 from tqdm import tqdm
+
 from transformers import (
     get_cosine_schedule_with_warmup,
     get_linear_schedule_with_warmup,
@@ -16,12 +16,22 @@ import torch
 import torch.distributed as dist
 import torch.multiprocessing as mp
 from torch.nn.parallel import DistributedDataParallel as DDP
-from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 
-from gliner import GLiNER
-from gliner.modules.base import load_config_as_namespace
-from gliner.modules.run_evaluation import get_for_all_path
+from transformers.trainer import (
+    is_sagemaker_mp_enabled,
+    get_parameter_names,
+    ALL_LAYERNORM_LAYERS,
+)
+from transformers import AutoTokenizer
+
+from gliner import GLiNER, GLiNERConfig
+from gliner.data_processing import GLiNERDataset, SpanProcessor, TokenProcessor
+from gliner.data_processing.tokenizer import WordsSplitter
+from gliner.data_processing.collator import DataCollatorWithPadding, DataCollator
+from gliner.utils import load_config_as_namespace
+from gliner.evaluation import get_for_all_path
 
 
 def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k: int = 5):
@@ -38,7 +48,7 @@ def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k
         model.module.save_pretrained(os.path.join(save_path, str(checkpoint)))
     else:
         model.save_pretrained(os.path.join(save_path, str(checkpoint)))
-
+    
     # List all files in the directory
     files = os.listdir(save_path)
 
@@ -58,16 +68,18 @@ def save_top_k_checkpoints(model: GLiNER, save_path: str, checkpoint: int, top_k
 
 
 class Trainer:
-    def __init__(self, config, allow_distributed, device='cuda'):
+    def __init__(self, config, allow_distributed, compile_model=False, device='cuda'):
         self.config = config
         self.lr_encoder = float(self.config.lr_encoder)
         self.lr_others = float(self.config.lr_others)
         self.weight_decay_encoder = float(self.config.weight_decay_encoder)
         self.weight_decay_other = float(self.config.weight_decay_other)
 
+        self.compile_model = compile_model
+
         self.device = device
 
-        self.model_config = SimpleNamespace(
+        self.model_config = GLiNERConfig(
             model_name=config.model_name,
             name=config.name,
             max_width=config.max_width,
@@ -86,8 +98,21 @@ class Trainer:
             max_neg_type_ratio=config.max_neg_type_ratio,
             max_len=config.max_len,
         )
+        tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+        self.model_config.class_token_index=len(tokenizer)
+        tokenizer.add_tokens([self.model_config.ent_token, self.model_config.sep_token])
+        self.model_config.vocab_size = len(tokenizer)
+
+        words_splitter = WordsSplitter()
+
+        if config.span_mode == "token_level":
+            self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+        else:
+            self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
 
         self.allow_distributed = allow_distributed
+
+        self.optimizer = None
 
     def setup_distributed(self, rank, world_size):
         os.environ['MASTER_ADDR'] = 'localhost'
@@ -98,26 +123,101 @@ class Trainer:
     def cleanup_distributed(self):
         dist.destroy_process_group()
 
+    def create_optimizer(self, opt_model, **optimizer_kwargs):
+        """
+        Setup the optimizer.
+
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through `optimizers`, or subclass and override this method in a subclass.
+        """
+        if self.optimizer is None:
+            decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+            decay_parameters = [name for name in decay_parameters if "bias" not in name]
+            if self.lr_others is not None:
+                encoder_parameters = [name for name, _ in opt_model.named_parameters() if "token_rep_layer" in name]
+                optimizer_grouped_parameters = [
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n in decay_parameters and n not in encoder_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": self.weight_decay_other,
+                        "lr": self.lr_others,
+                    },
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n not in decay_parameters and n not in encoder_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": 0.0,
+                        "lr": self.lr_others,
+                    },
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n in decay_parameters and n in encoder_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": self.weight_decay_encoder,
+                        "lr": self.lr_encoder,
+                    },
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n not in decay_parameters and n in encoder_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": 0.0,
+                        "lr": self.lr_encoder,
+                    },
+                ]
+            else:
+                optimizer_grouped_parameters = [
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": self.weight_decay_encoder,
+                        "lr": self.lr_encoder,
+                    },
+                    {
+                        "params": [
+                            p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
+                        ],
+                        "weight_decay": 0.0,
+                        "lr": self.lr_encoder,
+                    },
+                ]
+
+            self.optimizer = torch.optim.AdamW(optimizer_grouped_parameters, **optimizer_kwargs)
+
+        return self.optimizer
+    
     def setup_model_and_optimizer(self, rank=None, device=None):
         if device is None:
             device = self.device
         if self.config.prev_path != "none":
-            model = GLiNER.from_pretrained(self.config.prev_path).to(device)
+            model = GLiNER.from_pretrained(self.config.prev_path, data_processor=self.data_processor).to(device)
             model.config = self.model_config
         else:
-            model = GLiNER(self.model_config).to(device)
-
+            model = GLiNER(self.model_config, data_processor=self.data_processor).to(device)
+            model.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+                                set_class_token_index = False,
+                                add_tokens_to_tokenizer=False)
         if rank is not None:
             model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=False)
-            optimizer = model.module.get_optimizer(self.lr_encoder, self.lr_others,
-                                                   self.weight_decay_encoder, self.weight_decay_other,
-                                                   freeze_token_rep=self.config.freeze_token_rep)
-        else:
-            optimizer = model.get_optimizer(self.lr_encoder, self.lr_others,
-                                            self.weight_decay_encoder, self.weight_decay_other,
-                                            freeze_token_rep=self.config.freeze_token_rep)
+            model.module.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+                                set_class_token_index = False,
+                                add_tokens_to_tokenizer=False)
+        optimizer = self.create_optimizer(model.model)
+
+        if self.compile_model:
+            model.compile_for_training()
+
         return model, optimizer
 
+    def create_dataloader(self, dataset, sampler=None, shuffle=True):
+        # dataset = GLiNERDataset(dataset, config = self.config, data_processor=self.data_processor)
+        # collator = DataCollatorWithPadding(self.config)
+        collator = DataCollator(self.config, data_processor=self.data_processor, prepare_labels=True)
+        data_loader = DataLoader(dataset, batch_size=self.config.train_batch_size, num_workers=12,
+                                                        shuffle=shuffle, collate_fn=collator, sampler=sampler)
+        return data_loader
+    
     def train_dist(self, rank, world_size, dataset):
         # Init distributed process group
         self.setup_distributed(rank, world_size)
@@ -128,8 +228,7 @@ class Trainer:
 
         sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=False)
 
-        train_loader = model.module.create_dataloader(dataset, batch_size=self.config.train_batch_size, shuffle=False,
-                                                      sampler=sampler)
+        train_loader = self.create_dataloader(dataset, sampler=sampler, shuffle=False)
 
         num_steps = self.config.num_steps // world_size
 
@@ -201,16 +300,21 @@ class Trainer:
             for k, v in x.items():
                 if isinstance(v, torch.Tensor):
                     x[k] = v.to(device)
-
+            
             try:
                 with torch.cuda.amp.autocast(dtype=torch.float16):
-                    loss = model(x)
+                    loss = model(alpha = self.config.loss_alpha,
+                                    gamma = self.config.loss_gamma,
+                                    label_smoothing = self.config.label_smoothing,
+                                    reduction = self.config.loss_reduction,
+                                    **x).loss
 
                 if torch.isnan(loss).any():
                     print("Warning: NaN loss detected")
                     continue
 
                 scaler.scale(loss).backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), self.config.max_grad_norm)
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
@@ -233,14 +337,14 @@ class Trainer:
     def run(self):
         with open(self.config.train_data, 'r') as f:
             data = json.load(f)
-
+        random.shuffle(data) 
         if torch.cuda.device_count() > 1 and self.allow_distributed:
             world_size = torch.cuda.device_count()
             mp.spawn(self.train_dist, args=(world_size, data), nprocs=world_size, join=True)
         else:
             model, optimizer = self.setup_model_and_optimizer()
 
-            train_loader = model.create_dataloader(data, batch_size=self.config.train_batch_size, shuffle=True)
+            train_loader = self.create_dataloader(data, shuffle=True)
 
             self.train(model, optimizer, train_loader, num_steps=self.config.num_steps, device=self.device)
 
@@ -251,6 +355,8 @@ def create_parser():
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to the log directory')
     parser.add_argument('--allow_distributed', type=bool, default=False,
                         help='Whether to allow distributed training if there are more than one GPU available')
+    parser.add_argument('--compile_model', type=bool, default=False,
+                        help='Whether to apply torch.compile to a modell or not')
     return parser
 
 
@@ -261,5 +367,6 @@ if __name__ == "__main__":
     config.log_dir = args.log_dir
 
     trainer = Trainer(config, allow_distributed=args.allow_distributed,
+                      compile_model = args.compile_model,
                       device='cuda' if torch.cuda.is_available() else 'cpu')
     trainer.run()

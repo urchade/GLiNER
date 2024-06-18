@@ -55,3 +55,18 @@ class MecabKoTokenSplitter(TokenSplitterBase):
             end_idx = start_idx + len(morph)
             last_idx = end_idx
             yield morph, start_idx, end_idx
+
+class WordsSplitter(TokenSplitterBase):
+    def __init__(self, splitter_type='whitespace'):
+        if splitter_type=='whitespace':
+            self.splitter = WhitespaceTokenSplitter()
+        elif splitter_type == 'spacy':
+            self.splitter = SpaCyTokenSplitter()
+        elif splitter_type == 'mecab':
+            self.splitter = MecabKoTokenSplitter()
+        else:
+            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy' and 'mecab'")
+    
+    def __call__(self, text):
+        for token in self.splitter(text):
+            yield token

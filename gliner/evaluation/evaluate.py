@@ -2,11 +2,11 @@ import glob
 import json
 import os
 import os
-
+import numpy as np
+import argparse
 import torch
 from tqdm import tqdm
 import random
-
 
 def open_content(path):
     paths = glob.glob(os.path.join(path, "*.json"))
@@ -50,7 +50,7 @@ def process(data):
             char_count += word_length + 1  # Add 1 for the space
 
         # Append the word positions to the list
-        entities.append((start_word, end_word, entity['type']))
+        entities.append((start_word, end_word, entity['type'].lower()))
 
     # Create a list of word positions for each entity
     sample = {
@@ -73,6 +73,7 @@ def create_dataset(path):
         dev_dataset.append(process(data))
     for data in test:
         test_dataset.append(process(data))
+    labels = [label.lower() for label in labels]
     return train_dataset, dev_dataset, test_dataset, labels
 
 

@@ -1,387 +1,425 @@
+import os
+import re
+import json
 import warnings
+from pathlib import Path
+from typing import Optional, Union, Dict, List
+
+from transformers import AutoTokenizer, AutoConfig
 
 import torch
-import torch.nn.functional as F
-from gliner.modules.base import InstructBase
-from gliner.modules.evaluator import greedy_search
-from gliner.modules.layers import LstmSeq2SeqEncoder, create_projection_layer, Scorer, TokenPromptProcessor
-from gliner.modules.loss_functions import focal_loss_with_logits
-from gliner.modules.span_rep import SpanRepLayer
-from gliner.modules.token_rep import TokenRepLayer
-from transformers.trainer import (
-    get_parameter_names,
-    ALL_LAYERNORM_LAYERS,
-)
+from torch import nn
+import numpy as np
 
+from .modeling.base import BaseModel, SpanModel, TokenModel
+from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
+from .data_processing import SpanProcessor, TokenProcessor, GLiNERDataset
+from .data_processing.tokenizer import WordsSplitter
+from .data_processing.collator import DataCollatorWithPadding
+from .decoding import SpanDecoder, TokenDecoder
+from .evaluation import Evaluator
+from .config import GLiNERConfig
 
-def get_params(opt_model, lr, weight_decay):
-    decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
-    decay_parameters = [name for name in decay_parameters if "bias" not in name]
-    grouped_parameters = [
-        {
-            "params": [
-                p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
-            ],
-            "weight_decay": weight_decay,
-            "lr": lr,
-        },
-        {
-            "params": [
-                p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
-            ],
-            "weight_decay": 0.0,
-            "lr": lr,
-        }
-    ]
-    return grouped_parameters
+from huggingface_hub import PyTorchModelHubMixin, snapshot_download
 
-
-class GLiNER(InstructBase):
-    def __new__(cls, config):
-        if config.span_mode == "token_level":
-            return TokenGLiNER(config)
-        else:
-            return SpanGLiNER(config)
-
-
-class SpanGLiNER(InstructBase):
-    def __init__(self, config):
-        super().__init__(config)
-
-        # [ENT] token
-        self.entity_token = "<<ENT>>"
-        self.sep_token = "<<SEP>>"
-
-        # usually a pretrained bidirectional transformer, returns first subtoken representation
-        self.token_rep_layer = TokenRepLayer(model_name=config.model_name, fine_tune=config.fine_tune,
-                                             subtoken_pooling=config.subtoken_pooling, hidden_size=config.hidden_size,
-                                             add_tokens=[self.entity_token, self.sep_token])
-
-        # token prompt processor
-        self.token_prompt_processor = TokenPromptProcessor(self.entity_token, self.sep_token)
-
-        # hierarchical representation of tokens (zaratiana et al, 2022)
-        # https://arxiv.org/pdf/2203.14710.pdf
-        self.rnn = LstmSeq2SeqEncoder(
-            input_size=config.hidden_size,
-            hidden_size=config.hidden_size // 2,
-            num_layers=1,
-            bidirectional=True,
-        )
-
-        # span representation
-        # we have a paper to study span representation for ner
-        # zaratiana et al, 2022: https://aclanthology.org/2022.umios-1.1/
-        self.span_rep_layer = SpanRepLayer(
-            span_mode=config.span_mode,
-            hidden_size=config.hidden_size,
-            max_width=config.max_width,
-            dropout=config.dropout,
-        )
-
-        # prompt representation (FFN)
-        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
-
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
-                      freeze_token_rep=False, **optimizer_kwargs):
-        """
-        Parameters:
-        - lr_encoder: Learning rate for the encoder layer.
-        - lr_others: Learning rate for all other layers.
-        - freeze_token_rep: whether the token representation layer should be frozen.
-        """
-        param_groups = []
-        param_groups += get_params(self.rnn, lr_others, weight_decay_others)
-        param_groups += get_params(self.span_rep_layer, lr_others, weight_decay_others)
-        param_groups += get_params(self.prompt_rep_layer, lr_others, weight_decay_others)
-
-        if not freeze_token_rep:
-            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate and weight decay
-            param_groups += get_params(self.token_rep_layer, lr_encoder, weight_decay_encoder)
-        else:
-            # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
-            for param in self.token_rep_layer.parameters():
-                param.requires_grad = False
-
-        optimizer = torch.optim.AdamW(param_groups, **optimizer_kwargs)
-
-        return optimizer
-
-    def compute_score_train(self, x):
-
-        # get device
-        device = next(self.token_rep_layer.parameters()).device
-
-        span_idx = (x["span_idx"] * x["span_mask"].unsqueeze(-1)).to(device)
-
-        # compute token representation
-        word_rep, mask, entity_type_rep, entity_type_mask = self.token_prompt_processor.process(
-            x, self.token_rep_layer, "train"
-        )
-
-        # compute span representation
-        word_rep = self.rnn(word_rep, mask)
-        span_rep = self.span_rep_layer(word_rep, span_idx)
-
-        # compute final entity type representation (FFN)
-        entity_type_rep = self.prompt_rep_layer(entity_type_rep)  # (batch_size, len_types, hidden_size)
-        num_classes = entity_type_rep.shape[1]  # number of entity types
-
-        # similarity score
-        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, entity_type_rep)
-
-        return scores, num_classes, entity_type_mask
-
-    def forward(self, x):
-        # compute span representation
-        scores, num_classes, entity_type_mask = self.compute_score_train(x)
-        batch_size = scores.shape[0]
-
-        # loss for filtering classifier
-        logits_label = scores.view(-1, num_classes)
-        labels = x["span_label"].view(-1)  # (batch_size * num_spans)
-        mask_label = labels != -1  # (batch_size * num_spans)
-        labels.masked_fill_(~mask_label, 0)  # Set the labels of padding tokens to 0
-
-        # one-hot encoding
-        labels_one_hot = F.one_hot(labels, num_classes + 1).to(dtype=scores.dtype)
-        labels_one_hot = labels_one_hot[:, 1:]  # Remove the first column
-        # Shape of labels_one_hot: (batch_size * num_spans, num_classes)
-
-        # compute loss (without reduction)
-        alpha = getattr(self.config, 'loss_alpha', -1)
-        gamma = getattr(self.config, 'loss_gamma', 0)
-        label_smoothing = getattr(self.config, 'label_smoothing', 0)
-
-        all_losses = focal_loss_with_logits(logits_label, labels_one_hot,
-                                            alpha=alpha,
-                                            gamma=gamma,
-                                            label_smoothing=label_smoothing)
-
-        # mask loss using entity_type_mask (B, C)
-        masked_loss = all_losses.view(batch_size, -1, num_classes) * entity_type_mask.unsqueeze(1)
-        all_losses = masked_loss.view(-1, num_classes)
-        # expand mask_label to all_losses
-        mask_label = mask_label.unsqueeze(-1).expand_as(all_losses)
-        # apply mask
-        all_losses = all_losses * mask_label.float()
-
-        reduction = getattr(self.config, 'loss_reduction', 'sum')
-
-        if reduction == "mean":
-            loss = all_losses.mean()
-        elif reduction == 'sum':
-            loss = all_losses.sum()
-        else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{self.config.loss_reduction} \n Supported reduction modes: 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = all_losses.sum()
-        return loss
-
-    def compute_score_eval(self, x, device):
-        # check if classes_to_id is dict
-        assert isinstance(x["classes_to_id"], dict), "classes_to_id must be a dict"
-
-        span_idx = (x["span_idx"] * x["span_mask"].unsqueeze(-1)).to(device)
-
-        word_rep, mask, entity_type_rep = self.token_prompt_processor.process(
-            x, self.token_rep_layer, "eval"
-        )
-
-        entity_type_rep = self.prompt_rep_layer(entity_type_rep)  # (batch_size, len_types, hidden_size)
-
-        word_rep = self.rnn(word_rep, mask)
-
-        span_rep = self.span_rep_layer(word_rep, span_idx)
-
-        local_scores = torch.einsum("BLKD,BCD->BLKC", span_rep, entity_type_rep)
-
-        return local_scores
-
-    @torch.no_grad()
-    def predict(self, x, flat_ner=False, threshold=0.5, multi_label=False):
-        self.eval()
-        local_scores = self.compute_score_eval(x, device=next(self.parameters()).device)
-        probs = torch.sigmoid(local_scores)
-
-        spans = []
-        for i, _ in enumerate(x["tokens"]):
-            probs_i = probs[i]
-
-            wh_i = [i.tolist() for i in torch.where(probs_i > threshold)]
-            span_i = []
-
-            for s, k, c in zip(*wh_i):
-                if s + k < len(x["tokens"][i]):
-                    span_i.append((s, s + k, x["id_to_classes"][c + 1], probs_i[s, k, c].item()))
-
-            span_i = greedy_search(span_i, flat_ner, multi_label=multi_label)
-            spans.append(span_i)
-        return spans
-
-
-class TokenGLiNER(InstructBase):
-    def __init__(self, config):
-        super().__init__(config)
-
+class GLiNER(nn.Module, PyTorchModelHubMixin):
+    def __init__(self, config: GLiNERConfig, 
+                        model: Optional[Union[BaseModel, BaseORTModel]] = None,
+                        tokenizer: Optional[Union[str, AutoTokenizer]] = None, 
+                        words_splitter: Optional[Union[str, WordsSplitter]] = None, 
+                        data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None, 
+                        encoder_from_pretrained: bool = True):
+        super().__init__()
         self.config = config
 
-        # [ENT] token
-        self.entity_token = "<<ENT>>"
-        self.sep_token = "<<SEP>>"
+        if tokenizer is None and data_processor is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name)
 
-        # usually a pretrained bidirectional transformer, returns first subtoken representation
-        self.token_rep_layer = TokenRepLayer(model_name=config.model_name, fine_tune=config.fine_tune,
-                                             subtoken_pooling=config.subtoken_pooling, hidden_size=config.hidden_size,
-                                             add_tokens=[self.entity_token, self.sep_token])
+        if words_splitter is None and data_processor is None:
+            words_splitter = WordsSplitter(config.words_splitter_type)
 
-        # hierarchical representation of tokens
-        self.rnn = LstmSeq2SeqEncoder(
-            input_size=config.hidden_size,
-            hidden_size=config.hidden_size // 2,
-            num_layers=1,
-            bidirectional=True,
-        )
-
-        # token prompt processor
-        self.token_prompt_processor = TokenPromptProcessor(self.entity_token, self.sep_token)
-
-        # span representation (FFN)
-        self.scorer = Scorer(config.hidden_size, config.dropout)
-
-    def get_optimizer(self, lr_encoder, lr_others, weight_decay_encoder=1e-2, weight_decay_others=1e-2,
-                      freeze_token_rep=False, **optimizer_kwargs):
-        """
-        Parameters:
-        - lr_encoder: Learning rate for the encoder layer.
-        - lr_others: Learning rate for all other layers.
-        - freeze_token_rep: whether the token representation layer should be frozen.
-        """
-        param_groups = []
-        param_groups += get_params(self.rnn, lr_others, weight_decay_others)
-        param_groups += get_params(self.scorer, lr_others, weight_decay_others)
-
-        if not freeze_token_rep:
-            # If token_rep_layer should not be frozen, add it to the optimizer with its learning rate and weight decay
-            param_groups += get_params(self.token_rep_layer, lr_encoder, weight_decay_encoder)
+        if config.span_mode == "token_level":
+            if model is None:
+                self.model = TokenModel(config, encoder_from_pretrained)
+            else:
+                self.model = model
+            if data_processor is None:
+                self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+            else:
+                self.data_processor = data_processor
+            self.decoder = TokenDecoder(config)
         else:
-            # If token_rep_layer should be frozen, explicitly set requires_grad to False for its parameters
-            for param in self.token_rep_layer.parameters():
-                param.requires_grad = False
+            if model is None:
+                self.model = SpanModel(config, encoder_from_pretrained)
+            else:
+                self.model = model
+            if data_processor is None:
+                self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+            else:
+                self.data_processor = data_processor
+            self.decoder = SpanDecoder(config)
 
-        optimizer = torch.optim.AdamW(param_groups, **optimizer_kwargs)
-
-        return optimizer
-
-    def compute_score_train(self, x):
-
-        device = next(self.parameters()).device
-
-        # compute token representation
-        word_rep, mask, entity_type_rep, entity_type_mask = self.token_prompt_processor.process(
-            x, self.token_rep_layer, "train"
-        )
-
-        num_classes = entity_type_rep.shape[1]  # number of entity types
-
-        # compute span representation
-        word_rep = self.rnn(word_rep, mask)
-
-        batch_size, seq_len, hidden_size = word_rep.shape
-
-        # create a tensor with shape (batch_size, seq_len) with entries the id of the entity type of the span
-        word_labels = torch.zeros(
-            3, batch_size, seq_len, num_classes, dtype=torch.float
-        ).to(device)
-
-        # get batch_nums and span_pos
-        for i, element in enumerate(x["entities_id"]):
-            for ent in element:
-                st, ed, sp_label = ent
-                sp_label = sp_label - 1
-
-                # prevent indexing errors
-                if st >= seq_len or ed >= seq_len:
-                    continue
-
-                word_labels[0, i, st, sp_label] = 1  # start
-                word_labels[1, i, ed, sp_label] = 1  # end
-                word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
-
-        # compute scores for start, end and inside
-        all_scores = self.scorer(word_rep, entity_type_rep)  # (3, batch_size, seq_len, num_classes)
-
-        alpha = getattr(self.config, 'loss_alpha', -1)
-        gamma = getattr(self.config, 'loss_gamma', 0)
-        label_smoothing = getattr(self.config, 'label_smoothing', 0)
-
-        all_losses = focal_loss_with_logits(all_scores, word_labels,
-                                            alpha=alpha,
-                                            gamma=gamma,
-                                            label_smoothing=label_smoothing)
-
-        all_losses = all_losses * entity_type_mask.unsqueeze(1) * mask.unsqueeze(-1)
-
-        return all_losses
-
-    def forward(self, x):
-        all_losses = self.compute_score_train(x)
-
-        reduction = getattr(self.config, 'loss_reduction', 'sum')
-
-        if reduction == "mean":
-            loss = all_losses.mean()
-        elif reduction == 'sum':
-            loss = all_losses.sum()
+        if config.vocab_size !=-1 and config.vocab_size!=len(self.data_processor.transformer_tokenizer):
+            warnings.warn(f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(self.data_processor.transformer_tokenizer)}). 
+                            You should to consider manually add new tokens to tokenizer or to load tokenizer with added tokens.""")
+            
+        if isinstance(self.model, BaseORTModel):
+            self.onnx_model = True
         else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{self.config.loss_reduction} \n Supported reduction modes:"
-                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = all_losses.sum()
-        return loss
+            self.onnx_model = False
 
-    def compute_score_eval(self, x):
-        # check if classes_to_id is dict
-        assert isinstance(x['classes_to_id'], dict), "classes_to_id must be a dict"
+    def forward(self, *args, **kwargs):
+        output = self.model(*args, **kwargs)
+        return output
 
-        # compute token representation
-        word_rep, mask, entity_type_rep = self.token_prompt_processor.process(
-            x, self.token_rep_layer, "eval"
-        )
+    @property
+    def device(self):
+        device = next(self.model.parameters()).device
+        return device
+    
+    def resize_token_embeddings(self, add_tokens, 
+                                    set_class_token_index = True, 
+                                    add_tokens_to_tokenizer = True, 
+                                    pad_to_multiple_of=None) -> nn.Embedding:
+        if set_class_token_index:
+            self.config.class_token_index = len(self.data_processor.transformer_tokenizer)+1
+        if add_tokens_to_tokenizer:
+            self.data_processor.transformer_tokenizer.add_tokens(add_tokens)
+        new_num_tokens = len(self.data_processor.transformer_tokenizer)
+        model_embeds = self.model.token_rep_layer.resize_token_embeddings(new_num_tokens, pad_to_multiple_of)
+        # update vocab size
+        self.config.vocab_size = model_embeds.num_embeddings
+        if self.config.encoder_config is not None:
+            self.config.encoder_config.vocab_size = model_embeds.num_embeddings
+        return model_embeds
 
-        # compute word representation using LSTM
-        word_rep = self.rnn(word_rep, mask)
+    def prepare_model_inputs(self, texts: str, labels: str):
+        all_tokens = []
+        all_start_token_idx_to_text_idx = []
+        all_end_token_idx_to_text_idx = []
 
-        # compute scores for start, end and inside
-        scores_start, scores_end, scores_inside = self.scorer(word_rep, entity_type_rep)
+        for text in texts:
+            tokens = []
+            start_token_idx_to_text_idx = []
+            end_token_idx_to_text_idx = []
+            for token, start, end in self.data_processor.words_splitter(text):
+                tokens.append(token)
+                start_token_idx_to_text_idx.append(start)
+                end_token_idx_to_text_idx.append(end)
+            all_tokens.append(tokens)
+            all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
+            all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
 
-        return scores_start, scores_end, scores_inside
+        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+        raw_batch = self.data_processor.collate_raw_batch(input_x, labels)
+        raw_batch["all_start_token_idx_to_text_idx"] = all_start_token_idx_to_text_idx
+        raw_batch["all_end_token_idx_to_text_idx"] = all_end_token_idx_to_text_idx
+
+        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=False)
+        model_input.update({"span_idx": raw_batch['span_idx'] if 'span_idx' in raw_batch else None, 
+                            "span_mask": raw_batch["span_mask"] if 'span_mask' in raw_batch else None,
+                            "text_lengths": raw_batch['seq_length']})
+        
+        if not self.onnx_model:
+            device = self.device
+            for key in model_input:
+                if model_input[key] is not None and isinstance(model_input[key], torch.Tensor):
+                    model_input[key] = model_input[key].to(device)
+
+        return model_input, raw_batch
+    
+    def predict_entities(self, text, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        return self.batch_predict_entities(
+            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+        )[0]
 
     @torch.no_grad()
-    def predict(self, x, flat_ner=False, threshold=0.5, multi_label=False):
-        scores_start, scores_end, scores_inside = self.compute_score_eval(x)
-        # shape: (batch_size, seq_len, num_classes)
+    def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        """
+        Predict entities for a batch of texts.
+        texts:  List of texts | List[str]
+        labels: List of labels | List[str]
+        ...
+        """
 
-        spans = []
-        for i, _ in enumerate(x["tokens"]):
-            start_i = torch.sigmoid(scores_start[i])
-            end_i = torch.sigmoid(scores_end[i])
-            scores_inside_i = torch.sigmoid(scores_inside[i])  # (seq_len, num_classes)
+        model_input, raw_batch = self.prepare_model_inputs(texts, labels)
 
-            start_idx = [k.tolist() for k in torch.where(start_i > threshold)]
-            end_idx = [k.tolist() for k in torch.where(end_i > threshold)]
+        model_output = self.model(**model_input)[0]
 
-            span_i = []
-            for st, cls_st in zip(*start_idx):
-                for ed, cls_ed in zip(*end_idx):
-                    if ed >= st and cls_st == cls_ed:
-                        ins = scores_inside_i[st:ed + 1, cls_st]
-                        # remove spans with low confidence (important for nested NER)
-                        if (ins < threshold).any():
-                            continue
-                        span_i.append(
-                            (st, ed, x["id_to_classes"][cls_st + 1], ins.mean().item())
-                        )
-            span_i = greedy_search(span_i, flat_ner, multi_label=multi_label)
-            spans.append(span_i)
-        return spans
+        if not isinstance(model_output, torch.Tensor):
+            model_output = torch.from_numpy(model_output)
+
+        outputs = self.decoder.decode(raw_batch['tokens'], raw_batch['id_to_classes'], 
+                    model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label)
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = raw_batch['all_start_token_idx_to_text_idx'][i]
+            end_token_idx_to_text_idx = raw_batch['all_end_token_idx_to_text_idx'][i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append({
+                    "start": start_token_idx_to_text_idx[start_token_idx],
+                    "end": end_token_idx_to_text_idx[end_token_idx],
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score
+                })
+            all_entities.append(entities)
+
+        return all_entities
+
+    def evaluate(self, test_data, flat_ner=False, multi_label=False, threshold=0.5, batch_size=12, entity_types=None):
+        """
+        Evaluate the model on a given test dataset.
+
+        Args:
+            test_data (List[Dict]): The test data containing text and entity annotations.
+            flat_ner (bool): Whether to use flat NER. Defaults to False.
+            multi_label (bool): Whether to use multi-label classification. Defaults to False.
+            threshold (float): The threshold for predictions. Defaults to 0.5.
+            batch_size (int): The batch size for evaluation. Defaults to 12.
+            entity_types (Optional[List[str]]): List of entity types to consider. Defaults to None.
+
+        Returns:
+            tuple: A tuple containing the evaluation output and the F1 score.
+        """
+        self.eval()
+        
+        # Create the dataset and data loader
+        dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
+                                                    return_tokens = True, return_id_to_classes = True,
+                                                    prepare_labels= False, return_entities = True,
+                                                    entities=entity_types, get_negatives=False)
+        
+        collator = DataCollatorWithPadding(self.config)
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
+
+        device = self.device
+        all_preds = []
+        all_trues = []
+
+        # Iterate over data batches
+        for batch in data_loader:
+            # Move the batch to the appropriate device
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(device)
+
+                # Perform predictions
+            model_output = self.model(**batch)[0]
+
+            if not isinstance(model_output, torch.Tensor):
+                model_output = torch.from_numpy(model_output)
+
+            decoded_outputs = self.decoder.decode(
+                batch['tokens'], batch['id_to_classes'][0],
+                model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+            )
+            all_preds.extend(decoded_outputs)
+            all_trues.extend(batch["entities"])
+
+        # Evaluate the predictions
+        evaluator = Evaluator(all_trues, all_preds)
+        out, f1 = evaluator.evaluate()
+
+        return out, f1
+
+    def predict(self, batch, flat_ner=False, threshold=0.5, multi_label=False):
+        """
+        Predict the entities for a given batch of data.
+
+        Args:
+            batch (Dict): A batch of data containing tokenized text and other relevant fields.
+            flat_ner (bool): Whether to use flat NER. Defaults to False.
+            threshold (float): The threshold for predictions. Defaults to 0.5.
+            multi_label (bool): Whether to use multi-label classification. Defaults to False.
+
+        Returns:
+            List: Predicted entities for each example in the batch.
+        """
+        model_output = self.model(**batch)[0]
+
+        if not isinstance(model_output, torch.Tensor):
+            model_output = torch.from_numpy(model_output)
+
+        decoded_outputs = self.decoder.decode(
+            batch['tokens'], batch['id_to_classes'],
+            model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+        )
+
+        return decoded_outputs
+
+    def compile(self):
+        self.model = torch.compile(self.model)
+
+    def compile_for_training(self):
+        print('Compiling transformer encoder...')
+        self.model.token_rep_layer = torch.compile(self.model.token_rep_layer)
+        print('Compiling RNN...')
+        self.model.rnn = torch.compile(self.model.rnn)
+        if hasattr(self.model, "span_rep_layer"):
+            print('Compiling span representation layer...')
+            self.model.span_rep_layer = torch.compile(self.model.span_rep_layer)
+        if hasattr(self.model, "prompt_rep_layer"):
+            print('Compiling prompt representation layer...')
+            self.model.prompt_rep_layer = torch.compile(self.model.prompt_rep_layer)
+        if hasattr(self.model, "scorer"):
+            print('Compiling scorer...')
+            self.model.scorer = torch.compile(self.model.scorer)
+
+    def set_sampling_params(self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len):
+        """
+        Sets sampling parameters on the given model.
+
+        Parameters:
+        - model: The model object to update.
+        - max_types: Maximum types parameter.
+        - shuffle_types: Boolean indicating whether to shuffle types.
+        - random_drop: Boolean indicating whether to randomly drop elements.
+        - max_neg_type_ratio: Maximum negative type ratio.
+        - max_len: Maximum length parameter.
+        """
+        self.config.max_types = max_types
+        self.config.shuffle_types = shuffle_types
+        self.config.random_drop = random_drop
+        self.config.max_neg_type_ratio = max_neg_type_ratio
+        self.config.max_len = max_len
+
+    def prepare_state_dict(self, state_dict):
+        new_state_dict = {}
+        for key, tensor in state_dict.items():
+            key = re.sub("_orig_mod\.", "", key)
+            new_state_dict[key] = tensor
+        return new_state_dict
+    
+    def save_pretrained(
+            self,
+            save_directory: Union[str, Path],
+            *,
+            config: Optional[GLiNERConfig] = None,
+            repo_id: Optional[str] = None,
+            push_to_hub: bool = False,
+            **push_to_hub_kwargs,
+    ) -> Optional[str]:
+        """
+        Save weights in local directory.
+
+        Args:
+            save_directory (`str` or `Path`):
+                Path to directory in which the model weights and configuration will be saved.
+            config (`dict` or `DataclassInstance`, *optional*):
+                Model configuration specified as a key/value dictionary or a dataclass instance.
+            push_to_hub (`bool`, *optional*, defaults to `False`):
+                Whether or not to push your model to the Huggingface Hub after saving it.
+            repo_id (`str`, *optional*):
+                ID of your repository on the Hub. Used only if `push_to_hub=True`. Will default to the folder name if
+                not provided.
+            kwargs:
+                Additional key word arguments passed along to the [`~ModelHubMixin.push_to_hub`] method.
+        """
+        save_directory = Path(save_directory)
+        save_directory.mkdir(parents=True, exist_ok=True)
+
+        # save model weights/files
+        torch.save(self.prepare_state_dict(self.model.state_dict()), save_directory / "pytorch_model.bin")
+
+        # save config (if provided)
+        if config is None:
+            config = self.config
+        if config is not None:
+            config.to_json_file(save_directory / "gliner_config.json")
+
+        self.data_processor.transformer_tokenizer.save_pretrained(save_directory)
+        # push to the Hub if required
+        if push_to_hub:
+            kwargs = push_to_hub_kwargs.copy()  # soft-copy to avoid mutating input
+            if config is not None:  # kwarg for `push_to_hub`
+                kwargs["config"] = config
+            if repo_id is None:
+                repo_id = save_directory.name  # Defaults to `save_directory` name
+            return self.push_to_hub(repo_id=repo_id, **kwargs)
+        return None
+
+    @classmethod
+    def _from_pretrained(
+            cls,
+            *,
+            model_id: str,
+            revision: Optional[str],
+            cache_dir: Optional[Union[str, Path]],
+            force_download: bool,
+            proxies: Optional[Dict],
+            resume_download: bool,
+            local_files_only: bool,
+            token: Union[str, bool, None],
+            map_location: str = "cpu",
+            strict: bool = False,
+            load_tokenizer: Optional[bool]=False,
+            resize_token_embeddings: Optional[bool]=True,
+            load_onnx_model: Optional[bool]=False,
+            onnx_model_file: Optional[str] = 'model.onnx',
+            compile_torch_model: Optional[bool] = False,
+            **model_kwargs,
+    ):
+
+        # Newer format: Use "pytorch_model.bin" and "gliner_config.json"
+        model_dir = Path(model_id)# / "pytorch_model.bin"
+        if not model_dir.exists():
+            model_dir = snapshot_download(
+                repo_id=model_id,
+                revision=revision,
+                cache_dir=cache_dir,
+                force_download=force_download,
+                proxies=proxies,
+                resume_download=resume_download,
+                token=token,
+                local_files_only=local_files_only,
+            )
+        model_file = Path(model_dir) / "pytorch_model.bin"
+        config_file = Path(model_dir) / "gliner_config.json"
+
+        if load_tokenizer:
+            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+        else:
+            tokenizer = None
+        config_ = json.load(open(config_file))
+        config = GLiNERConfig(**config_)
+        
+        add_tokens = ['[FLERT]', config.ent_token, config.sep_token]
+
+        if not load_onnx_model:
+            gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False)
+            # to be able to laod GLiNER models from previous version
+            if (config.class_token_index==-1 or config.vocab_size == -1) and resize_token_embeddings:
+                gliner.resize_token_embeddings(add_tokens=add_tokens)
+            state_dict = torch.load(model_file, map_location=torch.device(map_location))
+            gliner.model.load_state_dict(state_dict, strict=strict)
+            gliner.model.to(map_location)
+            if compile_torch_model and 'cuda' in map_location:
+                print("Compiling torch model...")
+                gliner.compile()
+            elif compile_torch_model:
+                warnings.warn("It's not possible to compile this model putting it to CPU, you should set `map_location` to `cuda`.")
+            gliner.eval()
+        else:
+            import onnxruntime as ort
+
+            model_file = Path(model_dir) / onnx_model_file
+            if not os.path.exists(model_file):
+                raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
+            session_options = ort.SessionOptions()
+            session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            ort_session = ort.InferenceSession(model_file, session_options)
+            if config.span_mode=='token_level':
+                model = TokenORTModel(ort_session)
+            else:
+                model = SpanORTModel(ort_session)
+
+            gliner = cls(config, tokenizer=tokenizer, model=model)
+            if (config.class_token_index==-1 or config.vocab_size == -1) and resize_token_embeddings:
+                gliner.data_processor.transformer_tokenizer.add_tokens(add_tokens)
+
+        return gliner

@@ -2,7 +2,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 
-from gliner.modules.layers import create_projection_layer
+from .layers import create_projection_layer
 
 class SpanQuery(nn.Module):
 
