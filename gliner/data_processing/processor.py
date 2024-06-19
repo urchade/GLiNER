@@ -167,7 +167,7 @@ class BaseProcessor(ABC):
         return class_to_ids, id_to_classes
 
     def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None, negatives: List[str]=None) -> Dict:
-        if entity_types is None or negatives is not None:
+        if entity_types is None:
             class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
             batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
                      enumerate(batch_list)]

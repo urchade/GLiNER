@@ -9,7 +9,7 @@ from onnxruntime.quantization import quantize_dynamic, QuantType
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default= "model/")
+    parser.add_argument('--model_path', type=str, default= "urchade/gliner_small-v2.1")
     parser.add_argument('--save_path', type=str, default = 'model/')
     parser.add_argument('--quantize', type=bool, default = True)
     args = parser.parse_args()
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     onnx_save_path = os.path.join(args.save_path, "model.onnx")
 
     print("Loading a model...")
-    gliner_model = GLiNER.from_pretrained(args.model_path, load_tokenizer=True)
+    gliner_model = GLiNER.from_pretrained(args.model_path, load_tokenizer=False)
 
     text = "ONNX is an open-source format designed to enable the interoperability of AI models across various frameworks and tools."
     labels = ['format', 'model', 'tool', 'cat']

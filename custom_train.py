@@ -318,8 +318,11 @@ class Trainer:
                 scaler.step(optimizer)
                 scaler.update()
                 scheduler.step()
+                del x
+                torch.cuda.empty_cache()
             except Exception as e:
                 print(f"Error: {e}")
+                del x
                 torch.cuda.empty_cache()
                 continue
 
