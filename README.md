@@ -140,7 +140,7 @@ After the installation of the GLiNER library, import the `GLiNER` class. Followi
 from gliner import GLiNER
 
 # Initialize GLiNER with the base model
-model = GLiNER.from_pretrained("EmergentMethods/gliner_medium_news-v2.1")
+model = GLiNER.from_pretrained("urchade/gliner_mediumv2.1")
 
 # Sample text for entity prediction
 text = """
@@ -190,7 +190,7 @@ from gliner_spacy.pipeline import GlinerSpacy
 
 # Configuration for GLiNER integration
 custom_spacy_config = {
-    "gliner_model": "EmergentMethods/gliner_medium_news-v2.1",
+    "gliner_model": "urchade/gliner_mediumv2.1",
     "chunk_size": 250,
     "labels": ["person", "organization", "email"],
     "style": "ent",
