@@ -12,13 +12,9 @@ class GLiNERDataset(Dataset):
                         config: Optional[GLiNERConfig], 
                         tokenizer: Optional[AutoTokenizer] = None, 
                         words_splitter: Optional[WordsSplitter] = None,
-                        data_processor = None, 
-                        return_tokens: bool = False,
-                        return_id_to_classes: bool = False,
-                        return_entities: bool = False,
-                        prepare_labels: bool = True,
-                        entities: List[str] = None,
-                        get_negatives=True):
+                        data_processor = None,
+                        entities = None,
+                        get_negatives:bool=True):
         self._data = examples
         self.config=config
         if data_processor is not None:
@@ -29,16 +25,13 @@ class GLiNERDataset(Dataset):
             else:
                 self.data_processor = SpanProcessor(config, tokenizer, words_splitter, preprocess_text=True)
         
-        self.return_tokens = return_tokens
-        self.return_id_to_classes = return_id_to_classes
-        self.prepare_labels = prepare_labels
-        self.return_entities = return_entities
         self.max_neg_type_ratio = int(self.config.max_neg_type_ratio)
+        self.get_negatives = get_negatives
         if not entities:
             self.all_entities = self._collect_all_entities()
         else:
             self.all_entities = entities
-        self.get_negatives = get_negatives
+        self.max_negatives = min(50, len(self.all_entities))
 
     def _get_entities_from_example(self, example):
         entities = {ner[-1] for ner in example['ner']}
@@ -54,7 +47,7 @@ class GLiNERDataset(Dataset):
         return all_entities
 
     def _get_negatives(self):
-        negatives = random.sample(self.all_entities, k=50)
+        negatives = random.sample(self.all_entities, k=self.max_negatives)
         random.shuffle(negatives)
         return negatives
     
@@ -69,22 +62,15 @@ class GLiNERDataset(Dataset):
             else:
                 curr_negatives = None
 
-            raw_batch = self.data_processor.collate_raw_batch([example], entity_types = self.all_entities,
-                                                                                negatives=curr_negatives)
+            raw_batch = self.data_processor.collate_raw_batch([example], negatives = curr_negatives)
             
-            model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=self.prepare_labels)
+            model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=True)
             if 'span_idx' in raw_batch:
                 model_input['span_idx'] = raw_batch['span_idx']
             if 'span_mask' in raw_batch:
                 model_input['span_mask'] = raw_batch['span_mask']
             if 'seq_length' in raw_batch:
                 model_input['text_lengths'] = raw_batch['seq_length']
-            if self.return_tokens:
-                model_input['tokens'] = raw_batch['tokens'][0]
-            if self.return_id_to_classes:
-                model_input['id_to_classes'] = raw_batch['id_to_classes']
-            if self.return_entities:
-                model_input['entities'] = raw_batch['entities'][0]
             return model_input
         except Exception as e:
             print(f"Skipping getting item due to error: {e}")

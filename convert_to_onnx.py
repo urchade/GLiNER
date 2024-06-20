@@ -9,7 +9,7 @@ from onnxruntime.quantization import quantize_dynamic, QuantType
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_path', type=str, default= "model/")
+    parser.add_argument('--model_path', type=str, default= "logs/model_12000")
     parser.add_argument('--save_path', type=str, default = 'model/')
     parser.add_argument('--quantize', type=bool, default = True)
     args = parser.parse_args()

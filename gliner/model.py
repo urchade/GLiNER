@@ -15,7 +15,7 @@ from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 from .data_processing import SpanProcessor, TokenProcessor, GLiNERDataset
 from .data_processing.tokenizer import WordsSplitter
-from .data_processing.collator import DataCollatorWithPadding
+from .data_processing.collator import DataCollatorWithPadding, DataCollator
 from .decoding import SpanDecoder, TokenDecoder
 from .evaluation import Evaluator
 from .config import GLiNERConfig
@@ -187,14 +187,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             tuple: A tuple containing the evaluation output and the F1 score.
         """
         self.eval()
-        
         # Create the dataset and data loader
-        dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
-                                                    return_tokens = True, return_id_to_classes = True,
-                                                    prepare_labels= False, return_entities = True,
-                                                    entities=entity_types, get_negatives=False)
-        
-        collator = DataCollatorWithPadding(self.config)
+        # dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
+        #                                             return_tokens = True, return_id_to_classes = True,
+        #                                             prepare_labels= False, return_entities = True,
+        #                                             entities=entity_types, get_negatives=False)
+        # collator = DataCollatorWithPadding(self.config)
+        dataset = test_data
+        collator = DataCollator(self.config, data_processor=self.data_processor,
+                                return_tokens=True,
+                                return_entities=True,
+                                return_id_to_classes=True,
+                                prepare_labels=False,
+                                entity_types = entity_types)
         data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
 
         device = self.device
@@ -215,7 +220,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 model_output = torch.from_numpy(model_output)
 
             decoded_outputs = self.decoder.decode(
-                batch['tokens'], batch['id_to_classes'][0],
+                batch['tokens'], batch['id_to_classes'],
                 model_output, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
             )
             all_preds.extend(decoded_outputs)
