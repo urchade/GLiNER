@@ -44,7 +44,7 @@ class GLiNERDataset(Dataset):
             curr_entities = self._get_entities_from_example(example)
             all_entities.update(curr_entities)
         print('Total number of entity classes: ', len(all_entities))
-        return sorted(all_entities)
+        return list(all_entities)
 
     def _get_negatives(self):
         negatives = random.sample(self.all_entities, k=self.max_negatives)

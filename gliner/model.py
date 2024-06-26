@@ -29,6 +29,17 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         words_splitter: Optional[Union[str, WordsSplitter]] = None, 
                         data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None, 
                         encoder_from_pretrained: bool = True):
+        """
+        Initialize the GLiNER model.
+
+        Args:
+            config (GLiNERConfig): Configuration object for the GLiNER model.
+            model (Optional[Union[BaseModel, BaseORTModel]]): GLiNER model to use for predictions. Defaults to None.
+            tokenizer (Optional[Union[str, AutoTokenizer]]): Tokenizer to use. Can be a string (path or name) or an AutoTokenizer instance. Defaults to None.
+            words_splitter (Optional[Union[str, WordsSplitter]]): Words splitter to use. Can be a string or a WordsSplitter instance. Defaults to None.
+            data_processor (Optional[Union[SpanProcessor, TokenProcessor]]): Data processor - object that prepare input to a model. Defaults to None.
+            encoder_from_pretrained (bool): Whether to load the encoder from a pre-trained model or init from scratch. Defaults to True.
+        """
         super().__init__()
         self.config = config
 
@@ -69,6 +80,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             self.onnx_model = False
 
     def forward(self, *args, **kwargs):
+        """Wrapper function for the model's forward pass."""
         output = self.model(*args, **kwargs)
         return output
 
@@ -81,6 +93,18 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                                     set_class_token_index = True, 
                                     add_tokens_to_tokenizer = True, 
                                     pad_to_multiple_of=None) -> nn.Embedding:
+        """
+        Resize the token embeddings of the model.
+
+        Args:
+            add_tokens: The tokens to add to the embedding layer.
+            set_class_token_index (bool, optional): Whether to set the class token index. Defaults to True.
+            add_tokens_to_tokenizer (bool, optional): Whether to add the tokens to the tokenizer. Defaults to True.
+            pad_to_multiple_of (int, optional): If set, pads the embedding size to be a multiple of this value. Defaults to None.
+
+        Returns:
+            nn.Embedding: The resized embedding layer.
+        """
         if set_class_token_index:
             self.config.class_token_index = len(self.data_processor.transformer_tokenizer)+1
         if add_tokens_to_tokenizer:
@@ -94,6 +118,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return model_embeds
 
     def prepare_model_inputs(self, texts: str, labels: str):
+        """
+        Prepare inputs for the model.
+
+        Args:
+            texts (str): The input text or texts to process.
+            labels (str): The corresponding labels for the input texts.
+        """
         all_tokens = []
         all_start_token_idx_to_text_idx = []
         all_end_token_idx_to_text_idx = []
@@ -129,6 +160,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return model_input, raw_batch
     
     def predict_entities(self, text, labels, flat_ner=True, threshold=0.5, multi_label=False):
+        """
+        Predict entities for a single text input.
+
+        Args:
+            text: The input text to predict entities for.
+            labels: The labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per entity. Defaults to False.
+
+        Returns:
+            The list of entity predictions.
+        """
         return self.batch_predict_entities(
             [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
         )[0]
@@ -137,9 +181,16 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     def batch_predict_entities(self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False):
         """
         Predict entities for a batch of texts.
-        texts:  List of texts | List[str]
-        labels: List of labels | List[str]
-        ...
+
+        Args:
+            texts (List[str]): A list of input texts to predict entities for.
+            labels (List[str]): A list of labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+
+        Returns:
+            The list of lists with predicted entities.
         """
 
         model_input, raw_batch = self.prepare_model_inputs(texts, labels)
@@ -294,6 +345,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         self.config.max_len = max_len
 
     def prepare_state_dict(self, state_dict):
+        """
+        Prepare state dict in the case of torch.compile
+        """
         new_state_dict = {}
         for key, tensor in state_dict.items():
             key = re.sub("_orig_mod\.", "", key)
@@ -369,7 +423,30 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             compile_torch_model: Optional[bool] = False,
             **model_kwargs,
     ):
+        """
+        Load a pretrained model from a given model ID.
 
+        Args:
+            model_id (str): Identifier of the model to load.
+            revision (Optional[str]): Specific model revision to use.
+            cache_dir (Optional[Union[str, Path]]): Directory to store downloaded models.
+            force_download (bool): Force re-download even if the model exists.
+            proxies (Optional[Dict]): Proxy configuration for downloads.
+            resume_download (bool): Resume interrupted downloads.
+            local_files_only (bool): Use only local files, don't download.
+            token (Union[str, bool, None]): Token for API authentication.
+            map_location (str): Device to map model to. Defaults to "cpu".
+            strict (bool): Enforce strict state_dict loading.
+            load_tokenizer (Optional[bool]): Whether to load the tokenizer. Defaults to False.
+            resize_token_embeddings (Optional[bool]): Resize token embeddings. Defaults to True.
+            load_onnx_model (Optional[bool]): Load ONNX version of the model. Defaults to False.
+            onnx_model_file (Optional[str]): Filename for ONNX model. Defaults to 'model.onnx'.
+            compile_torch_model (Optional[bool]): Compile the PyTorch model. Defaults to False.
+            **model_kwargs: Additional keyword arguments for model initialization.
+
+        Returns:
+            An instance of the model loaded from the pretrained weights.
+        """
         # Newer format: Use "pytorch_model.bin" and "gliner_config.json"
         model_dir = Path(model_id)# / "pytorch_model.bin"
         if not model_dir.exists():

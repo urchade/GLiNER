@@ -132,7 +132,8 @@ class BaseProcessor(ABC):
                     if words_count<prompt_length:
                         words_mask.append(0)
                     else:
-                        words_mask.append(1)
+                        masking_word_id = word_id-prompt_length+1
+                        words_mask.append(masking_word_id)
                     words_count+=1
                 else:
                     words_mask.append(0)
