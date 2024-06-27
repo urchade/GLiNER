@@ -86,7 +86,7 @@ class WordsSplitter(TokenSplitterBase):
         elif splitter_type == 'jieba':
             self.splitter = JiebaTokenSplitter()
         else:
-            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy' and 'mecab'")
+            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba' and 'mecab'")
     
     def __call__(self, text):
         for token in self.splitter(text):
