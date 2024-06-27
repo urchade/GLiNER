@@ -56,6 +56,25 @@ class MecabKoTokenSplitter(TokenSplitterBase):
             last_idx = end_idx
             yield morph, start_idx, end_idx
 
+class JiebaTokenSplitter(TokenSplitterBase):
+    def __init__(self):
+        try:
+            import jieba  # noqa
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install jieba with: `pip install jieba`"
+            )
+        self.tagger = jieba
+    
+    def __call__(self, text):
+        tokens = self.tagger.cut(text)
+        last_idx = 0
+        for token in tokens:
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
 class WordsSplitter(TokenSplitterBase):
     def __init__(self, splitter_type='whitespace'):
         if splitter_type=='whitespace':
@@ -64,6 +83,8 @@ class WordsSplitter(TokenSplitterBase):
             self.splitter = SpaCyTokenSplitter()
         elif splitter_type == 'mecab':
             self.splitter = MecabKoTokenSplitter()
+        elif splitter_type == 'jieba':
+            self.splitter = JiebaTokenSplitter()
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy' and 'mecab'")
     
