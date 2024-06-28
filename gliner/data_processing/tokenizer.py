@@ -110,6 +110,8 @@ class WordsSplitter(TokenSplitterBase):
             self.splitter = MecabKoTokenSplitter()
         elif splitter_type == 'jieba':
             self.splitter = JiebaTokenSplitter()
+        elif splitter_type == 'hanlp':
+            self.splitter = HanLPTokenSplitter()    
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba' and 'mecab'")
     
