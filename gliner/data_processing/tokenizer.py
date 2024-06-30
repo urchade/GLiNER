@@ -56,6 +56,50 @@ class MecabKoTokenSplitter(TokenSplitterBase):
             last_idx = end_idx
             yield morph, start_idx, end_idx
 
+class JiebaTokenSplitter(TokenSplitterBase):
+    def __init__(self):
+        try:
+            import jieba  # noqa
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install jieba with: `pip install jieba`"
+            )
+        self.tagger = jieba
+    
+    def __call__(self, text):
+        tokens = self.tagger.cut(text)
+        last_idx = 0
+        for token in tokens:
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
+class HanLPTokenSplitter(TokenSplitterBase):
+    def __init__(self, model_name="FINE_ELECTRA_SMALL_ZH"):
+        try:
+            import hanlp  # noqa
+            import hanlp.pretrained
+        except ModuleNotFoundError as error:
+            raise error.__class__(
+                "Please install hanlp with: `pip install hanlp`"
+            )
+
+        models = hanlp.pretrained.tok.ALL
+        if model_name not in models:
+            raise ValueError(f"HanLP: {model_name} is not available, choose between {models.keys()}")
+        url = models[model_name]
+        self.tagger = hanlp.load(url)
+    
+    def __call__(self, text):
+        tokens = self.tagger(text)
+        last_idx = 0
+        for token in tokens:
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
 class WordsSplitter(TokenSplitterBase):
     def __init__(self, splitter_type='whitespace'):
         if splitter_type=='whitespace':
@@ -64,8 +108,12 @@ class WordsSplitter(TokenSplitterBase):
             self.splitter = SpaCyTokenSplitter()
         elif splitter_type == 'mecab':
             self.splitter = MecabKoTokenSplitter()
+        elif splitter_type == 'jieba':
+            self.splitter = JiebaTokenSplitter()
+        elif splitter_type == 'hanlp':
+            self.splitter = HanLPTokenSplitter()    
         else:
-            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy' and 'mecab'")
+            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
     
     def __call__(self, text):
         for token in self.splitter(text):
