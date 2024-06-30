@@ -76,7 +76,7 @@ class JiebaTokenSplitter(TokenSplitterBase):
             yield token, start_idx, end_idx
 
 class HanLPTokenSplitter(TokenSplitterBase):
-    def __init__(self, model_name: str = "FINE_ELECTRA_SMALL_ZH"):
+    def __init__(self, model_name="FINE_ELECTRA_SMALL_ZH"):
         try:
             import hanlp  # noqa
             import hanlp.pretrained
@@ -113,7 +113,7 @@ class WordsSplitter(TokenSplitterBase):
         elif splitter_type == 'hanlp':
             self.splitter = HanLPTokenSplitter()    
         else:
-            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba' and 'mecab'")
+            raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
     
     def __call__(self, text):
         for token in self.splitter(text):
