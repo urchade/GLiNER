@@ -27,37 +27,48 @@ class GLiNERModelOutput(ModelOutput):
 
 def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids, attention_mask, 
                                                                     text_lengths, words_mask, **kwargs):
-        # getting prompt embeddings
-        class_token_mask = input_ids == config.class_token_index
-        num_class_tokens = torch.sum(class_token_mask, dim=-1, keepdim=True)
+    # getting prompt embeddings
+    batch_size, sequence_length, embed_dim = token_embeds.shape
 
-        max_embed_dim = num_class_tokens.max()
-        max_text_length = text_lengths.max().item()
-        max_length = max(max_embed_dim, max_text_length)
-        aranged_idx = torch.arange(max_length, device=token_embeds.device)
-        
-        batch_indices, target_class_idx = torch.where(aranged_idx<num_class_tokens)
-        _, class_indices = torch.where(class_token_mask)
-        # class_indices+=1
+    class_token_mask = input_ids == config.class_token_index
+    num_class_tokens = torch.sum(class_token_mask, dim=-1, keepdim=True)
 
-        prompts_embedding = torch.zeros_like(token_embeds[:, :max_embed_dim])
+    max_embed_dim = num_class_tokens.max()
+    max_text_length = text_lengths.max()
+    aranged_class_idx = torch.arange(max_embed_dim, 
+                                        dtype=attention_mask.dtype, 
+                                        device=token_embeds.device).expand(batch_size, -1)
+    
+    batch_indices, target_class_idx = torch.where(aranged_class_idx<num_class_tokens)
+    _, class_indices = torch.where(class_token_mask)
+    # class_indices+=1
 
-        prompts_embedding_mask = (aranged_idx[None, :max_embed_dim] < num_class_tokens).to(attention_mask.dtype)
+    prompts_embedding = torch.zeros(
+        batch_size, max_embed_dim, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
+    )
 
-        prompts_embedding[batch_indices, target_class_idx] = token_embeds[batch_indices, class_indices]
-        
-        #getting words embedding
-        words_embedding = torch.zeros_like(token_embeds[:, :max_text_length])
+    prompts_embedding_mask = (aranged_class_idx < num_class_tokens).to(attention_mask.dtype)
 
-        batch_indices, word_idx = torch.where(words_mask>0)
-        
-        target_word_idx = words_mask[batch_indices, word_idx]-1
+    prompts_embedding[batch_indices, target_class_idx] = token_embeds[batch_indices, class_indices]
+    
+    #getting words embedding
+    words_embedding = torch.zeros(
+        batch_size, max_text_length, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
+    )
 
-        words_embedding[batch_indices, target_word_idx] = token_embeds[batch_indices, word_idx]
+    batch_indices, word_idx = torch.where(words_mask>0)
+    
+    target_word_idx = words_mask[batch_indices, word_idx]-1
 
-        mask = aranged_idx[None, :max_text_length] < text_lengths
+    words_embedding[batch_indices, target_word_idx] = token_embeds[batch_indices, word_idx]
+    
+    aranged_word_idx = torch.arange(max_text_length, 
+                                        dtype=attention_mask.dtype, 
+                                        device=token_embeds.device).expand(batch_size, -1)
+    
+    mask = aranged_word_idx<text_lengths
 
-        return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+    return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
 class BaseModel(ABC, nn.Module):
     def __init__(self, config, from_pretrained = False):
