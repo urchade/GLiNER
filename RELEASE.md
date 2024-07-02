@@ -112,7 +112,7 @@ twine upload dist/* -r gliner_test
 Once that has uploaded the package, in a fresh environment containing all dependencies you need (tip: you can use Google Colab for this!), try to install your new package from the PyPI test server. First install all dependencies, and then your package.
 
 ```bash
-python -m pip install torch transformers huggingface_hub flair seqeval tqdm
+python -m pip install torch transformers huggingface_hub flair tqdm
 python -m pip install -i https://testpypi.python.org/pypi gliner
 ```
 
