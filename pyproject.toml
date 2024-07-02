@@ -38,7 +38,6 @@ dependencies = [
     "torch>=2.0.0",
     "transformers>=4.38.2",
     "huggingface_hub>=0.21.4",
-    "seqeval",
     "tqdm",
     "onnxruntime",
     "sentencepiece",
