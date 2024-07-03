@@ -155,6 +155,10 @@ class BaseProcessor(ABC):
 
             types = list(set([el[-1] for el in b["ner"]] + negs_i))
             random.shuffle(types)
+
+            if "negatives" in b:
+                types += b["negatives"]
+                
             types = types[:int(self.config.max_types)]
 
             if "label" in b:
