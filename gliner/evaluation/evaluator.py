@@ -1,8 +1,52 @@
+import warnings
 from collections import defaultdict
+from typing import Union, List, Literal
 
 import numpy as np
 import torch
-from seqeval.metrics.v1 import _prf_divide
+
+
+class UndefinedMetricWarning(UserWarning):
+    pass
+
+
+def _prf_divide(
+    numerator: np.ndarray,
+    denominator: np.ndarray,
+    metric: Literal["precision", "recall", "f-score"],
+    modifier: str,
+    average: str,
+    warn_for: List[str],
+    zero_division: Union[str, int] = "warn",
+) -> np.ndarray:
+    """Performs division and handles divide-by-zero with warnings."""
+    with np.errstate(divide="ignore", invalid="ignore"):
+        result = np.true_divide(numerator, denominator)
+        result[denominator == 0] = 0.0 if zero_division in ["warn", 0] else 1.0
+
+    if denominator == 0 and zero_division == "warn" and metric in warn_for:
+        msg_start = f"{metric.title()}"
+        if "f-score" in warn_for:
+            msg_start += " and F-score" if metric in warn_for else "F-score"
+        msg_start += " are" if "f-score" in warn_for else " is"
+        _warn_prf(
+            average=average,
+            modifier=modifier,
+            msg_start=msg_start,
+            result_size=len(result),
+        )
+
+    return result
+
+
+def _warn_prf(average: str, modifier: str, msg_start: str, result_size: int):
+    axis0, axis1 = ("label", "sample") if average == "samples" else ("sample", "label")
+    if result_size == 1:
+        msg = f"{msg_start} ill-defined and being set to 0.0 due to no {modifier} {axis0}."  # noqa: E501
+    else:
+        msg = f"{msg_start} ill-defined and being set to 0.0 in {axis1}s with no {modifier} {axis0}s."  # noqa: E501
+    msg += " Use `zero_division` parameter to control this behavior."
+    warnings.warn(msg, UndefinedMetricWarning, stacklevel=3)
 
 
 def extract_tp_actual_correct(y_true, y_pred):
@@ -40,12 +84,12 @@ def flatten_for_eval(y_true, y_pred):
     return all_true, all_pred
 
 
-def compute_prf(y_true, y_pred, average='micro'):
+def compute_prf(y_true, y_pred, average="micro"):
     y_true, y_pred = flatten_for_eval(y_true, y_pred)
 
     pred_sum, tp_sum, true_sum, target_names = extract_tp_actual_correct(y_true, y_pred)
 
-    if average == 'micro':
+    if average == "micro":
         tp_sum = np.array([tp_sum.sum()])
         pred_sum = np.array([pred_sum.sum()])
         true_sum = np.array([true_sum.sum()])
@@ -53,28 +97,28 @@ def compute_prf(y_true, y_pred, average='micro'):
     precision = _prf_divide(
         numerator=tp_sum,
         denominator=pred_sum,
-        metric='precision',
-        modifier='predicted',
+        metric="precision",
+        modifier="predicted",
         average=average,
-        warn_for=('precision', 'recall', 'f-score'),
-        zero_division='warn'
+        warn_for=["precision", "recall", "f-score"],
+        zero_division="warn",
     )
 
     recall = _prf_divide(
         numerator=tp_sum,
         denominator=true_sum,
-        metric='recall',
-        modifier='true',
+        metric="recall",
+        modifier="true",
         average=average,
-        warn_for=('precision', 'recall', 'f-score'),
-        zero_division='warn'
+        warn_for=["precision", "recall", "f-score"],
+        zero_division="warn",
     )
 
     denominator = precision + recall
-    denominator[denominator == 0.] = 1
+    denominator[denominator == 0.0] = 1
     f_score = 2 * (precision * recall) / denominator
 
-    return {'precision': precision[0], 'recall': recall[0], 'f_score': f_score[0]}
+    return {"precision": precision[0], "recall": recall[0], "f_score": f_score[0]}
 
 
 class Evaluator:
@@ -114,7 +158,9 @@ class Evaluator:
 
 def is_nested(idx1, idx2):
     # Return True if idx2 is nested inside idx1 or vice versa
-    return (idx1[0] <= idx2[0] and idx1[1] >= idx2[1]) or (idx2[0] <= idx1[0] and idx2[1] >= idx1[1])
+    return (idx1[0] <= idx2[0] and idx1[1] >= idx2[1]) or (
+        idx2[0] <= idx1[0] and idx2[1] >= idx1[1]
+    )
 
 
 def has_overlapping(idx1, idx2, multi_label=False):
@@ -139,7 +185,6 @@ from functools import partial
 
 
 def greedy_search(spans, flat_ner=True, multi_label=False):  # start, end, class, score
-
     if flat_ner:
         has_ov = partial(has_overlapping, multi_label=multi_label)
     else:
