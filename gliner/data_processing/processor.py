@@ -151,14 +151,18 @@ class BaseProcessor(ABC):
         for b in batch_list:
             max_neg_type_ratio = int(self.config.max_neg_type_ratio)
             neg_type_ratio = random.randint(0, max_neg_type_ratio) if max_neg_type_ratio else 0
-            negs_i = negatives[:len(b["ner"]) * neg_type_ratio] if neg_type_ratio else []
+            
+            if "negatives" in b: # manually setting negative types
+                negs_i = b["negatives"]
+            else: # in-batch negative types
+                negs_i = negatives[:len(b["ner"]) * neg_type_ratio] if neg_type_ratio else []
 
             types = list(set([el[-1] for el in b["ner"]] + negs_i))
             random.shuffle(types)
             types = types[:int(self.config.max_types)]
 
-            if "label" in b:
-                types = sorted(b["label"])
+            if "label" in b: # labels are predefined
+                types = b["label"]
 
             class_to_id = {k: v for v, k in enumerate(types, start=1)}
             id_to_class = {k: v for v, k in class_to_id.items()}
