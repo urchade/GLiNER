@@ -1,4 +1,4 @@
-# Training a Gliner Model
+# Training / Finetuning a GLiNER Model
 
 ## Step 1: Install the Gliner Package
 First, install the `gliner` package using pip:
