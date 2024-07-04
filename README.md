@@ -4,20 +4,17 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 
 * **Paper**: 📄 [GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer](https://arxiv.org/abs/2311.08526)
 * **Getting Started:** &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
+* **List of available models**: 🤗 [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
 * **Demo:** 🤗 [Hugging Face](https://huggingface.co/spaces/urchade/gliner_mediumv2.1)
 
 ## 🛠 Installation & Usage
 
-### 📦 Installation
+### Installation
 ```bash
 !pip install gliner
 ```
 
-### 📦 Available Models
-List of available models at [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
-
-### 🚀 Usage
-
+### Usage
 After the installation of the GLiNER library, import the `GLiNER` class. Following this, you can load your chosen model with `GLiNER.from_pretrained` and utilize `predict_entities` to discern entities within your text.
 
 ```python
