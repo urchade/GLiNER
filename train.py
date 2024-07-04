@@ -67,24 +67,36 @@ class Trainer:
 
         self.device = device
 
-        self.model_config = SimpleNamespace(
-            model_name=config.model_name,
-            name=config.name,
-            max_width=config.max_width,
-            hidden_size=config.hidden_size,
-            dropout=config.dropout,
-            fine_tune=config.fine_tune,
-            subtoken_pooling=config.subtoken_pooling,
-            span_mode=config.span_mode,
-            loss_alpha=config.loss_alpha,
-            loss_gamma=config.loss_gamma,
-            loss_reduction=config.loss_reduction,
-            max_types=config.max_types,
-            shuffle_types=config.shuffle_types,
-            random_drop=config.random_drop,
-            max_neg_type_ratio=config.max_neg_type_ratio,
-            max_len=config.max_len,
-        )
+        if config.prev_path != "none":  # fine-tuning mode
+            self.model_config = SimpleNamespace(
+                loss_alpha=config.loss_alpha,
+                loss_gamma=config.loss_gamma,
+                loss_reduction=config.loss_reduction,
+                max_types=config.max_types,
+                shuffle_types=config.shuffle_types,
+                random_drop=config.random_drop,
+                max_neg_type_ratio=config.max_neg_type_ratio,
+                max_len=config.max_len,
+            )
+        else:
+            self.model_config = SimpleNamespace(
+                model_name=config.model_name,
+                name=config.name,
+                max_width=config.max_width,
+                hidden_size=config.hidden_size,
+                dropout=config.dropout,
+                fine_tune=config.fine_tune,
+                subtoken_pooling=config.subtoken_pooling,
+                span_mode=config.span_mode,
+                loss_alpha=config.loss_alpha,
+                loss_gamma=config.loss_gamma,
+                loss_reduction=config.loss_reduction,
+                max_types=config.max_types,
+                shuffle_types=config.shuffle_types,
+                random_drop=config.random_drop,
+                max_neg_type_ratio=config.max_neg_type_ratio,
+                max_len=config.max_len,
+            )
 
         self.allow_distributed = allow_distributed
 
@@ -102,6 +114,16 @@ class Trainer:
             device = self.device
         if self.config.prev_path != "none":
             model = GLiNER.from_pretrained(self.config.prev_path).to(device)
+
+            # some parameters of model.config are not overwritten by the config file
+            # other than these are overwritten
+            keep_params = ['model_name', 'name', 'max_width', 'hidden_size', 'dropout', 'subtoken_pooling', 'span_mode',
+                           "fine_tune"]
+
+            for param in keep_params:
+                original_value = getattr(model.config, param)
+                setattr(self.model_config, param, original_value)
+
             model.config = self.model_config
         else:
             model = GLiNER(self.model_config).to(device)
