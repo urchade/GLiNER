@@ -12,9 +12,8 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 ```bash
 !pip install gliner
 ```
-% available models
-### 📦 Available Models
 
+### 📦 Available Models
 List of available models at [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
 
 ### 🚀 Usage
