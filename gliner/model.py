@@ -128,7 +128,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         all_tokens = []
         all_start_token_idx_to_text_idx = []
         all_end_token_idx_to_text_idx = []
-
+        # preserving the order of labels
+        labels = list(dict.fromkeys(labels))
+        
         for text in texts:
             tokens = []
             start_token_idx_to_text_idx = []
