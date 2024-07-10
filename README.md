@@ -6,6 +6,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 * **Getting Started:** &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
 * **List of available models**: 🤗 [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
 * **Demo:** 🤗 [Hugging Face](https://huggingface.co/spaces/urchade/gliner_mediumv2.1)
+* **Discord server:** https://discord.gg/Y2yVxpSQnG
 
 ## 🛠 Installation & Usage
 
