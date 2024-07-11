@@ -30,6 +30,7 @@ Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu �
 """
 
 # Labels for entity prediction
+# Most GLiNER models should work best when entity types are in lower case or title case
 labels = ["Person", "Award", "Date", "Competitions", "Teams"]
 
 # Perform entity prediction
