@@ -11,6 +11,8 @@ import torch
 from torch import nn
 import numpy as np
 
+import onnxruntime as ort
+
 from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 from .data_processing import SpanProcessor, TokenProcessor, GLiNERDataset
@@ -423,6 +425,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_onnx_model: Optional[bool]=False,
             onnx_model_file: Optional[str] = 'model.onnx',
             compile_torch_model: Optional[bool] = False,
+            session_options: Optional[ort.SessionOptions] = None,
             **model_kwargs,
     ):
         """
@@ -444,6 +447,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_onnx_model (Optional[bool]): Load ONNX version of the model. Defaults to False.
             onnx_model_file (Optional[str]): Filename for ONNX model. Defaults to 'model.onnx'.
             compile_torch_model (Optional[bool]): Compile the PyTorch model. Defaults to False.
+            session_options (Optional[onnxruntime.SessionOptions]): ONNX Runtime session options. Defaults to None.
             **model_kwargs: Additional keyword arguments for model initialization.
 
         Returns:
@@ -492,13 +496,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 warnings.warn("It's not possible to compile this model putting it to CPU, you should set `map_location` to `cuda`.")
             gliner.eval()
         else:
-            import onnxruntime as ort
-
             model_file = Path(model_dir) / onnx_model_file
             if not os.path.exists(model_file):
                 raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
-            session_options = ort.SessionOptions()
-            session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+            if session_options is None:
+                session_options = ort.SessionOptions()
+                session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
             ort_session = ort.InferenceSession(model_file, session_options)
             if config.span_mode=='token_level':
                 model = TokenORTModel(ort_session)
