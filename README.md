@@ -12,11 +12,12 @@ git clone -b training https://github.com/urchade/GLiNER.git
 ```
 
 
-## Step 3: Train the Model
-Next, train the model using the provided configuration file:
+## Step 3: Train from scratch
 ```bash
 python train.py --config config_span.yaml
 ```
-By default:
-- **Training Dataset:** Pilener data located at `data/pilene_train.json`
-- **Evaluation Dataset:** Cross-NER and MIT data located at `data/NER_datasets`
+
+## Step 3b: Finetuning an existing model
+```bash
+python train.py --config config_finetune.yaml
+```
