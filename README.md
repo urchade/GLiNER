@@ -10,20 +10,25 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 </p>
 
 <p align="center">
-<a href="https://arxiv.org/abs/2311.08526">📄 Paper</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://discord.gg/Y2yVxpSQnG">📢 Discord</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1">🤗 Demo</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://huggingface.co/models?library=gliner&sort=trending">🤗 Available models</a>
-<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-<a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>
+    <a href="https://arxiv.org/abs/2311.08526">📄 Paper</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href="https://discord.gg/Y2yVxpSQnG">📢 Discord</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1">🤗 Demo</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href="https://huggingface.co/models?library=gliner&sort=trending">🤗 Available models</a>
+    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+    <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing">
+        <img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />
+    </a>
 </p>
 
-* **Example notebooks:** finetuning, onxx conversion, synthetic data generation. [link](https://github.com/urchade/GLiNER/tree/main/examples)
-    * Finetune on colab &nbsp;[<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://drive.google.com/file/d/1TEWQg5YPq6BZAHlQYfAbEKJJJEhxwcYO/view?usp=sharing)
+## Example Notebooks
 
+Explore various examples including finetuning, ONNX conversion, and synthetic data generation. 
+
+- [Example Notebooks](https://github.com/urchade/GLiNER/tree/main/examples)
+- Finetune on Colab &nbsp;[<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://drive.google.com/file/d/1TEWQg5YPq6BZAHlQYfAbEKJJJEhxwcYO/view?usp=sharing)
 ## 🛠 Installation & Usage
 
 ### Installation
