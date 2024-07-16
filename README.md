@@ -22,7 +22,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 </p>
 
 * **Example notebooks:** finetuning, onxx conversion, synthetic data generation. [link](https://github.com/urchade/GLiNER/tree/main/examples)
-    * Finetune on colab &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />]([https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing](https://drive.google.com/file/d/1TEWQg5YPq6BZAHlQYfAbEKJJJEhxwcYO/view?usp=sharing))
+    * Finetune on colab &nbsp;[<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://drive.google.com/file/d/1TEWQg5YPq6BZAHlQYfAbEKJJJEhxwcYO/view?usp=sharing)
 
 ## 🛠 Installation & Usage
 
