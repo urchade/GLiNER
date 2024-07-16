@@ -2,11 +2,25 @@
 
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
-* **Paper**: 📄 [GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer](https://arxiv.org/abs/2311.08526)
-* **Getting Started:** &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing)
-* **List of available models**: 🤗 [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
-* **Demo:** 🤗 [Hugging Face](https://huggingface.co/spaces/urchade/gliner_mediumv2.1)
-* **Discord server:** https://discord.gg/Y2yVxpSQnG
+<p align="center">
+    <a href="https://pypi.org/project/gliner/" target="_blank">
+        <img alt="Python" src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" />
+        <img alt="Version" src="https://img.shields.io/pypi/v/gliner?style=for-the-badge&color=3670A0">
+    </a>
+</p>
+
+<p align="center">
+<a href="https://arxiv.org/abs/2311.08526">📄 Paper</a>
+<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+<a href="https://discord.gg/Y2yVxpSQnG">📢 Discord</a>
+<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+<a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1">🤗 Demo</a>
+<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+<a href="https://huggingface.co/models?library=gliner&sort=trending">🤗 Available models</a>
+<span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
+<a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" /></a>
+</p>
+
 * **Example notebooks:** finetuning, onxx conversion, synthetic data generation. [link](https://github.com/urchade/GLiNER/tree/main/examples)
     * Finetune on colab &nbsp; [<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />]([https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing](https://drive.google.com/file/d/1TEWQg5YPq6BZAHlQYfAbEKJJJEhxwcYO/view?usp=sharing))
 
