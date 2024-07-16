@@ -7,6 +7,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 * **List of available models**: 🤗 [Hugging Face](https://huggingface.co/models?library=gliner&sort=trending).
 * **Demo:** 🤗 [Hugging Face](https://huggingface.co/spaces/urchade/gliner_mediumv2.1)
 * **Discord server:** https://discord.gg/Y2yVxpSQnG
+* **Example notebooks:** finetuning, onxx conversion, synthetic data generation. [link](https://github.com/urchade/GLiNER/tree/main/examples)
 
 ## 🛠 Installation & Usage
 
