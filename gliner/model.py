@@ -81,6 +81,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         else:
             self.onnx_model = False
 
+        # to suppress an AttributeError when training
+        self._keys_to_ignore_on_save = None
+
+
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
         output = self.model(*args, **kwargs)
