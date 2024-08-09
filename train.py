@@ -9,7 +9,7 @@ import torch
 
 from gliner import GLiNERConfig, GLiNER
 from gliner.training import Trainer, TrainingArguments
-from gliner.data_processing.collator import DataCollatorWithPadding
+from gliner.data_processing.collator import DataCollatorWithPadding, DataCollator
 from gliner.utils import load_config_as_namespace
 from gliner.data_processing import WordsSplitter, GLiNERDataset
 
@@ -19,6 +19,8 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, default= "config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
     parser.add_argument('--compile_model', type=bool, default = False)
+    parser.add_argument('--freeze_language_model', type=bool, default = False)
+    parser.add_argument('--new_data_schema', type=bool, default = False)
     args = parser.parse_args()
     
     device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
@@ -49,11 +51,6 @@ if __name__ == '__main__':
     
     words_splitter = WordsSplitter(model_config.words_splitter_type)
 
-    train_dataset = GLiNERDataset(train_data, model_config, tokenizer, words_splitter)
-    test_dataset = GLiNERDataset(test_data, model_config, tokenizer, words_splitter)
-
-    data_collator = DataCollatorWithPadding(model_config)
-
     model = GLiNER(model_config, tokenizer=tokenizer, words_splitter=words_splitter)
     model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
                                   set_class_token_index = False,
@@ -64,6 +61,19 @@ if __name__ == '__main__':
         model.to(device)
         model.compile_for_training()
         
+    if args.freeze_language_model:
+        model.model.token_rep_layer.bert_layer.model.requires_grad_(False)
+    else:
+        model.model.token_rep_layer.bert_layer.model.requires_grad_(True)
+
+    if args.new_data_schema:
+        train_dataset = GLiNERDataset(train_data, model_config, tokenizer, words_splitter)
+        test_dataset = GLiNERDataset(test_data, model_config, tokenizer, words_splitter)
+        data_collator = DataCollatorWithPadding(model_config)
+    else:
+        train_dataset = train_data
+        test_dataset = test_data
+        data_collator = DataCollator(model.config, data_processor=model.data_processor, prepare_labels=True)
 
     training_args = TrainingArguments(
         output_dir=config.log_dir,
