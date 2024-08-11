@@ -28,8 +28,6 @@ if __name__ == '__main__':
     config = load_config_as_namespace(args.config)
     config.log_dir = args.log_dir
 
-    model_config = GLiNERConfig(**vars(config))
-
     with open(config.train_data, 'r') as f:
         data = json.load(f)
 
@@ -44,17 +42,23 @@ if __name__ == '__main__':
     print('Dataset is splitted...')
 
 
-    tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
-    model_config.class_token_index=len(tokenizer)
-    tokenizer.add_tokens([model_config.ent_token, model_config.sep_token])
-    model_config.vocab_size = len(tokenizer)
+    if config.prev_path is not None:
+        tokenizer = AutoTokenizer.from_pretrained(config.prev_path)
+        model = GLiNER.from_pretrained(config.prev_path)
+        model_config = model.config
+    else:
+        model_config = GLiNERConfig(**vars(config))
+        tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
+        model_config.class_token_index=len(tokenizer)
+        tokenizer.add_tokens([model_config.ent_token, model_config.sep_token])
+        model_config.vocab_size = len(tokenizer)
     
-    words_splitter = WordsSplitter(model_config.words_splitter_type)
+        words_splitter = WordsSplitter(model_config.words_splitter_type)
 
-    model = GLiNER(model_config, tokenizer=tokenizer, words_splitter=words_splitter)
-    model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
-                                  set_class_token_index = False,
-                                  add_tokens_to_tokenizer=False)
+        model = GLiNER(model_config, tokenizer=tokenizer, words_splitter=words_splitter)
+        model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
+                                    set_class_token_index = False,
+                                    add_tokens_to_tokenizer=False)
 
     if args.compile_model:
         torch.set_float32_matmul_precision('high')
