@@ -31,7 +31,7 @@ class Transformer(nn.Module):
         if config.encoder_config is not None:
             encoder_config = config.encoder_config
         else:
-            encoder_config = AutoConfig.from_pretrained(config.model_name, token="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")
+            encoder_config = AutoConfig.from_pretrained(config.model_name)
             if config.vocab_size!=-1:
                 encoder_config.vocab_size = config.vocab_size
 
@@ -49,7 +49,7 @@ class Transformer(nn.Module):
             ModelClass = AutoModel
 
         if from_pretrained:
-            self.model = ModelClass.from_pretrained(config.model_name, trust_remote_code=True, token="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")
+            self.model = ModelClass.from_pretrained(config.model_name, trust_remote_code=True)
         else:
             if not decoder:
                 self.model = ModelClass.from_config(encoder_config, trust_remote_code=True)
