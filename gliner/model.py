@@ -128,8 +128,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         )
         # update vocab size
         self.config.vocab_size = model_embeds.num_embeddings
+            
         if self.config.encoder_config is not None:
             self.config.encoder_config.vocab_size = model_embeds.num_embeddings
+
         return model_embeds
 
     def prepare_model_inputs(self, texts: str, labels: str):
@@ -491,6 +493,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         onnx_model_file: Optional[str] = "model.onnx",
         compile_torch_model: Optional[bool] = False,
         session_options: Optional[ort.SessionOptions] = None,
+        _attn_implementation: Optional[str] = None,
+        max_length: Optional[int] = None,
+        max_width: Optional[int] = None,
         **model_kwargs,
     ):
         """
@@ -543,6 +548,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 tokenizer = None
         config_ = json.load(open(config_file))
         config = GLiNERConfig(**config_)
+
+        if _attn_implementation is not None:
+            config.encoder_config._attn_implementation = _attn_implementation
+        if max_length is not None:
+            config.max_len = max_length
+        if max_width is not None:
+            config.max_width = max_width
 
         add_tokens = ["[FLERT]", config.ent_token, config.sep_token]
 
