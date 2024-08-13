@@ -50,7 +50,7 @@ if __name__ == '__main__':
         model_config = GLiNERConfig(**vars(config))
         tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
         model_config.class_token_index=len(tokenizer)
-        tokenizer.add_tokens([model_config.ent_token, model_config.sep_token])
+        tokenizer.add_tokens([model_config.ent_token, model_config.sep_token], special_tokens=True)
         model_config.vocab_size = len(tokenizer)
     
         words_splitter = WordsSplitter(model_config.words_splitter_type)
