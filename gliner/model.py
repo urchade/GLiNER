@@ -13,7 +13,7 @@ from torch import nn
 from transformers import AutoConfig, AutoTokenizer
 
 from .config import GLiNERConfig
-from .data_processing import GLiNERDataset, SpanProcessor, TokenProcessor
+from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcessor, TokenBiEncoderProcessor
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
@@ -58,7 +58,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             else:
                 self.model = model
             if data_processor is None:
-                self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+                if config.labels_encoder is not None:
+                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder)
+                    self.data_processor = TokenBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
+                else:
+                    self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
+
             else:
                 self.data_processor = data_processor
             self.decoder = TokenDecoder(config)
@@ -68,7 +73,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             else:
                 self.model = model
             if data_processor is None:
-                self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+                if config.labels_encoder is not None:
+                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder)
+                    self.data_processor = SpanBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
+                else:
+                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
             else:
                 self.data_processor = data_processor
             self.decoder = SpanDecoder(config)
@@ -322,7 +331,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 if isinstance(batch[key], torch.Tensor):
                     batch[key] = batch[key].to(device)
 
-                # Perform predictions
+            # Perform predictions
             model_output = self.model(**batch)[0]
 
             if not isinstance(model_output, torch.Tensor):
@@ -563,7 +572,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             # to be able to laod GLiNER models from previous version
             if (
                 config.class_token_index == -1 or config.vocab_size == -1
-            ) and resize_token_embeddings:
+            ) and resize_token_embeddings and not config.labels_encoder:
                 gliner.resize_token_embeddings(add_tokens=add_tokens)
             state_dict = torch.load(model_file, map_location=torch.device(map_location))
             gliner.model.load_state_dict(state_dict, strict=strict)

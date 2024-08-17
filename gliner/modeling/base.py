@@ -9,8 +9,8 @@ from torch.nn.utils.rnn import pad_sequence
 
 from transformers.utils import ModelOutput
 
-from .encoder import Encoder
-from .layers import LstmSeq2SeqEncoder, create_projection_layer
+from .encoder import Encoder, BiEncoder
+from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
 from .scorers import Scorer
 from .loss_functions import focal_loss_with_logits
 from .span_rep import SpanRepLayer
@@ -23,6 +23,24 @@ class GLiNERModelOutput(ModelOutput):
     prompts_embedding_mask: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
+
+def extract_word_embeddings(token_embeds, words_mask, attention_mask, 
+                                    batch_size, max_text_length, embed_dim, text_lengths):
+    words_embedding = torch.zeros(
+        batch_size, max_text_length, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
+    )
+
+    batch_indices, word_idx = torch.where(words_mask>0)
+    
+    target_word_idx = words_mask[batch_indices, word_idx]-1
+
+    words_embedding[batch_indices, target_word_idx] = token_embeds[batch_indices, word_idx]
+    
+    aranged_word_idx = torch.arange(max_text_length, 
+                                        dtype=attention_mask.dtype, 
+                                        device=token_embeds.device).expand(batch_size, -1)
+    mask = aranged_word_idx<text_lengths
+    return words_embedding, mask
 
 
 def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids, attention_mask, 
@@ -52,21 +70,8 @@ def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids,
     prompts_embedding[batch_indices, target_class_idx] = token_embeds[batch_indices, class_indices]
     
     #getting words embedding
-    words_embedding = torch.zeros(
-        batch_size, max_text_length, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
-    )
-
-    batch_indices, word_idx = torch.where(words_mask>0)
-    
-    target_word_idx = words_mask[batch_indices, word_idx]-1
-
-    words_embedding[batch_indices, target_word_idx] = token_embeds[batch_indices, word_idx]
-    
-    aranged_word_idx = torch.arange(max_text_length, 
-                                        dtype=attention_mask.dtype, 
-                                        device=token_embeds.device).expand(batch_size, -1)
-    
-    mask = aranged_word_idx<text_lengths
+    words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask, 
+                                    batch_size, max_text_length, embed_dim, text_lengths)
 
     return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
@@ -75,11 +80,25 @@ class BaseModel(ABC, nn.Module):
         super(BaseModel, self).__init__()
         self.config = config
         
-        self.token_rep_layer = Encoder(config, from_pretrained)
-
+        if not config.labels_encoder:
+            self.token_rep_layer = Encoder(config, from_pretrained)
+        else:
+            self.token_rep_layer = BiEncoder(config, from_pretrained)
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
-        
+
+        if config.post_fusion_schema:
+            self.cross_fuser = CrossFuser(self.bert_layer.model.config.hidden_size,
+                                            self.labels_encoder.model.config.hidden_size,
+                                            num_heads=self.bert_layer.model.config.num_attention_heads,
+                                            num_layers=1,
+                                            dropout=config.dropout, 
+                                            schema=config.post_fusion_schema)
+            
+    def features_enhancement(self, text_embeds, labels_embeds, text_mask=None, labels_mask=None):
+        labels_embeds, text_embeds = self.cross_fuser(labels_embeds, text_embeds, labels_mask, text_mask)
+        return text_embeds, labels_embeds
+    
     def _extract_prompt_features_and_word_embeddings(self, token_embeds, input_ids, attention_mask, 
                                                                     text_lengths, words_mask):
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = extract_prompt_features_and_word_embeddings(self.config, 
@@ -90,7 +109,7 @@ class BaseModel(ABC, nn.Module):
                                                                                                                        words_mask)
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
-    def get_representations(self, 
+    def get_uni_representations(self, 
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
@@ -106,6 +125,50 @@ class BaseModel(ABC, nn.Module):
             words_embedding = self.rnn(words_embedding, mask)
 
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+    
+    def get_bi_representations(self, 
+                input_ids: Optional[torch.FloatTensor] = None,
+                attention_mask: Optional[torch.LongTensor] = None,
+                labels_input_ids: Optional[torch.FloatTensor] = None,
+                labels_attention_mask: Optional[torch.LongTensor] = None,
+                text_lengths: Optional[torch.Tensor] = None,
+                words_mask: Optional[torch.LongTensor] = None,
+                **kwargs):
+        token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
+                                                           labels_input_ids, labels_attention_mask, 
+                                                                                            **kwargs) 
+        batch_size, sequence_length, embed_dim = token_embeds.shape
+        max_text_length = text_lengths.max()
+        words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask, 
+                                    batch_size, max_text_length, embed_dim, text_lengths)
+        
+        labels_embeds = labels_embeds.unsqueeze(0)
+        labels_embeds = labels_embeds.expand(batch_size, -1, -1)
+        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=labels_attention_mask.dtype,
+                                                        device = labels_attention_mask.device)
+
+        if hasattr(self, "cross_fuser"):
+            words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask)
+        
+        return labels_embeds, labels_mask, words_embedding, mask
+
+    def get_representations(self, 
+            input_ids: Optional[torch.FloatTensor] = None,
+            attention_mask: Optional[torch.LongTensor] = None,
+            labels_input_ids: Optional[torch.FloatTensor] = None,
+            labels_attention_mask: Optional[torch.LongTensor] = None,
+            text_lengths: Optional[torch.Tensor] = None,
+            words_mask: Optional[torch.LongTensor] = None,
+            **kwargs):
+        if self.config.labels_encoder:
+            prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_bi_representations(
+                input_ids, attention_mask, labels_input_ids, labels_attention_mask, text_lengths, words_mask, **kwargs
+            )
+        else:
+            prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_uni_representations(
+                                    input_ids, attention_mask, text_lengths, words_mask, **kwargs
+            )
+        return prompts_embedding, prompts_embedding_mask, words_embedding, mask 
     
     @abstractmethod
     def forward(self, x):
@@ -139,6 +202,8 @@ class SpanModel(BaseModel):
     def forward(self,        
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                labels_input_ids: Optional[torch.FloatTensor] = None,
+                labels_attention_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
                 span_idx: Optional[torch.LongTensor] = None,
@@ -149,6 +214,7 @@ class SpanModel(BaseModel):
 
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask, 
+                                                                                                labels_input_ids, labels_attention_mask, 
                                                                                                          text_lengths, words_mask)
         
         span_idx = span_idx*span_mask.unsqueeze(-1)
@@ -211,12 +277,15 @@ class TokenModel(BaseModel):
     def forward(self,        
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                labels_input_ids: Optional[torch.FloatTensor] = None,
+                labels_attention_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask, 
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask,
+                                                                                            labels_input_ids, labels_attention_mask,
                                                                                                         text_lengths, words_mask)
         
         scores = self.scorer(words_embedding, prompts_embedding)
