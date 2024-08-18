@@ -223,14 +223,13 @@ class SpanModel(BaseModel):
                 **kwargs
                 ):
 
-
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask, 
                                                                                 labels_embeddings, labels_input_ids, labels_attention_mask, 
                                                                                                                     text_lengths, words_mask)
         span_idx = span_idx*span_mask.unsqueeze(-1)
 
         span_rep = self.span_rep_layer(words_embedding, span_idx)
-
+        
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)

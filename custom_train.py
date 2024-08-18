@@ -79,42 +79,14 @@ class Trainer:
 
         self.device = device
 
-        self.model_config = GLiNERConfig(
-            model_name=config.model_name,
-            name=config.name,
-            max_width=config.max_width,
-            hidden_size=config.hidden_size,
-            dropout=config.dropout,
-            fine_tune=config.fine_tune,
-            subtoken_pooling=config.subtoken_pooling,
-            span_mode=config.span_mode,
-            loss_alpha=config.loss_alpha,
-            loss_gamma=config.loss_gamma,
-            label_smoothing=config.label_smoothing,
-            loss_reduction=config.loss_reduction,
-            max_types=config.max_types,
-            shuffle_types=config.shuffle_types,
-            random_drop=config.random_drop,
-            max_neg_type_ratio=config.max_neg_type_ratio,
-            max_len=config.max_len,
-        )
+        self.model_config = GLiNERConfig(**vars(config))
+
         tokenizer = AutoTokenizer.from_pretrained(config.model_name)
-        self.model_config.class_token_index=len(tokenizer)
-        tokenizer.add_tokens([self.model_config.ent_token, self.model_config.sep_token])
-        self.model_config.vocab_size = len(tokenizer)
-
-        words_splitter = WordsSplitter()
-
-        if config.span_mode == "token_level":
-            if config.labels_encoder is not None:
-                self.data_processor = TokenBiEncoderProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
-            else:
-                self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
-        else:
-            if config.labels_encoder is not None:
-                self.data_processor = SpanBiEncoderProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
-            else:
-                self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+        
+        if config.labels_encoder is None:
+            self.model_config.class_token_index=len(tokenizer)
+            tokenizer.add_tokens([self.model_config.ent_token, self.model_config.sep_token])
+            self.model_config.vocab_size = len(tokenizer)
 
         self.allow_distributed = allow_distributed
 
@@ -196,17 +168,19 @@ class Trainer:
     def setup_model_and_optimizer(self, rank=None, device=None):
         if device is None:
             device = self.device
-        if self.config.prev_path != "none":
-            model = GLiNER.from_pretrained(self.config.prev_path, data_processor=self.data_processor).to(device)
+        if self.config.prev_path is not None:
+            model = GLiNER.from_pretrained(self.config.prev_path).to(device)
             model.config = self.model_config
         else:
-            model = GLiNER(self.model_config, data_processor=self.data_processor).to(device)
-            model.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
-                                set_class_token_index = False,
-                                add_tokens_to_tokenizer=False)
+            model = GLiNER(self.model_config).to(device)
+            if self.config.labels_encoder is None:
+                model.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+                                    set_class_token_index = False,
+                                    add_tokens_to_tokenizer=False)
         if rank is not None:
             model = DDP(model, device_ids=[rank], output_device=rank, find_unused_parameters=False)
-            model.module.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
+            if self.config.labels_encoder is None:
+                model.module.resize_token_embeddings([self.model_config.ent_token, self.model_config.sep_token], 
                                 set_class_token_index = False,
                                 add_tokens_to_tokenizer=False)
         optimizer = self.create_optimizer(model.model)
@@ -216,10 +190,10 @@ class Trainer:
 
         return model, optimizer
 
-    def create_dataloader(self, dataset, sampler=None, shuffle=True):
+    def create_dataloader(self, dataset, data_processor, sampler=None, shuffle=True):
         # dataset = GLiNERDataset(dataset, config = self.config, data_processor=self.data_processor)
         # collator = DataCollatorWithPadding(self.config)
-        collator = DataCollator(self.config, data_processor=self.data_processor, prepare_labels=True)
+        collator = DataCollator(self.config, data_processor=data_processor, prepare_labels=True)
         data_loader = DataLoader(dataset, batch_size=self.config.train_batch_size, num_workers=12,
                                                         shuffle=shuffle, collate_fn=collator, sampler=sampler)
         return data_loader
@@ -234,7 +208,7 @@ class Trainer:
 
         sampler = DistributedSampler(dataset, num_replicas=world_size, rank=rank, shuffle=True, drop_last=False)
 
-        train_loader = self.create_dataloader(dataset, sampler=sampler, shuffle=False)
+        train_loader = self.create_dataloader(dataset, model.data_processor, sampler=sampler, shuffle=False)
 
         num_steps = self.config.num_steps // world_size
 
@@ -353,7 +327,7 @@ class Trainer:
         else:
             model, optimizer = self.setup_model_and_optimizer()
 
-            train_loader = self.create_dataloader(data, shuffle=True)
+            train_loader = self.create_dataloader(data, model.data_processor, shuffle=True)
 
             self.train(model, optimizer, train_loader, num_steps=self.config.num_steps, device=self.device)
 

@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence, pad_sequence
 
 class LstmSeq2SeqEncoder(nn.Module):
@@ -191,8 +192,8 @@ class LayersFuser(nn.Module):
         B, L, D = encoder_outputs[0].shape
         
         # Concatenate all layers
-        U = torch.stack(encoder_outputs, dim=1)  # [B, K, L, D]
-        
+        U = torch.stack(encoder_outputs[1:], dim=1)  # [B, K, L, D]
+
         # Squeeze operation
         Z = self.squeeze(U).squeeze(-1)  # [B, K, L]
         Z = Z.mean(dim=2)  # [B, K]

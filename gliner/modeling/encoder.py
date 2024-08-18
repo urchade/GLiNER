@@ -87,7 +87,7 @@ class Transformer(nn.Module):
         output = self.model(*args, output_hidden_states = output_hidden_states, 
                                             return_dict = True,  **kwargs)
         if self.config.fuse_layers:
-            encoder_layer = self.layer_wise_attention(output.hidden_states)
+            encoder_layer = self.layers_fuser(output.hidden_states)
         else:
             encoder_layer = output[0]
 
