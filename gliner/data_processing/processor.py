@@ -185,20 +185,22 @@ class BaseProcessor(ABC):
 
         return class_to_ids, id_to_classes
 
-    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None, negatives: List[str]=None) -> Dict:
-        if entity_types is None:
+    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None, negatives: List[str]=None,
+                            class_to_ids: Dict=None, id_to_classes: Dict=None) -> Dict:
+        if entity_types is None and class_to_ids is None:
             class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
             batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
                      enumerate(batch_list)]
         else:
-            class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
-            id_to_classes = {k: v for v, k in class_to_ids.items()}
+            if class_to_ids is None:
+                class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
+                id_to_classes = {k: v for v, k in class_to_ids.items()}
             batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) for b in batch_list]
 
         return self.create_batch_dict(batch, class_to_ids, id_to_classes)
 
-    def collate_fn(self, batch, prepare_labels=True):
-        model_input_batch = self.tokenize_and_prepare_labels(batch, prepare_labels)
+    def collate_fn(self, batch, prepare_labels=True, *args, **kwargs):
+        model_input_batch = self.tokenize_and_prepare_labels(batch, prepare_labels, *args, **kwargs)
         return model_input_batch
     
     @abstractmethod
@@ -206,22 +208,23 @@ class BaseProcessor(ABC):
                           id_to_classes: List[Dict[int, str]]) -> Dict:
         raise NotImplementedError("Subclasses should implement this method")
 
-    def create_dataloader(self, data, entity_types=None, **kwargs) -> DataLoader:
-        return DataLoader(data, collate_fn=lambda x: self.collate_fn(x, entity_types), **kwargs)
+    def create_dataloader(self, data, entity_types=None, *args, **kwargs) -> DataLoader:
+        return DataLoader(data, collate_fn=lambda x: self.collate_fn(x, entity_types), *args, **kwargs)
 
 
 class BaseBiEncoderProcessor(BaseProcessor):
-    def tokenize_inputs(self, texts, entities):
+    def tokenize_inputs(self, texts, entities=None):
         if self.preprocess_text:
             texts = self.prepare_texts(texts)
             
         tokenized_inputs = self.transformer_tokenizer(texts, is_split_into_words = True, return_tensors='pt',
                                                                                 truncation=True, padding="longest")
 
-        tokenized_labels = self.labels_tokenizer(entities, return_tensors='pt', truncation=True, padding="longest")
+        if entities is not None:
+            tokenized_labels = self.labels_tokenizer(entities, return_tensors='pt', truncation=True, padding="longest")
 
-        tokenized_inputs['labels_input_ids'] = tokenized_labels['input_ids']
-        tokenized_inputs['labels_attention_mask'] = tokenized_labels['attention_mask']
+            tokenized_inputs['labels_input_ids'] = tokenized_labels['input_ids']
+            tokenized_inputs['labels_attention_mask'] = tokenized_labels['attention_mask']
 
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths=None)
         tokenized_inputs['words_mask'] = torch.tensor(words_masks)
@@ -326,7 +329,7 @@ class SpanProcessor(BaseProcessor):
 
         return labels_batch
     
-    def tokenize_and_prepare_labels(self, batch, prepare_labels):
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
         if prepare_labels:
             labels = self.create_labels(batch)
@@ -334,11 +337,14 @@ class SpanProcessor(BaseProcessor):
         return tokenized_input
 
 class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):   
-    def tokenize_and_prepare_labels(self, batch, prepare_labels):
-        if type(batch['classes_to_id']) == dict:
-            entities = list(batch['classes_to_id'])
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, prepare_entities=True, *args, **kwargs):
+        if prepare_entities:
+            if type(batch['classes_to_id']) == dict:
+                entities = list(batch['classes_to_id'])
+            else:
+                entities = list(batch['classes_to_id'][0])
         else:
-            entities = list(batch['classes_to_id'][0])
+            entities = None
         tokenized_input = self.tokenize_inputs(batch['tokens'], entities)
         if prepare_labels:
             labels = self.create_labels(batch)
@@ -411,7 +417,7 @@ class TokenProcessor(BaseProcessor):
                 word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
         return word_labels
 
-    def tokenize_and_prepare_labels(self, batch, prepare_labels):
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         batch_size = len(batch['tokens'])
         seq_len = batch['seq_length'].max()
         num_classes = max([len(cid) for cid in batch['classes_to_id']])
@@ -424,19 +430,22 @@ class TokenProcessor(BaseProcessor):
         return tokenized_input
 
 class TokenBiEncoderProcessor(TokenProcessor, BaseBiEncoderProcessor):   
-    def tokenize_and_prepare_labels(self, batch, prepare_labels):
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, prepare_entities=True, **kwargs):
+        if prepare_entities:
+            if type(batch['classes_to_id']) == dict:
+                entities = list(batch['classes_to_id'])
+            else:
+                entities = list(batch['classes_to_id'][0])
+        else:
+            entities = None
         batch_size = len(batch['tokens'])
         seq_len = batch['seq_length'].max()
-        if type(batch['classes_to_id']) == dict:
-            entities = list(batch['classes_to_id'])
-        else:
-            entities = list(batch['classes_to_id'][0])
         num_classes = len(entities)
 
         tokenized_input = self.tokenize_inputs(batch['tokens'], entities)
         
         if prepare_labels:
             labels = self.create_labels(batch['entities_id'], batch_size, seq_len, num_classes)
-            tokenized_input['labels']
+            tokenized_input['labels'] = labels
 
         return tokenized_input

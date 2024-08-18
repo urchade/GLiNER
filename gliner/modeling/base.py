@@ -129,12 +129,16 @@ class BaseModel(ABC, nn.Module):
     def get_bi_representations(self, 
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                labels_embeds: Optional[torch.FloatTensor] = None,
                 labels_input_ids: Optional[torch.FloatTensor] = None,
                 labels_attention_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
-                **kwargs):
-        token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
+                **kwargs): 
+        if labels_embeds is not None:
+            token_embeds = self.token_rep_layer.encode_text(input_ids, attention_mask, **kwargs)
+        else:
+            token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
                                                            labels_input_ids, labels_attention_mask, 
                                                                                             **kwargs) 
         batch_size, sequence_length, embed_dim = token_embeds.shape
@@ -144,8 +148,8 @@ class BaseModel(ABC, nn.Module):
         
         labels_embeds = labels_embeds.unsqueeze(0)
         labels_embeds = labels_embeds.expand(batch_size, -1, -1)
-        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=labels_attention_mask.dtype,
-                                                        device = labels_attention_mask.device)
+        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
+                                                        device = attention_mask.device)
 
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask)
@@ -155,6 +159,7 @@ class BaseModel(ABC, nn.Module):
     def get_representations(self, 
             input_ids: Optional[torch.FloatTensor] = None,
             attention_mask: Optional[torch.LongTensor] = None,
+            labels_embeddings: Optional[torch.FloatTensor] = None,
             labels_input_ids: Optional[torch.FloatTensor] = None,
             labels_attention_mask: Optional[torch.LongTensor] = None,
             text_lengths: Optional[torch.Tensor] = None,
@@ -162,7 +167,8 @@ class BaseModel(ABC, nn.Module):
             **kwargs):
         if self.config.labels_encoder:
             prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_bi_representations(
-                input_ids, attention_mask, labels_input_ids, labels_attention_mask, text_lengths, words_mask, **kwargs
+                    input_ids, attention_mask, labels_embeddings, labels_input_ids, labels_attention_mask, 
+                                                                        text_lengths, words_mask, **kwargs
             )
         else:
             prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_uni_representations(
@@ -202,8 +208,13 @@ class SpanModel(BaseModel):
     def forward(self,        
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                labels_embeddings: Optional[torch.FloatTensor] = None,
                 labels_input_ids: Optional[torch.FloatTensor] = None,
                 labels_attention_mask: Optional[torch.LongTensor] = None,
+                words_embedding: Optional[torch.FloatTensor] = None,
+                mask: Optional[torch.LongTensor] = None,
+                prompts_embedding: Optional[torch.FloatTensor] = None,
+                prompts_embedding_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
                 span_idx: Optional[torch.LongTensor] = None,
@@ -214,9 +225,8 @@ class SpanModel(BaseModel):
 
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask, 
-                                                                                                labels_input_ids, labels_attention_mask, 
-                                                                                                         text_lengths, words_mask)
-        
+                                                                                labels_embeddings, labels_input_ids, labels_attention_mask, 
+                                                                                                                    text_lengths, words_mask)
         span_idx = span_idx*span_mask.unsqueeze(-1)
 
         span_rep = self.span_rep_layer(words_embedding, span_idx)
@@ -277,16 +287,22 @@ class TokenModel(BaseModel):
     def forward(self,        
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                labels_embeddings: Optional[torch.FloatTensor] = None,
                 labels_input_ids: Optional[torch.FloatTensor] = None,
                 labels_attention_mask: Optional[torch.LongTensor] = None,
+                words_embedding: Optional[torch.FloatTensor] = None,
+                mask: Optional[torch.LongTensor] = None,
+                prompts_embedding: Optional[torch.FloatTensor] = None,
+                prompts_embedding_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
+
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids, attention_mask,
-                                                                                            labels_input_ids, labels_attention_mask,
-                                                                                                        text_lengths, words_mask)
+                                                                            labels_embeddings, labels_input_ids, labels_attention_mask,
+                                                                                                                text_lengths, words_mask)
         
         scores = self.scorer(words_embedding, prompts_embedding)
 

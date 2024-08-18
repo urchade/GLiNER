@@ -109,31 +109,24 @@ class Encoder(nn.Module):
     def resize_token_embeddings(self, new_num_tokens, pad_to_multiple_of=None):
         return self.bert_layer.model.resize_token_embeddings(new_num_tokens, 
                                                                 pad_to_multiple_of)
-    def forward(self, *args, **kwargs) -> torch.Tensor:
-        token_embeddings = self.bert_layer(*args, **kwargs)
+
+    def encode_text(self, input_ids, attention_mask, *args, **kwargs):
+        token_embeddings = self.bert_layer(input_ids, attention_mask, *args, **kwargs)
         if hasattr(self, "projection"):
             token_embeddings = self.projection(token_embeddings)
-
+        return token_embeddings
+    
+    def forward(self, *args, **kwargs) -> torch.Tensor:
+        token_embeddings = self.encode_text(*args, **kwargs)
         return token_embeddings
 
-class BiEncoder(nn.Module):
+class BiEncoder(Encoder):
     def __init__(self, config, from_pretrained: bool = False):
-        super().__init__()
-
-        self.bert_layer = Transformer( #transformer_model
-            config.model_name, config, from_pretrained,
-        )
-
-        bert_hidden_size = self.bert_layer.model.config.hidden_size
-
-        if config.hidden_size != bert_hidden_size:
-            self.projection = nn.Linear(bert_hidden_size, config.hidden_size)
-
+        super().__init__(config, from_pretrained)
         if config.labels_encoder is not None:
             self.labels_encoder = Transformer( #transformer_model
                 config.labels_encoder, config, from_pretrained, True
             )
-
             le_hidden_size = self.labels_encoder.model.config.hidden_size
 
             if config.hidden_size != le_hidden_size:
@@ -143,18 +136,17 @@ class BiEncoder(nn.Module):
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-    def resize_token_embeddings(self, new_num_tokens, pad_to_multiple_of=None):
-        return self.bert_layer.model.resize_token_embeddings(new_num_tokens, 
-                                                                            pad_to_multiple_of)
-    def forward(self, input_ids, attention_maks, 
-                    labels_input_ids = None, labels_attention_mask=None, 
-                                            *args, **kwargs) -> torch.Tensor:
-        token_embeddings = self.bert_layer(input_ids, attention_maks, *args, **kwargs)
-        if hasattr(self, "projection"):
-            token_embeddings = self.projection(token_embeddings)
-
-        labels_embeddings = self.labels_encoder(labels_input_ids, labels_attention_mask, *args, **kwargs)
+    def encode_labels(self, input_ids, attention_mask, *args, **kwargs):
+        labels_embeddings = self.labels_encoder(input_ids, attention_mask, *args, **kwargs)
         if hasattr(self, "labels_projection"):
             labels_embeddings = self.labels_projection(labels_embeddings)
-        labels_embeddings = self.mean_pooling(labels_embeddings, labels_attention_mask)
+        labels_embeddings = self.mean_pooling(labels_embeddings, attention_mask)
+        return labels_embeddings
+
+    def forward(self, input_ids, attention_mask, 
+                    labels_input_ids = None, labels_attention_mask=None, 
+                                            *args, **kwargs) -> torch.Tensor:
+        token_embeddings = self.encode_text(input_ids, attention_mask, *args, **kwargs)
+
+        labels_embeddings = self.encode_labels(labels_input_ids, labels_attention_mask, *args, **kwargs)
         return token_embeddings, labels_embeddings
