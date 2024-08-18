@@ -27,15 +27,16 @@ if IS_PEFT:
     from peft import LoraConfig, get_peft_model
 
 class Transformer(nn.Module):
-    def __init__(self, model_name, config, from_pretrained):
+    def __init__(self, model_name, config, from_pretrained=False, labels_encoder = False):
         super().__init__()
-        if config.encoder_config is not None:
-            encoder_config = config.encoder_config
+        if labels_encoder:
+            encoder_config = config.labels_encoder_config
         else:
-            encoder_config = AutoConfig.from_pretrained(model_name, token="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")
+            encoder_config = config.encoder_config
+        if encoder_config is None:
+            encoder_config = AutoConfig.from_pretrained(model_name)
             if config.vocab_size!=-1:
                 encoder_config.vocab_size = config.vocab_size
-            config.encoder_config = encoder_config
 
         config_name = encoder_config.__class__.__name__
 
@@ -51,7 +52,7 @@ class Transformer(nn.Module):
             ModelClass = AutoModel
 
         if from_pretrained:
-            self.model = ModelClass.from_pretrained(model_name, trust_remote_code=True, token="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")
+            self.model = ModelClass.from_pretrained(model_name, trust_remote_code=True)
         else:
             if not decoder:
                 self.model = ModelClass.from_config(encoder_config, trust_remote_code=True)
@@ -70,6 +71,12 @@ class Transformer(nn.Module):
         if config.fuse_layers:
             self.layers_fuser = LayersFuser(encoder_config.num_hidden_layers,
                                                         encoder_config.hidden_size)
+
+        if labels_encoder:
+            config.labels_encoder_config = encoder_config
+        else:
+            config.encoder_config = encoder_config
+
         self.config = config
 
     def forward(self, *args, **kwargs):
@@ -124,7 +131,7 @@ class BiEncoder(nn.Module):
 
         if config.labels_encoder is not None:
             self.labels_encoder = Transformer( #transformer_model
-                config.labels_encoder, config, from_pretrained,
+                config.labels_encoder, config, from_pretrained, True
             )
 
             le_hidden_size = self.labels_encoder.model.config.hidden_size

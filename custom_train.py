@@ -27,7 +27,7 @@ from transformers.trainer import (
 from transformers import AutoTokenizer
 
 from gliner import GLiNER, GLiNERConfig
-from gliner.data_processing import GLiNERDataset, SpanProcessor, TokenProcessor
+from gliner.data_processing import SpanProcessor, TokenProcessor, SpanBiEncoderProcessor, TokenBiEncoderProcessor
 from gliner.data_processing.tokenizer import WordsSplitter
 from gliner.data_processing.collator import DataCollatorWithPadding, DataCollator
 from gliner.utils import load_config_as_namespace
@@ -106,9 +106,15 @@ class Trainer:
         words_splitter = WordsSplitter()
 
         if config.span_mode == "token_level":
-            self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+            if config.labels_encoder is not None:
+                self.data_processor = TokenBiEncoderProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+            else:
+                self.data_processor = TokenProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
         else:
-            self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+            if config.labels_encoder is not None:
+                self.data_processor = SpanBiEncoderProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
+            else:
+                self.data_processor = SpanProcessor(self.model_config, tokenizer, words_splitter, preprocess_text=True)
 
         self.allow_distributed = allow_distributed
 
