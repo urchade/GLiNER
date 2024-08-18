@@ -1,0 +1,54 @@
+# Model Configuration
+model_name: microsoft/deberta-v3-small # Hugging Face model
+labels_encoder: "BAAI/bge-small-en-v1.5"
+name: "span level gliner"
+max_width: 12
+hidden_size: 768
+dropout: 0.3
+fine_tune: true
+subtoken_pooling: first
+fuse_layers: false
+post_fusion_schema: "l2l-l2t-t2t"
+span_mode: markerV0
+
+# Training Parameters
+num_steps: 100000
+train_batch_size: 8
+eval_every: 5000
+warmup_ratio: 0.05
+scheduler_type: "cosine"
+
+# loss function
+loss_alpha: 0.75
+loss_gamma: 0
+label_smoothing: 0
+loss_reduction: "sum"
+
+# Learning Rate and weight decay Configuration
+lr_encoder: 1e-5
+lr_others: 3e-5
+weight_decay_encoder: 0.1
+weight_decay_other: 0.01
+
+max_grad_norm: 10.0
+
+# Directory Paths
+root_dir: gliner_logs
+train_data: "data.json" #"data/nuner_train.json" # see https://github.com/urchade/GLiNER/tree/main/data
+val_data_dir: "none"
+# "NER_datasets": val data from the paper can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
+
+# Pretrained Model Path
+# Use "none" if no pretrained model is being used
+prev_path: null
+
+save_total_limit: 3 #maximum amount of checkpoints to save
+
+# Advanced Training Settings
+size_sup: -1
+max_types: 100
+shuffle_types: true
+random_drop: true
+max_neg_type_ratio: 1
+max_len: 512
+freeze_token_rep: false

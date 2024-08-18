@@ -16,8 +16,8 @@ from gliner.data_processing import WordsSplitter, GLiNERDataset
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default= "config.yaml")
-    parser.add_argument('--log_dir', type=str, default = 'deberta/')
+    parser.add_argument('--config', type=str, default= "configs/config.yaml")
+    parser.add_argument('--log_dir', type=str, default = 'models/')
     parser.add_argument('--compile_model', type=bool, default = False)
     parser.add_argument('--freeze_language_model', type=bool, default = False)
     parser.add_argument('--new_data_schema', type=bool, default = False)
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         dataloader_num_workers = 8,
         use_cpu = False,
         report_to="none",
-        bf16=False,
+        bf16=True,
         )
 
     trainer = Trainer(
