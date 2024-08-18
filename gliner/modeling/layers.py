@@ -134,13 +134,11 @@ class CrossFuser(nn.Module):
             layers.append(layer)
 
         self.layers = nn.ModuleList(layers)
-        self.dense_i = nn.Linear(query_dim, d_model)
-        self.dense_o = nn.Linear(d_model, query_dim)
+        # self.dense_i = nn.Linear(query_dim, d_model)
+        # self.dense_o = nn.Linear(d_model, query_dim)
 
-        
     def forward(self, query, key, query_mask=None, key_mask=None):
-        query = self.dense_i(query)
-
+        # query = self.dense_i(query)
         for sublayers in self.layers:
             for id, layer in enumerate(sublayers):
                 if self.schema[id] == 'l2l':
@@ -167,7 +165,7 @@ class CrossFuser(nn.Module):
                     else:
                         cross_attn_mask = None
                     key = layer(key, query, mask=cross_attn_mask)
-        query=self.dense_o(query)   
+        # query=self.dense_o(query)   
         return query, key
 
 class LayersFuser(nn.Module):

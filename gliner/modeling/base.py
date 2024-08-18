@@ -88,9 +88,9 @@ class BaseModel(ABC, nn.Module):
             self.rnn = LstmSeq2SeqEncoder(config)
 
         if config.post_fusion_schema:
-            self.cross_fuser = CrossFuser(self.bert_layer.model.config.hidden_size,
-                                            self.labels_encoder.model.config.hidden_size,
-                                            num_heads=self.bert_layer.model.config.num_attention_heads,
+            self.cross_fuser = CrossFuser(self.config.hidden_size,
+                                            self.config.hidden_size,
+                                            num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
                                             num_layers=1,
                                             dropout=config.dropout, 
                                             schema=config.post_fusion_schema)
