@@ -90,32 +90,38 @@ class SelfAttentionBlock(nn.Module):
     def __init__(self, d_model, num_heads, dropout=0.1):
         super().__init__()
         self.self_attn = MultiheadAttention(d_model, num_heads, dropout=dropout)
-        self.norm = nn.LayerNorm(d_model)
+        self.pre_norm = nn.LayerNorm(d_model)
+        self.post_norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
         self.q_proj = nn.Linear(d_model, d_model)
         self.k_proj = nn.Linear(d_model, d_model)
         self.v_proj = nn.Linear(d_model, d_model)
 
     def forward(self, x, mask=None):
+        x = self.pre_norm(x)
         q = self.q_proj(x)
         k = self.k_proj(x)
         v = self.v_proj(x)
         attn_output, _ = self.self_attn(q, k, v, attn_mask=mask)
-        return self.norm(x + self.dropout(attn_output))
+        output = x + self.dropout(attn_output)
+        return self.post_norm(output)
 
 class CrossAttentionBlock(nn.Module):
     def __init__(self, d_model, num_heads, dropout=0.1):
         super().__init__()
         self.cross_attn = MultiheadAttention(d_model, num_heads, dropout=dropout)
-        self.norm = nn.LayerNorm(d_model)
+        self.pre_norm = nn.LayerNorm(d_model)
+        self.post_norm = nn.LayerNorm(d_model)
         self.dropout = nn.Dropout(dropout)
         self.v_proj = nn.Linear(d_model, d_model)
 
     def forward(self, query, key, value=None, mask=None):
+        query = self.pre_norm(query)
         if value is None:
             value = self.v_proj(key)
         attn_output, _ = self.cross_attn(query, key, value, attn_mask=mask)
-        return self.norm(query + self.dropout(attn_output))
+        output = query + self.dropout(attn_output)
+        return self.post_norm(output)
     
 class CrossFuser(nn.Module):
     def __init__(self, d_model, query_dim, num_heads=8, num_layers=1, dropout=0.1, schema='l2l-l2t'):
