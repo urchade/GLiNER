@@ -38,6 +38,7 @@ class DataCollator:
             model_input['id_to_classes'] = raw_batch['id_to_classes']
         if self.return_entities:
             model_input['entities'] = raw_batch['entities']
+        model_input = {k:v for k, v in model_input.items() if v is not None}
         return model_input
 
 class DataCollatorWithPadding:
@@ -91,7 +92,7 @@ class DataCollatorWithPadding:
                 padded_batch[key] = torch.tensor(key_data, dtype=torch.float32).to(self.device)
             else:
                 raise TypeError(f"Unsupported data type for key '{key}': {type(key_data[0])}")
-
+        padded_batch = {k:v for k,v in padded_batch.items() if v is not None}
         return padded_batch
     
     def _pad_2d_tensor(self, key_data):

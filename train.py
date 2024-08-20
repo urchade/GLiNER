@@ -16,7 +16,7 @@ from gliner.data_processing import WordsSplitter, GLiNERDataset
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default= "config.yaml")
+    parser.add_argument('--config', type=str, default= "configs/config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
     parser.add_argument('--compile_model', type=bool, default = False)
     parser.add_argument('--freeze_language_model', type=bool, default = False)
@@ -49,16 +49,18 @@ if __name__ == '__main__':
     else:
         model_config = GLiNERConfig(**vars(config))
         tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
-        model_config.class_token_index=len(tokenizer)
-        tokenizer.add_tokens([model_config.ent_token, model_config.sep_token], special_tokens=True)
-        model_config.vocab_size = len(tokenizer)
     
         words_splitter = WordsSplitter(model_config.words_splitter_type)
 
         model = GLiNER(model_config, tokenizer=tokenizer, words_splitter=words_splitter)
-        model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
-                                    set_class_token_index = False,
-                                    add_tokens_to_tokenizer=False)
+
+        if not config.labels_encoder:
+            model_config.class_token_index=len(tokenizer)
+            tokenizer.add_tokens([model_config.ent_token, model_config.sep_token], special_tokens=True)
+            model_config.vocab_size = len(tokenizer)
+            model.resize_token_embeddings([model_config.ent_token, model_config.sep_token], 
+                                        set_class_token_index = False,
+                                        add_tokens_to_tokenizer=False)
 
     if args.compile_model:
         torch.set_float32_matmul_precision('high')
@@ -97,6 +99,7 @@ if __name__ == '__main__':
         dataloader_num_workers = 8,
         use_cpu = False,
         report_to="none",
+        bf16=True,
         )
 
     trainer = Trainer(
