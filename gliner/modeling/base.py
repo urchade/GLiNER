@@ -151,6 +151,7 @@ class BaseModel(ABC, nn.Module):
         labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
                                                         device = attention_mask.device)
 
+        labels_embeds = labels_embeds.to(words_embedding.dtype)
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask)
         
