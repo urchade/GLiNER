@@ -10,7 +10,7 @@ from ..utils import is_module_available, MissedPackageException
 
 IS_LLM2VEC = is_module_available('llm2vec')
 IS_PEFT = is_module_available('peft')
-
+IS_TURBOT5 = is_module_available('turbot5')
 
 if IS_LLM2VEC:
     from llm2vec.models import MistralBiModel, LlamaBiModel, GemmaBiModel, Qwen2BiModel
@@ -23,6 +23,11 @@ if IS_LLM2VEC:
 else:
     DECODER_MODEL_MAPPING = {}
 
+if IS_TURBOT5:
+    from turbot5.model.modeling import T5EncoderModel
+else:
+    from transformers import T5EncoderModel
+
 if IS_PEFT:
     from peft import LoraConfig, get_peft_model
 
@@ -33,7 +38,6 @@ class Transformer(nn.Module):
             encoder_config = config.labels_encoder_config
         else:
             encoder_config = config.encoder_config
-
         if encoder_config is None:
             encoder_config = AutoConfig.from_pretrained(model_name)
             if config.vocab_size!=-1:
@@ -47,19 +51,26 @@ class Transformer(nn.Module):
             else:
                 print('Loading decoder model using LLM2Vec...')
                 ModelClass = DECODER_MODEL_MAPPING[config_name]
-            decoder = True
+            custom = True
+            kwargs = {}
+        elif config_name in {'T5Config', 'MT5Config'}:
+            custom = True
+            ModelClass = T5EncoderModel
+            if IS_TURBOT5:
+                kwargs = {"attention_type": 'flash'}
+            else:
+                kwargs = {}
         else:
-            decoder = False
+            custom = False
             ModelClass = AutoModel
 
         if from_pretrained:
             self.model = ModelClass.from_pretrained(model_name, trust_remote_code=True)
-
         else:
-            if not decoder:
+            if not custom:
                 self.model = ModelClass.from_config(encoder_config, trust_remote_code=True)
             else:
-                self.model = ModelClass(encoder_config)
+                self.model = ModelClass(encoder_config, **kwargs)
 
         adapter_config_file = Path(model_name) / "adapter_config.json"
 

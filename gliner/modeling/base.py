@@ -59,7 +59,8 @@ def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids,
     
     batch_indices, target_class_idx = torch.where(aranged_class_idx<num_class_tokens)
     _, class_indices = torch.where(class_token_mask)
-    # class_indices+=1
+    if not embed_ent_token:
+        class_indices+=1
 
     prompts_embedding = torch.zeros(
         batch_size, max_embed_dim, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
