@@ -726,7 +726,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             ) and resize_token_embeddings:
                 gliner.data_processor.transformer_tokenizer.add_tokens(add_tokens)
 
-        if len(tokenizer)!=gliner.config.vocab_size and gliner.config.vocab_size!=-1:
+        if (len(gliner.data_processor.transformer_tokenizer)!=gliner.config.vocab_size 
+                                                        and gliner.config.vocab_size!=-1):
             new_num_tokens = len(gliner.data_processor.transformer_tokenizer)
             model_embeds = gliner.model.token_rep_layer.resize_token_embeddings(
                 new_num_tokens, None
