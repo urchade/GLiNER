@@ -44,7 +44,7 @@ def extract_word_embeddings(token_embeds, words_mask, attention_mask,
 
 
 def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids, attention_mask, 
-                                                                    text_lengths, words_mask, **kwargs):
+                                                                    text_lengths, words_mask, embed_ent_token = True, **kwargs):
     # getting prompt embeddings
     batch_size, sequence_length, embed_dim = token_embeds.shape
 
@@ -89,10 +89,15 @@ class BaseModel(ABC, nn.Module):
             self.rnn = LstmSeq2SeqEncoder(config)
 
         if config.post_fusion_schema:
+            self.config.num_post_fusion_layers = 3
+            print('Initializing cross fuser...')
+            print('Post fusion layer:', config.post_fusion_schema)
+            print('Number of post fusion layers:', config.num_post_fusion_layers)
+
             self.cross_fuser = CrossFuser(self.config.hidden_size,
                                             self.config.hidden_size,
                                             num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
-                                            num_layers=1,
+                                            num_layers=self.config.num_post_fusion_layers,
                                             dropout=config.dropout, 
                                             schema=config.post_fusion_schema)
             
@@ -107,7 +112,8 @@ class BaseModel(ABC, nn.Module):
                                                                                                                        input_ids, 
                                                                                                                        attention_mask, 
                                                                                                                        text_lengths, 
-                                                                                                                       words_mask)
+                                                                                                                       words_mask,
+                                                                                                                       self.config.embed_ent_token)
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
     def get_uni_representations(self, 
@@ -194,8 +200,7 @@ class BaseModel(ABC, nn.Module):
     @abstractmethod
     def loss(self, x):
         pass
-
-
+    
 class SpanModel(BaseModel):
     def __init__(self, config, encoder_from_pretrained):
         super(SpanModel, self).__init__(config, encoder_from_pretrained)

@@ -123,6 +123,9 @@ class Encoder(nn.Module):
         return self.bert_layer.model.resize_token_embeddings(new_num_tokens, 
                                                                 pad_to_multiple_of)
 
+    def get_input_embeddings(self):
+        return self.bert_layer.model.get_input_embeddings()
+    
     def encode_text(self, input_ids, attention_mask, *args, **kwargs):
         token_embeddings = self.bert_layer(input_ids, attention_mask, *args, **kwargs)
         if hasattr(self, "projection"):
