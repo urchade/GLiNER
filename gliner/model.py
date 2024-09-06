@@ -173,6 +173,51 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
 
+
+    def prepare_model_inputs(self, texts: List[str], labels: List[str], prepare_entities: bool = True):
+        """
+        Prepare inputs for the model.
+
+        Args:
+            texts (str): The input text or texts to process.
+            labels (str): The corresponding labels for the input texts.
+        """
+        # preserving the order of labels
+        labels = list(dict.fromkeys(labels))
+        
+        class_to_ids = {k: v for v, k in enumerate(labels, start=1)}
+        id_to_classes = {k: v for v, k in class_to_ids.items()}
+        
+        input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
+
+        raw_batch = self.data_processor.collate_raw_batch(input_x, labels,
+                                                        class_to_ids = class_to_ids,
+                                                        id_to_classes = id_to_classes)
+        raw_batch["all_start_token_idx_to_text_idx"] = all_start_token_idx_to_text_idx
+        raw_batch["all_end_token_idx_to_text_idx"] = all_end_token_idx_to_text_idx
+
+        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=False, 
+                                                        prepare_entities=prepare_entities)
+        model_input.update(
+            {
+                "span_idx": raw_batch["span_idx"] if "span_idx" in raw_batch else None,
+                "span_mask": raw_batch["span_mask"]
+                if "span_mask" in raw_batch
+                else None,
+                "text_lengths": raw_batch["seq_length"],
+            }
+        )
+
+        if not self.onnx_model:
+            device = self.device
+            for key in model_input:
+                if model_input[key] is not None and isinstance(
+                    model_input[key], torch.Tensor
+                ):
+                    model_input[key] = model_input[key].to(device)
+
+        return model_input, raw_batch
+    
     def predict_entities(
         self, text, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
@@ -199,6 +244,63 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @torch.no_grad()
     def batch_predict_entities(
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False
+    ):
+        """
+        Predict entities for a batch of texts.
+
+        Args:
+            texts (List[str]): A list of input texts to predict entities for.
+            labels (List[str]): A list of labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+
+        Returns:
+            The list of lists with predicted entities.
+        """
+
+        model_input, raw_batch = self.prepare_model_inputs(texts, labels)
+
+        model_output = self.model(**model_input)[0]
+
+        if not isinstance(model_output, torch.Tensor):
+            model_output = torch.from_numpy(model_output)
+
+        outputs = self.decoder.decode(
+            raw_batch["tokens"],
+            raw_batch["id_to_classes"],
+            model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+        )
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = raw_batch["all_start_token_idx_to_text_idx"][
+                i
+            ]
+            end_token_idx_to_text_idx = raw_batch["all_end_token_idx_to_text_idx"][i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append(
+                    {
+                        "start": start_token_idx_to_text_idx[start_token_idx],
+                        "end": end_token_idx_to_text_idx[end_token_idx],
+                        "text": texts[i][start_text_idx:end_text_idx],
+                        "label": ent_type,
+                        "score": ent_score,
+                    }
+                )
+            all_entities.append(entities)
+
+        return all_entities
+    
+    @torch.no_grad()
+    def run(
         self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
     ):
         """
