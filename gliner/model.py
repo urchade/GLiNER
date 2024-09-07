@@ -145,7 +145,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return model_embeds
 
-    def prepare_model_inputs(self, texts: List[str], labels: List[str], prepare_entities: bool = True):
+    def prepare_texts(self, texts: List[str]):
         """
         Prepare inputs for the model.
 
@@ -156,11 +156,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         all_tokens = []
         all_start_token_idx_to_text_idx = []
         all_end_token_idx_to_text_idx = []
-        # preserving the order of labels
-        labels = list(dict.fromkeys(labels))
-        
-        class_to_ids = {k: v for v, k in enumerate(labels, start=1)}
-        id_to_classes = {k: v for v, k in class_to_ids.items()}
 
         for text in texts:
             tokens = []
@@ -175,6 +170,26 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
 
         input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+
+        return input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
+
+
+    def prepare_model_inputs(self, texts: List[str], labels: List[str], prepare_entities: bool = True):
+        """
+        Prepare inputs for the model.
+
+        Args:
+            texts (str): The input text or texts to process.
+            labels (str): The corresponding labels for the input texts.
+        """
+        # preserving the order of labels
+        labels = list(dict.fromkeys(labels))
+        
+        class_to_ids = {k: v for v, k in enumerate(labels, start=1)}
+        id_to_classes = {k: v for v, k in class_to_ids.items()}
+        
+        input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
+
         raw_batch = self.data_processor.collate_raw_batch(input_x, labels,
                                                         class_to_ids = class_to_ids,
                                                         id_to_classes = id_to_classes)
@@ -202,7 +217,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     model_input[key] = model_input[key].to(device)
 
         return model_input, raw_batch
-
+    
     def predict_entities(
         self, text, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
@@ -267,6 +282,87 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 i
             ]
             end_token_idx_to_text_idx = raw_batch["all_end_token_idx_to_text_idx"][i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append(
+                    {
+                        "start": start_token_idx_to_text_idx[start_token_idx],
+                        "end": end_token_idx_to_text_idx[end_token_idx],
+                        "text": texts[i][start_text_idx:end_text_idx],
+                        "label": ent_type,
+                        "score": ent_score,
+                    }
+                )
+            all_entities.append(entities)
+
+        return all_entities
+    
+    @torch.no_grad()
+    def run(
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
+    ):
+        """
+        Predict entities for a batch of texts.
+
+        Args:
+            texts (List[str]): A list of input texts to predict entities for.
+            labels (List[str]): A list of labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+
+        Returns:
+            The list of lists with predicted entities.
+        """
+        self.eval()
+        # raw input preparation
+        input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
+
+        labels = list(dict.fromkeys(labels))
+    
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+
+        outputs = []
+        # Iterate over data batches
+        for batch in data_loader:
+            # Move the batch to the appropriate device
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(self.device)
+
+            # Perform predictions
+            model_output = self.model(**batch)[0]
+
+            if not isinstance(model_output, torch.Tensor):
+                model_output = torch.from_numpy(model_output)
+
+            decoded_outputs = self.decoder.decode(
+                batch["tokens"],
+                batch["id_to_classes"],
+                model_output,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+            )
+            outputs.extend(decoded_outputs)
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
             for start_token_idx, end_token_idx, ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
@@ -437,7 +533,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             )
             all_preds.extend(decoded_outputs)
             all_trues.extend(batch["entities"])
-
         # Evaluate the predictions
         evaluator = Evaluator(all_trues, all_preds)
         out, f1 = evaluator.evaluate()
@@ -623,6 +718,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         _attn_implementation: Optional[str] = None,
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
+        post_fusion_schema: Optional[str] = None,
         **model_kwargs,
     ):
         """
@@ -682,7 +778,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             config.max_len = max_length
         if max_width is not None:
             config.max_width = max_width
-
+        if post_fusion_schema is not None:
+            config.post_fusion_schema = post_fusion_schema
+            print('Post fusion is set.')
+            
         add_tokens = ["[FLERT]", config.ent_token, config.sep_token]
 
         if not load_onnx_model:
