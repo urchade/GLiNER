@@ -23,25 +23,6 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
     </a>
 </p>
 
-## 🌟 Maintainers
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <strong>Urchade Zaratiana</strong><br>
-        <em>PhD Student at LIPN</em><br>
-        <a href="https://www.linkedin.com/in/urchade-zaratiana/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-      </td>
-      <td align="center">
-        <strong>Ihor Stepanov</strong><br>
-        <em>Co-Founder at Knowledgator</em><br>
-        <a href="https://www.linkedin.com/in/ihor-stepanov/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
-      </td>
-    </tr>
-  </table>
-</div>
-
 ## Example Notebooks
 
 Explore various examples including finetuning, ONNX conversion, and synthetic data generation. 
@@ -96,6 +77,24 @@ UEFA European Championship => competitions
 UEFA Nations League => competitions
 European Championship => competitions
 ```
+## 🌟 Maintainers
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center">
+        <strong>Urchade Zaratiana</strong><br>
+        <em>PhD Student at LIPN</em><br>
+        <a href="https://www.linkedin.com/in/urchade-zaratiana/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+      </td>
+      <td align="center">
+        <strong>Ihor Stepanov</strong><br>
+        <em>Co-Founder at Knowledgator</em><br>
+        <a href="https://www.linkedin.com/in/ihor-stepanov/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ## 👨‍💻 Model Authors
 The model authors are:
