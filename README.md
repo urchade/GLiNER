@@ -119,7 +119,7 @@ If you find GLiNER useful in your research, please consider citing our paper:
 ```
 ## Support and funding
 
-This project has been supported and funded by **FI Group** and **Laboratoire Informatique de Paris Nord**.
+This project has been supported and funded by **F.initiatives** and **Laboratoire Informatique de Paris Nord**.
 
 F.initiatives has been an expert in public funding strategies for R&D, Innovation, and Investments (R&D&I) for over 20 years. With a team of more than 200 qualified consultants, F.initiatives guides its clients at every stage of developing their public funding strategy: from structuring their projects to submitting their aid application, while ensuring the translation of their industrial and technological challenges to public funders. Through its continuous commitment to excellence and integrity, F.initiatives relies on the synergy between methods and tools to offer tailored, high-quality, and secure support.
 
