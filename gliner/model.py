@@ -8,6 +8,8 @@ from typing import Dict, List, Optional, Union
 
 import numpy as np
 import onnxruntime as ort
+from safetensors import safe_open
+from safetensors.torch import save_file
 import torch
 from torch.utils.data import DataLoader
 from huggingface_hub import PyTorchModelHubMixin, snapshot_download
@@ -26,13 +28,13 @@ from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 
 class GLiNER(nn.Module, PyTorchModelHubMixin):
     def __init__(
-        self,
-        config: GLiNERConfig,
-        model: Optional[Union[BaseModel, BaseORTModel]] = None,
-        tokenizer: Optional[Union[str, AutoTokenizer]] = None,
-        words_splitter: Optional[Union[str, WordsSplitter]] = None,
-        data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
-        encoder_from_pretrained: bool = True,
+            self,
+            config: GLiNERConfig,
+            model: Optional[Union[BaseModel, BaseORTModel]] = None,
+            tokenizer: Optional[Union[str, AutoTokenizer]] = None,
+            words_splitter: Optional[Union[str, WordsSplitter]] = None,
+            data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
+            encoder_from_pretrained: bool = True,
     ):
         """
         Initialize the GLiNER model.
@@ -85,9 +87,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             self.decoder = SpanDecoder(config)
 
         if config.vocab_size != -1 and config.vocab_size != len(
-            self.data_processor.transformer_tokenizer
+                self.data_processor.transformer_tokenizer
         ):
-            warnings.warn(f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(self.data_processor.transformer_tokenizer)}). 
+            warnings.warn(
+                f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(self.data_processor.transformer_tokenizer)}). 
                             You should to consider manually add new tokens to tokenizer or to load tokenizer with added tokens.""")
 
         if isinstance(self.model, BaseORTModel):
@@ -109,11 +112,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return device
 
     def resize_token_embeddings(
-        self,
-        add_tokens,
-        set_class_token_index=True,
-        add_tokens_to_tokenizer=True,
-        pad_to_multiple_of=None,
+            self,
+            add_tokens,
+            set_class_token_index=True,
+            add_tokens_to_tokenizer=True,
+            pad_to_multiple_of=None,
     ) -> nn.Embedding:
         """
         Resize the token embeddings of the model.
@@ -129,7 +132,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         if set_class_token_index:
             self.config.class_token_index = (
-                len(self.data_processor.transformer_tokenizer) + 1
+                    len(self.data_processor.transformer_tokenizer) + 1
             )
         if add_tokens_to_tokenizer:
             self.data_processor.transformer_tokenizer.add_tokens(add_tokens)
@@ -139,7 +142,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         )
         # update vocab size
         self.config.vocab_size = model_embeds.num_embeddings
-            
+
         if self.config.encoder_config is not None:
             self.config.encoder_config.vocab_size = model_embeds.num_embeddings
 
@@ -173,7 +176,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
 
-
     def prepare_model_inputs(self, texts: List[str], labels: List[str], prepare_entities: bool = True):
         """
         Prepare inputs for the model.
@@ -184,20 +186,20 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         # preserving the order of labels
         labels = list(dict.fromkeys(labels))
-        
+
         class_to_ids = {k: v for v, k in enumerate(labels, start=1)}
         id_to_classes = {k: v for v, k in class_to_ids.items()}
-        
+
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
 
         raw_batch = self.data_processor.collate_raw_batch(input_x, labels,
-                                                        class_to_ids = class_to_ids,
-                                                        id_to_classes = id_to_classes)
+                                                          class_to_ids=class_to_ids,
+                                                          id_to_classes=id_to_classes)
         raw_batch["all_start_token_idx_to_text_idx"] = all_start_token_idx_to_text_idx
         raw_batch["all_end_token_idx_to_text_idx"] = all_end_token_idx_to_text_idx
 
-        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=False, 
-                                                        prepare_entities=prepare_entities)
+        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=False,
+                                                     prepare_entities=prepare_entities)
         model_input.update(
             {
                 "span_idx": raw_batch["span_idx"] if "span_idx" in raw_batch else None,
@@ -212,14 +214,14 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             device = self.device
             for key in model_input:
                 if model_input[key] is not None and isinstance(
-                    model_input[key], torch.Tensor
+                        model_input[key], torch.Tensor
                 ):
                     model_input[key] = model_input[key].to(device)
 
         return model_input, raw_batch
-    
+
     def predict_entities(
-        self, text, labels, flat_ner=True, threshold=0.5, multi_label=False
+            self, text, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
         """
         Predict entities for a single text input.
@@ -244,7 +246,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @torch.no_grad()
     def batch_predict_entities(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False
+            self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
         """
         Predict entities for a batch of texts.
@@ -298,10 +300,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             all_entities.append(entities)
 
         return all_entities
-    
+
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
+            self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
     ):
         """
         Predict entities for a batch of texts.
@@ -321,7 +323,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
 
         labels = list(dict.fromkeys(labels))
-    
+
         collator = DataCollator(
             self.config,
             data_processor=self.data_processor,
@@ -381,7 +383,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return all_entities
 
     def predict_with_embeds(
-        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
+            self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
         """
         Predict entities for a single text input.
@@ -404,10 +406,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             threshold=threshold,
             multi_label=multi_label,
         )[0]
-    
+
     @torch.no_grad()
     def batch_predict_with_embeds(
-        self, texts, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
+            self, texts, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
     ):
         """
         Predict entities for a batch of texts.
@@ -423,9 +425,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             The list of lists with predicted entities.
         """
 
-        model_input, raw_batch = self.prepare_model_inputs(texts, labels, prepare_entities = False)
+        model_input, raw_batch = self.prepare_model_inputs(texts, labels, prepare_entities=False)
 
-        model_output = self.model(labels_embeddings = labels_embeddings, **model_input)[0]
+        model_output = self.model(labels_embeddings=labels_embeddings, **model_input)[0]
 
         if not isinstance(model_output, torch.Tensor):
             model_output = torch.from_numpy(model_output)
@@ -461,15 +463,15 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             all_entities.append(entities)
 
         return all_entities
-    
+
     def evaluate(
-        self,
-        test_data,
-        flat_ner=False,
-        multi_label=False,
-        threshold=0.5,
-        batch_size=12,
-        entity_types=None,
+            self,
+            test_data,
+            flat_ner=False,
+            multi_label=False,
+            threshold=0.5,
+            batch_size=12,
+            entity_types=None,
     ):
         """
         Evaluate the model on a given test dataset.
@@ -552,19 +554,20 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         if self.config.labels_encoder is None:
             raise NotImplementedError("Labels pre-encoding is supported only for bi-encoder model.")
-        
+
         # Create a DataLoader for efficient batching
         dataloader = DataLoader(labels, batch_size=batch_size, collate_fn=lambda x: x)
-        
+
         labels_embeddings = []
-        
+
         for batch in tqdm(dataloader, desc="Encoding labels"):
-            tokenized_labels = self.data_processor.labels_tokenizer(batch, return_tensors='pt', 
-                                                                truncation=True, padding="max_length").to(self.device)
+            tokenized_labels = self.data_processor.labels_tokenizer(batch, return_tensors='pt',
+                                                                    truncation=True, padding="max_length").to(
+                self.device)
             with torch.no_grad():  # Disable gradient calculation for inference
                 curr_labels_embeddings = self.model.token_rep_layer.encode_labels(**tokenized_labels)
             labels_embeddings.append(curr_labels_embeddings)
-        
+
         return torch.cat(labels_embeddings, dim=0)
 
     def predict(self, batch, flat_ner=False, threshold=0.5, multi_label=False):
@@ -615,7 +618,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             self.model.scorer = torch.compile(self.model.scorer)
 
     def set_sampling_params(
-        self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len
+            self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len
     ):
         """
         Sets sampling parameters on the given model.
@@ -640,18 +643,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         new_state_dict = {}
         for key, tensor in state_dict.items():
-            key = re.sub("_orig_mod\.", "", key)
+            key = re.sub(r"_orig_mod\.", "", key)
             new_state_dict[key] = tensor
         return new_state_dict
 
     def save_pretrained(
-        self,
-        save_directory: Union[str, Path],
-        *,
-        config: Optional[GLiNERConfig] = None,
-        repo_id: Optional[str] = None,
-        push_to_hub: bool = False,
-        **push_to_hub_kwargs,
+            self,
+            save_directory: Union[str, Path],
+            safe_serialization: bool = True,
+            *,
+            config: Optional[GLiNERConfig] = None,
+            repo_id: Optional[str] = None,
+            push_to_hub: bool = False,
+            **push_to_hub_kwargs,
     ) -> Optional[str]:
         """
         Save weights in local directory.
@@ -659,6 +663,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         Args:
             save_directory (`str` or `Path`):
                 Path to directory in which the model weights and configuration will be saved.
+            safe_serialization (`bool`):
+                Whether to save the model using `safetensors` or the traditional way for PyTorch.
             config (`dict` or `DataclassInstance`, *optional*):
                 Model configuration specified as a key/value dictionary or a dataclass instance.
             push_to_hub (`bool`, *optional*, defaults to `False`):
@@ -673,10 +679,14 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         save_directory.mkdir(parents=True, exist_ok=True)
 
         # save model weights/files
-        torch.save(
-            self.prepare_state_dict(self.model.state_dict()),
-            save_directory / "pytorch_model.bin",
-        )
+        model_state_dict = self.prepare_state_dict(self.model.state_dict())
+        if safe_serialization:
+            save_file(model_state_dict, os.path.join(save_directory, "model.safetensors"))
+        else:
+            torch.save(
+                model_state_dict,
+                os.path.join(save_directory, "pytorch_model.bin"),
+            )
 
         # save config (if provided)
         if config is None:
@@ -697,29 +707,29 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @classmethod
     def _from_pretrained(
-        cls,
-        *,
-        model_id: str,
-        revision: Optional[str],
-        cache_dir: Optional[Union[str, Path]],
-        force_download: bool,
-        proxies: Optional[Dict],
-        resume_download: bool,
-        local_files_only: bool,
-        token: Union[str, bool, None],
-        map_location: str = "cpu",
-        strict: bool = False,
-        load_tokenizer: Optional[bool] = False,
-        resize_token_embeddings: Optional[bool] = True,
-        load_onnx_model: Optional[bool] = False,
-        onnx_model_file: Optional[str] = "model.onnx",
-        compile_torch_model: Optional[bool] = False,
-        session_options: Optional[ort.SessionOptions] = None,
-        _attn_implementation: Optional[str] = None,
-        max_length: Optional[int] = None,
-        max_width: Optional[int] = None,
-        post_fusion_schema: Optional[str] = None,
-        **model_kwargs,
+            cls,
+            *,
+            model_id: str,
+            revision: Optional[str],
+            cache_dir: Optional[Union[str, Path]],
+            force_download: bool,
+            proxies: Optional[Dict],
+            resume_download: bool,
+            local_files_only: bool,
+            token: Union[str, bool, None],
+            map_location: str = "cpu",
+            strict: bool = False,
+            load_tokenizer: Optional[bool] = False,
+            resize_token_embeddings: Optional[bool] = True,
+            load_onnx_model: Optional[bool] = False,
+            onnx_model_file: Optional[str] = "model.onnx",
+            compile_torch_model: Optional[bool] = False,
+            session_options: Optional[ort.SessionOptions] = None,
+            _attn_implementation: Optional[str] = None,
+            max_length: Optional[int] = None,
+            max_width: Optional[int] = None,
+            post_fusion_schema: Optional[str] = None,
+            **model_kwargs,
     ):
         """
         Load a pretrained model from a given model ID.
@@ -759,7 +769,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 token=token,
                 local_files_only=local_files_only,
             )
-        model_file = Path(model_dir) / "pytorch_model.bin"
+        model_file = os.path.join(model_dir, "model.safetensors")
+        if not os.path.exists(model_file):
+            model_file = os.path.join(model_dir, "pytorch_model.bin")
         config_file = Path(model_dir) / "gliner_config.json"
 
         if load_tokenizer:
@@ -781,17 +793,23 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         if post_fusion_schema is not None:
             config.post_fusion_schema = post_fusion_schema
             print('Post fusion is set.')
-            
+
         add_tokens = ["[FLERT]", config.ent_token, config.sep_token]
 
         if not load_onnx_model:
             gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False)
             # to be able to laod GLiNER models from previous version
             if (
-                config.class_token_index == -1 or config.vocab_size == -1
+                    config.class_token_index == -1 or config.vocab_size == -1
             ) and resize_token_embeddings and not config.labels_encoder:
                 gliner.resize_token_embeddings(add_tokens=add_tokens)
-            state_dict = torch.load(model_file, map_location=torch.device(map_location))
+            if model_file.endswith("safetensors"):
+                state_dict = {}
+                with safe_open(model_file, framework="pt", device=map_location) as f:
+                    for key in f.keys():
+                        state_dict[key] = f.get_tensor(key)
+            else:
+                state_dict = torch.load(model_file, map_location=torch.device(map_location), weights_only=True)
             gliner.model.load_state_dict(state_dict, strict=strict)
             gliner.model.to(map_location)
             if compile_torch_model and "cuda" in map_location:
@@ -821,12 +839,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
             gliner = cls(config, tokenizer=tokenizer, model=model)
             if (
-                config.class_token_index == -1 or config.vocab_size == -1
+                    config.class_token_index == -1 or config.vocab_size == -1
             ) and resize_token_embeddings:
                 gliner.data_processor.transformer_tokenizer.add_tokens(add_tokens)
 
-        if (len(gliner.data_processor.transformer_tokenizer)!=gliner.config.vocab_size 
-                                                        and gliner.config.vocab_size!=-1):
+        if (len(gliner.data_processor.transformer_tokenizer) != gliner.config.vocab_size
+                and gliner.config.vocab_size != -1):
             new_num_tokens = len(gliner.data_processor.transformer_tokenizer)
             model_embeds = gliner.model.token_rep_layer.resize_token_embeddings(
                 new_num_tokens, None
