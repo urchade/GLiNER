@@ -6,15 +6,14 @@ from tqdm import tqdm
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
-import numpy as np
 import onnxruntime as ort
-from safetensors import safe_open
-from safetensors.torch import save_file
 import torch
 from torch.utils.data import DataLoader
 from huggingface_hub import PyTorchModelHubMixin, snapshot_download
 from torch import nn
 from transformers import AutoConfig, AutoTokenizer
+from safetensors import safe_open
+from safetensors.torch import save_file
 
 from .config import GLiNERConfig
 from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcessor, TokenBiEncoderProcessor
@@ -544,11 +543,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     def encode_labels(self, labels: List[str], batch_size: int = 8) -> torch.FloatTensor:
         """
         Embedding of labels.
-        
+
         Args:
             labels (List[str]): A list of labels.
             batch_size (int): Batch size for processing labels.
-        
+
         Returns:
             labels_embeddings (torch.FloatTensor): Tensor containing label embeddings.
         """
@@ -798,7 +797,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         if not load_onnx_model:
             gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False)
-            # to be able to laod GLiNER models from previous version
+            # to be able to load GLiNER models from previous version
             if (
                     config.class_token_index == -1 or config.vocab_size == -1
             ) and resize_token_embeddings and not config.labels_encoder:
