@@ -652,6 +652,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config: Optional[GLiNERConfig] = None,
         repo_id: Optional[str] = None,
         push_to_hub: bool = False,
+        safe_serialization = False,
         **push_to_hub_kwargs,
     ) -> Optional[str]:
         """
