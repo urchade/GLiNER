@@ -25,7 +25,7 @@ from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 
 
-class GLiNERModel(nn.Module, PyTorchModelHubMixin):
+class GLiNER(nn.Module, PyTorchModelHubMixin):
     def __init__(
         self,
         config: GLiNERConfig,
