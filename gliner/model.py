@@ -25,7 +25,7 @@ from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 
 
-class GLiNER(nn.Module, PyTorchModelHubMixin):
+class GLiNERModel(nn.Module, PyTorchModelHubMixin):
     def __init__(
         self,
         config: GLiNERConfig,
@@ -34,6 +34,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         words_splitter: Optional[Union[str, WordsSplitter]] = None,
         data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
         encoder_from_pretrained: bool = True,
+        onnx_use_cuda: bool = False
     ):
         """
         Initialize the GLiNER model.
@@ -98,6 +99,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         # to suppress an AttributeError when training
         self._keys_to_ignore_on_save = None
+        self.onnx_use_cuda = onnx_use_cuda
 
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
@@ -106,8 +108,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @property
     def device(self):
-        device = next(self.model.parameters()).device
-        return device
+        """
+        Determines the device (CPU or GPU) for the model.
+        """
+        if (self.onnx_use_cuda and self.onnx_model) or (torch.cuda.is_available() and not self.onnx_model):
+            return torch.device("cuda")
+        return torch.device("cpu")
 
     def resize_token_embeddings(
         self,
@@ -209,7 +215,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             }
         )
 
-        if not self.onnx_model:
+        if not self.onnx_model or self.onnx_use_cuda:
             device = self.device
             for key in model_input:
                 if model_input[key] is not None and isinstance(
@@ -728,6 +734,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
+        onnx_use_cuda: bool = False,
         **model_kwargs,
     ):
         """
@@ -830,13 +837,14 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 session_options.graph_optimization_level = (
                     ort.GraphOptimizationLevel.ORT_ENABLE_ALL
                 )
-            ort_session = ort.InferenceSession(model_file, session_options)
+            providers = ['CUDAExecutionProvider'] if onnx_use_cuda else ['CPUExecutionProvider']
+            ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
             if config.span_mode == "token_level":
                 model = TokenORTModel(ort_session)
             else:
                 model = SpanORTModel(ort_session)
 
-            gliner = cls(config, tokenizer=tokenizer, model=model)
+            gliner = cls(config, tokenizer=tokenizer, model=model, onnx_use_cuda=onnx_use_cuda)
             if (
                 config.class_token_index == -1 or config.vocab_size == -1
             ) and resize_token_embeddings:

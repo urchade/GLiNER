@@ -1,6 +1,6 @@
 torch>=2.0.0
 transformers>=4.38.2
 huggingface_hub>=0.21.4
-onnxruntime
+onnxruntime-gpu<=1.18.1
 sentencepiece
 tqdm
