@@ -508,16 +508,16 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
         )
 
-        device = self.device
         all_preds = []
         all_trues = []
 
         # Iterate over data batches
         for batch in data_loader:
             # Move the batch to the appropriate device
-            for key in batch:
-                if isinstance(batch[key], torch.Tensor):
-                    batch[key] = batch[key].to(device)
+            if not self.onnx_model:
+                for key in batch:
+                    if isinstance(batch[key], torch.Tensor):
+                        batch[key] = batch[key].to(self.device)
 
             # Perform predictions
             model_output = self.model(**batch)[0]
