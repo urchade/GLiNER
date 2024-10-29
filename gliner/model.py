@@ -34,7 +34,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         words_splitter: Optional[Union[str, WordsSplitter]] = None,
         data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
         encoder_from_pretrained: bool = True,
-        onnx_use_cuda: bool = False
     ):
         """
         Initialize the GLiNER model.
@@ -99,7 +98,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         # to suppress an AttributeError when training
         self._keys_to_ignore_on_save = None
-        self.onnx_use_cuda = onnx_use_cuda
 
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
@@ -108,12 +106,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @property
     def device(self):
-        """
-        Determines the device (CPU or GPU) for the model.
-        """
-        if (self.onnx_use_cuda and self.onnx_model) or (torch.cuda.is_available() and not self.onnx_model):
-            return torch.device("cuda")
-        return torch.device("cpu")
+        if self.onnx_model:
+            providers = self.model.session.get_providers()
+            if 'CUDAExecutionProvider' in providers:
+                return torch.device('cuda')
+            return torch.device('cpu')
+        device = next(self.model.parameters()).device
+        return device
 
     def resize_token_embeddings(
         self,
@@ -215,13 +214,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             }
         )
 
-        if not self.onnx_model or self.onnx_use_cuda:
-            device = self.device
-            for key in model_input:
-                if model_input[key] is not None and isinstance(
-                    model_input[key], torch.Tensor
-                ):
-                    model_input[key] = model_input[key].to(device)
+        device = self.device
+        for key in model_input:
+            if model_input[key] is not None and isinstance(
+                model_input[key], torch.Tensor
+            ):
+                model_input[key] = model_input[key].to(device)
 
         return model_input, raw_batch
 
@@ -513,7 +511,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
         )
 
-        device = self.device
         all_preds = []
         all_trues = []
 
@@ -522,7 +519,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             # Move the batch to the appropriate device
             for key in batch:
                 if isinstance(batch[key], torch.Tensor):
-                    batch[key] = batch[key].to(device)
+                    batch[key] = batch[key].to(self.device)
 
             # Perform predictions
             model_output = self.model(**batch)[0]
@@ -734,7 +731,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
-        onnx_use_cuda: bool = False,
         **model_kwargs,
     ):
         """
@@ -837,14 +833,18 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 session_options.graph_optimization_level = (
                     ort.GraphOptimizationLevel.ORT_ENABLE_ALL
                 )
-            providers = ['CUDAExecutionProvider'] if onnx_use_cuda else ['CPUExecutionProvider']
+            providers = ['CPUExecutionProvider']
+            if map_location == 'cuda':
+                if not torch.cuda.is_available():
+                    raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
+                providers = ['CUDAExecutionProvider']
             ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
             if config.span_mode == "token_level":
                 model = TokenORTModel(ort_session)
             else:
                 model = SpanORTModel(ort_session)
 
-            gliner = cls(config, tokenizer=tokenizer, model=model, onnx_use_cuda=onnx_use_cuda)
+            gliner = cls(config, tokenizer=tokenizer, model=model)
             if (
                 config.class_token_index == -1 or config.vocab_size == -1
             ) and resize_token_embeddings:
