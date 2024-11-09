@@ -781,7 +781,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 tokenizer = AutoTokenizer.from_pretrained(model_dir)
             else:
                 tokenizer = None
-        config_ = json.load(open(config_file))
+        with open(config_file, "r") as f:
+            config_ = json.load(f)
         config = GLiNERConfig(**config_)
 
         if _attn_implementation is not None:
