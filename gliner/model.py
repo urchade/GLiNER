@@ -835,7 +835,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     ort.GraphOptimizationLevel.ORT_ENABLE_ALL
                 )
             providers = ['CPUExecutionProvider']
-            if map_location == 'cuda':
+            if "cuda" in map_location:
                 if not torch.cuda.is_available():
                     raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
                 providers = ['CUDAExecutionProvider']
