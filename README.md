@@ -43,7 +43,7 @@ After the installation of the GLiNER library, import the `GLiNER` class. Followi
 from gliner import GLiNER
 
 # Initialize GLiNER with the base model
-model = GLiNER.from_pretrained("urchade/gliner_mediumv2.1")
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
 
 # Sample text for entity prediction
 text = """
