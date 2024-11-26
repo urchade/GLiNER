@@ -10,7 +10,7 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 </p>
 
 <p align="center">
-    <a href="https://arxiv.org/abs/2311.08526">📄 Paper</a>
+    <a href="https://aclanthology.org/2024.naacl-long.300/">📄 Paper</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
     <a href="https://discord.gg/Y2yVxpSQnG">📢 Discord</a>
     <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
