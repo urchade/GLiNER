@@ -2,7 +2,7 @@ import random
 import warnings
 from abc import ABC, abstractmethod
 from collections import defaultdict
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Union
 from concurrent.futures import ProcessPoolExecutor
 
 import torch
@@ -185,19 +185,45 @@ class BaseProcessor(ABC):
 
         return class_to_ids, id_to_classes
 
-    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[str] = None, negatives: List[str]=None,
-                            class_to_ids: Dict=None, id_to_classes: Dict=None) -> Dict:
+    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[Union[str, List[str]]] = None, 
+                        negatives: List[str] = None, class_to_ids: Dict = None, id_to_classes: Dict = None) -> Dict:
         if entity_types is None and class_to_ids is None:
+            # Generate mappings dynamically based on batch content
             class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
-            batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) for i, b in
-                     enumerate(batch_list)]
+            batch = [
+                self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) 
+                for i, b in enumerate(batch_list)
+            ]
         else:
             if class_to_ids is None:
-                class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
-                id_to_classes = {k: v for v, k in class_to_ids.items()}
-            batch = [self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) for b in batch_list]
-
+                # Handle cases for entity_types being a list of strings or list of lists
+                if isinstance(entity_types[0], list):  # List of lists of strings
+                    class_to_ids = []
+                    id_to_classes = []
+                    for i, types in enumerate(entity_types):
+                        mapping = {k: v for v, k in enumerate(types, start=1)}
+                        class_to_ids.append(mapping)
+                        id_to_classes.append({v: k for k, v in mapping.items()})
+                    batch = [
+                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) 
+                        for i, b in enumerate(batch_list)
+                    ]
+                else:  # Single list of strings
+                    class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
+                    id_to_classes = {v: k for k, v in class_to_ids.items()}
+                    batch = [
+                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) 
+                        for b in batch_list
+                    ]
+            else:
+                # Use provided mappings
+                batch = [
+                    self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) 
+                    for b in batch_list
+                ]
+        
         return self.create_batch_dict(batch, class_to_ids, id_to_classes)
+
 
     def collate_fn(self, batch, prepare_labels=True, *args, **kwargs):
         model_input_batch = self.tokenize_and_prepare_labels(batch, prepare_labels, *args, **kwargs)
