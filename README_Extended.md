@@ -55,7 +55,9 @@ Word-level models work **better for finding multi-word entities, highlighting se
 - **Birds attribute extraction**: 🐦 `wjbmattingly/gliner-large-v2.1-bird`  *(Apache 2.0)*
 
 #### 📚 Multi-task Models
-- **GLiNER multi-task large** `knowledgator/gliner-multitask-large-v0.5` *(Apache 2.0)* - +4.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization and question-answering tasks.
+- **GLiNER multi-task large v0.5** `knowledgator/gliner-multitask-large-v0.5` *(Apache 2.0)* - +4.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization and question-answering tasks.
+- **GLiNER multi-task v1.0** `knowledgator/gliner-multitask-v1.0` *(Apache 2.0)* - +5.0% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization, classification and question-answering tasks.
+- **GLiNER Llama multi-task v1.0** `knowledgator/gliner-llama-multitask-1B-v1.0` *(Apache 2.0)* - +3.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization, classification and question-answering tasks.
 
 ## 🛠 Installation & Usage
 
@@ -219,6 +221,248 @@ for ent in doc.ents:
 Bill Gates => person
 Microsoft => organization
 ```
+
+## Multitask Usage
+GLiNER-Multitask models are designed to extract relevant information from plain text based on a user-provided custom prompt. The advantage of such encoder-based multitask models is that they enable efficient and more controllable information extraction with a single model that reduces costs on computational and storage resources. Moreover, such encoder models are more interpretable, efficient and tunable than LLMs, which are hard to fine-tune and use for information extraction.
+
+**Supported tasks:**:
+   * Named Entity Recognition (NER): Identifies and categorizes entities such as names, organizations, dates, and other specific items in the text.
+   * Relation Extraction: Detects and classifies relationships between entities within the text.
+   * Summarization: Extract the most important sentences that summarize the input text, capturing the essential information.
+   * Sentiment Extraction: Identify parts of the text that signalize a positive, negative, or neutral sentiment;
+   * Key-Phrase Extraction: Identifies and extracts important phrases and keywords from the text.
+   * Question-answering: Finding an answer in the text given a question;
+   * Open Information Extraction: Extracts pieces of text given an open prompt from a user, for example, product description extraction;
+   * Text classification: Classifying text by matching labels specified in the prompt;
+
+We prepared high-level classes that simplify the usage and evaluation of GLiNER multi-task models for different task types.
+
+### Classification
+
+The `GLiNERClassifier` is a pipeline for text classification tasks based on the GLiNER model. It evaluates input text against a set of predefined labels, supporting both single-label and multi-label classification. It also calculates F1 scores for evaluation on datasets.
+
+#### Quick Usage Examples
+
+1. **Initialize the Classifier**  
+   Load a pretrained model and initialize the `GLiNERClassifier`.
+
+   ```python
+   from gliner import GLiNER, GLiNERClassifier
+
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   model = GLiNER.from_pretrained(model_id)
+   classifier = GLiNERClassifier(model=model)
+   ```
+
+2. **Classify a Text**  
+   Classify a single text into a list of labels.
+
+   ```python
+   text = "SpaceX successfully launched a new rocket into orbit."
+   labels = ['science', 'technology', 'business', 'sports']
+   predictions = classifier(text, classes=labels, multi_label=False)
+   print(predictions)
+   ```
+
+3. **Evaluate on a Dataset**  
+   Evaluate the model on a dataset from Hugging Face.
+
+   ```python
+   metrics = classifier.evaluate('dair-ai/emotion')
+   print(metrics)
+   ```
+
+### Question-Answering
+
+The `GLiNERQuestionAnswerer` is a pipeline for question-answering tasks based on the GLiNER model. It extracts answers based on questions and input text. You can leverage `GLiNERSquadEvaluator` to evaluate a model on the SQuAD dataset.
+
+#### Quick Usage Examples
+
+1. **Initialize the Question-Answerer**  
+   Load a pretrained model and initialize the `GLiNERQuestionAnswerer`.
+
+   ```python
+   from gliner import GLiNER, GLiNERQuestionAnswerer
+
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   model = GLiNER.from_pretrained(model_id)
+   answerer = GLiNERQuestionAnswerer(model=model)
+   ```
+
+2. **Extract an answer from a Text**  
+   Extract an answer to the input question.
+
+   ```python
+   text = "SpaceX successfully launched a new rocket into orbit."
+   question = 'Which company launched a new rocker?'
+   predictions = answerer(text, questions=question)
+   print(predictions)
+   ```
+
+3. **Evaluate on a Dataset**  
+   Evaluate the model on a dataset from Hugging Face.
+
+   ```python
+   from gliner import GLiNERSquadEvaluator
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   evaluator = GLiNERSquadEvaluator(model_id=model_id)
+   metrics = evaluator.evaluate( threshold=0.25)
+   print(metrics)
+   ```
+
+### Relation Extraction
+
+The `GLiNERRelationExtractor` is a pipeline for extracting relationships between entities in a text using the GLiNER model. The pipeline combines both zero-shot named entity recognition and relation extraction. It identifies entity pairs and their relations based on a specified by user set of relation types.
+
+#### Quick Usage Examples
+
+1. **Initialize the Relation Extractor**  
+   Load a pretrained model and initialize the `GLiNERRelationExtractor`.
+
+   ```python
+   from gliner import GLiNER, GLiNERRelationExtractor
+
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   model = GLiNER.from_pretrained(model_id)
+   relation_extractor = GLiNERRelationExtractor(model=model)
+   ```
+
+2. **Extract Relations from Text**  
+   Identify relationships between entities in a given text.
+
+   ```python
+   text = "Elon Musk founded SpaceX in 2002 to reduce space transportation costs."
+   relations = ['founded', 'owns', 'works for']
+   entities = ['person', 'company', 'year']
+   predictions = relation_extractor(text, entities=entities, relations=relations)
+   print(predictions)
+   ```
+
+3. **Evaluate on a Dataset**  
+   Evaluate the model on a relation extraction dataset.
+
+   ```python
+   from datasets import load_dataset
+
+   dataset = load_dataset('docred', split='test')
+   metrics = relation_extractor.evaluate(dataset=dataset)
+   print(metrics)
+   ```
+
+For more nuance tuning of relation extraction pipeline, we recommend to use `utca` framework.
+
+#### Construct relations extraction pipeline with [utca](https://github.com/Knowledgator/utca)
+First of all, we need import neccessary components of the library and initalize predictor - GLiNER model and construct pipeline that combines NER and realtions extraction:
+```python
+from utca.core import RenameAttribute
+from utca.implementation.predictors import (
+    GLiNERPredictor,
+    GLiNERPredictorConfig
+)
+from utca.implementation.tasks import (
+    GLiNER,
+    GLiNERPreprocessor,
+    GLiNERRelationExtraction,
+    GLiNERRelationExtractionPreprocessor,
+)
+
+predictor = GLiNERPredictor( # Predictor manages the model that will be used by tasks
+    GLiNERPredictorConfig(
+        model_name = "knowledgator/gliner-multitask-v1.0", # Model to use
+        device = "cuda:0", # Device to use
+    )
+)
+
+pipe = (
+    GLiNER( # GLiNER task produces classified entities that will be at the "output" key.
+        predictor=predictor,
+        preprocess=GLiNERPreprocessor(threshold=0.7) # Entities threshold
+    ) 
+    | RenameAttribute("output", "entities") # Rename output entities from GLiNER task to use them as inputs in GLiNERRelationExtraction
+    | GLiNERRelationExtraction( # GLiNERRelationExtraction is used for relation extraction.
+        predictor=predictor,
+        preprocess=(
+            GLiNERPreprocessor(threshold=0.5) # Relations threshold
+            | GLiNERRelationExtractionPreprocessor()
+        )
+    )
+)
+```
+
+To run pipeline we need to specify entity types and relations with their parameters:
+
+```python
+r = pipe.run({
+    "text": text, # Text to process
+    "labels": ["organisation", "founder", "position", "date"],
+    "relations": [{ # Relation parameters
+        "relation": "founder", # Relation label. Required parameter.
+        "pairs_filter": [("organisation", "founder")], # Optional parameter. It specifies possible members of relations by their entity labels.
+        "distance_threshold": 100, # Optional parameter. It specifies the max distance between spans in the text (i.e., the end of the span that is closer to the start of the text and the start of the next one).
+    }, {
+        "relation": "inception date",
+        "pairs_filter": [("organisation", "date")],
+    }, {
+        "relation": "held position",
+        "pairs_filter": [("founder", "position")],
+    }]
+})
+
+print(r["output"])
+```
+
+### Open Information Extraction
+
+The `GLiNEROpenExtractor` is a pipeline designed to extract information from a text given a user query. By default in terms of GLiNER labels `match` tag is used, however, we recommend combining prompting and selecting appropriate tags for your tasks. 
+
+#### Quick Usage Examples
+
+1. **Initialize the Information Extractor**  
+   Load a pretrained model and initialize the `GLiNEROpenExtractor`.
+
+   ```python
+   from gliner import GLiNER, GLiNEROpenExtractor
+
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   model = GLiNER.from_pretrained(model_id)
+   extractor = GLiNEROpenExtractor(model=model, prompt="Extract all companies related to space technologies")
+   ```
+
+2. **Extract Information from Text**  
+   Identify relevant information from a given text.
+
+   ```python
+   text = "Elon Musk founded SpaceX in 2002 to reduce space transportation costs. Also Elon is founder of Tesla, NeuroLink and many other companies."
+   labels = ['company']
+   predictions = relation_extractor(text, labels=labels)
+   print(predictions)
+   ```
+
+### Summariztion
+
+The `GLiNERSummarizer` pipeline leverages the GLiNER model for performing summarization tasks as extraction process. 
+
+#### Quick Usage Examples
+
+1. **Initialize the Summarizer**  
+   Load a pretrained model and initialize the `GLiNERSummarizer`.
+
+   ```python
+   from gliner import GLiNER, GLiNERSummarizer
+
+   model_id = 'knowledgator/gliner-multitask-v1.0'
+   model = GLiNER.from_pretrained(model_id)
+   summarizer = GLiNERSummarizer(model=model)
+   ```
+
+2. **Summarize the Text**  
+   Extract the most important information from a given text and construct summary.
+
+   ```python
+   text = "Microsoft was founded by Bill Gates and Paul Allen on April 4, 1975 to develop and sell BASIC interpreters for the Altair 8800. During his career at Microsoft, Gates held the positions of chairman, chief executive officer, president and chief software architect, while also being the largest individual shareholder until May 2014."
+   summary = relation_extractor(text, threshold=0.1)
+   print(summary)
+   ```
 
 ##  📊 NER Benchmark Results
 

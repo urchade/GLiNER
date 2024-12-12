@@ -43,12 +43,15 @@ class SpanDecoder(BaseDecoder):
         spans = []
         for i, _ in enumerate(tokens):
             probs_i = probs[i]
-
+            
+            # Support for id_to_classes being a list of dictionaries
+            id_to_class_i = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+            
             wh_i = [i.tolist() for i in torch.where(probs_i > threshold)]
             span_i = []
             for s, k, c in zip(*wh_i):
                 if s + k < len(tokens[i]):
-                    span_i.append((s, s + k, id_to_classes[c + 1], probs_i[s, k, c].item()))
+                    span_i.append((s, s + k, id_to_class_i[c + 1], probs_i[s, k, c].item()))
 
             span_i = self.greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
@@ -74,12 +77,18 @@ class TokenDecoder(BaseDecoder):
 
     def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False):
         scores_start, scores_end, scores_inside = model_output
-        spans = [self.greedy_search(self.calculate_span_score(
-            self.get_indices_above_threshold(scores_start[i], threshold),
-            self.get_indices_above_threshold(scores_end[i], threshold),
-            torch.sigmoid(scores_inside[i]),
-            torch.sigmoid(scores_start[i]),
-            torch.sigmoid(scores_end[i]),
-            id_to_classes,
-            threshold), flat_ner, multi_label) for i, _ in enumerate(tokens)]
+        spans = []
+        for i, _ in enumerate(tokens):
+            id_to_class_i = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+            span_scores = self.calculate_span_score(
+                self.get_indices_above_threshold(scores_start[i], threshold),
+                self.get_indices_above_threshold(scores_end[i], threshold),
+                torch.sigmoid(scores_inside[i]),
+                torch.sigmoid(scores_start[i]),
+                torch.sigmoid(scores_end[i]),
+                id_to_class_i,
+                threshold
+            )
+            span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+            spans.append(span_i)
         return spans
