@@ -27,7 +27,7 @@ class GLiNEROpenExtractor(GLiNERBasePipeline):
             Evaluates the model on a dataset and computes F1 scores.
     """
 
-    prompt = "{}"
+    prompt = ""
 
     def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', prompt: Optional[str] = None):
         """
