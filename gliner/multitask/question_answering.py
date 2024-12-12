@@ -3,7 +3,6 @@ import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 import torch
 from datasets import load_dataset, Dataset
-from sklearn.metrics import f1_score
 from gliner import GLiNER
 
 from .base import GLiNERBasePipeline
@@ -113,24 +112,75 @@ class GLiNERQuestionAnswerer(GLiNERBasePipeline):
         """
         raise NotImplementedError("Currently `evaluate` method is not implemented.")
 
-
 class GLiNERSquadEvaluator(GLiNERQuestionAnswerer):
-    def evaluate(self, dataset_id: Optional[str] = None, dataset: Optional[Dataset] = None, 
-                    labels: Optional[List[str]]=None, threshold: float =0.5, max_examples: float =-1):
+    def evaluate(self, dataset_id: str = 'rajpurkar/squad_v2', dataset: Optional[Dataset] = None, 
+                    labels: Optional[List[str]] = ['answer'], threshold: float = 0.5, max_examples: int = -1):
         """
         Evaluates the model on a specified dataset and computes evaluation metrics.
 
         Args:
             dataset_id (str, optional): Identifier for the dataset to load (e.g., from Hugging Face datasets).
             dataset (Dataset, optional): A pre-loaded dataset to evaluate. If provided, `dataset_id` is ignored.
-            labels (list, optional): List of target labels to consider for classification. Defaults to None (use all).
+            labels (list, optional): List of target labels to consider for classification. Defaults to ['answer'].
             threshold (float): Confidence threshold for predictions. Defaults to 0.5.
             max_examples (int): Maximum number of examples to evaluate. Defaults to -1 (use all available examples).
 
         Returns:
             dict: A dictionary containing evaluation metrics such as F1 Scores.
-        
+
         Raises:
             ValueError: If neither `dataset_id` nor `dataset` is provided.
         """
-        raise NotImplementedError("Currently `evaluate` method is not implemented.")
+        from evaluate import load
+
+        # Validate input
+        if not dataset and not dataset_id:
+            raise ValueError("Either `dataset` or `dataset_id` must be provided.")
+
+        # Load the dataset if not provided
+        if not dataset:
+            dataset = load_dataset(dataset_id, split="validation")
+
+        if not isinstance(dataset, Dataset):
+            dataset = dataset['validation']
+
+        # Truncate dataset if max_examples is specified
+        if max_examples > 0:
+            dataset = dataset.shuffle().select(range(min(len(dataset), max_examples)))
+
+        # Load evaluation metric for SQuAD
+        squad_metric = load("squad_v2" if "squad_v2" in dataset_id else "squad")
+
+        # Prepare predictions and references
+        contexts = dataset['context']
+        questions = dataset['question']
+
+        raw_predictions = self(contexts, questions, labels=labels, threshold=threshold)
+
+        predictions = []
+        references = []
+        for id, prediction in enumerate(raw_predictions):
+            example = dataset[id]
+
+            if len(prediction):
+                predicted_answer = prediction[0]["answer"]
+                no_answer_probability=0.0
+            else:
+                predicted_answer = ""
+                no_answer_probability=1.0
+
+            # Append to predictions and references
+            predictions.append({
+                "id": example["id"],
+                "prediction_text": predicted_answer,
+                "no_answer_probability": no_answer_probability
+            })
+
+            references.append({
+                "id": example["id"],
+                "answers": {"text": example["answers"]["text"], "answer_start": example["answers"]["answer_start"]}
+            })
+
+        # Compute metrics
+        results = squad_metric.compute(predictions=predictions, references=references)
+        return results

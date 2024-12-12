@@ -3,7 +3,6 @@ import os
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 import torch
 from datasets import load_dataset, Dataset
-from sklearn.metrics import f1_score
 from gliner import GLiNER
 
 from .base import GLiNERBasePipeline
