@@ -201,6 +201,7 @@ class BaseProcessor(ABC):
                     class_to_ids = []
                     id_to_classes = []
                     for i, types in enumerate(entity_types):
+                        types = list(dict.fromkeys(types))
                         mapping = {k: v for v, k in enumerate(types, start=1)}
                         class_to_ids.append(mapping)
                         id_to_classes.append({v: k for k, v in mapping.items()})
