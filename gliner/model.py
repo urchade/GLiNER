@@ -106,6 +106,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @property
     def device(self):
+        if self.onnx_model:
+            providers = self.model.session.get_providers()
+            if 'CUDAExecutionProvider' in providers:
+                return torch.device('cuda')
+            return torch.device('cpu')
         device = next(self.model.parameters()).device
         return device
 
@@ -209,13 +214,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             }
         )
 
-        if not self.onnx_model:
-            device = self.device
-            for key in model_input:
-                if model_input[key] is not None and isinstance(
-                    model_input[key], torch.Tensor
-                ):
-                    model_input[key] = model_input[key].to(device)
+        device = self.device
+        for key in model_input:
+            if model_input[key] is not None and isinstance(
+                model_input[key], torch.Tensor
+            ):
+                model_input[key] = model_input[key].to(device)
 
         return model_input, raw_batch
 
@@ -514,10 +518,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # Iterate over data batches
         for batch in data_loader:
             # Move the batch to the appropriate device
-            if not self.onnx_model:
-                for key in batch:
-                    if isinstance(batch[key], torch.Tensor):
-                        batch[key] = batch[key].to(self.device)
+            for key in batch:
+                if isinstance(batch[key], torch.Tensor):
+                    batch[key] = batch[key].to(self.device)
 
             # Perform predictions
             model_output = self.model(**batch)[0]
@@ -832,7 +835,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 session_options.graph_optimization_level = (
                     ort.GraphOptimizationLevel.ORT_ENABLE_ALL
                 )
-            ort_session = ort.InferenceSession(model_file, session_options)
+            providers = ['CPUExecutionProvider']
+            if "cuda" in map_location:
+                if not torch.cuda.is_available():
+                    raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
+                providers = ['CUDAExecutionProvider']
+            ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
             if config.span_mode == "token_level":
                 model = TokenORTModel(ort_session)
             else:
