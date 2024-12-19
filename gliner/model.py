@@ -325,7 +325,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # raw input preparation
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
 
-        labels = list(dict.fromkeys(labels))
+        # labels = list(dict.fromkeys(labels))
 
         collator = DataCollator(
             self.config,
