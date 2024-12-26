@@ -30,7 +30,7 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_reduction: Optional[str] = 'sum' 
 
 class Trainer(transformers.Trainer):
-    def training_step(self, model, inputs) -> torch.Tensor:
+    def training_step(self, model, inputs, *args, **kwargs) -> torch.Tensor:
         """
         Perform a training step on a batch of inputs.
 
