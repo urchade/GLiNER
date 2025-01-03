@@ -247,7 +247,8 @@ The `GLiNERClassifier` is a pipeline for text classification tasks based on the 
    Load a pretrained model and initialize the `GLiNERClassifier`.
 
    ```python
-   from gliner import GLiNER, GLiNERClassifier
+   from gliner import GLiNER
+   from gliner.multitask import GLiNERClassifier
 
    model_id = 'knowledgator/gliner-multitask-v1.0'
    model = GLiNER.from_pretrained(model_id)
@@ -282,7 +283,8 @@ The `GLiNERQuestionAnswerer` is a pipeline for question-answering tasks based on
    Load a pretrained model and initialize the `GLiNERQuestionAnswerer`.
 
    ```python
-   from gliner import GLiNER, GLiNERQuestionAnswerer
+   from gliner import GLiNER
+   from gliner.multitask import GLiNERQuestionAnswerer
 
    model_id = 'knowledgator/gliner-multitask-v1.0'
    model = GLiNER.from_pretrained(model_id)
@@ -303,7 +305,7 @@ The `GLiNERQuestionAnswerer` is a pipeline for question-answering tasks based on
    Evaluate the model on a dataset from Hugging Face.
 
    ```python
-   from gliner import GLiNERSquadEvaluator
+   from gliner.multitask import GLiNERSquadEvaluator
    model_id = 'knowledgator/gliner-multitask-v1.0'
    evaluator = GLiNERSquadEvaluator(model_id=model_id)
    metrics = evaluator.evaluate( threshold=0.25)
@@ -320,7 +322,8 @@ The `GLiNERRelationExtractor` is a pipeline for extracting relationships between
    Load a pretrained model and initialize the `GLiNERRelationExtractor`.
 
    ```python
-   from gliner import GLiNER, GLiNERRelationExtractor
+   from gliner import GLiNER
+   from gliner.multitask import GLiNERRelationExtractor
 
    model_id = 'knowledgator/gliner-multitask-v1.0'
    model = GLiNER.from_pretrained(model_id)
@@ -421,7 +424,8 @@ The `GLiNEROpenExtractor` is a pipeline designed to extract information from a t
    Load a pretrained model and initialize the `GLiNEROpenExtractor`.
 
    ```python
-   from gliner import GLiNER, GLiNEROpenExtractor
+   from gliner import GLiNER
+   from gliner.multitask import GLiNEROpenExtractor
 
    model_id = 'knowledgator/gliner-multitask-v1.0'
    model = GLiNER.from_pretrained(model_id)
@@ -448,7 +452,8 @@ The `GLiNERSummarizer` pipeline leverages the GLiNER model for performing summar
    Load a pretrained model and initialize the `GLiNERSummarizer`.
 
    ```python
-   from gliner import GLiNER, GLiNERSummarizer
+   from gliner import GLiNER
+   from gliner.multitask import GLiNERSummarizer
 
    model_id = 'knowledgator/gliner-multitask-v1.0'
    model = GLiNER.from_pretrained(model_id)
