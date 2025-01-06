@@ -75,6 +75,12 @@ To begin using the GLiNER model, you can install the GLiNER Python library throu
 !pip install gliner
 ```
 
+If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU feature. This also installs the `onnxruntime-gpu` dependency.
+
+```bash
+!pip install gliner[gpu]
+```
+
 ### Install via Conda
 
 ```bash

@@ -39,11 +39,15 @@ dependencies = [
     "transformers>=4.38.2",
     "huggingface_hub>=0.21.4",
     "tqdm",
-    "onnxruntime-gpu",
+    "onnxruntime",
     "sentencepiece",
 ]
 
 dynamic = ["version"]
+
+[project.optional-dependencies]
+gpu = ["onnxruntime-gpu"]
+
 
 [project.urls]
 Homepage = "https://github.com/urchade/GLiNER"
