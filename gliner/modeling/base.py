@@ -9,8 +9,8 @@ from torch.nn.utils.rnn import pad_sequence
 
 from transformers.utils import ModelOutput
 
-from .encoder import Encoder, BiEncoder
-from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
+from .encoder import Encoder, BiEncoder, BiPreFusionEncoder
+from .layers import LstmSeq2SeqEncoder, CrossFuser, LabelsFuser, create_projection_layer
 from .scorers import Scorer
 from .loss_functions import focal_loss_with_logits
 from .span_rep import SpanRepLayer
@@ -83,10 +83,15 @@ class BaseModel(ABC, nn.Module):
         
         if not config.labels_encoder:
             self.token_rep_layer = Encoder(config, from_pretrained)
+        elif config.pre_fusion:
+            self.token_rep_layer = BiPreFusionEncoder(config, from_pretrained)
         else:
             self.token_rep_layer = BiEncoder(config, from_pretrained)
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
+
+        if config.labels_fusion_schema:
+            self.labels_fuser = LabelsFuser(self.config.hidden_size, self.config.dropout, self.config.labels_fusion_schema)
 
         if config.post_fusion_schema:
             self.config.num_post_fusion_layers = 3
@@ -142,23 +147,39 @@ class BaseModel(ABC, nn.Module):
                 text_lengths: Optional[torch.Tensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 **kwargs): 
-        if labels_embeds is not None:
-            token_embeds = self.token_rep_layer.encode_text(input_ids, attention_mask, **kwargs)
-        else:
-            token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
-                                                           labels_input_ids, labels_attention_mask, 
-                                                                                            **kwargs) 
+
+        token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
+                                                        labels_input_ids, labels_attention_mask,
+                                                                labels_embeddings = labels_embeds, 
+                                                                                            **kwargs)
         batch_size, sequence_length, embed_dim = token_embeds.shape
         max_text_length = text_lengths.max()
-        words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask, 
-                                    batch_size, max_text_length, embed_dim, text_lengths)
-        
-        labels_embeds = labels_embeds.unsqueeze(0)
-        labels_embeds = labels_embeds.expand(batch_size, -1, -1)
-        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
-                                                        device = attention_mask.device)
 
-        labels_embeds = labels_embeds.to(words_embedding.dtype)
+        if self.config.pre_fusion:
+            (post_labels_embeds, 
+                labels_mask, 
+                    words_embedding, 
+                        mask) = self._extract_prompt_features_and_word_embeddings(token_embeds, input_ids, attention_mask, 
+                                                                                                            text_lengths, words_mask)
+            
+
+            post_labels_embeds = post_labels_embeds.to(words_embedding.dtype)
+
+            if hasattr(self, "labels_fuser"):
+                labels_embeds = self.labels_fuser(labels_embeds, post_labels_embeds)
+            else:
+                labels_embeds = post_labels_embeds
+        else:
+            words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask, 
+                        batch_size, max_text_length, embed_dim, text_lengths)
+    
+            labels_embeds = labels_embeds.unsqueeze(0)
+            labels_embeds = labels_embeds.expand(batch_size, -1, -1)
+            labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
+                                                            device = attention_mask.device)
+
+            labels_embeds = labels_embeds.to(words_embedding.dtype)
+
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask)
         

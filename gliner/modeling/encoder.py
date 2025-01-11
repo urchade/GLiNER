@@ -160,9 +160,67 @@ class BiEncoder(Encoder):
         return labels_embeddings
 
     def forward(self, input_ids, attention_mask, 
-                    labels_input_ids = None, labels_attention_mask=None, 
+                    labels_input_ids = None, labels_attention_mask=None,
+                                                labels_embeddings = None,
                                             *args, **kwargs) -> torch.Tensor:
         token_embeddings = self.encode_text(input_ids, attention_mask, *args, **kwargs)
-
-        labels_embeddings = self.encode_labels(labels_input_ids, labels_attention_mask, *args, **kwargs)
+        
+        if labels_embeddings is None:
+            labels_embeddings = self.encode_labels(labels_input_ids, labels_attention_mask, *args, **kwargs)
         return token_embeddings, labels_embeddings
+
+
+class BiPreFusionEncoder(BiEncoder):
+    def __init__(self, config, from_pretrained: bool = False):
+        super().__init__(config, from_pretrained)
+
+        self.class_token_index = config.class_token_index
+
+        le_hidden_size = self.labels_encoder.model.config.hidden_size
+
+        te_hidden_size = self.bert_layer.model.config.hidden_size
+
+        if config.hidden_size != le_hidden_size:
+            self.pre_labels_projection = nn.Linear(config.hidden_size, te_hidden_size)
+
+    def encode_text_and_labels(self, input_ids, attention_mask, labels_embeddings, *args, **kwargs):
+        batch_size, num_tokens = input_ids.shape
+        num_labels, hidden_dim = labels_embeddings.shape
+
+        embedding_layer = self.bert_layer.model.get_input_embeddings()
+        inputs_embeds = embedding_layer(input_ids)
+
+        class_token_mask = input_ids==self.class_token_index
+        batch_indices, class_indices = torch.where(class_token_mask)
+
+        expanded_labels = labels_embeddings.unsqueeze(0)               # [1, num_labels, hidden_dim]
+        expanded_labels = expanded_labels.expand(batch_size, -1, -1)   # [batch_size, num_labels, hidden_dim]
+        expanded_labels = expanded_labels.reshape(-1, hidden_dim).to(dtype=inputs_embeds.dtype)       # [batch_size*num_labels, hidden_dim]
+        
+        inputs_embeds[batch_indices, class_indices] = expanded_labels
+        
+        token_embeddings = self.bert_layer(input_ids=None, attention_mask=attention_mask, 
+                                    inputs_embeds=inputs_embeds, *args, **kwargs)
+                
+        if hasattr(self, "projection"):
+            token_embeddings = self.projection(token_embeddings)
+        return token_embeddings
+    
+    def forward(self, input_ids, attention_mask, 
+                    labels_input_ids = None, labels_attention_mask=None,
+                                            labels_embeddings = None,
+                                            *args, **kwargs) -> torch.Tensor:
+                
+        if labels_embeddings is None: 
+            pre_labels_embeddings = self.encode_labels(labels_input_ids, labels_attention_mask, *args, **kwargs)
+        else:
+            pre_labels_embeddings = labels_embeddings
+
+        if hasattr(self, "pre_labels_projection"):
+            fusing_labels_embeddings = self.pre_labels_projection(pre_labels_embeddings)
+        else:
+            fusing_labels_embeddings = pre_labels_embeddings
+
+        token_embeddings = self.encode_text_and_labels(input_ids, attention_mask, fusing_labels_embeddings, *args, **kwargs)
+
+        return token_embeddings, pre_labels_embeddings

@@ -174,6 +174,41 @@ class CrossFuser(nn.Module):
         # query=self.dense_o(query)   
         return query, key
 
+class LabelsFuser(nn.Module):
+    def __init__(self, d_model, dropout, schema='pre'):
+        super().__init__()
+        self.d_model = d_model
+        self.schema = schema.lower()  
+        
+        if set(self.schema.split('-')) == {'pre', 'post'}:
+            self.projection = create_projection_layer(d_model, dropout)
+        else:
+            self.projection = None
+
+    def forward(self, pre_labels_embeds, post_labels_embeds):
+        """
+        Fuses pre and post label embeddings based on the specified schema.
+        """
+        if pre_labels_embeds.dim()==2:
+            batch_size = post_labels_embeds.shape[0]
+            expanded_pre_labels = pre_labels_embeds.unsqueeze(0)              
+            expanded_pre_labels = expanded_pre_labels.expand(batch_size, -1, -1)  
+        else:
+            expanded_pre_labels = pre_labels_embeds
+        if self.schema == 'pre':
+            return expanded_pre_labels
+        elif self.schema == 'post':
+            return post_labels_embeds
+        elif '+' in self.schema:
+            return (expanded_pre_labels + post_labels_embeds) / 2
+        elif '-' in self.schema:
+            if self.projection is None:
+                raise ValueError("Projection layer is not initialized for the given schema.")
+            avg_embeds = (expanded_pre_labels + post_labels_embeds) / 2
+            return self.projection(avg_embeds)
+        else:
+            raise ValueError(f"Unsupported schema: {self.schema}")
+        
 class LayersFuser(nn.Module):
     def __init__(self, num_layers, hidden_size, output_size=None):
         super().__init__()

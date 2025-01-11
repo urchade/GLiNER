@@ -240,10 +240,30 @@ class BaseProcessor(ABC):
 
 
 class BaseBiEncoderProcessor(BaseProcessor):
+    def prepare_inputs(self, texts, entities):
+        input_texts = []
+        batch_range = range(len(texts))
+        entities_count = len(entities)
+        prompt_lengths = [entities_count+1 for i in batch_range]
+        for id, text in enumerate(texts):
+            input_text = []
+            for i in range(entities_count):
+                input_text.append(self.ent_token)
+
+            input_text.append(self.sep_token)
+            input_text.extend(text)
+            input_texts.append(input_text)
+        return input_texts, prompt_lengths
+    
     def tokenize_inputs(self, texts, entities=None):
         if self.preprocess_text:
             texts = self.prepare_texts(texts)
             
+        if self.config.pre_fusion:
+            texts, prompt_lengths = self.prepare_inputs(texts, entities)            
+        else:
+            prompt_lengths = None
+
         tokenized_inputs = self.transformer_tokenizer(texts, is_split_into_words = True, return_tensors='pt',
                                                                                 truncation=True, padding="longest")
 
@@ -253,7 +273,7 @@ class BaseBiEncoderProcessor(BaseProcessor):
             tokenized_inputs['labels_input_ids'] = tokenized_labels['input_ids']
             tokenized_inputs['labels_attention_mask'] = tokenized_labels['attention_mask']
 
-        words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths=None)
+        words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths=prompt_lengths)
         tokenized_inputs['words_mask'] = torch.tensor(words_masks)
         return tokenized_inputs
 
