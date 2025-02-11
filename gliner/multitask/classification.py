@@ -177,6 +177,8 @@ class GLiNERClassifier(GLiNERBasePipeline):
         """
         if dataset is None and dataset_id is not None:
             dataset = load_dataset(dataset_id)
+        elif dataset is not None and dataset_id is None:
+            dataset = dataset
         else:
             raise ValueError("Either 'dataset_id' or 'dataset' must be provided to start evaluation.")
         
