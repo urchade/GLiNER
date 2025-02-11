@@ -87,6 +87,8 @@ if __name__ == '__main__':
         weight_decay=float(config.weight_decay_encoder),
         others_lr=float(config.lr_others),
         others_weight_decay=float(config.weight_decay_other),
+        focal_loss_gamma=config.loss_gamma,
+        focal_loss_alpha=config.loss_alpha,
         lr_scheduler_type=config.scheduler_type,
         warmup_ratio=config.warmup_ratio,
         per_device_train_batch_size=config.train_batch_size,
