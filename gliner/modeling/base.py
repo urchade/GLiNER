@@ -227,6 +227,7 @@ class SpanModel(BaseModel):
                 span_idx: Optional[torch.LongTensor] = None,
                 span_mask: Optional[torch.LongTensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
+                neg_span_masking: Optional[str] = None,
                 **kwargs
                 ):
 
@@ -243,7 +244,7 @@ class SpanModel(BaseModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, neg_span_masking, **kwargs)
 
         output = GLiNERModelOutput(
             logits=scores,
@@ -257,7 +258,7 @@ class SpanModel(BaseModel):
     
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
                         alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, 
-                        reduction: str = 'sum', **kwargs):
+                        reduction: str = 'sum', negative_rate: float = 0.75, neg_span_masking = None, **kwargs):
         
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -273,6 +274,42 @@ class SpanModel(BaseModel):
         mask_label = mask_label.view(-1, 1)
         
         all_losses = all_losses * mask_label.float()
+
+        if neg_span_masking is not None :
+
+            if neg_span_masking == "global_w_threshold":
+
+                # Adding negative examples 1a
+                #Permits to drop negative_rate percent of the negative examples
+                mask_negative_examples = (torch.rand_like(labels, dtype=torch.float) + labels > negative_rate).float()  
+                all_losses = all_losses * mask_negative_examples
+
+            elif neg_span_masking == "global_wo_threshold" :
+
+                #Adding negative examples 1b 
+                p = torch.sigmoid(scores) # We need to apply sigmoid so that all the scores will be between 0 and 1
+                random_mask = torch.bernoulli(1 - p) + labels 
+                mask_negative_examples = torch.where(labels == 1, torch.ones_like(labels), random_mask)
+                all_losses = all_losses*mask_negative_examples
+
+            elif neg_span_masking == "entity_w_threshold":
+                
+                # Adding negative examples 2a
+                #masking entities with no positive label
+                mask_negative_examples = labels.clone()
+                zero_rows = labels.sum(dim=1) == 0
+                mask_negative_examples[zero_rows] = (torch.rand((zero_rows.sum(), labels.size(1))) >= negative_rate).float()
+                all_losses = all_losses*mask_negative_examples
+
+            elif neg_span_masking == "entity_wo_threshold":
+                
+                print('To do')
+                
+            else:
+
+                warnings.warn(
+                    f"Invalid Value for config 'mask type': '{neg_span_masking}. ")
+
 
         if reduction == "mean":
             loss = all_losses.mean()
