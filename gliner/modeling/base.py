@@ -266,7 +266,7 @@ class SpanModel(BaseModel):
         labels = labels.view(-1, num_classes)
         
         all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing)
-
+        #print
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
 
