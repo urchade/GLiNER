@@ -257,7 +257,7 @@ class SpanModel(BaseModel):
     
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
                         alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, 
-                        reduction: str = 'sum', **kwargs):
+                        reduction: str = 'sum', negative_rate: float = 0.75, neg_span_masking: str = None, **kwargs):
         
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -273,6 +273,40 @@ class SpanModel(BaseModel):
         mask_label = mask_label.view(-1, 1)
         
         all_losses = all_losses * mask_label.float()
+
+        if neg_span_masking is not None :
+
+            if neg_span_masking == "global_w_threshold":
+
+                mask_negative_examples = (torch.rand_like(labels, dtype=torch.float) + labels > negative_rate).float()  
+                all_losses = all_losses * mask_negative_examples
+
+            elif neg_span_masking == "global_wo_threshold" :
+
+                p = torch.sigmoid(scores) 
+                random_mask = torch.bernoulli(1 - p) + labels 
+                mask_negative_examples = torch.where(labels == 1, torch.ones_like(labels), random_mask)
+                all_losses = all_losses*mask_negative_examples
+
+            elif neg_span_masking == "entity_w_threshold":
+                
+                mask_negative_examples = labels.clone()
+                zero_rows = labels.sum(dim=1) == 0
+                mask_negative_examples[zero_rows] = (torch.rand((zero_rows.sum(), labels.size(1))) >= negative_rate).float()
+                all_losses = all_losses*mask_negative_examples
+
+            elif neg_span_masking == "entity_wo_threshold":
+
+                p = torch.sigmoid(scores)
+                mask = labels.clone()
+                rows_to_sample = labels.sum(dim=1) == 0
+                mask[rows_to_sample] = torch.bernoulli(p[rows_to_sample])
+                
+            else:
+
+                warnings.warn(
+                    f"Invalid Value for config 'neg_span_masking': '{neg_span_masking}. ")
+
 
         if reduction == "mean":
             loss = all_losses.mean()
