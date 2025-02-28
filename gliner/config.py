@@ -22,7 +22,7 @@ class GLiNERConfig(PretrainedConfig):
                  max_types: int = 25,
                  max_len: int = 384,
                  words_splitter_type: str = "whitespace",
-                 neg_span_masking="global_w_threshold",
+                 neg_span_masking: str = None,
                  has_rnn: bool = True,
                  fuse_layers: bool = False,
                  embed_ent_token: bool = True,
