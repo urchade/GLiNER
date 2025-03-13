@@ -6,7 +6,7 @@ class GLiNERConfig(PretrainedConfig):
     model_type = "gliner"
     is_composition = True
     def __init__(self, 
-                 model_name: str = "microsoft/deberta-v3-small",
+                 model_name: str = "bisectgroup/biobigbird-base-stage3",
                  labels_encoder: str = None,
                  name: str = "span level gliner",
                  max_width: int = 12,
