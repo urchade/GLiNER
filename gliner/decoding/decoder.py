@@ -71,7 +71,13 @@ class TokenDecoder(BaseDecoder):
                     ins = scores_inside_i[st:ed + 1, cls_st]
                     if (ins < threshold).any():
                         continue
-                    spn_score = ins.mean().item()
+                    # Get the start and end scores for this span
+                    start_score = start_i[st, cls_st]
+                    end_score = end_i[ed, cls_st]
+                    # Concatenate the inside scores with start and end scores
+                    combined = torch.cat([ins, start_score.unsqueeze(0), end_score.unsqueeze(0)])
+                    # The span score is the minimum value among these scores
+                    spn_score = combined.min().item()
                     span_i.append((st, ed, id_to_classes[cls_st + 1], spn_score))
         return span_i
 
