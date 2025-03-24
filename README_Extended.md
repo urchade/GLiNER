@@ -361,7 +361,7 @@ The `GLiNERRelationExtractor` is a pipeline for extracting relationships between
 For more nuance tuning of relation extraction pipeline, we recommend to use `utca` framework.
 
 #### Construct relations extraction pipeline with [utca](https://github.com/Knowledgator/utca)
-First of all, we need import neccessary components of the library and initalize predictor - GLiNER model and construct pipeline that combines NER and realtions extraction:
+First of all, we need import neccessary components of the library and initialize predictor - GLiNER model and construct pipeline that combines NER and realtions extraction:
 ```python
 from utca.core import RenameAttribute
 from utca.implementation.predictors import (
