@@ -34,6 +34,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         words_splitter: Optional[Union[str, WordsSplitter]] = None,
         data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
         encoder_from_pretrained: bool = True,
+        cache_dir: Optional[Union[str, Path]] = None,
     ):
         """
         Initialize the GLiNER model.
@@ -50,19 +51,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         self.config = config
 
         if tokenizer is None and data_processor is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name)
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
 
         if words_splitter is None and data_processor is None:
             words_splitter = WordsSplitter(config.words_splitter_type)
 
         if config.span_mode == "token_level":
             if model is None:
-                self.model = TokenModel(config, encoder_from_pretrained)
+                self.model = TokenModel(config, encoder_from_pretrained, cache_dir=cache_dir)
             else:
                 self.model = model
             if data_processor is None:
                 if config.labels_encoder is not None:
-                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder)
+                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
                     self.data_processor = TokenBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
                 else:
                     self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
@@ -72,12 +73,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             self.decoder = TokenDecoder(config)
         else:
             if model is None:
-                self.model = SpanModel(config, encoder_from_pretrained)
+                self.model = SpanModel(config, encoder_from_pretrained, cache_dir=cache_dir)
             else:
                 self.model = model
             if data_processor is None:
                 if config.labels_encoder is not None:
-                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder)
+                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
                     self.data_processor = SpanBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
                 else:
                     self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
@@ -778,10 +779,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config_file = Path(model_dir) / "gliner_config.json"
 
         if load_tokenizer:
-            tokenizer = AutoTokenizer.from_pretrained(model_dir)
+            tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
         else:
             if os.path.exists(os.path.join(model_dir, "tokenizer_config.json")):
-                tokenizer = AutoTokenizer.from_pretrained(model_dir)
+                tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
             else:
                 tokenizer = None
         with open(config_file, "r") as f:
@@ -801,7 +802,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         add_tokens = ["[FLERT]", config.ent_token, config.sep_token]
 
         if not load_onnx_model:
-            gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False)
+            gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False, cache_dir=cache_dir)
             # to be able to load GLiNER models from previous version
             if (
                 config.class_token_index == -1 or config.vocab_size == -1

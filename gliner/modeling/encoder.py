@@ -7,6 +7,7 @@ from transformers import AutoModel, AutoConfig
 
 from .layers import LayersFuser
 from ..utils import is_module_available, MissedPackageException
+from typing import Optional, Union
 
 IS_LLM2VEC = is_module_available('llm2vec')
 IS_PEFT = is_module_available('peft')
@@ -32,14 +33,21 @@ if IS_PEFT:
     from peft import LoraConfig, get_peft_model
 
 class Transformer(nn.Module):
-    def __init__(self, model_name, config, from_pretrained=False, labels_encoder = False):
+    def __init__(
+        self, 
+        model_name, 
+        config, 
+        from_pretrained=False, 
+        labels_encoder = False, 
+        cache_dir:Optional[Union[str, Path]] = None
+    ):
         super().__init__()
         if labels_encoder:
             encoder_config = config.labels_encoder_config
         else:
             encoder_config = config.encoder_config
         if encoder_config is None:
-            encoder_config = AutoConfig.from_pretrained(model_name)
+            encoder_config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
             if config.vocab_size!=-1:
                 encoder_config.vocab_size = config.vocab_size
 
@@ -107,11 +115,11 @@ class Transformer(nn.Module):
         return encoder_layer
     
 class Encoder(nn.Module):
-    def __init__(self, config, from_pretrained: bool = False):
+    def __init__(self, config, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]]= None):
         super().__init__()
 
         self.bert_layer = Transformer( #transformer_model
-            config.model_name, config, from_pretrained,
+            config.model_name, config, from_pretrained, cache_dir = cache_dir
         )
 
         bert_hidden_size = self.bert_layer.model.config.hidden_size
@@ -137,11 +145,11 @@ class Encoder(nn.Module):
         return token_embeddings
 
 class BiEncoder(Encoder):
-    def __init__(self, config, from_pretrained: bool = False):
+    def __init__(self, config, from_pretrained: bool = False, cache_dir:Optional[Union[str, Path]] = None):
         super().__init__(config, from_pretrained)
         if config.labels_encoder is not None:
             self.labels_encoder = Transformer( #transformer_model
-                config.labels_encoder, config, from_pretrained, True
+                config.labels_encoder, config, from_pretrained, True, cache_dir=cache_dir
             )
             le_hidden_size = self.labels_encoder.model.config.hidden_size
 
