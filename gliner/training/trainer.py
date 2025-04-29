@@ -27,7 +27,9 @@ class TrainingArguments(transformers.TrainingArguments):
     focal_loss_alpha: Optional[float] = -1
     focal_loss_gamma: Optional[float] = 0
     label_smoothing: Optional[float] = 0
-    loss_reduction: Optional[str] = 'sum' 
+    loss_reduction: Optional[str] = 'sum'
+    negatives = 1.0
+    masking = "label"
 
 class Trainer(transformers.Trainer):
     def training_step(self, model, inputs, *args, **kwargs) -> torch.Tensor:
