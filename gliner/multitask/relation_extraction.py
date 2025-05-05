@@ -29,7 +29,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     prompt = "Extract relationships between entities from the text: "
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', prompt: Optional[str] = None):
+    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, prompt: Optional[str] = None):
         """
         Initializes the GLiNERRelationExtractor.
 
@@ -37,6 +37,8 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
             model_id (str, optional): Identifier for the model to be loaded. Defaults to None.
             model (GLiNER, optional): Preloaded GLiNER model. Defaults to None.
             device (str, optional): Device to run the model on ('cpu' or 'cuda:X'). Defaults to 'cuda:0'.
+            ner_threshold (float, optional): Named Entity Recognition threshold to use. Defaults to 0.5.
+            rel_threshold (float, optional): Relation Extraction threshold to use. Defaults to 0.5.
             prompt (str, optional): Template prompt for question-answering.
         """
         # Use the provided prompt or default to the class-level prompt
@@ -105,7 +107,9 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
     def __call__(self, texts: Union[str, List[str]], relations: List[str]=None, 
                                 entities: List[str] = ['named entity'], 
                                 relation_labels: Optional[List[List[str]]]=None, 
-                                threshold: float = 0.5, batch_size: int = 8, **kwargs):
+                                ner_threshold: float = 0.5,
+                                rel_threshold: float = 0.5, 
+                                batch_size: int = 8, **kwargs):
         if isinstance(texts, str):
             texts = [texts]
         
@@ -113,11 +117,11 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
         if relation_labels is None:
             # ner
-            ner_predictions = self.model.run(texts, entities, threshold=threshold, batch_size=batch_size)
+            ner_predictions = self.model.run(texts, entities, threshold=ner_threshold, batch_size=batch_size)
             #rex
             relation_labels = self.prepare_source_relation(ner_predictions, relations)
 
-        predictions = self.model.run(prompts, relation_labels, threshold=threshold, batch_size=batch_size)
+        predictions = self.model.run(prompts, relation_labels, threshold=rel_threshold, batch_size=batch_size)
 
         results = self.process_predictions(predictions, **kwargs)
 
