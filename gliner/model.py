@@ -859,3 +859,50 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 new_num_tokens, None
             )
         return gliner
+
+    @staticmethod
+    def load_from_config(gliner_config: GLiNERConfig):
+        # Initialize tokenizer
+        tokenizer = AutoTokenizer.from_pretrained(
+            gliner_config.model_name,
+            model_max_length=gliner_config.max_len
+        )
+
+        # Add special tokens and update config
+        gliner_config.class_token_index = len(tokenizer)
+        tokenizer.add_tokens([
+            gliner_config.ent_token,
+            gliner_config.sep_token
+        ])
+        gliner_config.vocab_size = len(tokenizer)
+
+        # Select appropriate processor
+        words_splitter = WordsSplitter()
+        if gliner_config.span_mode == "token_level":
+            data_processor = TokenProcessor(
+                gliner_config,
+                tokenizer,
+                words_splitter,
+                preprocess_text=True
+            )
+        else:
+            data_processor = SpanProcessor(
+                gliner_config,
+                tokenizer,
+                words_splitter,
+                preprocess_text=True
+            )
+
+        # Instantiate model and apply token resizing
+        model = GLiNER(
+            gliner_config,
+            data_processor=data_processor
+        )
+
+        model.resize_token_embeddings(
+            [gliner_config.ent_token, gliner_config.sep_token],
+            set_class_token_index=False,
+            add_tokens_to_tokenizer=False
+        )
+
+        return model
