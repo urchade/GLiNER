@@ -789,7 +789,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         config = GLiNERConfig(**config_)
 
         if _attn_implementation is not None:
-            config.encoder_config._attn_implementation = _attn_implementation
+            config._attn_implementation = _attn_implementation
+            
         if max_length is not None:
             config.max_len = max_length
         if max_width is not None:
