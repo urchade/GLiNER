@@ -30,6 +30,7 @@ class GLiNERConfig(PretrainedConfig):
                  labels_encoder_config: Optional[dict] = None,
                  ent_token = "<<ENT>>",
                  sep_token = "<<SEP>>",
+                 _attn_implementation = None,
                  **kwargs):
         super().__init__(**kwargs)
         if isinstance(encoder_config, dict):
@@ -68,6 +69,7 @@ class GLiNERConfig(PretrainedConfig):
         self.embed_ent_token = embed_ent_token
         self.ent_token = ent_token
         self.sep_token = sep_token
+        self._attn_implementation = _attn_implementation
 
 # Register the configuration
 from transformers import CONFIG_MAPPING
