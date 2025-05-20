@@ -92,12 +92,7 @@ class BaseModel(ABC, nn.Module):
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
 
-        if config.post_fusion_schema:
-            self.config.num_post_fusion_layers = 3
-            print('Initializing cross fuser...')
-            print('Post fusion layer:', config.post_fusion_schema)
-            print('Number of post fusion layers:', config.num_post_fusion_layers)
-
+        if config.post_fusion_schema:            
             self.cross_fuser = CrossFuser(self.config.hidden_size,
                                           self.config.hidden_size,
                                           num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
