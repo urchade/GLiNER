@@ -228,6 +228,27 @@ Bill Gates => person
 Microsoft => organization
 ```
 
+## Using FlashDeBERTa
+
+Most GLiNER models use the DeBERTa encoder as their backbone. This architecture offers strong token classification performance and typically requires less data to achieve good results. However, a major drawback has been its slower inference speed, and until recently, there was no flash attention implementation compatible with DeBERTa's disentangled attention mechanism.
+
+To address this, [FlashDeBERTa](https://github.com/Knowledgator/FlashDeBERTa) was introduced.
+
+To use `FlashDeBERTa` with GLiNER, install it with:
+
+```bash
+pip install flashdeberta -U
+```
+
+GLiNER will automatically detect and use `FlashDeBERTa`. If needed, you can switch to the standard `eager` attention mechanism by specifying the attention implementation:
+
+```python
+model = GLiNER.from_pretrained("urchade/gliner_mediumv2.1", _attn_implementation="eager")
+```
+
+`FlashDeBERTa` provides up to a 3× speed boost for typical sequence lengths—and even greater improvements for longer sequences.
+
+
 ## Multitask Usage
 GLiNER-Multitask models are designed to extract relevant information from plain text based on a user-provided custom prompt. The advantage of such encoder-based multitask models is that they enable efficient and more controllable information extraction with a single model that reduces costs on computational and storage resources. Moreover, such encoder models are more interpretable, efficient and tunable than LLMs, which are hard to fine-tune and use for information extraction.
 
