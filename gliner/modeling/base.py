@@ -1,4 +1,5 @@
-from typing import Optional, Tuple
+from pathlib import Path
+from typing import Optional, Tuple, Union
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import warnings
@@ -80,14 +81,14 @@ def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids,
 
 
 class BaseModel(ABC, nn.Module):
-    def __init__(self, config, from_pretrained=False):
+    def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
         super(BaseModel, self).__init__()
         self.config = config
 
         if not config.labels_encoder:
-            self.token_rep_layer = Encoder(config, from_pretrained)
+            self.token_rep_layer = Encoder(config, from_pretrained, cache_dir = cache_dir)
         else:
-            self.token_rep_layer = BiEncoder(config, from_pretrained)
+            self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir=cache_dir)
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
 
@@ -240,12 +241,12 @@ class BaseModel(ABC, nn.Module):
 
 
 class SpanModel(BaseModel):
-    def __init__(self, config, encoder_from_pretrained):
-        super(SpanModel, self).__init__(config, encoder_from_pretrained)
-        self.span_rep_layer = SpanRepLayer(span_mode=config.span_mode,
-                                           hidden_size=config.hidden_size,
-                                           max_width=config.max_width,
-                                           dropout=config.dropout)
+    def __init__(self, config, encoder_from_pretrained, cache_dir: Optional[Union[str, Path]] = None):
+        super(SpanModel, self).__init__(config, encoder_from_pretrained, cache_dir = cache_dir)
+        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
+                                           hidden_size = config.hidden_size, 
+                                           max_width = config.max_width,
+                                           dropout = config.dropout)
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
@@ -331,8 +332,8 @@ class SpanModel(BaseModel):
 
 
 class TokenModel(BaseModel):
-    def __init__(self, config, encoder_from_pretrained):
-        super(TokenModel, self).__init__(config, encoder_from_pretrained)
+    def __init__(self, config, encoder_from_pretrained, cache_dir:Optional[Union[str, Path]] = None):
+        super(TokenModel, self).__init__(config, encoder_from_pretrained, cache_dir=cache_dir)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
     def forward(self,
