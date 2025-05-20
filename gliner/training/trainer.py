@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 
 import torch
 import transformers
+from numpy.ma.core import negative
 from transformers.training_args import OptimizerNames
 from transformers.trainer import (
     is_sagemaker_mp_enabled,
@@ -27,7 +28,9 @@ class TrainingArguments(transformers.TrainingArguments):
     focal_loss_alpha: Optional[float] = -1
     focal_loss_gamma: Optional[float] = 0
     label_smoothing: Optional[float] = 0
-    loss_reduction: Optional[str] = 'sum' 
+    loss_reduction: Optional[str] = 'sum'
+    negatives: Optional[float] = 1.0
+    masking: Optional[str] = 'global'
 
 class Trainer(transformers.Trainer):
     def training_step(self, model, inputs, *args, **kwargs) -> torch.Tensor:
@@ -95,6 +98,8 @@ class Trainer(transformers.Trainer):
                         gamma = self.args.focal_loss_gamma,
                         label_smoothing = self.args.label_smoothing,
                         reduction = self.args.loss_reduction,
+                        negatives = self.args.negatives,
+                        masking = self.args.masking,
                         **inputs)
         loss = outputs.loss
         return loss
