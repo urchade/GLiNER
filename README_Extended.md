@@ -240,6 +240,8 @@ To use `FlashDeBERTa` with GLiNER, install it with:
 pip install flashdeberta -U
 ```
 
+Before using FlashDeBERTa, please make sure that you have `transformers>=4.47.0`.
+
 GLiNER will automatically detect and use `FlashDeBERTa`. If needed, you can switch to the standard `eager` attention mechanism by specifying the attention implementation:
 
 ```python
