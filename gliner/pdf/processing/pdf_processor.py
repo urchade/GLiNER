@@ -59,9 +59,11 @@ class GLiNERPDFProcessor(ProcessorMixin):
         return_overflowing_tokens: Optional[bool] = True,
         max_length: Optional[int]=None,
         return_tensors: Optional[Union[str, TensorType]]=None,
+        add_image_token: bool = True,
     ) -> BatchEncoding:
         processed_document = self.document_processor.process(
-            path_or_fp, words = words, words_bbox= words_bbox, pages=pages, password=password
+            path_or_fp, words = words, words_bbox= words_bbox, pages=pages, password=password, 
+            add_image_token=add_image_token
         )
 
         features = self.image_processor(
@@ -133,7 +135,7 @@ class GLiNERPDFProcessor(ProcessorMixin):
         
         if "token_type_ids" in tokenized_inputs:
             token_type_ids = tokenized_inputs.pop('token_type_ids')
-
+        
         words_masks = []
         aligned_words_bbox = []
         for id in range(len(texts)):

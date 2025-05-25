@@ -96,8 +96,11 @@ class GLiNERPDFConfig(GLiNERConfig):
         fuse_layers: bool = False,
         embed_ent_token: bool = True,
         class_token_index: int = -1,
+        image_token_index: int = 0,
         ent_token: str = "<<ENT>>",
         sep_token: str = "<<SEP>>",
+        image_token: str = "<<IMG>>",
+        page_token: str = "<<PAGE>>",
         _attn_implementation=None,
         vision_encoder: str = "google/vit-base-patch16-224",
         vision_encoder_config: Optional[Dict] = None,
@@ -107,7 +110,6 @@ class GLiNERPDFConfig(GLiNERConfig):
         num_channels: int = 3,
         vision_feature_layer: int = 0,
         vision_feature_select_strategy: str = "default",
-        image_token_index: int = 0,
         max_2d_position_embeddings: int = 1024,
         coordinate_size: int = 64,
         shape_size: int = 64,
@@ -155,7 +157,9 @@ class GLiNERPDFConfig(GLiNERConfig):
 
         self.vision_feature_layer = vision_feature_layer
         self.vision_feature_select_strategy = vision_feature_select_strategy
+        self.image_token = image_token
         self.image_token_index = image_token_index
+        self.page_token = page_token
 
         self.max_2d_position_embeddings = max_2d_position_embeddings
         self.coordinate_size = coordinate_size

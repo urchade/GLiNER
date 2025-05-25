@@ -1,8 +1,8 @@
 import enum
 
 class Token(enum.Enum):
-    PAGE = '<page>'
-    IMAGE = '<image>'
+    PAGE = '<<PAGE>>'
+    IMAGE = '<<IMG>>'
 
 EMPTY_BBOX = (0, 0, 0, 0)
 MAX_COORDINATE = 1000

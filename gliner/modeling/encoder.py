@@ -176,17 +176,21 @@ class VisionTransformer(nn.Module):
                 output_hidden_states = True
             else:
                 output_hidden_states = False
+            return_hidden_states = False
         else:
             output_hidden_states = kwargs.pop('output_hidden_states')
-
+            return_hidden_states = True
         output = self.model(pixel_values, *args, output_hidden_states = output_hidden_states, 
                                             return_dict = True,  **kwargs)
-        if self.config.fuse_layers:
-            encoder_layer = self.layers_fuser(output.hidden_states)
+        if return_hidden_states:
+            return output.hidden_states
         else:
-            encoder_layer = output[0]
+            if self.config.fuse_layers:
+                encoder_layer = self.layers_fuser(output.hidden_states)
+            else:
+                encoder_layer = output[0]
 
-        return encoder_layer
+            return encoder_layer
     
 class Encoder(nn.Module):
     def __init__(self, config, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]]= None):
@@ -258,10 +262,11 @@ class LayoutVLEncoder(Encoder):
             self.vision_encoder = VisionTransformer( #transformer_model
                 config.vision_encoder, config, from_pretrained, cache_dir=cache_dir
             )
-            le_hidden_size = self.vision_encoder.model.config.hidden_size
+            ve_hidden_size = self.vision_encoder.model.config.hidden_size
+            bert_hidden_size = self.bert_layer.model.config.hidden_size
 
-            if config.hidden_size != le_hidden_size:
-                self.vision_projection = nn.Linear(le_hidden_size, config.hidden_size)
+            if bert_hidden_size != ve_hidden_size:
+                self.vision_projection = nn.Linear(ve_hidden_size, bert_hidden_size)
         self.spatial_embeddings = SpatialEmbeddings(config)
         
         self.pad_token_id = self.config.encoder_config.pad_token_id
@@ -273,7 +278,7 @@ class LayoutVLEncoder(Encoder):
     def encode_image(self, pixel_values, *args, **kwargs):
         vision_embeddings = self.vision_encoder(pixel_values, *args, **kwargs)
         if hasattr(self, "vision_projection"):
-            vision_embeddings = self.labels_projection(vision_embeddings)
+            vision_embeddings = self.vision_projection(vision_embeddings)
         return vision_embeddings
 
     def _merge_input_ids_with_image_features(self, image_features, inputs_embeds, 
@@ -360,15 +365,12 @@ class LayoutVLEncoder(Encoder):
                                     vision_feature_select_strategy, bbox, visual_bbox, **kwargs):
         inputs_embeds = self.get_input_embeddings()(input_ids)
 
-        # 2. Merge text and images
         if pixel_values is not None and input_ids.shape[1] != 1:
             if self.config.use_patch_embeddings:
                 selected_image_feature = self.vision_encoder(pixel_values)
             else:
-                if image_outputs is None:
-                    selected_image_feature = self.vision_encoder(pixel_values, output_hidden_states=True)
-                # this is not memory efficient at all (output_hidden_states=True) will save all the hidden stated.
-                # selected_image_feature = image_outputs.hidden_states[vision_feature_layer]
+                vision_hidden_states = self.vision_encoder(pixel_values, output_hidden_states = True)
+                selected_image_feature = vision_hidden_states[vision_feature_layer]
 
             if vision_feature_select_strategy == "default":
                 selected_image_feature = selected_image_feature[:, 1:]
@@ -380,6 +382,7 @@ class LayoutVLEncoder(Encoder):
                 )
 
             image_features = self.vision_projection(selected_image_feature)
+
             inputs_embeds, attention_mask, bbox = self._merge_input_ids_with_image_features(
                 image_features, inputs_embeds, input_ids, attention_mask, bbox, visual_bbox
             )
@@ -417,9 +420,12 @@ class LayoutVLEncoder(Encoder):
             inputs_embeds, attention_mask, bbox, image_outputs = self.prepare_inputs_embeds(input_ids, attention_mask, pixel_values, image_outputs, vision_feature_layer, 
                                     vision_feature_select_strategy, bbox, images_bbox)
 
-        encoder_outputs = self.bert_layer(
+        token_embeddings = self.bert_layer(
                 attention_mask=attention_mask,
                 inputs_embeds=inputs_embeds,
                 **kwargs)
         
-        return encoder_outputs, attention_mask
+        if hasattr(self, "projection"):
+            token_embeddings = self.projection(token_embeddings)
+        
+        return token_embeddings, attention_mask

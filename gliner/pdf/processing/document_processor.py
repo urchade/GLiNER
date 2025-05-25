@@ -104,6 +104,7 @@ class PDFProcessor:
         words_bbox: Optional[List[List[int]]] = None, 
         pages: Union[List[int], Tuple[int], None]=None,
         password: Optional[str]=None,
+        add_image_token: bool = True,
         **kwargs
     ) -> Dict[str, List[Any]]:
         doc = CustomPDF.open(
@@ -128,6 +129,11 @@ class PDFProcessor:
                 for word, bbox in self.words(page): # type: ignore
                     tokenized_doc["words"].append(word)
                     tokenized_doc["words_bbox"].append(bbox)
+
+            if add_image_token:
+                tokenized_doc["words"].append(Token.IMAGE.value)
+                tokenized_doc["words_bbox"].append(EMPTY_BBOX)
+
             tokenized_doc["words"].append(Token.PAGE.value)
             tokenized_doc["words_bbox"].append(EMPTY_BBOX)
 
@@ -147,6 +153,7 @@ class LayoutImageProcessor:
         path_or_fp: Union[str, pathlib.Path, io.BufferedReader, io.BytesIO], 
         words: List[str],
         words_bbox: List[List[int]],
+        add_image_token: bool = True,
         **kwargs
     ) -> Dict[str, List[Any]]:
         image = Image.open(path_or_fp)
@@ -155,6 +162,11 @@ class LayoutImageProcessor:
 
         words_list = list(words)
         bbox_list = list(words_bbox)
+        
+        if add_image_token:
+            words_list.append(Token.IMAGE.value)
+            bbox_list.append(EMPTY_BBOX)
+
         words_list.append(Token.PAGE.value)
         bbox_list.append(EMPTY_BBOX)
 
