@@ -29,7 +29,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     prompt = "Extract relationships between entities from the text: "
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, prompt: Optional[str] = None):
+    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, return_index: bool = False, prompt: Optional[str] = None):
         """
         Initializes the GLiNERRelationExtractor.
 
@@ -43,6 +43,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         """
         # Use the provided prompt or default to the class-level prompt
         prompt = prompt if prompt is not None else self.prompt
+        self.return_index = return_index
         super().__init__(model_id=model_id, model=model, prompt=prompt, device=device)
 
     def prepare_texts(self, texts: List[str], **kwargs):
@@ -99,6 +100,9 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
                     "target": target_ent.strip(),
                     "score": score
                 }
+                if self.return_index:
+                    relation['start'] = target.get('start', None)
+                    relation['end']   = target.get('end', None)
                 curr_relations.append(relation)
             batch_predicted_relations.append(curr_relations)
 
