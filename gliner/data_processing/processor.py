@@ -500,27 +500,55 @@ class TokenBiEncoderProcessor(TokenProcessor, BaseBiEncoderProcessor):
 
 class BasePDFProcessor(BaseProcessor, ABC):
     def __init__(self, config, tokenizer, image_processor, words_splitter, labels_tokenizer = None, preprocess_text=False):
-        super(BaseProcessor).__init__(self, config, tokenizer, words_splitter, 
+        super().__init__(config, tokenizer, words_splitter, 
                                             labels_tokenizer = labels_tokenizer, 
                                                 preprocess_text=preprocess_text)
 
         self.pdf_processor = GLiNERPDFProcessor(config, image_processor, tokenizer)
 
-    def tokenize_inputs(self, texts, entities):
-        input_texts, prompt_lengths = self.prepare_inputs(texts, entities)
-
-        if self.preprocess_text:
-            input_texts = self.prepare_texts(input_texts)
-            
-        tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
-                                                                                truncation=True, padding="longest")
-        words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
-        tokenized_inputs['words_mask'] = torch.tensor(words_masks)
-        return tokenized_inputs
+    def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[Union[str, List[str]]] = None, 
+                        negatives: List[str] = None, class_to_ids: Dict = None, id_to_classes: Dict = None) -> Dict:
+        if entity_types is None and class_to_ids is None:
+            # Generate mappings dynamically based on batch content
+            class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
+            batch = [
+                self.preprocess_example(b["path_or_fp"], b["ner"], class_to_ids[i]) 
+                for i, b in enumerate(batch_list)
+            ]
+        else:
+            if class_to_ids is None:
+                # Handle cases for entity_types being a list of strings or list of lists
+                if isinstance(entity_types[0], list):  # List of lists of strings
+                    class_to_ids = []
+                    id_to_classes = []
+                    for i, types in enumerate(entity_types):
+                        types = list(dict.fromkeys(types))
+                        mapping = {k: v for v, k in enumerate(types, start=1)}
+                        class_to_ids.append(mapping)
+                        id_to_classes.append({v: k for k, v in mapping.items()})
+                    batch = [
+                        self.preprocess_example(b["path_or_fp"], b["ner"], class_to_ids[i]) 
+                        for i, b in enumerate(batch_list)
+                    ]
+                else:  # Single list of strings
+                    class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
+                    id_to_classes = {v: k for k, v in class_to_ids.items()}
+                    batch = [
+                        self.preprocess_example(b["path_or_fp"], b["ner"], class_to_ids) 
+                        for b in batch_list
+                    ]
+            else:
+                # Use provided mappings
+                batch = [
+                    self.preprocess_example(b["path_or_fp"], b["ner"], class_to_ids) 
+                    for b in batch_list
+                ]
+        
+        return self.create_batch_dict(batch, class_to_ids, id_to_classes)
     
 class SpanPDFProcessor(BasePDFProcessor, SpanProcessor):    
     def preprocess_example(self, path_or_fp, ner, classes_to_id):
-        processed_document = self.pdf_processor.process_document(path_or_fp)
+        processed_document = self.pdf_processor.preprocess_document(path_or_fp)
         tokens = processed_document['words']
         tokens_bbox = processed_document['words_bbox']
         images = processed_document['images']
@@ -554,8 +582,8 @@ class SpanPDFProcessor(BasePDFProcessor, SpanProcessor):
     def create_batch_dict(self, batch, class_to_ids, id_to_classes):
         tokens = [el["tokens"] for el in batch]
         tokens_bbox = [el['tokens_bbox'] for el in batch]
-        images = [image for images_ in batch['images'] for image in images_]
-        images_bbox = [image_bbox for images_bbox_ in batch['images_bbox'] for image_bbox in images_bbox_]
+        images = [image for item in batch for image in item['images']]
+        images_bbox =  [image_bbox for item in batch for image_bbox in item['images_bbox']]
 
         entities = [el["entities"] for el in batch]
         span_idx = pad_sequence([b["span_idx"] for b in batch], batch_first=True, padding_value=0)
@@ -590,30 +618,28 @@ class SpanPDFProcessor(BasePDFProcessor, SpanProcessor):
         return tokenized_input
 
 
-class PDFTokenProcessor(BasePDFProcessor):
+class TokenPDFProcessor(BasePDFProcessor):
     """
     A processor that converts a PDF (path or file‐like) into token sequences
     + bounding‐boxes, then builds batch dicts and label tensors exactly like TokenProcessor.
     """
     def preprocess_example(self, path_or_fp, ner, classes_to_id):
         # run your existing PDF‐to‐words pipeline
-        processed = self.pdf_processor.process_document(path_or_fp)
-        tokens = processed["words"]
-        tokens_bbox = processed["words_bbox"]
-
-        # ensure at least one pad token
+        processed_document = self.pdf_processor.preprocess_document(path_or_fp)
+        tokens = processed_document["words"]
+        tokens_bbox = processed_document["words_bbox"]
+        images = processed_document['images']
+        images_bbox = processed_document['images_bbox']
         if len(tokens) == 0:
             tokens = ["[PAD]"]
             tokens_bbox = [[0, 0, 0, 0]]
 
-        # truncate to max length
         max_len = self.config.max_len
         if len(tokens) > max_len:
             warnings.warn(f"Document of {len(tokens)} tokens truncated to {max_len}")
             tokens = tokens[:max_len]
             tokens_bbox = tokens_bbox[:max_len]
 
-        # build entity‐ID triples just like in TokenProcessor
         try:
             entities_id = [
                 [i, j, classes_to_id[label]]
@@ -626,21 +652,27 @@ class PDFTokenProcessor(BasePDFProcessor):
         return {
             "tokens": tokens,
             "tokens_bbox": tokens_bbox,
+            "images": images,
+            "images_bbox": images_bbox,
             "seq_length": len(tokens),
             "entities": ner,
             "entities_id": entities_id,
         }
 
     def create_batch_dict(self, batch, classes_to_id, id_to_classes):
-        tokens       = [ex["tokens"]       for ex in batch]
-        tokens_bbox  = [ex["tokens_bbox"]  for ex in batch]
-        seq_length   = torch.LongTensor([ex["seq_length"] for ex in batch]).unsqueeze(-1)
-        entities     = [ex["entities"]     for ex in batch]
-        entities_id  = [ex["entities_id"]  for ex in batch]
+        tokens = [ex["tokens"] for ex in batch]
+        tokens_bbox = [ex["tokens_bbox"]  for ex in batch]
+        images = [image for item in batch for image in item['images']]
+        images_bbox =  [image_bbox for item in batch for image_bbox in item['images_bbox']]
+        seq_length = torch.LongTensor([ex["seq_length"] for ex in batch]).unsqueeze(-1)
+        entities = [ex["entities"] for ex in batch]
+        entities_id = [ex["entities_id"] for ex in batch]
 
         return {
             "tokens": tokens,
             "tokens_bbox": tokens_bbox,
+            "images": images, 
+            "images_bbox": images_bbox,
             "seq_length": seq_length,
             "entities": entities,
             "entities_id": entities_id,
@@ -649,7 +681,6 @@ class PDFTokenProcessor(BasePDFProcessor):
         }
 
     def create_labels(self, entities_id, batch_size, seq_len, num_classes):
-        # same 3×B×L×C word‐label tensor
         word_labels = torch.zeros(3, batch_size, seq_len, num_classes, dtype=torch.float)
 
         for b_idx, spans in enumerate(entities_id):
@@ -657,16 +688,15 @@ class PDFTokenProcessor(BasePDFProcessor):
                 cls = cls_id - 1
                 if st >= seq_len or ed >= seq_len:
                     continue
-                word_labels[0, b_idx, st,       cls] = 1  # start
-                word_labels[1, b_idx, ed,       cls] = 1  # end
-                word_labels[2, b_idx, st:ed+1,  cls] = 1  # inside
+                word_labels[0, b_idx, st, cls] = 1  
+                word_labels[1, b_idx, ed, cls] = 1  
+                word_labels[2, b_idx, st:ed+1, cls] = 1  
 
         return word_labels
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        # first, run your normal tokenization
-        batch_size  = len(batch["tokens"])
-        seq_len     = batch["seq_length"].max().item()
+        batch_size = len(batch["tokens"])
+        seq_len = batch["seq_length"].max().item()
         num_classes = max(len(m) for m in batch["classes_to_id"].values())
 
         tokenized = self.tokenize_inputs(batch["tokens"], batch["classes_to_id"], *args, **kwargs)

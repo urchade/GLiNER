@@ -102,11 +102,11 @@ class GLiNERPDFConfig(GLiNERConfig):
         image_token: str = "<<IMG>>",
         page_token: str = "<<PAGE>>",
         _attn_implementation=None,
+        image_size: int = None,
+        patch_size: int = None,
         vision_encoder: str = "google/vit-base-patch16-224",
         vision_encoder_config: Optional[Dict] = None,
         use_patch_embeddings: bool = False,
-        patch_size: Union[int, Tuple[int, int]] = (16, 16),
-        input_size: Union[int, Tuple[int, int]] = (224, 224),
         num_channels: int = 3,
         vision_feature_layer: int = 0,
         vision_feature_select_strategy: str = "default",
@@ -151,8 +151,8 @@ class GLiNERPDFConfig(GLiNERConfig):
             self.vision_encoder_config = vision_encoder_config
 
         self.use_patch_embeddings = use_patch_embeddings
-        self.patch_size = patch_size
-        self.input_size = input_size
+        self.patch_size = self.vision_encoder_config.patch_size if patch_size is None else patch_size
+        self.image_size = self.vision_encoder_config.image_size if image_size is None else image_size
         self.num_channels = num_channels
 
         self.vision_feature_layer = vision_feature_layer
