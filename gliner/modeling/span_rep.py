@@ -277,7 +277,7 @@ class SpanMarkerV0(nn.Module):
 
         start_rep = self.project_start(h)
         end_rep = self.project_end(h)
-
+        print(start_rep.shape, span_idx.shape)
         start_span_rep = extract_elements(start_rep, span_idx[:, :, 0])
         end_span_rep = extract_elements(end_rep, span_idx[:, :, 1])
 

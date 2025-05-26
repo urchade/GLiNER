@@ -1,1 +1,2 @@
 from .pdf_processor import GLiNERPDFProcessor
+from .document_processor import LayoutImageProcessor, PDFProcessor

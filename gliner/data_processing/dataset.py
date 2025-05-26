@@ -6,6 +6,7 @@ from transformers import AutoTokenizer
 
 from . import TokenProcessor, SpanProcessor, WordsSplitter
 from ..config import GLiNERConfig
+from ..pdf.processing import LayoutImageProcessor
 
 class GLiNERDataset(Dataset):
     def __init__(self, examples, 

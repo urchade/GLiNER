@@ -10,7 +10,7 @@ from torch.nn.utils.rnn import pad_sequence
 
 from transformers.utils import ModelOutput
 
-from .encoder import Encoder, BiEncoder
+from .encoder import Encoder, BiEncoder, LayoutVLEncoder
 from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
 from .scorers import Scorer
 from .loss_functions import focal_loss_with_logits
@@ -388,3 +388,228 @@ class TokenModel(BaseModel):
                 f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
             loss = all_losses.sum()
         return loss
+
+
+class BaseLayoutModel(ABC, nn.Module):
+    def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
+        super(BaseLayoutModel, self).__init__()
+        self.config = config
+
+        self.token_rep_layer = LayoutVLEncoder(config, from_pretrained, cache_dir=cache_dir)
+
+        if self.config.has_rnn:
+            self.rnn = LstmSeq2SeqEncoder(config)
+
+        if config.post_fusion_schema:            
+            self.cross_fuser = CrossFuser(self.config.hidden_size,
+                                          self.config.hidden_size,
+                                          num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
+                                          num_layers=self.config.num_post_fusion_layers,
+                                          dropout=config.dropout,
+                                          schema=config.post_fusion_schema)
+
+    def features_enhancement(self, text_embeds, labels_embeds, text_mask=None, labels_mask=None):
+        labels_embeds, text_embeds = self.cross_fuser(labels_embeds, text_embeds, labels_mask, text_mask)
+        return text_embeds, labels_embeds
+
+    def _extract_prompt_features_and_word_embeddings(self, token_embeds, input_ids, attention_mask,
+                                                     text_lengths, words_mask):
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = extract_prompt_features_and_word_embeddings(
+            self.config,
+            token_embeds,
+            input_ids,
+            attention_mask,
+            text_lengths,
+            words_mask,
+            self.config.embed_ent_token)
+        return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+
+    def get_representations(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.LongTensor,
+        text_lengths: torch.Tensor,
+        words_mask: torch.LongTensor,
+        *,
+        pixel_values: Optional[torch.FloatTensor] = None,
+        bbox: Optional[torch.LongTensor] = None,
+        images_bbox: Optional[torch.LongTensor] = None,
+        vision_feature_layer: Optional[int] = None,
+        vision_feature_select_strategy: Optional[str] = None,
+        **kwargs,
+    ):
+        token_embeds, _ = self.token_rep_layer(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            pixel_values=pixel_values,
+            bbox=bbox,
+            images_bbox=images_bbox,
+            vision_feature_layer=vision_feature_layer,
+            vision_feature_select_strategy=vision_feature_select_strategy,
+            **kwargs,
+        )
+
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self._extract_prompt_features_and_word_embeddings(
+            token_embeds, input_ids, attention_mask,
+            text_lengths, words_mask)
+
+        if self.config.has_rnn:
+            words_embedding = self.rnn(words_embedding, mask)
+
+        return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+
+    @abstractmethod
+    def forward(self, x):
+        pass
+
+    def _loss(self, logits: torch.Tensor, labels: torch.Tensor,
+              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, negatives=1., masking="label"):
+
+        # Compute the loss per element using the focal loss function
+        all_losses = focal_loss_with_logits(logits, labels,
+                                            alpha=alpha,
+                                            gamma=gamma,
+                                            label_smoothing=label_smoothing)
+
+        if masking == "global":
+            mask_neg = torch.where(labels == 0,
+                                   (torch.rand_like(labels) < negatives).float(),
+                                   torch.ones_like(labels))
+
+        elif masking == "label":
+            neg_proposals = (labels.sum(dim=1) == 0).unsqueeze(1).expand_as(labels)
+
+            mask_neg = torch.where(neg_proposals,
+                                     (torch.rand_like(neg_proposals.float()) < negatives).float(),
+                                        torch.ones_like(neg_proposals.float()))
+
+        elif masking == "span":
+            neg_proposals = (labels.sum(dim=2) == 0).unsqueeze(2).expand_as(labels)
+
+            mask_neg = torch.where(neg_proposals,
+                                   (torch.rand_like(neg_proposals.float()) < negatives).float(),
+                                   torch.ones_like(neg_proposals.float()))
+
+        else:
+            mask_neg = 1.
+
+        # Apply the mask: for positive examples, some losses will be zeroed out based on the sampling
+        all_losses = all_losses * mask_neg
+
+        return all_losses
+
+
+class SpanLayoutModel(BaseLayoutModel):
+    def __init__(self, config, from_pretrained=False, cache_dir=None):
+        super().__init__(config, from_pretrained, cache_dir)
+        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
+                                           hidden_size = config.hidden_size, 
+                                           max_width = config.max_width,
+                                           dropout = config.dropout)
+
+        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.LongTensor,
+        text_lengths: torch.Tensor,
+        words_mask: torch.LongTensor,
+        span_idx: torch.LongTensor,
+        span_mask: torch.LongTensor,
+        *,
+        pixel_values: Optional[torch.FloatTensor] = None,
+        bbox: Optional[torch.LongTensor] = None,
+        images_bbox: Optional[torch.LongTensor] = None,
+        vision_feature_layer: Optional[int] = None,
+        vision_feature_select_strategy: Optional[str] = None,
+        labels: Optional[torch.FloatTensor] = None,
+        **kwargs,
+    ) -> GLiNERModelOutput:
+
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            text_lengths=text_lengths,
+            words_mask=words_mask,
+            pixel_values=pixel_values,
+            bbox=bbox,
+            images_bbox=images_bbox,
+            vision_feature_layer=vision_feature_layer,
+            vision_feature_select_strategy=vision_feature_select_strategy,
+            **kwargs,
+        )
+
+        span_idx = span_idx * span_mask.unsqueeze(-1)
+        span_rep = self.span_rep_layer(words_embedding, span_idx)
+        prompts_embedding = self.prompt_rep_layer(prompts_embedding)
+        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
+
+        loss = None
+        if labels is not None:
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+
+        return GLiNERModelOutput(
+            logits=scores,
+            loss=loss,
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            words_embedding=words_embedding,
+            mask=mask,
+        )
+
+
+class TokenLayoutModel(BaseLayoutModel):
+    def __init__(self, config, from_pretrained=False, cache_dir=None):
+        super().__init__(config, from_pretrained, cache_dir)
+        self.scorer = Scorer(config.hidden_size, config.dropout)
+
+    def forward(
+        self,
+        input_ids: torch.LongTensor,
+        attention_mask: torch.LongTensor,
+        text_lengths: torch.Tensor,
+        words_mask: torch.LongTensor,
+        *,
+        pixel_values: Optional[torch.FloatTensor] = None,
+        bbox: Optional[torch.LongTensor] = None,
+        images_bbox: Optional[torch.LongTensor] = None,
+        vision_feature_layer: Optional[int] = None,
+        vision_feature_select_strategy: Optional[str] = None,
+        labels_embeddings: Optional[torch.FloatTensor] = None,
+        labels_input_ids: Optional[torch.LongTensor] = None,
+        labels_attention_mask: Optional[torch.LongTensor] = None,
+        labels: Optional[torch.FloatTensor] = None,
+        **kwargs,
+    ) -> GLiNERModelOutput:
+
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels_embeddings=labels_embeddings,
+            labels_input_ids=labels_input_ids,
+            labels_attention_mask=labels_attention_mask,
+            text_lengths=text_lengths,
+            words_mask=words_mask,
+            pixel_values=pixel_values,
+            bbox=bbox,
+            images_bbox=images_bbox,
+            vision_feature_layer=vision_feature_layer,
+            vision_feature_select_strategy=vision_feature_select_strategy,
+            **kwargs,
+        )
+
+        scores = self.scorer(words_embedding, prompts_embedding)
+
+        loss = None
+        if labels is not None:
+            loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
+
+        return GLiNERModelOutput(
+            logits=scores,
+            loss=loss,
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            words_embedding=words_embedding,
+            mask=mask,
+        )

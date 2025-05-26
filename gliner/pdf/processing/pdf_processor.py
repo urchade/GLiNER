@@ -1,4 +1,4 @@
-from typing import List, Optional, Union, Tuple
+from typing import List, Optional, Union, Tuple, Dict, Any
 import pathlib, io
 import numpy as np
 import torch
@@ -35,19 +35,71 @@ class GLiNERPDFProcessor(ProcessorMixin):
         image_processor, 
         tokenizer, 
         document_processor: Optional[Union[PDFProcessor, LayoutImageProcessor]]=None,
-        image_size: int=224,
-        patch_size: int=16
+        image_size: Optional[int]=None,
+        patch_size: Optional[int]=None
     ):
         super().__init__(image_processor, tokenizer)
         self.gliner_config = gliner_config
         self.document_processor = document_processor or PDFProcessor()
-        self.image_size = image_size
-        self.patch_size = patch_size
+        self.image_size = gliner_config.image_size if image_size is None else image_size
+        self.patch_size = gliner_config.patch_size if patch_size is None else patch_size
 
+    def preprocess_document(self,
+            path_or_fp: Union[str, pathlib.Path, io.BufferedReader, io.BytesIO],
+            words: Optional[List[str]] = None,
+            words_bbox: Optional[List[List[int]]] = None,
+            pages: Union[List[int], Tuple[int], None]=None,
+            password: Optional[str]=None,
+            add_image_token: bool = True,
+        ):
+        processed_document = self.document_processor.process(
+            path_or_fp, words = words, words_bbox= words_bbox, pages=pages, password=password, 
+            add_image_token=add_image_token
+        )
+        return processed_document
 
+    def process_document(self, 
+                        words: Optional[List[List[str]]] = None,
+                        words_bbox: Optional[List[List[List[int]]]] = None,
+                        images: Optional[List[Any]] = None,
+                        images_bbox: Optional[List[List[int]]] = None,
+                        entities: Optional[List[str]] = None,
+                        return_tensors: Optional[Union[str, TensorType]]=None,
+                        add_special_tokens: bool=True,
+                        padding: Union[bool, str, PaddingStrategy]=False,
+                        truncation: Union[bool, str, TruncationStrategy]=False,
+                        return_overflowing_tokens: Optional[bool] = True,
+                        max_length: Optional[int]=None,
+                        **kwargs
+                        ):
+        features = self.image_processor(
+            images=images, return_tensors=return_tensors
+        )
+
+        if not isinstance(entities, dict):
+            batch_entities = [entities]
+        else:
+            batch_entities = entities
+        encoded_inputs = self.tokenize_and_align(words, batch_entities, words_bbox,
+                                                 add_special_tokens = add_special_tokens, padding=padding, truncation=truncation,
+                                                 max_length=max_length)
+        # add pixel values
+        pixel_values = features.pop("pixel_values")
+        if return_overflowing_tokens is True:
+            pixel_values = self.get_overflowing_images(
+                pixel_values, encoded_inputs["overflow_to_sample_mapping"]
+            )
+        encoded_inputs["pixel_values"] = torch.from_numpy(np.array(pixel_values))
+        patched_bbox = [
+            self.patches_bbox(bbox) for bbox in images_bbox
+        ]
+        encoded_inputs["images_bbox"] = torch.tensor(patched_bbox)
+        return encoded_inputs
+    
     def __call__(
         self,
-        path_or_fp: Union[str, pathlib.Path, io.BufferedReader, io.BytesIO],
+        path_or_fp: Optional[Union[str, pathlib.Path, io.BufferedReader, io.BytesIO]] = None,
+        processed_document: Optional[Dict[str, Any]] = None,
         words: Optional[List[str]] = None,
         words_bbox: Optional[List[List[int]]] = None,
         entities: Optional[List[str]] = None,
@@ -61,10 +113,11 @@ class GLiNERPDFProcessor(ProcessorMixin):
         return_tensors: Optional[Union[str, TensorType]]=None,
         add_image_token: bool = True,
     ) -> BatchEncoding:
-        processed_document = self.document_processor.process(
-            path_or_fp, words = words, words_bbox= words_bbox, pages=pages, password=password, 
-            add_image_token=add_image_token
-        )
+        if processed_document is None:
+            processed_document = self.document_processor.process(
+                path_or_fp, words = words, words_bbox= words_bbox, pages=pages, password=password, 
+                add_image_token=add_image_token
+            )
 
         features = self.image_processor(
             images=processed_document["images"], return_tensors=return_tensors
