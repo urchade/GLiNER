@@ -85,7 +85,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
             list: List of predicted labels for each input.
         """
         batch_predicted_relations = []
-        shift = len(self.prompt)
+        shift = len(self.prompt) #subtract the prompt length to get the original text indexes
         for prediction in predictions:
             # Sort predictions by score in descending order
             curr_relations = []
@@ -104,9 +104,9 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
                     start = target.get('start')
                     end   = target.get('end')
                     if start is not None:
-                        start += shift
+                        start -= shift
                     if end is not None:
-                        end += shift
+                        end -= shift
                     rel['start'] = start
                     rel['end']   = end
                 curr_relations.append(relation)
