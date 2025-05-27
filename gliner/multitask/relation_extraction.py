@@ -85,7 +85,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
             list: List of predicted labels for each input.
         """
         batch_predicted_relations = []
-
+        shift = len(self.prompt)
         for prediction in predictions:
             # Sort predictions by score in descending order
             curr_relations = []
@@ -101,13 +101,19 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
                     "score": score
                 }
                 if self.return_index:
-                    relation['start'] = target.get('start', None)
-                    relation['end']   = target.get('end', None)
+                    start = target.get('start')
+                    end   = target.get('end')
+                    if start is not None:
+                        start += shift
+                    if end is not None:
+                        end += shift
+                    rel['start'] = start
+                    rel['end']   = end
                 curr_relations.append(relation)
             batch_predicted_relations.append(curr_relations)
 
         return batch_predicted_relations
-    
+
     def __call__(self, texts: Union[str, List[str]], relations: List[str]=None, 
                                 entities: List[str] = ['named entity'], 
                                 relation_labels: Optional[List[List[str]]]=None, 
