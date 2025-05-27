@@ -76,40 +76,36 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     def process_predictions(self, predictions, **kwargs):
         """
-        Processes predictions to extract the highest-scoring relation(s).
-
-        Args:
-            predictions (list): List of predictions with scores.
-
-        Returns:
-            list: List of predicted labels for each input.
+        Processes predictions to extract relations, and if return_index=True,
+        shifts any start/end by the exact number of characters prepended
+        (prompt + " \\n ") so they align against the bare `text`.
         """
         batch_predicted_relations = []
-        shift = len(self.prompt) #subtract the prompt length to get the original text indexes
-        for prediction in predictions:
-            # Sort predictions by score in descending order
-            curr_relations = []
+        # account for prompt + space + newline + space
+        shift = len(self.prompt) + len(" \n ")
 
+        for prediction in predictions:
+            curr_relations = []
             for target in prediction:
-                target_ent = target['text']
-                score = target['score']
-                source, relation = target['label'].split('<>')
-                relation = {
-                    "source": source.strip(),
-                    "relation": relation.strip(),
-                    "target": target_ent.strip(),
-                    "score": score
+                source, rel_label = target['label'].split('<>')
+                rel = {
+                    "source":   source.strip(),
+                    "relation": rel_label.strip(),
+                    "target":   target['text'].strip(),
+                    "score":    target['score']
                 }
+
                 if self.return_index:
-                    start = target.get('start')
-                    end   = target.get('end')
-                    if start is not None:
-                        start -= shift
-                    if end is not None:
-                        end -= shift
-                    rel['start'] = start
-                    rel['end']   = end
-                curr_relations.append(relation)
+                    raw_start = target.get('start')
+                    raw_end   = target.get('end')
+                    # subtract the exact prefix length
+                    if raw_start is not None:
+                        rel['start'] = raw_start - shift
+                    if raw_end is not None:
+                        rel['end']   = raw_end   - shift
+
+                curr_relations.append(rel)
+
             batch_predicted_relations.append(curr_relations)
 
         return batch_predicted_relations
