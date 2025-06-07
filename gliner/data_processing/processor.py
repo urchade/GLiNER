@@ -14,10 +14,11 @@ from .utils import pad_2d_tensor
 
 # Abstract base class for handling data processing
 class BaseProcessor(ABC):
-    def __init__(self, config, tokenizer, words_splitter, labels_tokenizer = None, preprocess_text=False):
+    def __init__(self, config, tokenizer, words_splitter, labels_tokenizer = None, decoder_tokenizer = None, preprocess_text=False):
         self.config = config
         self.transformer_tokenizer = tokenizer
         self.labels_tokenizer = labels_tokenizer
+        self.decoder_tokenizer = decoder_tokenizer
 
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
@@ -154,6 +155,17 @@ class BaseProcessor(ABC):
                                                                                 truncation=True, padding="longest")
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
         tokenized_inputs['words_mask'] = torch.tensor(words_masks)
+
+        if self.decoder_tokenizer is not None:
+            if type(entities)==dict:
+                entities_=entities
+            else:
+                entities_=[ent for curr_entities in entities for ent in curr_entities]
+            tokenized_entities = self.transformer_tokenizer(entities_, return_tensors='pt',
+                                                                truncation=True, padding="longest")
+            tokenized_inputs['decoder_input_ids'] = tokenized_entities['input_ids']
+            tokenized_inputs['decoder_attention_mask'] = tokenized_entities['decoder_attention_mask']
+
         return tokenized_inputs
 
     def batch_generate_class_mappings(self, batch_list: List[Dict], negatives: List[str]=None) -> Tuple[

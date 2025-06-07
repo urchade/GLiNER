@@ -11,9 +11,10 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers.utils import ModelOutput
 
 from .encoder import Encoder, BiEncoder
+from .decoder import Decoder
 from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
 from .scorers import Scorer
-from .loss_functions import focal_loss_with_logits
+from .loss_functions import focal_loss_with_logits, cross_entropy_loss
 from .span_rep import SpanRepLayer
 
 
@@ -23,6 +24,9 @@ class GLiNERModelOutput(ModelOutput):
     logits: Optional[torch.FloatTensor] = None
     prompts_embedding: Optional[torch.FloatTensor] = None
     prompts_embedding_mask: Optional[torch.LongTensor] = None
+    decoder_loss: Optional[torch.FloatTensor] = None
+    decoder_embedding: Optional[torch.FloatTensor] = None
+    decoder_embedding_mask: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
 
@@ -88,7 +92,16 @@ class BaseModel(ABC, nn.Module):
         if not config.labels_encoder:
             self.token_rep_layer = Encoder(config, from_pretrained, cache_dir = cache_dir)
         else:
-            self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir=cache_dir)
+            self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir = cache_dir)
+        
+        if config.labels_decoder:
+            self.decoder = Decoder(config, from_pretrained, cache_dir = cache_dir)
+            if self.config.hidden_size != self.decoder.decoder_hidden_size:
+                self._enc2dec_proj = create_projection_layer(
+                    self.config.hidden_size,
+                    self.decoder.decoder_hidden_size,
+                )
+
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
 
@@ -186,6 +199,63 @@ class BaseModel(ABC, nn.Module):
             )
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
+    def select_decoder_embedding(
+        self,
+        representations: torch.FloatTensor = None,  # (B, N, D)
+        rep_mask: torch.LongTensor = None           # (B, N)  – 0/1 or False/True
+    ):
+        B, N, D = representations.shape
+        lengths = rep_mask.sum(dim=-1)                  # (B,)
+        max_len = lengths.max().item()
+        target_rep = representations.new_zeros(B, max_len, D)
+        target_mask = rep_mask.new_zeros(B, max_len)        # same dtype/device as rep_mask
+
+        new_col_idx = (rep_mask.cumsum(dim=1) - 1)          # (B, N)
+        keep = rep_mask.bool()                     
+
+        batch_idx, old_col_idx = torch.where(keep)          # both (*) 1-D
+
+        new_col_idx = new_col_idx[keep]                     # (K,)  – K = total # kept tokens
+
+        target_rep[batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
+        target_mask[batch_idx, new_col_idx] = 1
+
+        if hasattr(self, "_enc2dec_proj"):
+            target_rep = self._enc2dec_proj(target_rep) 
+
+        return target_rep, target_mask
+    
+    def prepare_decoder_inputs(self, representations, rep_mask, decoder_input_ids, decoder_attention_mask):
+        input_embeds = self.decoder.ids_to_embeds(decoder_input_ids) #(B*N, S, D)
+        BN, S, D = input_embeds.shape
+
+        representations = representations.reshape(BN, 1, D)
+
+        rep_mask = rep_mask.reshape(BN, 1)
+
+        input_embeds = torch.cat([representations, input_embeds], dim=1)
+        decoder_attention_mask = torch.cat([torch.ones([BN, S], device=input_embeds.device), 
+                                            decoder_attention_mask], dim=1)
+        return input_embeds, decoder_attention_mask
+    
+    def decode_labels(self, representations: torch.FloatTensor = None, #B, N, D
+                            rep_mask: torch.LongTensor = None,
+                            decoder_input_ids: torch.FloatTensor = None, #(B*N, S)
+                            decoder_attention_mask: torch.LongTensor = None,
+                            decoder_labels: torch.FloatTensor = None,
+                            **kwargs):
+        input_embeds, decoder_attention_mask = self.prepare_decoder_inputs(
+            representations, rep_mask, decoder_input_ids, decoder_attention_mask
+        )
+        decoder_outputs = self.decoder(input_embeds=input_embeds, attention_mask=decoder_attention_mask)
+
+        if decoder_labels is not None:
+            decoder_labels = torch.cat([decoder_input_ids[:,0], decoder_labels], dim=1)
+            loss = cross_entropy_loss(decoder_outputs, decoder_labels, rep_mask)
+        else:
+            loss = None
+        return (loss, decoder_outputs)
+
     @abstractmethod
     def forward(self, x):
         pass
@@ -202,26 +272,22 @@ class BaseModel(ABC, nn.Module):
         # Create a mask of the same shape as labels:
         # For elements where labels==0, sample a Bernoulli random variable that is 1 with probability `negatives`
         # For elements where labels==1, set the mask to 1 (i.e. do not change these losses)
-        #if masking == "global":
         if masking == "global":
             mask_neg = torch.where(labels == 0,
                                    (torch.rand_like(labels) < negatives).float(),
                                    torch.ones_like(labels))
-
         elif masking == "label":
             neg_proposals = (labels.sum(dim=1) == 0).unsqueeze(1).expand_as(labels)
 
             mask_neg = torch.where(neg_proposals,
                                      (torch.rand_like(neg_proposals.float()) < negatives).float(),
                                         torch.ones_like(neg_proposals.float()))
-
         elif masking == "span":
             neg_proposals = (labels.sum(dim=2) == 0).unsqueeze(2).expand_as(labels)
 
             mask_neg = torch.where(neg_proposals,
                                    (torch.rand_like(neg_proposals.float()) < negatives).float(),
                                    torch.ones_like(neg_proposals.float()))
-
         else:
             mask_neg = 1.
 
@@ -245,9 +311,53 @@ class SpanModel(BaseModel):
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
+    def select_span_decoder_embedding(
+        self,
+        prompts_embedding: torch.FloatTensor,          # (B, C, D)
+        prompts_embedding_mask: torch.LongTensor,      # (B, C)
+        span_rep: torch.FloatTensor,                   # (B, L, K, D)
+        span_scores: torch.FloatTensor,                # (B, L, K, C)
+        span_mask: torch.LongTensor,                   # (B, L, K)
+        thr = 0.5,
+        top_k = None,
+    ):
+        if self.config.decoder_mode == "prompt":
+            return self.select_decoder_embedding(
+                representations = prompts_embedding,
+                rep_mask        = prompts_embedding_mask,
+            )
+
+        B, L, K, D = span_rep.shape
+        span_rep_flat = span_rep.view(B, L * K, D)      # (B, L*K, D)
+        span_mask_flat = span_mask.view(B, L * K)        # (B, L*K)
+
+        span_prob_flat = torch.sigmoid(span_scores)      # (B, L, K, C)
+        span_prob_flat = span_prob_flat.max(dim=-1).values.view(B, L * K)  # (B, L*K)
+
+        keep = (span_prob_flat >= thr) & span_mask_flat.bool()
+
+        if top_k is not None and top_k > 0:
+            sel_scores = span_prob_flat.masked_fill(~keep, -1.0)
+            top_idx = sel_scores.topk(
+                k=min(top_k, sel_scores.size(1)),
+                dim=1
+            ).indices                                       # (B, k)
+            keep.flat_data = torch.zeros_like(keep)         # reset
+            keep.scatter_(1, top_idx, True)
+
+        rep_mask = keep.long()                              # (B, L*K)
+
+        target_rep, target_mask = self.select_representations(
+            representations = span_rep_flat,                # (B, L*K, D)
+            rep_mask = rep_mask                      # (B, L*K)
+        )
+        return target_rep, target_mask
+    
     def forward(self,
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                decoder_input_ids: Optional[torch.FloatTensor] = None,
+                decoder_attention_mask: Optional[torch.LongTensor] = None,
                 labels_embeddings: Optional[torch.FloatTensor] = None,
                 labels_input_ids: Optional[torch.FloatTensor] = None,
                 labels_attention_mask: Optional[torch.LongTensor] = None,
@@ -260,6 +370,7 @@ class SpanModel(BaseModel):
                 span_idx: Optional[torch.LongTensor] = None,
                 span_mask: Optional[torch.LongTensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
+                decoder_labels:  Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
 
@@ -278,6 +389,16 @@ class SpanModel(BaseModel):
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
 
+        decoder_embedding, decoder_mask, decoder_loss = None
+        if hasattr(self, "decoder"):
+            decoder_embedding, decoder_mask = self.select_span_decoder_embedding(
+                prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask
+            )
+            if decoder_labels is not None:
+                decoder_loss, decoder_outputs = self.decode_labels(
+                    decoder_embedding, decoder_mask, decoder_input_ids, decoder_attention_mask, decoder_labels
+                )
+
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
@@ -285,8 +406,11 @@ class SpanModel(BaseModel):
         output = GLiNERModelOutput(
             logits=scores,
             loss=loss,
+            decoder_loss=decoder_loss,
             prompts_embedding=prompts_embedding,
             prompts_embedding_mask=prompts_embedding_mask,
+            decoder_embedding=decoder_embedding,
+            decoder_embedding_mask=decoder_mask,
             words_embedding=words_embedding,
             mask=mask,
         )

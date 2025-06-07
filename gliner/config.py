@@ -8,12 +8,14 @@ class GLiNERConfig(PretrainedConfig):
     def __init__(self, 
                  model_name: str = "microsoft/deberta-v3-small",
                  labels_encoder: str = None,
+                 labels_decoder: str = None,
                  name: str = "span level gliner",
                  max_width: int = 12,
                  hidden_size: int = 512,
                  dropout: float = 0.4,
                  fine_tune: bool = True,
                  subtoken_pooling: str = "first",
+                 decoder_mode: str = "prompt", #prompt|span
                  span_mode: str = "markerV0",
                  post_fusion_schema: str = '', #l2l-l2t-t2t
                  num_post_fusion_layers: int = 1, 
@@ -28,6 +30,7 @@ class GLiNERConfig(PretrainedConfig):
                  class_token_index: int = -1,
                  encoder_config: Optional[dict] = None,
                  labels_encoder_config: Optional[dict] = None,
+                 labels_decoder_config: Optional[dict] = None,
                  ent_token = "<<ENT>>",
                  sep_token = "<<SEP>>",
                  _attn_implementation = None,
@@ -47,14 +50,23 @@ class GLiNERConfig(PretrainedConfig):
             labels_encoder_config = CONFIG_MAPPING[labels_encoder_config["model_type"]](**labels_encoder_config)
         self.labels_encoder_config = labels_encoder_config
 
+        if isinstance(labels_decoder_config, dict):
+            labels_decoder_config["model_type"] = (labels_decoder_config["model_type"] 
+                                                if "model_type" in labels_decoder_config 
+                                                else "gpt")
+            labels_decoder_config = CONFIG_MAPPING[labels_decoder_config["model_type"]](**labels_decoder_config)
+        self.labels_decoder_config = labels_decoder_config
+    
         self.model_name = model_name
         self.labels_encoder = labels_encoder
+        self.labels_decoder = labels_decoder
         self.name = name
         self.max_width = max_width
         self.hidden_size = hidden_size
         self.dropout = dropout
         self.fine_tune = fine_tune
         self.subtoken_pooling = subtoken_pooling
+        self.decoder_mode = decoder_mode
         self.span_mode = span_mode
         self.post_fusion_schema = post_fusion_schema
         self.num_post_fusion_layers = num_post_fusion_layers
