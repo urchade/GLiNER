@@ -80,7 +80,7 @@ def cross_entropy_loss(
         inputs: torch.Tensor,
         targets: torch.Tensor,
         valid_mask: torch.Tensor,
-        reduction: str = "none",
+        reduction: str = "sum",
         label_smoothing: float = 0.0,
         ignore_index: int = -100,  # default value for ignored index
         **kwargs

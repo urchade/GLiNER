@@ -81,7 +81,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
                     self.data_processor = SpanBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
                 else:
-                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+                    if config.labels_decoder is not None:
+                        decoder_tokenizer = AutoTokenizer.from_pretrained(config.labels_decoder, cache_dir=cache_dir)
+                        if decoder_tokenizer.pad_token is None:
+                            decoder_tokenizer.pad_token = decoder_tokenizer.eos_token
+                    else:
+                        decoder_tokenizer = None
+                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter, decoder_tokenizer=decoder_tokenizer)
             else:
                 self.data_processor = data_processor
             self.decoder = SpanDecoder(config)

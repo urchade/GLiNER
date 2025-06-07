@@ -145,26 +145,64 @@ class BaseProcessor(ABC):
             words_masks.append(words_mask)
         return words_masks
     
-    def tokenize_inputs(self, texts, entities):
+    def tokenize_inputs(self, texts, entities, prepare_labels: bool = False):
+
         input_texts, prompt_lengths = self.prepare_inputs(texts, entities)
 
         if self.preprocess_text:
             input_texts = self.prepare_texts(input_texts)
-            
-        tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
-                                                                                truncation=True, padding="longest")
+
+        tokenized_inputs = self.transformer_tokenizer(
+            input_texts,
+            is_split_into_words=True,
+            return_tensors="pt",
+            truncation=True,
+            padding="longest",
+        )
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
-        tokenized_inputs['words_mask'] = torch.tensor(words_masks)
+        tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
         if self.decoder_tokenizer is not None:
-            if type(entities)==dict:
-                entities_=entities
+            def _shift_right(input_ids: torch.Tensor, bos_token_id: int) -> torch.Tensor:
+                """
+                Prepends BOS and drops the last token. Works on batched `input_ids`.
+                """
+                bos_column = input_ids.new_full((input_ids.size(0), 1), bos_token_id)
+                return torch.cat([bos_column, input_ids[:, :-1]], dim=1)
+            
+            if isinstance(entities, dict):
+                entities_ = entities
             else:
-                entities_=[ent for curr_entities in entities for ent in curr_entities]
-            tokenized_entities = self.transformer_tokenizer(entities_, return_tensors='pt',
-                                                                truncation=True, padding="longest")
-            tokenized_inputs['decoder_input_ids'] = tokenized_entities['input_ids']
-            tokenized_inputs['decoder_attention_mask'] = tokenized_entities['decoder_attention_mask']
+                entities_ = [ent for sample_entities in entities for ent in sample_entities]
+
+            tokenized_targets = self.decoder_tokenizer(
+                entities_,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+            )
+
+            target_ids = tokenized_targets["input_ids"]
+            target_mask = tokenized_targets["attention_mask"]
+            tokenized_inputs["decoder_attention_mask"] = target_mask
+
+            # shift right to build decoder inputs
+            bos_token_id = self.decoder_tokenizer.bos_token_id or self.decoder_tokenizer.cls_token_id
+            if bos_token_id is None:
+                raise ValueError(
+                    "Decoder tokenizer must have either bos_token_id or cls_token_id."
+                )
+
+            tokenized_inputs["decoder_input_ids"] = _shift_right(
+                target_ids, bos_token_id
+            )
+
+            if prepare_labels:
+                labels = target_ids.clone()
+                pad_id = self.decoder_tokenizer.pad_token_id
+                if pad_id is not None:
+                    labels[labels == pad_id] = -100  # ignore padding in the loss
+                tokenized_inputs["labels"] = labels
 
         return tokenized_inputs
 
@@ -388,7 +426,7 @@ class SpanProcessor(BaseProcessor):
         return labels_batch
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
+        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels)
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input['labels'] = labels

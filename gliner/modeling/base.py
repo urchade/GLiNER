@@ -17,7 +17,6 @@ from .scorers import Scorer
 from .loss_functions import focal_loss_with_logits, cross_entropy_loss
 from .span_rep import SpanRepLayer
 
-
 @dataclass
 class GLiNERModelOutput(ModelOutput):
     loss: Optional[torch.FloatTensor] = None
@@ -29,7 +28,6 @@ class GLiNERModelOutput(ModelOutput):
     decoder_embedding_mask: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
-
 
 def extract_word_embeddings(token_embeds, words_mask, attention_mask,
                             batch_size, max_text_length, embed_dim, text_lengths):
@@ -48,7 +46,6 @@ def extract_word_embeddings(token_embeds, words_mask, attention_mask,
                                     device=token_embeds.device).expand(batch_size, -1)
     mask = aranged_word_idx < text_lengths
     return words_embedding, mask
-
 
 def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids, attention_mask,
                                                 text_lengths, words_mask, embed_ent_token=True, **kwargs):
@@ -389,7 +386,7 @@ class SpanModel(BaseModel):
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
 
-        decoder_embedding, decoder_mask, decoder_loss = None
+        decoder_embedding, decoder_mask, decoder_loss = None, None, None
         if hasattr(self, "decoder"):
             decoder_embedding, decoder_mask = self.select_span_decoder_embedding(
                 prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask
@@ -401,7 +398,7 @@ class SpanModel(BaseModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, decoder_loss=decoder_loss, **kwargs)
 
         output = GLiNERModelOutput(
             logits=scores,
@@ -418,7 +415,7 @@ class SpanModel(BaseModel):
 
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1.0, masking="label", **kwargs):
+             reduction: str = 'sum', negatives=1.0, masking="label", decoder_loss = None, **kwargs):
 
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -447,6 +444,10 @@ class SpanModel(BaseModel):
                 f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
                 f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
             loss = all_losses.sum()
+
+        if decoder_loss is not None:
+            loss = decoder_loss+loss
+        
         return loss
 
 
