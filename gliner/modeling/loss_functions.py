@@ -79,20 +79,19 @@ def focal_loss_with_logits(
 def cross_entropy_loss(
         inputs: torch.Tensor,
         targets: torch.Tensor,
-        valid_mask: torch.Tensor,
         reduction: str = "sum",
         label_smoothing: float = 0.0,
         ignore_index: int = -100,  # default value for ignored index
         **kwargs
 ) -> torch.Tensor:
 
+    valid_mask = targets != ignore_index
+
     cls_size = inputs.shape[-1]
     inputs = inputs.reshape(-1, cls_size)
     targets = targets.reshape(-1)
     loss = F.cross_entropy(inputs, targets, ignore_index = ignore_index, 
                             label_smoothing = label_smoothing, reduction="none")
-
-    loss = loss * valid_mask
 
     if reduction == "none":
         return loss

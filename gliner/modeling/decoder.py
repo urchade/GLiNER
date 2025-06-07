@@ -83,6 +83,7 @@ class Decoder(nn.Module):
             attention_mask = torch.ones(
                 inputs_embeds.size()[:2], dtype=torch.long, device=inputs_embeds.device
             )
+
         return self.decoder_layer.model.generate(
             inputs_embeds=inputs_embeds,
             attention_mask=attention_mask,

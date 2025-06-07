@@ -96,6 +96,7 @@ class BaseModel(ABC, nn.Module):
             if self.config.hidden_size != self.decoder.decoder_hidden_size:
                 self._enc2dec_proj = create_projection_layer(
                     self.config.hidden_size,
+                    self.config.dropout,
                     self.decoder.decoder_hidden_size,
                 )
 
@@ -204,18 +205,23 @@ class BaseModel(ABC, nn.Module):
         B, N, D = representations.shape
         lengths = rep_mask.sum(dim=-1)                  # (B,)
         max_len = lengths.max().item()
-        target_rep = representations.new_zeros(B, max_len, D)
-        target_mask = rep_mask.new_zeros(B, max_len)        # same dtype/device as rep_mask
 
-        new_col_idx = (rep_mask.cumsum(dim=1) - 1)          # (B, N)
-        keep = rep_mask.bool()                     
+        if max_len != N:
+            target_rep = representations.new_zeros(B, max_len, D)
+            target_mask = rep_mask.new_zeros(B, max_len)        # same dtype/device as rep_mask
 
-        batch_idx, old_col_idx = torch.where(keep)          # both (*) 1-D
+            new_col_idx = (rep_mask.cumsum(dim=1) - 1)          # (B, N)
+            keep = rep_mask.bool()                     
 
-        new_col_idx = new_col_idx[keep]                     # (K,)  – K = total # kept tokens
+            batch_idx, old_col_idx = torch.where(keep)          # both (*) 1-D
 
-        target_rep[batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
-        target_mask[batch_idx, new_col_idx] = 1
+            new_col_idx = new_col_idx[keep]                     # (K,)  – K = total # kept tokens
+
+            target_rep[batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
+            target_mask[batch_idx, new_col_idx] = 1
+        else:
+            target_rep = representations
+            target_mask = rep_mask
 
         if hasattr(self, "_enc2dec_proj"):
             target_rep = self._enc2dec_proj(target_rep) 
@@ -226,33 +232,41 @@ class BaseModel(ABC, nn.Module):
         input_embeds = self.decoder.ids_to_embeds(decoder_input_ids) #(B*N, S, D)
         BN, S, D = input_embeds.shape
 
-        representations = representations.reshape(BN, 1, D)
+        rep_batch_indices, rep_indices = torch.where(rep_mask==1)
+        target_representations = representations[rep_batch_indices, rep_indices].unsqueeze(1)
 
-        rep_mask = rep_mask.reshape(BN, 1)
-
-        input_embeds = torch.cat([representations, input_embeds], dim=1)
-        decoder_attention_mask = torch.cat([torch.ones([BN, S], device=input_embeds.device), 
+        input_embeds = torch.cat([target_representations, input_embeds], dim=1)
+        decoder_attention_mask = torch.cat([torch.ones([BN, 1], device=input_embeds.device), 
                                             decoder_attention_mask], dim=1)
         return input_embeds, decoder_attention_mask
     
-    def decode_labels(self, representations: torch.FloatTensor = None, #B, N, D
-                            rep_mask: torch.LongTensor = None,
+    def decode_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, D
+                            decoder_embedding_mask: torch.LongTensor = None,
                             decoder_input_ids: torch.FloatTensor = None, #(B*N, S)
                             decoder_attention_mask: torch.LongTensor = None,
                             decoder_labels: torch.FloatTensor = None,
                             **kwargs):
-        input_embeds, decoder_attention_mask = self.prepare_decoder_inputs(
-            representations, rep_mask, decoder_input_ids, decoder_attention_mask
+        inputs_embeds, decoder_attention_mask = self.prepare_decoder_inputs(
+            decoder_embedding, decoder_embedding_mask, decoder_input_ids, decoder_attention_mask
         )
-        decoder_outputs = self.decoder(input_embeds=input_embeds, attention_mask=decoder_attention_mask)
+        decoder_outputs = self.decoder(inputs_embeds=inputs_embeds, attention_mask=decoder_attention_mask)
 
         if decoder_labels is not None:
-            decoder_labels = torch.cat([decoder_input_ids[:,0], decoder_labels], dim=1)
-            loss = cross_entropy_loss(decoder_outputs, decoder_labels, rep_mask)
+            decoder_labels = torch.cat([decoder_input_ids[:,0].unsqueeze(1), decoder_labels], dim=1)
+            loss = cross_entropy_loss(decoder_outputs, decoder_labels)
         else:
             loss = None
         return (loss, decoder_outputs)
 
+    def generate_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, D
+                            decoder_embedding_mask: torch.LongTensor = None,
+                            **kwargs):
+
+        rep_batch_indices, rep_indices = torch.where(decoder_embedding_mask==1)
+        inputs_embeds = decoder_embedding[rep_batch_indices, rep_indices].unsqueeze(1) # BN,1, D
+        results = self.decoder.generate_from_embeds(inputs_embeds, **kwargs)
+        return results
+    
     @abstractmethod
     def forward(self, x):
         pass

@@ -311,9 +311,27 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return all_entities
 
+    def generate_labels(self, model_output, batch_size, id_to_classes, **gen_kwargs):
+        decoder_embedding = model_output.decoder_embedding
+        decoder_embedding_mask = model_output.decoder_embedding_mask
+
+        results = self.model.generate_labels(decoder_embedding, decoder_embedding_mask, **gen_kwargs)
+
+        decoded_labels = self.data_processor.decoder_tokenizer.batch_decode(results, skip_special_tokens=True)
+
+        curr_idx = 0
+        new_id_to_classes = []
+        for id in range(batch_size):
+            id_to_class_i = id_to_classes[id] if isinstance(id_to_classes, list) else id_to_classes
+            curr_labels = decoded_labels[curr_idx: len(id_to_class_i)]
+            curr_idx+=len(curr_labels)
+            curr_id_to_class = {i:label for i, label in enumerate(curr_labels, start=1)}
+            new_id_to_classes.append(curr_id_to_class)
+        return new_id_to_classes
+    
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, **gen_kwargs
     ):
         """
         Predict entities for a batch of texts.
@@ -357,15 +375,22 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         batch[key] = batch[key].to(self.device)
 
             # Perform predictions
-            model_output = self.model(**batch)[0]
+            model_output = self.model(**batch)
+            model_logits = model_output[0]
 
-            if not isinstance(model_output, torch.Tensor):
-                model_output = torch.from_numpy(model_output)
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+
+            if self.config.labels_decoder is not None:
+                id_to_classes = self.generate_labels(model_output, model_logits.shape[0], 
+                                                        batch["id_to_classes"], **gen_kwargs)
+            else:
+                id_to_classes = batch["id_to_classes"]
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],
-                batch["id_to_classes"],
-                model_output,
+                id_to_classes,
+                model_logits,
                 flat_ner=flat_ner,
                 threshold=threshold,
                 multi_label=multi_label,

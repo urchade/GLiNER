@@ -171,10 +171,11 @@ class BaseProcessor(ABC):
                 return torch.cat([bos_column, input_ids[:, :-1]], dim=1)
             
             if isinstance(entities, dict):
-                entities_ = entities
+                entities_ = list(entities)
             else:
                 entities_ = [ent for sample_entities in entities for ent in sample_entities]
 
+            print('ENTITIES', entities_)
             tokenized_targets = self.decoder_tokenizer(
                 entities_,
                 return_tensors="pt",
@@ -202,7 +203,7 @@ class BaseProcessor(ABC):
                 pad_id = self.decoder_tokenizer.pad_token_id
                 if pad_id is not None:
                     labels[labels == pad_id] = -100  # ignore padding in the loss
-                tokenized_inputs["labels"] = labels
+                tokenized_inputs["decoder_labels"] = labels
 
         return tokenized_inputs
 
