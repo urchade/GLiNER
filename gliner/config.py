@@ -15,7 +15,7 @@ class GLiNERConfig(PretrainedConfig):
                  dropout: float = 0.4,
                  fine_tune: bool = True,
                  subtoken_pooling: str = "first",
-                 decoder_mode: str = "prompt", #prompt|span
+                 decoder_mode: str = None, #prompt|span
                  span_mode: str = "markerV0",
                  post_fusion_schema: str = '', #l2l-l2t-t2t
                  num_post_fusion_layers: int = 1, 

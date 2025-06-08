@@ -162,20 +162,12 @@ class BaseProcessor(ABC):
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
-        if self.decoder_tokenizer is not None:
-            def _shift_right(input_ids: torch.Tensor, bos_token_id: int) -> torch.Tensor:
-                """
-                Prepends BOS and drops the last token. Works on batched `input_ids`.
-                """
-                bos_column = input_ids.new_full((input_ids.size(0), 1), bos_token_id)
-                return torch.cat([bos_column, input_ids[:, :-1]], dim=1)
-            
+        if prepare_labels and self.config.decoder_mode == 'prompt':
             if isinstance(entities, dict):
                 entities_ = list(entities)
             else:
                 entities_ = [ent for sample_entities in entities for ent in sample_entities]
 
-            print('ENTITIES', entities_)
             tokenized_targets = self.decoder_tokenizer(
                 entities_,
                 return_tensors="pt",
@@ -187,23 +179,10 @@ class BaseProcessor(ABC):
             target_mask = tokenized_targets["attention_mask"]
             tokenized_inputs["decoder_attention_mask"] = target_mask
 
-            # shift right to build decoder inputs
-            bos_token_id = self.decoder_tokenizer.bos_token_id or self.decoder_tokenizer.cls_token_id
-            if bos_token_id is None:
-                raise ValueError(
-                    "Decoder tokenizer must have either bos_token_id or cls_token_id."
-                )
+            tokenized_inputs["decoder_input_ids"] = target_ids
 
-            tokenized_inputs["decoder_input_ids"] = _shift_right(
-                target_ids, bos_token_id
-            )
-
-            if prepare_labels:
-                labels = target_ids.clone()
-                pad_id = self.decoder_tokenizer.pad_token_id
-                if pad_id is not None:
-                    labels[labels == pad_id] = -100  # ignore padding in the loss
-                tokenized_inputs["decoder_labels"] = labels
+            labels = target_ids.clone()
+            tokenized_inputs["decoder_labels"] = labels
 
         return tokenized_inputs
 
@@ -381,6 +360,25 @@ class SpanProcessor(BaseProcessor):
             "id_to_classes": id_to_classes,
         }
 
+    def create_decoder_labels(self, batch):
+        span_entities = []
+        for i in range(len(batch['tokens'])):
+            ner = batch['entities'][i]
+            ner = batch['entities'][i]
+            tokens = batch['tokens'][i]
+            sorted_ner = sorted(ner, key=lambda x: (x[0], x[1]))
+            entities = [ent[-1] for ent in sorted_ner if ent[0]<len(tokens)]
+            span_entities.extend(entities)
+
+        tokenized_targets = self.decoder_tokenizer(
+            span_entities,
+            return_tensors="pt",
+            truncation=True,
+            padding="longest",
+        )
+        tokenized_targets['labels'] = tokenized_targets['input_ids'].clone()
+        return tokenized_targets
+
     def create_labels(self, batch):
         labels_batch = []
         for i in range(len(batch['tokens'])):
@@ -431,6 +429,12 @@ class SpanProcessor(BaseProcessor):
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input['labels'] = labels
+
+            if self.config.decoder_mode == 'span':
+                decoder_tokenized_input = self.create_decoder_labels(batch)
+                tokenized_input['decoder_input_ids'] = decoder_tokenized_input['input_ids']
+                tokenized_input['decoder_attention_mask'] = decoder_tokenized_input['attention_mask']
+                tokenized_input['decoder_labels'] = decoder_tokenized_input['labels']
         return tokenized_input
 
 class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):   

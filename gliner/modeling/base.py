@@ -235,6 +235,7 @@ class BaseModel(ABC, nn.Module):
         rep_batch_indices, rep_indices = torch.where(rep_mask==1)
         target_representations = representations[rep_batch_indices, rep_indices].unsqueeze(1)
 
+        print("MAIN", target_representations.shape, input_embeds.shape)
         input_embeds = torch.cat([target_representations, input_embeds], dim=1)
         decoder_attention_mask = torch.cat([torch.ones([BN, 1], device=input_embeds.device), 
                                             decoder_attention_mask], dim=1)
@@ -252,7 +253,7 @@ class BaseModel(ABC, nn.Module):
         decoder_outputs = self.decoder(inputs_embeds=inputs_embeds, attention_mask=decoder_attention_mask)
 
         if decoder_labels is not None:
-            decoder_labels = torch.cat([decoder_input_ids[:,0].unsqueeze(1), decoder_labels], dim=1)
+            decoder_labels = torch.cat([decoder_labels, decoder_input_ids[:,-1].unsqueeze(1)], dim=1)
             loss = cross_entropy_loss(decoder_outputs, decoder_labels)
         else:
             loss = None
@@ -324,12 +325,13 @@ class SpanModel(BaseModel):
 
     def select_span_decoder_embedding(
         self,
-        prompts_embedding: torch.FloatTensor,          # (B, C, D)
-        prompts_embedding_mask: torch.LongTensor,      # (B, C)
-        span_rep: torch.FloatTensor,                   # (B, L, K, D)
-        span_scores: torch.FloatTensor,                # (B, L, K, C)
-        span_mask: torch.LongTensor,                   # (B, L, K)
-        thr = 0.5,
+        prompts_embedding: torch.FloatTensor,            # (B, C, D)
+        prompts_embedding_mask: torch.LongTensor,        # (B, C)
+        span_rep: torch.FloatTensor,                     # (B, L, K, D)
+        span_scores: torch.FloatTensor,                  # (B, L, K, C)
+        span_mask: torch.LongTensor,                     # (B, L, K)
+        span_labels: Optional[torch.FloatTensor] = None, # (B, L, K, C)               
+        threshold = 0.5,
         top_k = None,
     ):
         if self.config.decoder_mode == "prompt":
@@ -342,11 +344,14 @@ class SpanModel(BaseModel):
         span_rep_flat = span_rep.view(B, L * K, D)      # (B, L*K, D)
         span_mask_flat = span_mask.view(B, L * K)        # (B, L*K)
 
-        span_prob_flat = torch.sigmoid(span_scores)      # (B, L, K, C)
-        span_prob_flat = span_prob_flat.max(dim=-1).values.view(B, L * K)  # (B, L*K)
-
-        keep = (span_prob_flat >= thr) & span_mask_flat.bool()
-
+        if span_labels is not None:
+            span_prob_flat = span_labels.max(dim=-1).values.view(B, L * K)  # (B, L*K)
+            keep = (span_prob_flat == 1) & span_mask_flat.bool()
+        else:
+            span_prob_flat = torch.sigmoid(span_scores)      # (B, L, K, C)
+            span_prob_flat = span_prob_flat.max(dim=-1).values.view(B, L * K)  # (B, L*K)
+            keep = (span_prob_flat >= threshold) & span_mask_flat.bool()
+        
         if top_k is not None and top_k > 0:
             sel_scores = span_prob_flat.masked_fill(~keep, -1.0)
             top_idx = sel_scores.topk(
@@ -358,10 +363,11 @@ class SpanModel(BaseModel):
 
         rep_mask = keep.long()                              # (B, L*K)
 
-        target_rep, target_mask = self.select_representations(
+        target_rep, target_mask = self.select_decoder_embedding(
             representations = span_rep_flat,                # (B, L*K, D)
             rep_mask = rep_mask                      # (B, L*K)
         )
+
         return target_rep, target_mask
     
     def forward(self,
@@ -403,7 +409,7 @@ class SpanModel(BaseModel):
         decoder_embedding, decoder_mask, decoder_loss = None, None, None
         if hasattr(self, "decoder"):
             decoder_embedding, decoder_mask = self.select_span_decoder_embedding(
-                prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask
+                prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask, span_labels=labels
             )
             if decoder_labels is not None:
                 decoder_loss, decoder_outputs = self.decode_labels(

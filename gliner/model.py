@@ -312,21 +312,61 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return all_entities
 
     def generate_labels(self, model_output, batch_size, id_to_classes, **gen_kwargs):
-        decoder_embedding = model_output.decoder_embedding
-        decoder_embedding_mask = model_output.decoder_embedding_mask
+        """
+        Generate (or rewrite) the textual class labels for each example in the batch.
 
-        results = self.model.generate_labels(decoder_embedding, decoder_embedding_mask, **gen_kwargs)
+        Parameters
+        ----------
+        model_output : Namespace
+            Must expose `decoder_embedding` (FloatTensor, shape [N, L, H]) and
+            `decoder_embedding_mask` (BoolTensor, shape [N, L]), where N is the total
+            number of label placeholders across the whole minibatch.
+        batch_size : int
+            Number of input examples in the minibatch.
+        id_to_classes : list[dict[int, str]] | dict[int, str]
+            Original mapping(s) from label-id → text. If a single dict is passed,
+            the same mapping is assumed for every example.
+        **gen_kwargs
+            Extra args forwarded to `self.model.generate_labels` (e.g. `max_new_tokens`).
 
-        decoded_labels = self.data_processor.decoder_tokenizer.batch_decode(results, skip_special_tokens=True)
+        Returns
+        -------
+        list[dict[int, str]]
+            One dict per example, mapping the *new* 1-based label-ids to the
+            generated label strings.
+        """
+        # Unpack
+        dec_embeds = model_output.decoder_embedding            # [N, L, H]
+        dec_mask   = model_output.decoder_embedding_mask       # [N, L]
 
-        curr_idx = 0
+        # ── 1. prepend BOS ────────────────────────────────────────────────────────────
+        bos_id = self.data_processor.decoder_tokenizer.bos_token_id
+        bos_ids = torch.full(
+            (dec_embeds.size(0), 1), bos_id,
+            dtype=torch.long, device=dec_embeds.device
+        )                                                      # [N, 1]
+        bos_embeds = self.model.decoder.ids_to_embeds(bos_ids) # [N, 1, H]
+
+        # dec_embeds = torch.cat([dec_embeds, bos_embeds], dim=1)             # [N, L+1, H]
+        # bos_mask   = torch.ones_like(bos_ids, dtype=dec_mask.dtype).bool()  # [N, 1]
+        # dec_mask   = torch.cat([dec_mask, bos_mask], dim=1)                 # [N, L+1]
+
+        # ── 2. label generation ───────────────────────────────────────────────────────
+        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=10,**gen_kwargs)  # [N, S]
+        gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
+            gen_ids, skip_special_tokens=False
+        )  # list[str] of length N
+
+        # ── 3. regroup per input example ─────────────────────────────────────────────
         new_id_to_classes = []
-        for id in range(batch_size):
-            id_to_class_i = id_to_classes[id] if isinstance(id_to_classes, list) else id_to_classes
-            curr_labels = decoded_labels[curr_idx: len(id_to_class_i)]
-            curr_idx+=len(curr_labels)
-            curr_id_to_class = {i:label for i, label in enumerate(curr_labels, start=1)}
-            new_id_to_classes.append(curr_id_to_class)
+        cursor = 0
+        for i in range(batch_size):
+            original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+            k = len(original)                    # how many labels belong to this example
+            mapping = {idx + 1: gen_texts[cursor + idx] for idx in range(k)}
+            new_id_to_classes.append(mapping)
+            cursor += k
+
         return new_id_to_classes
     
     @torch.no_grad()
