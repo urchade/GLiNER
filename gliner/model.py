@@ -339,35 +339,18 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         dec_embeds = model_output.decoder_embedding            # [N, L, H]
         dec_mask   = model_output.decoder_embedding_mask       # [N, L]
 
-        # ── 1. prepend BOS ────────────────────────────────────────────────────────────
         bos_id = self.data_processor.decoder_tokenizer.bos_token_id
         bos_ids = torch.full(
             (dec_embeds.size(0), 1), bos_id,
             dtype=torch.long, device=dec_embeds.device
         )                                                      # [N, 1]
-        bos_embeds = self.model.decoder.ids_to_embeds(bos_ids) # [N, 1, H]
 
-        # dec_embeds = torch.cat([dec_embeds, bos_embeds], dim=1)             # [N, L+1, H]
-        # bos_mask   = torch.ones_like(bos_ids, dtype=dec_mask.dtype).bool()  # [N, 1]
-        # dec_mask   = torch.cat([dec_mask, bos_mask], dim=1)                 # [N, L+1]
-
-        # ── 2. label generation ───────────────────────────────────────────────────────
         gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=10,**gen_kwargs)  # [N, S]
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
             gen_ids, skip_special_tokens=False
         )  # list[str] of length N
 
-        # ── 3. regroup per input example ─────────────────────────────────────────────
-        new_id_to_classes = []
-        cursor = 0
-        for i in range(batch_size):
-            original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
-            k = len(original)                    # how many labels belong to this example
-            mapping = {idx + 1: gen_texts[cursor + idx] for idx in range(k)}
-            new_id_to_classes.append(mapping)
-            cursor += k
-
-        return new_id_to_classes
+        return gen_texts
     
     @torch.no_grad()
     def run(
@@ -420,10 +403,23 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
             if not isinstance(model_logits, torch.Tensor):
                 model_logits = torch.from_numpy(model_logits)
-
+            
+            gen_labels = None
             if self.config.labels_decoder is not None:
-                id_to_classes = self.generate_labels(model_output, model_logits.shape[0], 
+                gen_labels = self.generate_labels(model_output, model_logits.shape[0], 
                                                         batch["id_to_classes"], **gen_kwargs)
+                if self.config.decoder_mode == 'prompt':
+                    new_id_to_classes = []
+                    cursor = 0
+                    for i in range(batch_size):
+                        original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+                        k = len(original)                    # how many labels belong to this example
+                        mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
+                        new_id_to_classes.append(mapping)
+                        cursor += k
+                    id_to_classes = new_id_to_classes
+                else:
+                    id_to_classes = batch["id_to_classes"]
             else:
                 id_to_classes = batch["id_to_classes"]
 
@@ -438,6 +434,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             outputs.extend(decoded_outputs)
 
         all_entities = []
+        cursor = 0
         for i, output in enumerate(outputs):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
@@ -445,6 +442,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             for start_token_idx, end_token_idx, ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                if gen_labels is not None:
+                    ent_type = gen_labels[cursor]
+                    cursor+=1
                 entities.append(
                     {
                         "start": start_token_idx_to_text_idx[start_token_idx],
