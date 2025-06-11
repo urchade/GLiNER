@@ -118,3 +118,22 @@ class WordsSplitter(TokenSplitterBase):
     def __call__(self, text):
         for token in self.splitter(text):
             yield token
+
+class MultiLangWordsSplitter(TokenSplitterBase):
+    def __init__(self):
+        try:
+            from langdetect import detect
+        except:
+            raise ImportError("Please install langdetect with: `pip install langdetect`")
+        self.detect = detect
+
+    def __call__(self, text):
+        lang = self.detect(text)
+        if lang == 'ko':
+            splitter = MecabKoTokenSplitter()
+        elif lang in ['zh-cn', 'zh-tw', 'zh']:
+            splitter = JiebaTokenSplitter()
+        else:
+            splitter = WhitespaceTokenSplitter()
+        for token in splitter(text):
+            yield token
