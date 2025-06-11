@@ -68,7 +68,6 @@ class JanomeJaTokenSplitter(TokenSplitterBase):
 
     def __call__(self, text):
         last_idx = 0
-        print(self.tokenizer.tokenize(text, wakati=True))
         for token in self.tokenizer.tokenize(text, wakati=True):
             start_idx = text.find(token, last_idx)
             end_idx = start_idx + len(token)
