@@ -41,6 +41,12 @@ dependencies = [
     "tqdm",
     "onnxruntime",
     "sentencepiece",
+    "langdetect",
+    "python-mecab-ko",
+    "janome",
+    "jieba",
+    "camel_tools",
+    "indic-nlp-librarys"
 ]
 
 dynamic = ["version"]

@@ -1,4 +1,5 @@
 import re
+from langdetect.lang_detect_exception import LangDetectException
 
 
 class TokenSplitterBase():
@@ -48,13 +49,32 @@ class MecabKoTokenSplitter(TokenSplitterBase):
     
     def __call__(self, text):
         tokens = self.tagger.morphs(text)
-
+        print(tokens)
         last_idx = 0
         for morph in tokens:
             start_idx = text.find(morph, last_idx)
             end_idx = start_idx + len(morph)
             last_idx = end_idx
             yield morph, start_idx, end_idx
+
+
+class JanomeJaTokenSplitter(TokenSplitterBase):
+    def __init__(self):
+        try:
+            from janome.tokenizer import Tokenizer
+        except ModuleNotFoundError:
+            raise ModuleNotFoundError("Please install janome with: `pip install janome`")
+        self.tokenizer = Tokenizer()
+
+    def __call__(self, text):
+        last_idx = 0
+        print(self.tokenizer.tokenize(text, wakati=True))
+        for token in self.tokenizer.tokenize(text, wakati=True):
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
 
 class JiebaTokenSplitter(TokenSplitterBase):
     def __init__(self):
@@ -74,6 +94,47 @@ class JiebaTokenSplitter(TokenSplitterBase):
             end_idx = start_idx + len(token)
             last_idx = end_idx
             yield token, start_idx, end_idx
+
+class CamelArabicSplitter():
+    def __init__(self):
+        try:
+            from camel_tools.tokenizers.word import simple_word_tokenize
+            self.tokenizer = simple_word_tokenize
+        except ModuleNotFoundError as error:
+            raise ModuleNotFoundError(
+                'Please install camel_tools: pip install camel-tools'
+            )
+        
+    def __call__(self, text):
+        tokens = self.tokenizer(text)
+        last_idx = 0
+        for token in tokens:
+            start_idx = text.find(token, last_idx)
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+
+class HindiSplitter():
+    def __init__(self):
+        try:
+            from indicnlp.tokenize import indic_tokenize
+            self.tokenizer = lambda text: indic_tokenize.trivial_tokenize(text, lang='hi')
+        except ModuleNotFoundError as error:
+            raise ModuleNotFoundError(
+                'Please install indic-nlp-librarys: pip install indic-nlp-librarys'
+            )
+    def __call__(self, text):
+        tokens = self.tokenizer(text)
+        last_idx = 0
+        for token in tokens:
+            match = re.search(re.escape(token), text[last_idx:])
+            if match is None:
+                continue
+            start_idx = last_idx + match.start()
+            end_idx = start_idx + len(token)
+            last_idx = end_idx
+            yield token, start_idx, end_idx
+        
 
 class HanLPTokenSplitter(TokenSplitterBase):
     def __init__(self, model_name="FINE_ELECTRA_SMALL_ZH"):
@@ -128,11 +189,20 @@ class MultiLangWordsSplitter(TokenSplitterBase):
         self.detect = detect
 
     def __call__(self, text):
-        lang = self.detect(text)
+        try:
+            lang = self.detect(text)
+        except LangDetectException:
+            lang = 'en'
         if lang == 'ko':
             splitter = MecabKoTokenSplitter()
+        elif lang == 'ja':
+            splitter = JanomeJaTokenSplitter()
+        elif lang == 'hi':
+            splitter = HindiSplitter()
         elif lang in ['zh-cn', 'zh-tw', 'zh']:
             splitter = JiebaTokenSplitter()
+        elif lang == 'ar':
+            splitter = CamelArabicSplitter()
         else:
             splitter = WhitespaceTokenSplitter()
         for token in splitter(text):

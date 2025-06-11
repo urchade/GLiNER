@@ -4,3 +4,9 @@ huggingface_hub>=0.21.4
 onnxruntime-gpu
 sentencepiece
 tqdm
+langdetect
+python-mecab-ko
+janome
+jieba
+camel_tools
+indic-nlp-librarys
