@@ -13,7 +13,7 @@ class TokenSplitterBase():
 class WhitespaceTokenSplitter(TokenSplitterBase):
     def __init__(self):
         self.whitespace_pattern = re.compile(r'\w+(?:[-_]\w+)*|\S')
-    
+
     def __call__(self, text):
         for match in self.whitespace_pattern.finditer(text):
             yield match.group(), match.start(), match.end()
@@ -94,6 +94,7 @@ class JiebaTokenSplitter(TokenSplitterBase):
             last_idx = end_idx
             yield token, start_idx, end_idx
 
+
 class CamelArabicSplitter():
     def __init__(self):
         try:
@@ -112,6 +113,7 @@ class CamelArabicSplitter():
             end_idx = start_idx + len(token)
             last_idx = end_idx
             yield token, start_idx, end_idx
+
 
 class HindiSplitter():
     def __init__(self):
@@ -133,7 +135,7 @@ class HindiSplitter():
             end_idx = start_idx + len(token)
             last_idx = end_idx
             yield token, start_idx, end_idx
-        
+
 
 class HanLPTokenSplitter(TokenSplitterBase):
     def __init__(self, model_name="FINE_ELECTRA_SMALL_ZH"):
@@ -160,9 +162,52 @@ class HanLPTokenSplitter(TokenSplitterBase):
             last_idx = end_idx
             yield token, start_idx, end_idx
 
+
+class MultiLangWordsSplitter(TokenSplitterBase):
+    def __init__(self, logging=False):
+        try:
+            from langdetect import detect, DetectorFactory
+        except ImportError:
+            raise ImportError("Please install langdetect with: `pip install langdetect`")
+        DetectorFactory.seed = 0
+        self.detect = detect
+        self.lang2splitter = {
+            'ko': MecabKoTokenSplitter(),
+            'ja': JanomeJaTokenSplitter(),
+            'hi': HindiSplitter(),
+            'zh-cn': JiebaTokenSplitter(),
+            'zh-tw': JiebaTokenSplitter(),
+            'zh': JiebaTokenSplitter(),
+            'ar': CamelArabicSplitter(),
+        }
+        self.universal_splitter = SpaCyTokenSplitter(lang='xx')
+        self.logging = logging
+
+    def __call__(self, text):
+        lang = 'unknown'
+        splitter = self.universal_splitter
+        try:
+            lang = self.detect(text)
+        except LangDetectException:
+            pass
+        else:
+            splitter = self.lang2splitter.get(lang)
+            if splitter is None:
+                splitter = WhitespaceTokenSplitter()
+                self.lang2splitter[lang] = splitter
+        if self.logging:
+            if lang != 'unknown':
+                print(f"Detected language: {lang}, using splitter: {splitter.__class__.__name__}")
+            else:
+                print(f"Language detection failed, using default splitter: {splitter.__class__.__name__}")
+        yield from splitter(text)
+
+
 class WordsSplitter(TokenSplitterBase):
-    def __init__(self, splitter_type='whitespace'):
-        if splitter_type=='whitespace':
+    def __init__(self, splitter_type='universal'):
+        if splitter_type == 'universal':
+            self.splitter = MultiLangWordsSplitter()
+        if splitter_type == 'whitespace':
             self.splitter = WhitespaceTokenSplitter()
         elif splitter_type == 'spacy':
             self.splitter = SpaCyTokenSplitter()
@@ -174,35 +219,7 @@ class WordsSplitter(TokenSplitterBase):
             self.splitter = HanLPTokenSplitter()    
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
-    
+
     def __call__(self, text):
         for token in self.splitter(text):
-            yield token
-
-class MultiLangWordsSplitter(TokenSplitterBase):
-    def __init__(self):
-        try:
-            from langdetect import detect
-        except:
-            raise ImportError("Please install langdetect with: `pip install langdetect`")
-        self.detect = detect
-
-    def __call__(self, text):
-        try:
-            lang = self.detect(text)
-        except LangDetectException:
-            lang = 'en'
-        if lang == 'ko':
-            splitter = MecabKoTokenSplitter()
-        elif lang == 'ja':
-            splitter = JanomeJaTokenSplitter()
-        elif lang == 'hi':
-            splitter = HindiSplitter()
-        elif lang in ['zh-cn', 'zh-tw', 'zh']:
-            splitter = JiebaTokenSplitter()
-        elif lang == 'ar':
-            splitter = CamelArabicSplitter()
-        else:
-            splitter = WhitespaceTokenSplitter()
-        for token in splitter(text):
             yield token

@@ -18,7 +18,7 @@ from safetensors.torch import save_file
 from .config import GLiNERConfig
 from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcessor, TokenBiEncoderProcessor
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
-from .data_processing.tokenizer import WordsSplitter, MultiLangWordsSplitter
+from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
 from .evaluation import Evaluator
 from .modeling.base import BaseModel, SpanModel, TokenModel
@@ -54,7 +54,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
 
         if words_splitter is None and data_processor is None:
-            words_splitter = MultiLangWordsSplitter()
+            words_splitter = WordsSplitter(config.words_splitter_type)
 
         if config.span_mode == "token_level":
             if model is None:
@@ -879,7 +879,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         gliner_config.vocab_size = len(tokenizer)
 
         # Select appropriate processor
-        words_splitter = MultiLangWordsSplitter()
+        words_splitter = WordsSplitter()
         if gliner_config.span_mode == "token_level":
             data_processor = TokenProcessor(
                 gliner_config,
