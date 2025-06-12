@@ -195,7 +195,7 @@ class MultiLangWordsSplitter(TokenSplitterBase):
         else:
             splitter = self.lang2splitter.get(lang)
             if splitter is None:
-                splitter = WhitespaceTokenSplitter()
+                splitter = SpaCyTokenSplitter()
                 self.lang2splitter[lang] = splitter
         if self.logging:
             if lang != 'unknown':
