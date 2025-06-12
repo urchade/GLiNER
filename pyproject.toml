@@ -41,6 +41,13 @@ dependencies = [
     "tqdm",
     "onnxruntime",
     "sentencepiece",
+]
+
+dynamic = ["version"]
+
+[project.optional-dependencies]
+gpu = ["onnxruntime-gpu"]
+tokenizers = [
     "langdetect",
     "python-mecab-ko",
     "janome",
@@ -48,11 +55,6 @@ dependencies = [
     "camel_tools",
     "indic-nlp-library"
 ]
-
-dynamic = ["version"]
-
-[project.optional-dependencies]
-gpu = ["onnxruntime-gpu"]
 
 
 [project.urls]
