@@ -47,6 +47,15 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 gpu = ["onnxruntime-gpu"]
+tokenizers = [
+    "langdetect",
+    "python-mecab-ko",
+    "janome",
+    "jieba",
+    "camel_tools",
+    "indic-nlp-library",
+    "spacy"
+]
 
 
 [project.urls]
