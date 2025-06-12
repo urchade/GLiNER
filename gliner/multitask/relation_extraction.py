@@ -29,7 +29,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     prompt = "Extract relationships between entities from the text: "
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, prompt: Optional[str] = None):
+    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, return_index: bool = False, prompt: Optional[str] = None):
         """
         Initializes the GLiNERRelationExtractor.
 
@@ -43,6 +43,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         """
         # Use the provided prompt or default to the class-level prompt
         prompt = prompt if prompt is not None else self.prompt
+        self.return_index = return_index
         super().__init__(model_id=model_id, model=model, prompt=prompt, device=device)
 
     def prepare_texts(self, texts: List[str], **kwargs):
@@ -75,35 +76,40 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     def process_predictions(self, predictions, **kwargs):
         """
-        Processes predictions to extract the highest-scoring relation(s).
-
-        Args:
-            predictions (list): List of predictions with scores.
-
-        Returns:
-            list: List of predicted labels for each input.
+        Processes predictions to extract relations, and if return_index=True,
+        shifts any start/end by the exact number of characters prepended
+        (prompt + " \\n ") so they align against the bare `text`.
         """
         batch_predicted_relations = []
+        # account for prompt + space + newline + space
+        shift = len(self.prompt) + len(" \n ")
 
         for prediction in predictions:
-            # Sort predictions by score in descending order
             curr_relations = []
-
             for target in prediction:
-                target_ent = target['text']
-                score = target['score']
-                source, relation = target['label'].split('<>')
-                relation = {
-                    "source": source.strip(),
-                    "relation": relation.strip(),
-                    "target": target_ent.strip(),
-                    "score": score
+                source, rel_label = target['label'].split('<>')
+                rel = {
+                    "source":   source.strip(),
+                    "relation": rel_label.strip(),
+                    "target":   target['text'].strip(),
+                    "score":    target['score']
                 }
-                curr_relations.append(relation)
+
+                if self.return_index:
+                    raw_start = target.get('start')
+                    raw_end   = target.get('end')
+                    # subtract the exact prefix length
+                    if raw_start is not None:
+                        rel['start'] = raw_start - shift
+                    if raw_end is not None:
+                        rel['end']   = raw_end   - shift
+
+                curr_relations.append(rel)
+
             batch_predicted_relations.append(curr_relations)
 
         return batch_predicted_relations
-    
+
     def __call__(self, texts: Union[str, List[str]], relations: List[str]=None, 
                                 entities: List[str] = ['named entity'], 
                                 relation_labels: Optional[List[List[str]]]=None, 
