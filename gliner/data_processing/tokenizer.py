@@ -49,7 +49,6 @@ class MecabKoTokenSplitter(TokenSplitterBase):
     
     def __call__(self, text):
         tokens = self.tagger.morphs(text)
-        print(tokens)
         last_idx = 0
         for morph in tokens:
             start_idx = text.find(morph, last_idx)
@@ -164,7 +163,7 @@ class HanLPTokenSplitter(TokenSplitterBase):
 
 
 class MultiLangWordsSplitter(TokenSplitterBase):
-    def __init__(self, logging=False):
+    def __init__(self, logging=False, use_spacy=True):
         try:
             from langdetect import detect, DetectorFactory
         except ImportError:
@@ -180,7 +179,10 @@ class MultiLangWordsSplitter(TokenSplitterBase):
             'zh': JiebaTokenSplitter(),
             'ar': CamelArabicSplitter(),
         }
-        self.universal_splitter = SpaCyTokenSplitter(lang='xx')
+        if use_spacy is True:
+            self.universal_splitter = SpaCyTokenSplitter(lang='xx')
+        else:
+            self.universal_splitter = WhitespaceTokenSplitter()
         self.logging = logging
 
     def __call__(self, text):
@@ -207,7 +209,7 @@ class WordsSplitter(TokenSplitterBase):
     def __init__(self, splitter_type='universal'):
         if splitter_type == 'universal':
             self.splitter = MultiLangWordsSplitter()
-        if splitter_type == 'whitespace':
+        elif splitter_type == 'whitespace':
             self.splitter = WhitespaceTokenSplitter()
         elif splitter_type == 'spacy':
             self.splitter = SpaCyTokenSplitter()
@@ -216,7 +218,13 @@ class WordsSplitter(TokenSplitterBase):
         elif splitter_type == 'jieba':
             self.splitter = JiebaTokenSplitter()
         elif splitter_type == 'hanlp':
-            self.splitter = HanLPTokenSplitter()    
+            self.splitter = HanLPTokenSplitter()  
+        elif splitter_type == 'janome':
+            self.splitter = JanomeJaTokenSplitter()
+        elif splitter_type == 'camel':
+            self.splitter = CamelArabicSplitter()
+        elif splitter_type == 'hindi':
+            self.splitter = HindiSplitter()
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
 

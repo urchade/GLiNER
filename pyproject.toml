@@ -53,7 +53,8 @@ tokenizers = [
     "janome",
     "jieba",
     "camel_tools",
-    "indic-nlp-library"
+    "indic-nlp-library",
+    "spacy"
 ]
 
 
