@@ -185,7 +185,7 @@ class BaseModel(ABC, nn.Module):
                 input_ids, attention_mask, text_lengths, words_mask, **kwargs
             )
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
-
+    
     @staticmethod
     def _fit_length(
         embedding: torch.Tensor,    # (B, L, D)
@@ -277,31 +277,6 @@ class SpanModel(BaseModel):
                                            dropout = config.dropout)
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
-
-    @staticmethod
-    def _pad_words(words_embedding: torch.Tensor,
-                   mask: torch.Tensor,
-                   target_len: int) -> Tuple[torch.Tensor, torch.Tensor]:
-        """
-        Left-pads `words_embedding` (B,W,D) and `mask` (B,W) with zeros
-        so that W == `target_len`.  No-op when already long enough.
-        """
-        B, W, D = words_embedding.shape
-        if W >= target_len:                                       # already large enough
-            return words_embedding, mask
-
-        pad_len = target_len - W                                  # how many positions to add
-        pad_emb = torch.zeros(B, pad_len, D,
-                              dtype=words_embedding.dtype,
-                              device=words_embedding.device)
-        pad_msk = torch.zeros(B, pad_len,
-                              dtype=mask.dtype,
-                              device=mask.device)
-
-        # concatenate on the time/word axis
-        words_embedding = torch.cat([words_embedding, pad_emb], dim=1)
-        mask            = torch.cat([mask,            pad_msk], dim=1)
-        return words_embedding, mask
     
     def forward(self,
                 input_ids: Optional[torch.FloatTensor] = None,
@@ -423,6 +398,17 @@ class TokenModel(BaseModel):
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
                                                                                                     words_mask)
+        if labels is not None:
+            target_W = labels.shape[1]
+            words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
+
+            target_C = prompts_embedding.size(1)
+            if labels is not None:
+                target_C = max(target_C, labels.size(-2))
+
+            prompts_embedding, prompts_embedding_mask = self._fit_length(
+                prompts_embedding, prompts_embedding_mask, target_C
+            )
 
         scores = self.scorer(words_embedding, prompts_embedding)
 
@@ -445,7 +431,7 @@ class TokenModel(BaseModel):
              reduction: str = 'sum', negatives=1, **kwargs):
         all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives)
 
-        all_losses = all_losses * prompts_embedding_mask.unsqueeze(1) * mask.unsqueeze(-1)
+        all_losses = all_losses * (mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
 
         if reduction == "mean":
             loss = all_losses.mean()
