@@ -66,12 +66,8 @@ class Trainer(transformers.Trainer):
 
             kwargs = {}
 
-            # For LOMO optimizers you need to explicitly use the learnign rate
-            # if self.args.optim in [OptimizerNames.LOMO, OptimizerNames.ADALOMO]:
-            #     kwargs["learning_rate"] = self._get_learning_rate()
-
             if self.args.n_gpu > 1:
-                loss = loss.mean()  # mean() to average on multi-gpu parallel training
+                loss = loss.mean()  # Average on multi-gpu training
 
             if self.use_apex:
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
@@ -80,11 +76,15 @@ class Trainer(transformers.Trainer):
                 self.accelerator.backward(loss, **kwargs)
 
             return loss.detach() / self.args.gradient_accumulation_steps
+
         except Exception as e:
             print(f"Skipping iteration due to error: {e}")
             model.zero_grad(set_to_none=True)
             torch.cuda.empty_cache()
-            return torch.tensor(0.0, requires_grad=True).to(model.device) 
+            # Safely get device for DataParallel or normal model
+            _model = getattr(model, "module", model)
+            device = next(_model.parameters()).device
+            return torch.tensor(0.0, requires_grad=True, device=device)
 
     def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
         self.model.save_pretrained(output_dir)

@@ -9,7 +9,7 @@ def pad_2d_tensor(key_data):
     """
     if not key_data:
         raise ValueError("The input list 'key_data' should not be empty.")
-
+    
     # Determine the maximum size along both dimensions
     max_rows = max(tensor.shape[0] for tensor in key_data)
     max_cols = max(tensor.shape[1] for tensor in key_data)
