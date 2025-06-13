@@ -1,6 +1,4 @@
 import re
-from langdetect.lang_detect_exception import LangDetectException
-
 
 class TokenSplitterBase():
     def __init__(self):
@@ -166,6 +164,7 @@ class MultiLangWordsSplitter(TokenSplitterBase):
     def __init__(self, logging=False, use_spacy=True):
         try:
             from langdetect import detect, DetectorFactory
+            from langdetect.lang_detect_exception import LangDetectException
         except ImportError:
             raise ImportError("Please install langdetect with: `pip install langdetect`")
         DetectorFactory.seed = 0

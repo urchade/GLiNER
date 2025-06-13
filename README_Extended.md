@@ -46,12 +46,17 @@ Word-level models work **better for finding multi-word entities, highlighting se
 #### 🌍 For Other Languages
 - **Korean**: 🇰🇷 `taeminlee/gliner_ko`
 - **Italian**: 🇮🇹 `DeepMount00/universal_ner_ita`
-- **Multilingual**: 🌐 `urchade/gliner_multi` *(CC BY NC 4.0)* and `urchade/gliner_multi-v2.1` *(Apache 2.0)*
+- **Multilingual**: 🌐 
+   - `urchade/gliner_multi` *(CC BY NC 4.0)*
+   - `urchade/gliner_multi-v2.1` *(Apache 2.0)* 
+   - `knowledgator/gliner-x-large-v0.5`  *(Apache 2.0)*, see other model sizes in the [collection](https://huggingface.co/collections/knowledgator/gliner-x-684320a3f1220315c651d2f5)
 
 #### 🔬 Domain Specific Models
 - **Personally Identifiable Information**: 🔍 `urchade/gliner_multi_pii-v1` *(Apache 2.0)*
     - This model is capable of recognizing various types of *personally identifiable information* (PII), including but not limited to these entity types: `person`, `organization`, `phone number`, `address`, `passport number`, `email`, `credit card number`, `social security number`, `health insurance id number`, `date of birth`, `mobile phone number`, `bank account number`, `medication`, `cpf`, `driver's license number`, `tax identification number`, `medical condition`, `identity card number`, `national id number`, `ip address`, `email address`, `iban`, `credit card expiration date`, `username`, `health insurance number`, `registration number`, `student id number`, `insurance number`, `flight number`, `landline phone number`, `blood type`, `cvv`, `reservation number`, `digital signature`, `social media handle`, `license plate number`, `cnpj`, `postal code`, `passport_number`, `serial number`, `vehicle registration number`, `credit card brand`, `fax number`, `visa number`, `insurance company`, `identity document number`, `transaction number`, `national health insurance number`, `cvc`, `birth certificate number`, `train ticket number`, `passport expiration date`, and `social_security_number`.
-- **Biomedical**: 🧬 `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
+- **Biomedical**: 
+   - 🧬 `urchade/gliner_large_bio-v0.1` *(Apache 2.0)*
+   - [GLiNER-BioMed collection of models](https://huggingface.co/collections/Ihor/gliner-biomed-67b5dbb61225c634020de01a), trained on high-quality data corresponding to scientific articles, clinical trials, patents, drug labels, etc.
 - **Birds attribute extraction**: 🐦 `wjbmattingly/gliner-large-v2.1-bird`  *(Apache 2.0)*
 
 #### 📚 Multi-task Models
@@ -81,6 +86,11 @@ If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU fe
 !pip install gliner[gpu]
 ```
 
+If you need to use a multi-lingual model, like this [one](https://huggingface.co/collections/knowledgator/gliner-x-684320a3f1220315c651d2f5), please install additional dependencies for running tokenisers for different languages.
+
+```bash
+!pip install gliner[tokenizers]
+```
 ### Install via Conda
 
 ```bash
