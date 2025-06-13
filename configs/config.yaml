@@ -1,6 +1,6 @@
 # Model Configuration
 model_name: microsoft/deberta-v3-small # Hugging Face model
-labels_encoder: "BAAI/bge-small-en-v1.5"
+labels_encoder: null
 name: "span level gliner"
 max_width: 12
 hidden_size: 768
@@ -8,7 +8,7 @@ dropout: 0.3
 fine_tune: true
 subtoken_pooling: first
 fuse_layers: false
-post_fusion_schema: "l2l-l2t-t2t"
+post_fusion_schema: null #"l2l-l2t-t2t"
 span_mode: markerV0
 
 # Training Parameters
