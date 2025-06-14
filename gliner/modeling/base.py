@@ -235,7 +235,6 @@ class BaseModel(ABC, nn.Module):
         rep_batch_indices, rep_indices = torch.where(rep_mask==1)
         target_representations = representations[rep_batch_indices, rep_indices].unsqueeze(1)
 
-        print("MAIN", target_representations.shape, input_embeds.shape)
         input_embeds = torch.cat([target_representations, input_embeds], dim=1)
         decoder_attention_mask = torch.cat([torch.ones([BN, 1], device=input_embeds.device), 
                                             decoder_attention_mask], dim=1)
@@ -341,10 +340,12 @@ class SpanModel(BaseModel):
             )
 
         B, L, K, D = span_rep.shape
+
         span_rep_flat = span_rep.view(B, L * K, D)      # (B, L*K, D)
         span_mask_flat = span_mask.view(B, L * K)        # (B, L*K)
 
         if span_labels is not None:
+            # It doesn't support multi-label scenario
             span_prob_flat = span_labels.max(dim=-1).values.view(B, L * K)  # (B, L*K)
             keep = (span_prob_flat == 1) & span_mask_flat.bool()
         else:
@@ -388,6 +389,7 @@ class SpanModel(BaseModel):
                 span_mask: Optional[torch.LongTensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
                 decoder_labels:  Optional[torch.FloatTensor] = None,
+                threshold: Optional[float] = 0.5,
                 **kwargs
                 ):
 
@@ -409,11 +411,13 @@ class SpanModel(BaseModel):
         decoder_embedding, decoder_mask, decoder_loss = None, None, None
         if hasattr(self, "decoder"):
             decoder_embedding, decoder_mask = self.select_span_decoder_embedding(
-                prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask, span_labels=labels
+                        prompts_embedding, prompts_embedding_mask, span_rep, scores, 
+                                    span_mask, span_labels=labels, threshold=threshold
             )
             if decoder_labels is not None:
                 decoder_loss, decoder_outputs = self.decode_labels(
-                    decoder_embedding, decoder_mask, decoder_input_ids, decoder_attention_mask, decoder_labels
+                    decoder_embedding, decoder_mask, decoder_input_ids, 
+                                        decoder_attention_mask, decoder_labels
                 )
 
         loss = None

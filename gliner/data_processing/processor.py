@@ -362,13 +362,33 @@ class SpanProcessor(BaseProcessor):
 
     def create_decoder_labels(self, batch):
         span_entities = []
+
         for i in range(len(batch['tokens'])):
-            ner = batch['entities'][i]
-            ner = batch['entities'][i]
             tokens = batch['tokens'][i]
-            sorted_ner = sorted(ner, key=lambda x: (x[0], x[1]))
-            entities = [ent[-1] for ent in sorted_ner if ent[0]<len(tokens)]
-            span_entities.extend(entities)
+            ner = batch['entities'][i]
+            classes_to_id = batch['classes_to_id'][i]
+
+            for ent in ner:
+                start, end, label = ent
+
+                # Ensure boundaries are within the tokenized input
+                if start >= len(tokens) or end >= len(tokens):
+                    continue
+
+                # Ensure span is within max_width (+1 because span length = end - start + 1)
+                if (end - start + 1) > self.config.max_width:
+                    continue
+
+                # Ensure class is recognized
+                if label not in classes_to_id:
+                    continue
+
+                span_entities.append(label)
+
+        if len(span_entities) == 0:
+            # Handle the case where no valid entities are found
+            span_entities = ["none"]  # or some default token
+            # You may also consider raising an exception or logging
 
         tokenized_targets = self.decoder_tokenizer(
             span_entities,
@@ -376,11 +396,13 @@ class SpanProcessor(BaseProcessor):
             truncation=True,
             padding="longest",
         )
+
         tokenized_targets['labels'] = tokenized_targets['input_ids'].clone()
         return tokenized_targets
 
     def create_labels(self, batch):
         labels_batch = []
+        decoder_entity_strings = []
         for i in range(len(batch['tokens'])):
             tokens = batch['tokens'][i]
             classes_to_id = batch['classes_to_id'][i]
@@ -399,17 +421,18 @@ class SpanProcessor(BaseProcessor):
 
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
 
-            lab_flt = []
-            for span in ner:
-                if span[2] in classes_to_id:
-                    lab_flt.append(((span[0], span[1]), classes_to_id[span[2]]))
-
-            for span, class_id in lab_flt:
-                if span in span_to_index:
+            end_token_idx = (len(tokens) - 1)
+            for (start, end, label) in ner:
+                span = (start, end)
+                if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
-                    labels_one_hot[idx, class_id] = 1.0
+                    class_id = classes_to_id[label]
+                    if labels_one_hot[idx, class_id] == 0:         
+                        labels_one_hot[idx, class_id] = 1.0
+                        if end <= end_token_idx:
+                            decoder_entity_strings.append(label)
 
-            valid_span_mask = spans_idx[:, 1] > (len(tokens) - 1)
+            valid_span_mask = spans_idx[:, 1] > end_token_idx
             labels_one_hot[valid_span_mask, :] = 0.0
 
             labels_one_hot = labels_one_hot[:, 1:]
@@ -422,16 +445,25 @@ class SpanProcessor(BaseProcessor):
         else:
             labels_batch = labels_batch[0]
 
-        return labels_batch
+        decoder_tokenized_input = None
+        if self.config.decoder_mode == 'span':                   # no valid entities at all
+            decoder_tokenized_input = self.decoder_tokenizer(
+                decoder_entity_strings,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+            )
+            decoder_tokenized_input["labels"] = decoder_tokenized_input["input_ids"].clone()
+    
+        return labels_batch, decoder_tokenized_input
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels)
         if prepare_labels:
-            labels = self.create_labels(batch)
+            labels, decoder_tokenized_input = self.create_labels(batch)
             tokenized_input['labels'] = labels
 
-            if self.config.decoder_mode == 'span':
-                decoder_tokenized_input = self.create_decoder_labels(batch)
+            if decoder_tokenized_input is not None:
                 tokenized_input['decoder_input_ids'] = decoder_tokenized_input['input_ids']
                 tokenized_input['decoder_attention_mask'] = decoder_tokenized_input['attention_mask']
                 tokenized_input['decoder_labels'] = decoder_tokenized_input['labels']

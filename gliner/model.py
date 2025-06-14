@@ -398,7 +398,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         batch[key] = batch[key].to(self.device)
 
             # Perform predictions
-            model_output = self.model(**batch)
+            model_output = self.model(**batch, threshold=threshold)
             model_logits = model_output[0]
 
             if not isinstance(model_logits, torch.Tensor):
