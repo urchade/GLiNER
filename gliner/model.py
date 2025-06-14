@@ -311,7 +311,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return all_entities
 
-    def generate_labels(self, model_output, batch_size, id_to_classes, **gen_kwargs):
+    def generate_labels(self, model_output, **gen_kwargs):
         """
         Generate (or rewrite) the textual class labels for each example in the batch.
 
@@ -321,11 +321,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             Must expose `decoder_embedding` (FloatTensor, shape [N, L, H]) and
             `decoder_embedding_mask` (BoolTensor, shape [N, L]), where N is the total
             number of label placeholders across the whole minibatch.
-        batch_size : int
-            Number of input examples in the minibatch.
-        id_to_classes : list[dict[int, str]] | dict[int, str]
-            Original mapping(s) from label-id → text. If a single dict is passed,
-            the same mapping is assumed for every example.
         **gen_kwargs
             Extra args forwarded to `self.model.generate_labels` (e.g. `max_new_tokens`).
 
@@ -348,7 +343,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=10,**gen_kwargs)  # [N, S]
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
             gen_ids, skip_special_tokens=False
-        )  # list[str] of length N
+        ) 
 
         return gen_texts
     
@@ -405,23 +400,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 model_logits = torch.from_numpy(model_logits)
             
             gen_labels = None
+            id_to_classes = batch["id_to_classes"]
             if self.config.labels_decoder is not None:
                 gen_labels = self.generate_labels(model_output, model_logits.shape[0], 
                                                         batch["id_to_classes"], **gen_kwargs)
-                if self.config.decoder_mode == 'prompt':
-                    new_id_to_classes = []
-                    cursor = 0
-                    for i in range(batch_size):
-                        original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
-                        k = len(original)                    # how many labels belong to this example
-                        mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
-                        new_id_to_classes.append(mapping)
-                        cursor += k
-                    id_to_classes = new_id_to_classes
-                else:
-                    id_to_classes = batch["id_to_classes"]
-            else:
-                id_to_classes = batch["id_to_classes"]
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],
@@ -434,7 +416,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             outputs.extend(decoded_outputs)
 
         all_entities = []
-        cursor = 0
         for i, output in enumerate(outputs):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
@@ -442,9 +423,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             for start_token_idx, end_token_idx, ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                if gen_labels is not None:
-                    ent_type = gen_labels[cursor]
-                    cursor+=1
                 entities.append(
                     {
                         "start": start_token_idx_to_text_idx[start_token_idx],

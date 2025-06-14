@@ -13,7 +13,21 @@ class BaseDecoder(ABC):
     @abstractmethod
     def decode(self, *args, **kwargs):
         pass
-
+    
+    def update_id_to_classes(self, id_to_classes, gen_labels, batch_size):
+        if self.config.labels_decoder is not None:
+            if self.config.decoder_mode == 'prompt':
+                new_id_to_classes = []
+                cursor = 0
+                for i in range(batch_size):
+                    original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+                    k = len(original)                    # how many labels belong to this example
+                    mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
+                    new_id_to_classes.append(mapping)
+                    cursor += k
+                id_to_classes = new_id_to_classes
+        return id_to_classes
+    
     def greedy_search(self, spans, flat_ner=True, multi_label=False):
         if flat_ner:
             has_ov = partial(has_overlapping, multi_label=multi_label)
@@ -38,9 +52,13 @@ class BaseDecoder(ABC):
 
 
 class SpanDecoder(BaseDecoder):
-    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False):
+    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, 
+                        threshold=0.5, multi_label=False, gen_labels = None):
+        batch_size = len(tokens)
+        id_to_classes = self.update_id_to_classes(id_to_classes, gen_labels, batch_size)
         probs = torch.sigmoid(model_output)
         spans = []
+        cursor = 0
         for i, _ in enumerate(tokens):
             probs_i = probs[i]
             
@@ -51,7 +69,11 @@ class SpanDecoder(BaseDecoder):
             span_i = []
             for s, k, c in zip(*wh_i):
                 if s + k < len(tokens[i]):
-                    span_i.append((s, s + k, id_to_class_i[c + 1], probs_i[s, k, c].item()))
+                    if self.config.decoder_mode == 'span':
+                        ent_type = gen_labels[cursor]
+                    else:
+                        ent_type = id_to_class_i[c + 1]
+                    span_i.append((s, s + k, ent_type, probs_i[s, k, c].item()))
 
             span_i = self.greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
