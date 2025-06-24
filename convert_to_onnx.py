@@ -7,6 +7,22 @@ from gliner import GLiNER
 import torch
 from onnxruntime.quantization import quantize_dynamic, QuantType
 
+class GLiNERWrapper(torch.nn.Module):
+    def __init__(self, core):
+        super().__init__()
+        self.core = core.model                      
+
+    def forward(self, input_ids, attention_mask,
+                words_mask, text_lengths, span_idx = None, span_mask = None):
+        return self.core(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            words_mask=words_mask,
+            text_lengths=text_lengths,
+            span_idx=span_idx, 
+            span_mask = span_mask
+        ).logits                              
+    
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_path', type=str, default= "logs/model_12000")
@@ -26,7 +42,7 @@ if __name__ == "__main__":
     labels = ['format', 'model', 'tool', 'cat']
 
     inputs, _ = gliner_model.prepare_model_inputs([text], labels)
-        
+
     if gliner_model.config.span_mode == 'token_level':
         all_inputs =  (inputs['input_ids'], inputs['attention_mask'], 
                         inputs['words_mask'], inputs['text_lengths'])
@@ -53,14 +69,15 @@ if __name__ == "__main__":
             "logits": {0: "batch_size", 1: "sequence_length", 2: "num_spans", 3: "num_classes"},
         }
     print('Converting the model...')
+    model_wrapper = GLiNERWrapper(gliner_model)
     torch.onnx.export(
-        gliner_model.model,
+        model_wrapper,
         all_inputs,
         f=onnx_save_path,
         input_names=input_names,
         output_names=["logits"],
         dynamic_axes=dynamic_axes,
-        opset_version=14,
+        opset_version=19,
     )
 
     if args.quantize:
