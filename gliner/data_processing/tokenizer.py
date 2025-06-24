@@ -1,4 +1,8 @@
 import re
+from ..utils import is_module_available
+
+if is_module_available('langdetect'):
+    from langdetect.lang_detect_exception import LangDetectException
 
 class TokenSplitterBase():
     def __init__(self):
@@ -19,32 +23,26 @@ class WhitespaceTokenSplitter(TokenSplitterBase):
 
 class SpaCyTokenSplitter(TokenSplitterBase):
     def __init__(self, lang=None):
-        try:
-            import spacy # noqa
-        except ModuleNotFoundError as error:
-            raise error.__class__(
-                "Please install spacy with: `pip install spacy`"
-            )
+        if not is_module_available('spacy'):
+            raise ModuleNotFoundError("Please install spacy with: `pip install spacy`")
+        import spacy
         if lang is None:
-            lang = 'en'  # Default to English if no language is specified
+            lang = 'en'
         self.nlp = spacy.blank(lang)
 
     def __call__(self, text):
         doc = self.nlp(text)
         for token in doc:
-            yield token.text, token.idx, token.idx + len(token.text)            
+            yield token.text, token.idx, token.idx + len(token.text)
 
 
 class MecabKoTokenSplitter(TokenSplitterBase):
     def __init__(self):
-        try:
-            import mecab  # noqa
-        except ModuleNotFoundError as error:
-            raise error.__class__(
-                "Please install python-mecab-ko with: `pip install python-mecab-ko`"
-            )
+        if not is_module_available('mecab'):
+            raise ModuleNotFoundError("Please install python-mecab-ko with: `pip install python-mecab-ko`")
+        import mecab
         self.tagger = mecab.MeCab()
-    
+
     def __call__(self, text):
         tokens = self.tagger.morphs(text)
         last_idx = 0
@@ -57,10 +55,9 @@ class MecabKoTokenSplitter(TokenSplitterBase):
 
 class JanomeJaTokenSplitter(TokenSplitterBase):
     def __init__(self):
-        try:
-            from janome.tokenizer import Tokenizer
-        except ModuleNotFoundError:
+        if not is_module_available('janome'):
             raise ModuleNotFoundError("Please install janome with: `pip install janome`")
+        from janome.tokenizer import Tokenizer
         self.tokenizer = Tokenizer()
 
     def __call__(self, text):
@@ -74,14 +71,11 @@ class JanomeJaTokenSplitter(TokenSplitterBase):
 
 class JiebaTokenSplitter(TokenSplitterBase):
     def __init__(self):
-        try:
-            import jieba  # noqa
-        except ModuleNotFoundError as error:
-            raise error.__class__(
-                "Please install jieba with: `pip install jieba`"
-            )
+        if not is_module_available('jieba'):
+            raise ModuleNotFoundError("Please install jieba with: `pip install jieba`")
+        import jieba
         self.tagger = jieba
-    
+
     def __call__(self, text):
         tokens = self.tagger.cut(text)
         last_idx = 0
@@ -94,14 +88,11 @@ class JiebaTokenSplitter(TokenSplitterBase):
 
 class CamelArabicSplitter():
     def __init__(self):
-        try:
-            from camel_tools.tokenizers.word import simple_word_tokenize
-            self.tokenizer = simple_word_tokenize
-        except ModuleNotFoundError as error:
-            raise ModuleNotFoundError(
-                'Please install camel_tools: pip install camel-tools'
-            )
-        
+        if not is_module_available('camel_tools'):
+            raise ModuleNotFoundError('Please install camel_tools: pip install camel-tools')
+        from camel_tools.tokenizers.word import simple_word_tokenize
+        self.tokenizer = simple_word_tokenize
+
     def __call__(self, text):
         tokens = self.tokenizer(text)
         last_idx = 0
@@ -114,13 +105,11 @@ class CamelArabicSplitter():
 
 class HindiSplitter():
     def __init__(self):
-        try:
-            from indicnlp.tokenize import indic_tokenize
-            self.tokenizer = lambda text: indic_tokenize.trivial_tokenize(text, lang='hi')
-        except ModuleNotFoundError as error:
-            raise ModuleNotFoundError(
-                'Please install indic-nlp-librarys: pip install indic-nlp-librarys'
-            )
+        if not is_module_available('indicnlp'):
+            raise ModuleNotFoundError('Please install indic-nlp-librarys: pip install indic-nlp-librarys')
+        from indicnlp.tokenize import indic_tokenize
+        self.tokenizer = lambda text: indic_tokenize.trivial_tokenize(text, lang='hi')
+
     def __call__(self, text):
         tokens = self.tokenizer(text)
         last_idx = 0
@@ -136,20 +125,16 @@ class HindiSplitter():
 
 class HanLPTokenSplitter(TokenSplitterBase):
     def __init__(self, model_name="FINE_ELECTRA_SMALL_ZH"):
-        try:
-            import hanlp  # noqa
-            import hanlp.pretrained
-        except ModuleNotFoundError as error:
-            raise error.__class__(
-                "Please install hanlp with: `pip install hanlp`"
-            )
-
+        if not is_module_available('hanlp'):
+            raise ModuleNotFoundError("Please install hanlp with: `pip install hanlp`")
+        import hanlp
+        import hanlp.pretrained
         models = hanlp.pretrained.tok.ALL
         if model_name not in models:
             raise ValueError(f"HanLP: {model_name} is not available, choose between {models.keys()}")
         url = models[model_name]
         self.tagger = hanlp.load(url)
-    
+
     def __call__(self, text):
         tokens = self.tagger(text)
         last_idx = 0
@@ -162,11 +147,9 @@ class HanLPTokenSplitter(TokenSplitterBase):
 
 class MultiLangWordsSplitter(TokenSplitterBase):
     def __init__(self, logging=False, use_spacy=True):
-        try:
-            from langdetect import detect, DetectorFactory
-            from langdetect.lang_detect_exception import LangDetectException
-        except ImportError:
+        if not is_module_available('langdetect'):
             raise ImportError("Please install langdetect with: `pip install langdetect`")
+        from langdetect import detect, DetectorFactory
         DetectorFactory.seed = 0
         self.detect = detect
         self.lang2splitter = {
@@ -217,7 +200,7 @@ class WordsSplitter(TokenSplitterBase):
         elif splitter_type == 'jieba':
             self.splitter = JiebaTokenSplitter()
         elif splitter_type == 'hanlp':
-            self.splitter = HanLPTokenSplitter()  
+            self.splitter = HanLPTokenSplitter()
         elif splitter_type == 'janome':
             self.splitter = JanomeJaTokenSplitter()
         elif splitter_type == 'camel':
