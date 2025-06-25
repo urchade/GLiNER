@@ -73,11 +73,11 @@ class JiebaTokenSplitter(TokenSplitterBase):
     def __init__(self):
         if not is_module_available('jieba'):
             raise ModuleNotFoundError("Please install jieba with: `pip install jieba`")
-        import jieba
-        self.tagger = jieba
+        import jieba3
+        self.tagger = jieba3.jieba3()
 
     def __call__(self, text):
-        tokens = self.tagger.cut(text)
+        tokens = self.tagger.cut_text(text)
         last_idx = 0
         for token in tokens:
             start_idx = text.find(token, last_idx)
