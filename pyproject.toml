@@ -51,7 +51,7 @@ tokenizers = [
     "langdetect",
     "python-mecab-ko",
     "janome",
-    "jieba",
+    "jieba3",
     "camel_tools",
     "indic-nlp-library",
     "spacy"
