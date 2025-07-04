@@ -351,8 +351,8 @@ class SpanModel(BaseModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, 
-                                    prob_margin = prob_margin, masking=masking)
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, 
+                                        label_smoothing, negatives, masking=masking)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -432,7 +432,7 @@ class TokenModel(BaseModel):
     def loss(self, scores, labels, prompts_embedding_mask, mask,
              alpha: float = -1., gamma: float = 0.0, prob_margin: float=  0.0,
              label_smoothing: float = 0.0, reduction: str = 'sum', negatives=1, **kwargs):
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, prob_margin=prob_margin)
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
         all_losses = all_losses * (mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
 
