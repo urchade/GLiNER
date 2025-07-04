@@ -7,6 +7,7 @@ def focal_loss_with_logits(
         targets: torch.Tensor,
         alpha: float = 0.25,
         gamma: float = 2,
+        prob_margin: float = 0.1,
         reduction: str = "none",
         label_smoothing: float = 0.0,
         ignore_index: int = -100  # default value for ignored index
@@ -54,7 +55,8 @@ def focal_loss_with_logits(
 
     # Apply focal loss modulation if gamma is greater than 0
     if gamma > 0:
-        p_t = p * targets + (1 - p) * (1 - targets)
+        neg_prob =  torch.clamp(1 - p - prob_margin, min=0)
+        p_t = p * targets + neg_prob * (1 - targets)
         loss = loss * ((1 - p_t) ** gamma)
 
     # Apply alpha weighting if alpha is specified
