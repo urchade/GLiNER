@@ -27,6 +27,7 @@ class TrainingArguments(transformers.TrainingArguments):
     others_weight_decay: Optional[float] = 0.0
     focal_loss_alpha: Optional[float] = -1
     focal_loss_gamma: Optional[float] = 0
+    focal_loss_prob_margin: Optional[float] = 0
     label_smoothing: Optional[float] = 0
     loss_reduction: Optional[str] = 'sum'
     negatives: Optional[float] = 1.0
@@ -96,6 +97,7 @@ class Trainer(transformers.Trainer):
         # Forward pass
         outputs = model(alpha = self.args.focal_loss_alpha,
                         gamma = self.args.focal_loss_gamma,
+                        prob_margin = self.args.focal_loss_prob_margin,
                         label_smoothing = self.args.label_smoothing,
                         reduction = self.args.loss_reduction,
                         negatives = self.args.negatives,

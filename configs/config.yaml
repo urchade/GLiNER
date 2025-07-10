@@ -9,10 +9,10 @@ fine_tune: true
 subtoken_pooling: first
 fuse_layers: false
 post_fusion_schema: null #"l2l-l2t-t2t"
-span_mode: markerV0
+span_mode: token_level #token_level | markerV0
 
 # Training Parameters
-num_steps: 100000
+num_steps: 15000
 train_batch_size: 8
 eval_every: 5000
 warmup_ratio: 0.05
@@ -21,6 +21,7 @@ scheduler_type: "cosine"
 # loss function
 loss_alpha: 0.75
 loss_gamma: 0
+loss_prob_margin: 0
 label_smoothing: 0
 loss_reduction: "sum"
 
