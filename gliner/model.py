@@ -334,15 +334,17 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         dec_embeds = model_output.decoder_embedding            # [N, L, H]
         dec_mask   = model_output.decoder_embedding_mask       # [N, L]
 
-        bos_id = self.data_processor.decoder_tokenizer.bos_token_id
-        bos_ids = torch.full(
-            (dec_embeds.size(0), 1), bos_id,
-            dtype=torch.long, device=dec_embeds.device
-        )                                                      # [N, 1]
+        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=15,
+                                                eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
+                                                do_sample      = True,      # or num_beams > 1
+                                                temperature    = 0.5,
+                                                top_p          = 0.9,
+                                                no_repeat_ngram_size = 2,
+                                                repetition_penalty   = 1.2,
+                                                **gen_kwargs)  # [N, S]
 
-        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=10,**gen_kwargs)  # [N, S]
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
-            gen_ids, skip_special_tokens=False
+            gen_ids, skip_special_tokens=True
         ) 
 
         return gen_texts
@@ -402,8 +404,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             gen_labels = None
             id_to_classes = batch["id_to_classes"]
             if self.config.labels_decoder is not None:
-                gen_labels = self.generate_labels(model_output, model_logits.shape[0], 
-                                                        batch["id_to_classes"], **gen_kwargs)
+                gen_labels = self.generate_labels(model_output, **gen_kwargs)
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],
@@ -412,6 +413,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 flat_ner=flat_ner,
                 threshold=threshold,
                 multi_label=multi_label,
+                gen_labels=gen_labels
             )
             outputs.extend(decoded_outputs)
 

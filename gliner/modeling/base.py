@@ -12,7 +12,7 @@ from transformers.utils import ModelOutput
 
 from .encoder import Encoder, BiEncoder
 from .decoder import Decoder
-from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
+from .layers import LstmSeq2SeqEncoder, CrossFuser, SelfAttentionBlock, create_projection_layer
 from .scorers import Scorer
 from .loss_functions import focal_loss_with_logits, cross_entropy_loss
 from .span_rep import SpanRepLayer
@@ -252,7 +252,13 @@ class BaseModel(ABC, nn.Module):
         decoder_outputs = self.decoder(inputs_embeds=inputs_embeds, attention_mask=decoder_attention_mask)
 
         if decoder_labels is not None:
-            decoder_labels = torch.cat([decoder_labels, decoder_input_ids[:,-1].unsqueeze(1)], dim=1)
+            ignore_col = torch.full(
+                (decoder_labels.size(0), 1),
+                -100,
+                dtype=decoder_labels.dtype,
+                device=decoder_labels.device,
+            )
+            decoder_labels = torch.cat([decoder_labels, ignore_col], dim=1)  # (B*N, S)
             loss = cross_entropy_loss(decoder_outputs, decoder_labels)
         else:
             loss = None
@@ -322,6 +328,10 @@ class SpanModel(BaseModel):
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
 
+        if self.config.labels_decoder is not None:
+            num_heads = self.decoder.decoder_hidden_size//(self.decoder.decoder_hidden_size//8)
+            self.span_attn_layer = SelfAttentionBlock(self.decoder.decoder_hidden_size, num_heads = num_heads)
+
     def select_span_decoder_embedding(
         self,
         prompts_embedding: torch.FloatTensor,            # (B, C, D)
@@ -347,11 +357,11 @@ class SpanModel(BaseModel):
         if span_labels is not None:
             # It doesn't support multi-label scenario
             span_prob_flat = span_labels.max(dim=-1).values.view(B, L * K)  # (B, L*K)
-            keep = (span_prob_flat == 1) & span_mask_flat.bool()
+            keep = (span_prob_flat == 1).bool() #& span_mask_flat.bool()
         else:
             span_prob_flat = torch.sigmoid(span_scores)      # (B, L, K, C)
             span_prob_flat = span_prob_flat.max(dim=-1).values.view(B, L * K)  # (B, L*K)
-            keep = (span_prob_flat >= threshold) & span_mask_flat.bool()
+            keep = (span_prob_flat > threshold) & span_mask_flat.bool()
         
         if top_k is not None and top_k > 0:
             sel_scores = span_prob_flat.masked_fill(~keep, -1.0)
@@ -414,6 +424,8 @@ class SpanModel(BaseModel):
                         prompts_embedding, prompts_embedding_mask, span_rep, scores, 
                                     span_mask, span_labels=labels, threshold=threshold
             )
+            decoder_embedding = self.span_attn_layer(decoder_embedding, decoder_mask)
+            
             if decoder_labels is not None:
                 decoder_loss, decoder_outputs = self.decode_labels(
                     decoder_embedding, decoder_mask, decoder_input_ids, 

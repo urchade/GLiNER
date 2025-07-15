@@ -85,22 +85,10 @@ def cross_entropy_loss(
         **kwargs
 ) -> torch.Tensor:
 
-    valid_mask = targets != ignore_index
-
     cls_size = inputs.shape[-1]
     inputs = inputs.reshape(-1, cls_size)
     targets = targets.reshape(-1)
     loss = F.cross_entropy(inputs, targets, ignore_index = ignore_index, 
-                            label_smoothing = label_smoothing, reduction="none")
+                            label_smoothing = label_smoothing, reduction=reduction)
 
-    if reduction == "none":
-        return loss
-    elif reduction == "mean":
-        return loss.sum() / valid_mask.sum()  # Normalize by the number of valid (non-ignored) elements
-    elif reduction == "sum":
-        return loss.sum()
-    else:
-        raise ValueError(
-            f"Invalid value for argument 'reduction': '{reduction}'. "
-            f"Supported reduction modes: 'none', 'mean', 'sum'"
-        )
+    return loss

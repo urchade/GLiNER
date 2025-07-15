@@ -16,6 +16,7 @@ class GLiNERConfig(PretrainedConfig):
                  fine_tune: bool = True,
                  subtoken_pooling: str = "first",
                  decoder_mode: str = None, #prompt|span
+                 full_decoder_context: bool = True,
                  span_mode: str = "markerV0",
                  post_fusion_schema: str = '', #l2l-l2t-t2t
                  num_post_fusion_layers: int = 1, 
@@ -67,6 +68,7 @@ class GLiNERConfig(PretrainedConfig):
         self.fine_tune = fine_tune
         self.subtoken_pooling = subtoken_pooling
         self.decoder_mode = decoder_mode
+        self.full_decoder_context = full_decoder_context
         self.span_mode = span_mode
         self.post_fusion_schema = post_fusion_schema
         self.num_post_fusion_layers = num_post_fusion_layers

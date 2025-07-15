@@ -80,7 +80,7 @@ class Trainer(transformers.Trainer):
                 self.accelerator.backward(loss, **kwargs)
 
             return loss.detach() / self.args.gradient_accumulation_steps
-        except Exception as e:
+        except Exception as e: 
             print(f"Skipping iteration due to error: {e}")
             model.zero_grad(set_to_none=True)
             torch.cuda.empty_cache()

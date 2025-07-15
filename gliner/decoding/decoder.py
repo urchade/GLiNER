@@ -71,6 +71,7 @@ class SpanDecoder(BaseDecoder):
                 if s + k < len(tokens[i]):
                     if self.config.decoder_mode == 'span':
                         ent_type = gen_labels[cursor]
+                        cursor+=1
                     else:
                         ent_type = id_to_class_i[c + 1]
                     span_i.append((s, s + k, ent_type, probs_i[s, k, c].item()))
