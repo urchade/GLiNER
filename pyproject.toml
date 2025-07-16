@@ -54,7 +54,8 @@ tokenizers = [
     "jieba3",
     "camel_tools",
     "indic-nlp-library",
-    "spacy"
+    "spacy",
+    "stanza"
 ]
 
 
