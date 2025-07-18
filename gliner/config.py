@@ -15,6 +15,8 @@ class GLiNERConfig(PretrainedConfig):
                  fine_tune: bool = True,
                  subtoken_pooling: str = "first",
                  span_mode: str = "markerV0",
+                 relations_layer: str = None,
+                 triples_layer: str = None,
                  post_fusion_schema: str = '', #l2l-l2t-t2t
                  num_post_fusion_layers: int = 1, 
                  vocab_size: int = -1,
@@ -26,9 +28,11 @@ class GLiNERConfig(PretrainedConfig):
                  fuse_layers: bool = False,
                  embed_ent_token: bool = True,
                  class_token_index: int = -1,
+                 rel_token_index: int = -1, 
                  encoder_config: Optional[dict] = None,
                  labels_encoder_config: Optional[dict] = None,
                  ent_token = "<<ENT>>",
+                 rel_token = "<<REL>>",
                  sep_token = "<<SEP>>",
                  _attn_implementation = None,
                  **kwargs):
@@ -66,10 +70,14 @@ class GLiNERConfig(PretrainedConfig):
         self.has_rnn = has_rnn
         self.fuse_layers = fuse_layers
         self.class_token_index = class_token_index
+        self.rel_token_index = rel_token_index
         self.embed_ent_token = embed_ent_token
         self.ent_token = ent_token
         self.sep_token = sep_token
+        self.rel_token = rel_token
         self._attn_implementation = _attn_implementation
+        self.relations_layer = relations_layer
+        self.triples_layer = triples_layer
 
 # Register the configuration
 from transformers import CONFIG_MAPPING

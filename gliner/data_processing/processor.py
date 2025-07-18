@@ -22,6 +22,9 @@ class BaseProcessor(ABC):
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
         self.sep_token = config.sep_token
+        self.rel_token = config.rel_token
+
+        self.relations_layer = config.relations_layer
 
         self.preprocess_text = preprocess_text
 
@@ -57,9 +60,17 @@ class BaseProcessor(ABC):
                 dict_tag[(span[0], span[1])] = classes_to_id[span[2]]
         return dict_tag
 
+    @staticmethod
+    def get_rel_dict(rels: List[Tuple[int, int, str]], classes_to_id: Dict[str, int]) -> Dict[Tuple[int, int], int]:
+        dict_tag = defaultdict(int)
+        for rel in rels:
+            if rel[1] in classes_to_id:
+                dict_tag[(rel[0], rel[2])] = classes_to_id[rel[1]]
+        return dict_tag
+    
     @abstractmethod
     def preprocess_example(self, tokens: List[str], ner: List[Tuple[int, int, str]],
-                         classes_to_id: Dict[str, int]) -> Dict:
+                         classes_to_id: Dict[str, int], relations = None, rel_classes_to_id = None) -> Dict:
         raise NotImplementedError("Subclasses should implement this method")
 
     @abstractmethod
@@ -80,6 +91,17 @@ class BaseProcessor(ABC):
         random.shuffle(ent_types)
         return ent_types[:sampled_neg]
 
+    @staticmethod
+    def get_negatives_rels(batch_list: List[Dict], sampled_neg: int = 5) -> List[str]:
+        rel_types = []
+        for b in batch_list:
+            if 'rel' in b:
+                types = set([el[-1] for el in b['rel']])
+                rel_types.extend(list(types))
+        rel_types = list(set(rel_types))
+        random.shuffle(rel_types)
+        return rel_types[:sampled_neg]
+    
     def prepare_text(self, text):
         new_text = []
         for token in text:
@@ -99,7 +121,7 @@ class BaseProcessor(ABC):
         texts = [self.prepare_text(text) for text in texts]
         return texts
 
-    def prepare_inputs(self, texts, entities):
+    def prepare_inputs(self, texts, entities, relations = None):
         input_texts = []
         prompt_lengths = []
         for id, text in enumerate(texts):
@@ -112,6 +134,18 @@ class BaseProcessor(ABC):
                 input_text.append(self.ent_token)
                 input_text.append(ent)
             input_text.append(self.sep_token)
+            
+            if relations is not None:
+                if type(relations) == dict:
+                    relations_ = relations
+                else:
+                    relations_ = relations[id]
+
+                for rel in relations_:
+                    input_text.append(self.rel_token)
+                    input_text.append(rel)
+                input_text.append(self.sep_token)
+
             prompt_length = len(input_text)
             prompt_lengths.append(prompt_length)
             input_text.extend(text)
@@ -144,8 +178,8 @@ class BaseProcessor(ABC):
             words_masks.append(words_mask)
         return words_masks
     
-    def tokenize_inputs(self, texts, entities):
-        input_texts, prompt_lengths = self.prepare_inputs(texts, entities)
+    def tokenize_inputs(self, texts, entities, relations = None):
+        input_texts, prompt_lengths = self.prepare_inputs(texts, entities, relations = None)
 
         if self.preprocess_text:
             input_texts = self.prepare_texts(input_texts)
@@ -162,6 +196,13 @@ class BaseProcessor(ABC):
             negatives = self.get_negatives(batch_list, 100)
         class_to_ids = []
         id_to_classes = []
+
+        rel_class_to_ids = []
+        rel_id_to_classes = []
+        has_rel = {True for b in batch_list if 'relations' in b}
+        if True in has_rel:
+            negatives_rels = self.get_negatives_rels(batch_list, 100)
+
         for b in batch_list:
             max_neg_type_ratio = int(self.config.max_neg_type_ratio)
             neg_type_ratio = random.randint(0, max_neg_type_ratio) if max_neg_type_ratio else 0
@@ -183,15 +224,44 @@ class BaseProcessor(ABC):
             class_to_ids.append(class_to_id)
             id_to_classes.append(id_to_class)
 
-        return class_to_ids, id_to_classes
+            
+            if self.relations_layer is not None and True in has_rel:
+                if 'relations' in b:
+                    negs_i = negatives_rels[:len(b["relations"]) * neg_type_ratio] if neg_type_ratio else []
+                    types = list(set([el[-1] for el in b["relations"]] + negs_i))
+                else:
+                    types = negatives_rels
 
+                random.shuffle(types)
+                types = types[:int(self.config.max_types)]
+
+                if "relation_label" in b: # labels are predefined
+                    types = b["relation_label"]
+
+                rel_class_to_id = {k: v for v, k in enumerate(types, start=1)}
+                rel_id_to_class = {k: v for v, k in class_to_id.items()}
+                rel_class_to_ids.append(rel_class_to_id)
+                rel_id_to_classes.append(rel_id_to_class)
+                
+        return class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_class
+    
     def collate_raw_batch(self, batch_list: List[Dict], entity_types: List[Union[str, List[str]]] = None, 
-                        negatives: List[str] = None, class_to_ids: Dict = None, id_to_classes: Dict = None) -> Dict:
+                        negatives: List[str] = None, class_to_ids: Dict = None, id_to_classes: Dict = None,
+                        relation_types: List[Union[str, List[str]]] = None, 
+                        rel_class_to_ids: Dict = None, rel_id_to_classes: Dict = None ) -> Dict:
+        def build_mapping(types):
+            """Create forward and reverse mapping for types."""
+            types = list(dict.fromkeys(types))  # Remove duplicates, preserve order
+            mapping = {k: v for v, k in enumerate(types, start=1)}
+            return mapping, {v: k for k, v in mapping.items()}
+        
         if entity_types is None and class_to_ids is None:
             # Generate mappings dynamically based on batch content
-            class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
+            class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_class = self.batch_generate_class_mappings(batch_list, negatives)
             batch = [
-                self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) 
+                self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i],
+                                        b['relations'] if 'relations' in b else None, 
+                                        rel_class_to_ids[i] if rel_class_to_ids is not None else None) 
                 for i, b in enumerate(batch_list)
             ]
         else:
@@ -201,29 +271,47 @@ class BaseProcessor(ABC):
                     class_to_ids = []
                     id_to_classes = []
                     for i, types in enumerate(entity_types):
-                        types = list(dict.fromkeys(types))
-                        mapping = {k: v for v, k in enumerate(types, start=1)}
+                        mapping, rev = build_mapping(types)
                         class_to_ids.append(mapping)
-                        id_to_classes.append({v: k for k, v in mapping.items()})
+                        id_to_classes.append(rev)
+
+                    if relation_types is not None:
+                        rel_class_to_ids = []
+                        rel_id_to_classes = []
+                    
+                        for i, types in enumerate(relation_types):
+                            mapping, rev = build_mapping(types)
+                            rel_class_to_ids.append(mapping)
+                            rel_id_to_classes.append(rev)
+
                     batch = [
-                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i]) 
+                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids[i],
+                                                b['relations'] if 'relations' in b else None, 
+                                                rel_class_to_ids[i] if rel_class_to_ids is not None else None)
                         for i, b in enumerate(batch_list)
                     ]
                 else:  # Single list of strings
                     class_to_ids = {k: v for v, k in enumerate(entity_types, start=1)}
                     id_to_classes = {v: k for k, v in class_to_ids.items()}
+                    if relation_types is not None:
+                        rel_class_to_ids = {k: v for v, k in enumerate(relation_types, start=1)}
+                        rel_id_to_classes = {v: k for k, v in class_to_ids.items()}
                     batch = [
-                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) 
+                        self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids,
+                                                b['relations'] if 'relations' in b else None, 
+                                                rel_class_to_ids) 
                         for b in batch_list
                     ]
             else:
                 # Use provided mappings
                 batch = [
-                    self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids) 
+                    self.preprocess_example(b["tokenized_text"], b["ner"], class_to_ids,
+                                            b['relations'] if 'relations' in b else None, 
+                                            rel_class_to_ids[i] if rel_class_to_ids is not None else None) 
                     for b in batch_list
                 ]
         
-        return self.create_batch_dict(batch, class_to_ids, id_to_classes)
+        return self.create_batch_dict(batch, class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes)
 
 
     def collate_fn(self, batch, prepare_labels=True, *args, **kwargs):
@@ -232,7 +320,9 @@ class BaseProcessor(ABC):
     
     @abstractmethod
     def create_batch_dict(self, batch: List[Dict], class_to_ids: List[Dict[str, int]],
-                          id_to_classes: List[Dict[int, str]]) -> Dict:
+                          id_to_classes: List[Dict[int, str]],
+                          rel_class_to_ids: List[Dict[str, int]] = None,
+                          rel_id_to_classes: List[Dict[int, str]] = None) -> Dict:
         raise NotImplementedError("Subclasses should implement this method")
 
     def create_dataloader(self, data, entity_types=None, *args, **kwargs) -> DataLoader:
@@ -288,7 +378,7 @@ class BaseBiEncoderProcessor(BaseProcessor):
         return class_to_ids, id_to_classes
     
 class SpanProcessor(BaseProcessor):    
-    def preprocess_example(self, tokens, ner, classes_to_id):
+    def preprocess_example(self, tokens, ner, classes_to_id, relations = None, rel_classes_to_id = None):
         if len(tokens) == 0:
             tokens = ["[PAD]"]
         max_len = self.config.max_len
@@ -309,13 +399,15 @@ class SpanProcessor(BaseProcessor):
             "span_label": span_label,
             "seq_length": len(tokens),
             "entities": ner,
+            "relations": relations
         }
 
-    def create_batch_dict(self, batch, class_to_ids, id_to_classes):
+    def create_batch_dict(self, batch, class_to_ids, id_to_classes, rel_class_to_ids = None, rel_id_to_classes = None):
         tokens = [el["tokens"] for el in batch]
         entities = [el["entities"] for el in batch]
         span_idx = pad_sequence([b["span_idx"] for b in batch], batch_first=True, padding_value=0)
         span_label = pad_sequence([el["span_label"] for el in batch], batch_first=True, padding_value=-1)
+        
         seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
         span_mask = span_label != -1
 
@@ -328,6 +420,8 @@ class SpanProcessor(BaseProcessor):
             "entities": entities,
             "classes_to_id": class_to_ids,
             "id_to_classes": id_to_classes,
+            "rel_class_to_ids": rel_class_to_ids,
+            "rel_id_to_classes": rel_id_to_classes
         }
 
     def create_labels(self, batch):
@@ -374,12 +468,72 @@ class SpanProcessor(BaseProcessor):
             labels_batch = labels_batch[0]
 
         return labels_batch
-    
+
+    def create_relation_labels(self, batch):
+        B = len(batch['tokens'])
+        entity_label = batch['span_label']
+        relation_label = batch['rel_label']
+        
+        entities_list = batch['entities']
+        relations_list = batch['relations']
+
+        max_En = torch.max(torch.sum(entity_label>0, dim=-1))
+        max_Rn = torch.max(torch.sum(relation_label>0, dim=-1))
+
+        rel_classes_to_id = batch['rel_class_to_ids']
+        C = len(rel_classes_to_id)
+
+        adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
+        rel_matrix = torch.zeros(B, max_Rn, C, dtype=torch.float)
+
+        for i in range(B):
+            seq_len = batch['seq_length'][i].item()
+            entities = entities_list[i]
+            
+            valid_entities = [ent for ent in entities if ent[1] <= seq_len - 1]
+            N = len(valid_entities)
+
+            valid_ent_mask = [ent[1] <= seq_len - 1 for ent in entities]
+            valid_ent_old_indices = [idx for idx, is_valid in enumerate(valid_ent_mask) if is_valid]
+            new_ent_idx = {old: new for new, old in enumerate(valid_ent_old_indices)}
+
+            adj = torch.zeros(N, N)
+            pos_pairs = []
+
+            rel_idx_i = batch['rel_idx'][i]
+            rel_label_i = batch['rel_label'][i]
+
+            for k in range(rel_label_i.shape[0]):
+                if rel_label_i[k] > 0:
+                    e1 = rel_idx_i[k, 0].item()
+                    e2 = rel_idx_i[k, 1].item()
+                    if e1 in new_ent_idx and e2 in new_ent_idx:
+                        new_e1 = new_ent_idx[e1]
+                        new_e2 = new_ent_idx[e2]
+                        adj[new_e1, new_e2] = 1.0
+                        class_id = rel_label_i[k].item()
+                        pos_pairs.append(class_id)
+
+            adj_matrix[i, :N, :N] = adj
+
+            one_hots = torch.zeros(len(pos_pairs), C)
+            for k, class_id in enumerate(pos_pairs):
+                one_hots[k, class_id] = 1.0
+            rel_matrix[i, :len(pos_pairs), :] = one_hots
+
+        return adj_matrix, rel_matrix
+
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input['labels'] = labels
+
+            if self.relations_layer is not None:
+                adj_matrix, rel_matrix = self.create_relation_labels(batch)
+                tokenized_input['adj_matrix'] = adj_matrix
+                tokenized_input['rel_matrix'] = rel_matrix
+
         return tokenized_input
 
 class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):   
@@ -399,7 +553,7 @@ class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):
 
 
 class TokenProcessor(BaseProcessor):
-    def preprocess_example(self, tokens, ner, classes_to_id):
+    def preprocess_example(self, tokens, ner, classes_to_id, *args, **kwargs):
         # Ensure there is always a token list, even if it's empty
         if len(tokens) == 0:
             tokens = ["[PAD]"]
@@ -425,7 +579,7 @@ class TokenProcessor(BaseProcessor):
         }
         return example
 
-    def create_batch_dict(self, batch, class_to_ids, id_to_classes):
+    def create_batch_dict(self, batch, class_to_ids, id_to_classes, *args, **kwargs):
         # Extract relevant data from batch for batch processing
         tokens = [el["tokens"] for el in batch]
         seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
