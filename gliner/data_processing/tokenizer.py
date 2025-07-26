@@ -187,6 +187,85 @@ class MultiLangWordsSplitter(TokenSplitterBase):
         yield from splitter(text)
 
 
+class StanzaWordsSplitter(TokenSplitterBase):
+    def __init__(
+        self,
+        default_lang: str = "en",
+        download_on_missing: bool = True,
+        logging: bool = False,
+    ):
+        if not is_module_available("stanza"):
+            raise ModuleNotFoundError(
+                "Please install stanza with: `pip install stanza`"
+            )
+        if not is_module_available("langdetect"):
+            raise ModuleNotFoundError(
+                "Please install langdetect with: `pip install langdetect`"
+            )
+
+        import stanza
+        from langdetect import detect, DetectorFactory, LangDetectException
+
+        DetectorFactory.seed = 42
+
+        self._stanza = stanza
+        self._detect = detect
+        self._LangDetectException = LangDetectException
+
+        self.default_lang = default_lang
+        self.download_on_missing = download_on_missing
+        self.logging = logging
+
+        self._pipelines: dict[str, stanza.Pipeline | None] = {}
+        self._ensure_pipeline(default_lang)
+
+    def _ensure_pipeline(self, lang: str):
+        if lang in self._pipelines:
+            return self._pipelines[lang]
+
+        stanza = self._stanza
+        pipeline = None
+
+        try:
+            pipeline = stanza.Pipeline(
+                lang, processors="tokenize", verbose=False, download_method=None
+            )
+        except Exception:
+            pass
+
+        if pipeline is None and self.download_on_missing:
+            try:
+                if self.logging:
+                    print(f"[StanzaWordsSplitter] downloading model for '{lang}'")
+                stanza.download(lang, processors="tokenize", verbose=False)
+                pipeline = stanza.Pipeline(lang, processors="tokenize", verbose=False)
+            except Exception:
+                pipeline = None
+
+        self._pipelines[lang] = pipeline
+        return pipeline
+
+    def __call__(self, text):
+        try:
+            lang = self._detect(text)
+            if lang == "zh-cn":
+                lang = "zh"
+        except self._LangDetectException:
+            lang = self.default_lang
+
+        pipeline = self._ensure_pipeline(lang) or self._ensure_pipeline(
+            self.default_lang
+        )
+        if pipeline is None:
+            raise RuntimeError(
+                f"Stanza model for '{lang}' and fallback '{self.default_lang}' could not be loaded."
+            )
+
+        for sentence in pipeline(text).sentences:
+            for word in sentence.words:
+                yield word.text, word.start_char, word.end_char
+
+
 class WordsSplitter(TokenSplitterBase):
     def __init__(self, splitter_type='universal'):
         if splitter_type == 'universal':
@@ -207,6 +286,8 @@ class WordsSplitter(TokenSplitterBase):
             self.splitter = CamelArabicSplitter()
         elif splitter_type == 'hindi':
             self.splitter = HindiSplitter()
+        elif splitter_type == "stanza":
+            self.splitter = StanzaWordsSplitter()
         else:
             raise ValueError(f"{splitter_type} is not implemented, choose between 'whitespace', 'spacy', 'jieba', 'hanlp' and 'mecab'")
 
