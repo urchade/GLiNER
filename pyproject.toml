@@ -57,7 +57,10 @@ tokenizers = [
     "spacy",
     "stanza"
 ]
-
+stanza = [
+    "stanza",
+    "langdetect"
+]
 
 [project.urls]
 Homepage = "https://github.com/urchade/GLiNER"

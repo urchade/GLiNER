@@ -11,7 +11,7 @@ def focal_loss_with_logits(
         reduction: str = "none",
         label_smoothing: float = 0.0,
         ignore_index: int = -100,  # default value for ignored index
-        eps: float = 1e-8
+        eps: float = 1e-6
 ) -> torch.Tensor:
     """
     Loss used in RetinaNet for dense detection: https://arxiv.org/abs/1708.02002.

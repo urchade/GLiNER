@@ -91,6 +91,13 @@ If you need to use a multi-lingual model, like this [one](https://huggingface.co
 ```bash
 !pip install gliner[tokenizers]
 ```
+
+In the case of a model that uses Stanza tokeniser, you can install GLiNER with this type of tokeniser in the following way:
+
+```bash
+!pip install gliner[stanza]
+```
+
 ### Install via Conda
 
 ```bash
