@@ -19,6 +19,11 @@ GLiNER is a Named Entity Recognition (NER) model capable of identifying any enti
 ### Finetuning GLiNER
 - 📘 See this [directory](https://github.com/urchade/GLiNER/tree/main/examples/finetuning)
 
+### Demonstating GLiNER
+![GLiNER Gradio demo](assets/demo.jpg "Demo")
+
+- 🖥️ You can run an interactive Gradio demo to play with existing or your custom GLiNER models, see the [script](https://github.com/urchade/GLiNER/tree/main/demo.py)
+
 ### 🌟 Available Models on Hugging Face
 
 #### 🇬🇧 For English
