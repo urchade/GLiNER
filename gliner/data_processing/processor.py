@@ -394,6 +394,7 @@ class SpanProcessor(BaseProcessor):
             used_spans = set()
             for (start, end, label) in ner:
                 span = (start, end)
+    
                 if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
                     if self.config.decoder_mode == 'span':
@@ -402,8 +403,8 @@ class SpanProcessor(BaseProcessor):
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
                         used_spans.add(idx) # double check it
-                        labels_one_hot[idx, class_id] = 1.0
                         if end <= end_token_idx:
+                            labels_one_hot[idx, class_id] = 1.0
                             decoder_label_strings.append(f"{label}<|endoftext|>")
 
             valid_span_mask = spans_idx[:, 1] > end_token_idx
@@ -420,6 +421,8 @@ class SpanProcessor(BaseProcessor):
 
         decoder_tokenized_input = None
         if self.config.decoder_mode == 'span':                   # no valid entities at all
+            if not len(decoder_label_strings):
+                decoder_label_strings = ['other']
             decoder_tokenized_input = self.decoder_tokenizer(
                 decoder_label_strings,
                 return_tensors="pt",

@@ -31,7 +31,7 @@ if __name__ == '__main__':
     config.log_dir = args.log_dir
 
     with open(config.train_data, 'r') as f:
-        data = json.load(f)
+        data = [item for item in json.load(f) if len(item['tokenized_text']) and len(item['ner'])]
 
     print('Dataset size:', len(data))
     #shuffle
@@ -45,12 +45,12 @@ if __name__ == '__main__':
 
 
     if config.prev_path is not None:
-        tokenizer = AutoTokenizer.from_pretrained(config.prev_path)
+        tokenizer = AutoTokenizer.from_pretrained(config.prev_path, add_prefix_space=True)
         model = GLiNER.from_pretrained(config.prev_path)
         model_config = model.config
     else:
         model_config = GLiNERConfig(**vars(config))
-        tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_config.model_name, add_prefix_space=True)
     
         words_splitter = WordsSplitter(model_config.words_splitter_type)
 
