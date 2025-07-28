@@ -8,8 +8,9 @@ from transformers.training_args import OptimizerNames
 from transformers.trainer import (
     is_sagemaker_mp_enabled,
     get_parameter_names,
-    ALL_LAYERNORM_LAYERS,
+   
 )
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
 from transformers.trainer_utils import seed_worker
 
 if transformers.utils.is_apex_available():
