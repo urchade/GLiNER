@@ -10,7 +10,7 @@ from transformers.trainer import (
     get_parameter_names,
    
 )
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS
+from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS #updated to fix this bug , previously it was called from training_args
 from transformers.trainer_utils import seed_worker
 
 if transformers.utils.is_apex_available():
