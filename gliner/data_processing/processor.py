@@ -125,7 +125,7 @@ class BaseProcessor(ABC):
             input_texts.append(input_text)
         return input_texts, prompt_lengths
     
-    def prepare_word_mask(self, texts, tokenized_inputs, prompt_lengths = None):
+    def prepare_word_mask(self, texts, tokenized_inputs, prompt_lengths = None, token_level=False):
         words_masks = []
         for id in range(len(texts)):
             if prompt_lengths is not None:
@@ -138,7 +138,7 @@ class BaseProcessor(ABC):
             for word_id in tokenized_inputs.word_ids(id):
                 if word_id is None:
                     words_mask.append(0)
-                elif word_id != prev_word_id:
+                elif word_id != prev_word_id or token_level:
                     if words_count<prompt_length:
                         words_mask.append(0)
                     else:
@@ -168,6 +168,20 @@ class BaseProcessor(ABC):
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
+        if self.decoder_tokenizer is not None and self.config.decoder_mode == 'span':
+            decoder_tokenized_inputs = self.decoder_tokenizer(
+                input_texts,
+                is_split_into_words=True,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+            )
+            tokenized_inputs['decoder_input_ids'] = decoder_tokenized_inputs['input_ids']
+            tokenized_inputs['decoder_attention_mask'] = decoder_tokenized_inputs['attention_mask']
+
+            decoder_words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths, token_level=True)
+            tokenized_inputs['decoder_words_mask'] = torch.tensor(decoder_words_masks)
+
         if prepare_labels and self.config.decoder_mode == 'prompt':
             if isinstance(entities, dict):
                 entities_ = list(entities)
@@ -183,9 +197,9 @@ class BaseProcessor(ABC):
 
             target_ids = tokenized_targets["input_ids"]
             target_mask = tokenized_targets["attention_mask"]
-            tokenized_inputs["decoder_attention_mask"] = target_mask
+            tokenized_inputs["decoder_labels_mask"] = target_mask
 
-            tokenized_inputs["decoder_input_ids"] = target_ids
+            tokenized_inputs["decoder_labels_ids"] = target_ids
 
             labels = target_ids.clone()
             tokenized_inputs["decoder_labels"] = labels
@@ -444,8 +458,8 @@ class SpanProcessor(BaseProcessor):
             tokenized_input['labels'] = labels
 
             if decoder_tokenized_input is not None:
-                tokenized_input['decoder_input_ids'] = decoder_tokenized_input['input_ids']
-                tokenized_input['decoder_attention_mask'] = decoder_tokenized_input['attention_mask']
+                tokenized_input['decoder_labels_ids'] = decoder_tokenized_input['input_ids']
+                tokenized_input['decoder_labels_mask'] = decoder_tokenized_input['attention_mask']
                 tokenized_input['decoder_labels'] = decoder_tokenized_input['labels']
 
         return tokenized_input
