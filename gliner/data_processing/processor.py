@@ -144,7 +144,8 @@ class BaseProcessor(ABC):
                     else:
                         masking_word_id = word_id-prompt_length+1
                         words_mask.append(masking_word_id)
-                    words_count+=1
+                    if word_id != prev_word_id:
+                        words_count+=1
                 else:
                     words_mask.append(0)
                 prev_word_id = word_id
@@ -179,8 +180,9 @@ class BaseProcessor(ABC):
             tokenized_inputs['decoder_input_ids'] = decoder_tokenized_inputs['input_ids']
             tokenized_inputs['decoder_attention_mask'] = decoder_tokenized_inputs['attention_mask']
 
-            decoder_words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths, token_level=True)
-            tokenized_inputs['decoder_words_mask'] = torch.tensor(decoder_words_masks)
+            if self.config.full_decoder_context:
+                decoder_words_masks = self.prepare_word_mask(texts, decoder_tokenized_inputs, prompt_lengths, token_level=True)
+                tokenized_inputs['decoder_words_mask'] = torch.tensor(decoder_words_masks)
 
         if prepare_labels and self.config.decoder_mode == 'prompt':
             if isinstance(entities, dict):
@@ -416,10 +418,10 @@ class SpanProcessor(BaseProcessor):
                     else:
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
-                        used_spans.add(idx) # double check it
+                        used_spans.add(idx) 
                         if end <= end_token_idx:
                             labels_one_hot[idx, class_id] = 1.0
-                            decoder_label_strings.append(f"{label}<|endoftext|>")
+                            decoder_label_strings.append(label)
 
             valid_span_mask = spans_idx[:, 1] > end_token_idx
             labels_one_hot[valid_span_mask, :] = 0.0
@@ -434,7 +436,7 @@ class SpanProcessor(BaseProcessor):
             labels_batch = labels_batch[0]
 
         decoder_tokenized_input = None
-        if self.config.decoder_mode == 'span':                   # no valid entities at all
+        if self.config.decoder_mode == 'span':                  
             if not len(decoder_label_strings):
                 decoder_label_strings = ['other']
             decoder_tokenized_input = self.decoder_tokenizer(

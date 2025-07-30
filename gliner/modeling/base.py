@@ -259,27 +259,30 @@ class BaseModel(ABC, nn.Module):
                             **kwargs):
         span_tokens, span_tokens_mask = self.get_raw_decoder_inputs(decoder_embedding, decoder_embedding_mask)
 
-        label_embeds  = self.decoder.ids_to_embeds(decoder_labels_ids)  # (M, L, D)
+        label_embeds = self.decoder.ids_to_embeds(decoder_labels_ids)        # (M, L, D)
 
-        inputs_embeds = torch.cat([span_tokens, label_embeds], dim=1)   # (M, T+L, D)
-        
-        decoder_attention_mask = torch.cat(
-            [span_tokens_mask.to(decoder_labels_mask.dtype), decoder_labels_mask], dim=1)           # (M, T+L)
+        decoder_inputs = torch.cat([span_tokens, label_embeds[:, :-1, :]], dim=1)
 
-        decoder_outputs = self.decoder(inputs_embeds=inputs_embeds, attention_mask=decoder_attention_mask)
+        attn_inputs    = torch.cat(
+            [span_tokens_mask.to(decoder_labels_mask.dtype),
+            decoder_labels_mask[:, :-1]], dim=1
+        )
 
-        if decoder_labels is not None:
-            ignore_col = torch.full(
-                (span_tokens.size(0), span_tokens.size(1)),
-                -100,
-                dtype=decoder_labels.dtype,
-                device=decoder_labels.device,
-            )
-            decoder_labels = torch.cat([ignore_col, decoder_labels], dim=1)[:, 1:]
-            decoder_outputs = decoder_outputs[:,:-1,:]
-            loss = cross_entropy_loss(decoder_outputs, decoder_labels)
-        else:
-            loss = None
+        decoder_outputs = self.decoder(inputs_embeds=decoder_inputs,
+                                    attention_mask=attn_inputs)           # (M, S+L‑1, V)
+
+        blank_for_spans = torch.full(                       
+            (decoder_labels.size(0), span_tokens.size(1)),
+            -100, dtype=decoder_labels.dtype, device=decoder_labels.device
+        )
+
+        targets = torch.cat([blank_for_spans, decoder_labels], dim=1)        # (M, S+L)
+
+        loss = cross_entropy_loss(
+            decoder_outputs,                      # logits
+            targets[:, 1:]                        # same length as logits
+        )
+
         return (loss, decoder_outputs)
 
     def generate_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, D
@@ -398,11 +401,13 @@ class SpanModel(BaseModel):
         if decoder_text_embeds is None or decoder_words_mask is None:
             return span_rep_kept, span_msk.unsqueeze(-1), span_sel_idx
 
+        decoder_text_embeds = decoder_text_embeds.to(dtype=span_rep_kept.dtype)
+        
         S = span_rep_kept.shape[1]
         dec_D = span_rep_kept.shape[-1]
 
         span_start = span_sel_idx//self.config.max_width+1
-        span_end = span_sel_idx%self.config.max_width
+        span_end = span_sel_idx%self.config.max_width+span_start
 
         token_in_span = (
             (decoder_words_mask.unsqueeze(1) >= span_start.unsqueeze(-1)) &
@@ -412,7 +417,7 @@ class SpanModel(BaseModel):
         tokens_per_span = token_in_span.sum(-1)                 # (B, S)
         max_tokens = int(tokens_per_span.max())            # scalar python int
 
-        span_rep_new  = decoder_text_embeds.new_zeros(B, S, max_tokens + 1, dec_D)  # (B,S,T+1,D)
+        span_rep_new  = span_rep_kept.new_zeros(B, S, max_tokens + 1, dec_D)  # (B,S,T+1,D)
         span_rep_mask = torch.zeros(B, S, max_tokens + 1, dtype=torch.bool,
                                     device=decoder_text_embeds.device)
 

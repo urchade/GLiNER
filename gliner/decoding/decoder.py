@@ -77,25 +77,25 @@ class SpanDecoder(BaseDecoder):
             (`sel_idx` flattened row‑major).
         """
         B, L, K, C = model_output.shape
-        probs       = torch.sigmoid(model_output)
+        probs = torch.sigmoid(model_output)
 
         span_label_maps = [{} for _ in range(B)]        # one dict per sample
         if self.config.decoder_mode == "span" and sel_idx is not None and gen_labels is not None:
             cursor = 0
             for b in range(B):
                 valid_pos = (sel_idx[b] != -1)
-                n         = valid_pos.sum().item()
+                n = valid_pos.sum().item()
                 if n:                                     # map only if we kept spans
                     flat_indices = sel_idx[b, valid_pos].tolist()
-                    labels_b     = gen_labels[cursor : cursor + n]
+                    labels_b = gen_labels[cursor : cursor + n]
                     span_label_maps[b] = dict(zip(flat_indices, labels_b))
                 cursor += n
-        print(span_label_maps,'\n', gen_labels)
+
         spans = []
         for i in range(B):
-            probs_i        = probs[i]
+            probs_i = probs[i]
             id_to_class_i  = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
-            span_i         = []
+            span_i = []
 
             s_idx, k_idx, c_idx = torch.where(probs_i > threshold)
             for s, k, c in zip(s_idx.tolist(), k_idx.tolist(), c_idx.tolist()):

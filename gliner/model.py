@@ -336,9 +336,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=15,
                                                 eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
-                                                do_sample      = True,      # or num_beams > 1
+                                                do_sample      = True,
                                                 temperature    = 0.01,
-                                                top_p          = 0.99,
                                                 no_repeat_ngram_size = 1,
                                                 repetition_penalty   = 1.1,
                                                 **gen_kwargs)  # [N, S]
@@ -369,9 +368,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         self.eval()
         # raw input preparation
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
-
-        # labels = list(dict.fromkeys(labels))
-
+        
         collator = DataCollator(
             self.config,
             data_processor=self.data_processor,
