@@ -170,8 +170,9 @@ class BaseProcessor(ABC):
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
         if self.decoder_tokenizer is not None and self.config.decoder_mode == 'span':
+            decoder_input_texts = [[f" {t}" for t in tokens] for tokens in input_texts]
             decoder_tokenized_inputs = self.decoder_tokenizer(
-                input_texts,
+                decoder_input_texts,
                 is_split_into_words=True,
                 return_tensors="pt",
                 truncation=True,
@@ -390,27 +391,23 @@ class SpanProcessor(BaseProcessor):
             classes_to_id = batch['classes_to_id'][i]
             ner = batch['entities'][i]
             num_classes = len(classes_to_id)
-
-            spans_idx = [(start, start + width)
-                         for start in range(len(tokens))
-                         for width in range(self.config.max_width)]
-            spans_idx = torch.LongTensor(spans_idx)
-
+            spans_idx = torch.LongTensor([
+                (start, start + width)
+                for start in range(len(tokens))
+                for width in range(self.config.max_width)
+            ])
             span_to_index = {
                 (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
                 for idx in range(len(spans_idx))
             }
-
             if self.config.decoder_mode == 'span':
                 num_classes = 1
-
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
-
             end_token_idx = (len(tokens) - 1)
             used_spans = set()
+            span_labels_dict = {}
             for (start, end, label) in ner:
                 span = (start, end)
-    
                 if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
                     if self.config.decoder_mode == 'span':
@@ -418,25 +415,23 @@ class SpanProcessor(BaseProcessor):
                     else:
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
-                        used_spans.add(idx) 
+                        used_spans.add(idx)
                         if end <= end_token_idx:
                             labels_one_hot[idx, class_id] = 1.0
-                            decoder_label_strings.append(label)
-
+                            span_labels_dict[idx] = label
             valid_span_mask = spans_idx[:, 1] > end_token_idx
             labels_one_hot[valid_span_mask, :] = 0.0
-
             labels_one_hot = labels_one_hot[:, 1:]
-
             labels_batch.append(labels_one_hot)
-
+            sorted_idxs = sorted(span_labels_dict.keys())
+            for idx in sorted_idxs:
+                decoder_label_strings.append(span_labels_dict[idx])
         if len(labels_batch) > 1:
             labels_batch = pad_2d_tensor(labels_batch)
         else:
             labels_batch = labels_batch[0]
-
         decoder_tokenized_input = None
-        if self.config.decoder_mode == 'span':                  
+        if self.config.decoder_mode == 'span':
             if not len(decoder_label_strings):
                 decoder_label_strings = ['other']
             decoder_tokenized_input = self.decoder_tokenizer(

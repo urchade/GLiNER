@@ -92,6 +92,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 self.data_processor = data_processor
             self.decoder = SpanDecoder(config)
 
+        self.model.data_processor = self.data_processor # for debugging purposes
+        
         if config.vocab_size != -1 and config.vocab_size != len(
             self.data_processor.transformer_tokenizer
         ):
@@ -345,7 +347,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
             gen_ids, skip_special_tokens=True
         ) 
-
         return gen_texts
     
     @torch.no_grad()
