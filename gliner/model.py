@@ -20,6 +20,7 @@ from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcess
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
+from .decoding.trie import LabelsTrie
 from .evaluation import Evaluator
 from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
@@ -313,6 +314,24 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         return all_entities
 
+    def set_labels_trie(self, labels: List[str]):
+        """
+        Initializing the labels trie
+
+        Args:
+            labels (List[str]): Labels that will be used.
+        """ 
+        tokenized_labels = []
+        if self.data_processor.decoder_tokenizer is None:
+            raise NotImplementedError("Label trie is implemented only to models with decoder.")
+        for label in labels:
+            tokens = self.data_processor.decoder_tokenizer.encode(label) # type: ignore
+            if tokens[0] == self.data_processor.decoder_tokenizer.bos_token_id:
+                tokens = tokens[1:]
+            tokenized_labels.append(tokens) # type: ignore
+        trie = LabelsTrie(tokenized_labels)
+        return trie
+    
     def generate_labels(self, model_output, **gen_kwargs):
         """
         Generate (or rewrite) the textual class labels for each example in the batch.
@@ -351,7 +370,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, **gen_kwargs
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, gen_constraints = None, **gen_kwargs
     ):
         """
         Predict entities for a batch of texts.
@@ -402,7 +421,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             gen_labels = None
             id_to_classes = batch["id_to_classes"]
             if self.config.labels_decoder is not None:
-                gen_labels = self.generate_labels(model_output, **gen_kwargs)
+                if gen_constraints is not None:
+                    labels_trie = self.set_labels_trie(gen_constraints)
+                else:
+                    labels_trie = None
+                gen_labels = self.generate_labels(model_output, labels_trie=labels_trie, **gen_kwargs)
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],

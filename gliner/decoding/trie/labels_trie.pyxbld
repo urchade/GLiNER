@@ -1,0 +1,9 @@
+from setuptools import Extension
+from Cython.Build import cythonize
+
+def make_ext(modname, pyxfilename):
+    import pathlib
+    path = pathlib.Path(__file__).parent.resolve()
+    ext = Extension("labels_trie", [f"{path}/labels_trie.pyx"], language='c++', extra_compile_args=['-std=c++17'])
+    ext.cython_directives = {'language_level': '3'}
+    return cythonize([ext])[0]

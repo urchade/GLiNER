@@ -170,7 +170,7 @@ class BaseProcessor(ABC):
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
 
         if self.decoder_tokenizer is not None and self.config.decoder_mode == 'span':
-            decoder_input_texts = [[f" {t}" for t in tokens] for tokens in input_texts]
+            decoder_input_texts = [[f" {t}" if i else t for i, t in enumerate(tokens)] for tokens in input_texts]
             decoder_tokenized_inputs = self.decoder_tokenizer(
                 decoder_input_texts,
                 is_split_into_words=True,

@@ -8,6 +8,8 @@ from transformers import AutoModelForCausalLM, AutoConfig
 from ..utils import is_module_available, MissedPackageException
 from typing import Optional, Union
 
+from ..decoding.trie import LabelsTrie
+
 IS_PEFT = is_module_available('peft')
 
 if IS_PEFT:
@@ -82,6 +84,7 @@ class Decoder(nn.Module):
         pad_token_id: Optional[int] = None,
         temperature: float = 1.0,
         do_sample: bool = False,
+        labels_trie: Optional[LabelsTrie] = None,
         **kwargs
     ):
         model = self.decoder_layer.model
@@ -99,18 +102,36 @@ class Decoder(nn.Module):
                     attention_mask=attention_mask,
                     use_cache=True)
         past_key_values = out.past_key_values
-        next_logits     = out.logits[:, -1]                         # (B, V)
+        next_logits = out.logits[:, -1]                         # (B, V)
 
         unfinished = torch.ones(B, dtype=torch.bool, device=device)
         generated = [[] for _ in range(B)]
 
         for _ in range(max_new_tokens):
+            if labels_trie is not None:
+                V = next_logits.shape[1]
+                mask_tensor = torch.full((B, V), -float('inf'), device=device)
+                for b in range(B):
+                    if unfinished[b]:
+                        current_seq = generated[b]  # Tokens generated so far
+                        
+                        allowed_tokens = labels_trie.get(current_seq)
+
+                        if len(allowed_tokens) == 0:
+                            allowed_tokens = [eos_token_id]
+                        
+                        mask_tensor[b, allowed_tokens] = 0
+                    else:
+                         mask_tensor[b, :] = 0
+                next_logits = next_logits + mask_tensor
+
             if temperature != 1.0:
                 next_logits = next_logits / temperature
 
             if do_sample:
                 probs = torch.softmax(next_logits, dim=-1)
                 next_token = torch.multinomial(probs, num_samples=1)      # (B, 1)
+            
             else:
                 next_token = next_logits.argmax(dim=-1, keepdim=True)     # (B, 1)
 
@@ -118,8 +139,8 @@ class Decoder(nn.Module):
                 if unfinished[b]:
                     generated[b].append(next_token[b, 0].item())
 
-            eos_hit      = next_token.squeeze() == eos_token_id
-            unfinished   = unfinished & ~eos_hit
+            eos_hit = next_token.squeeze() == eos_token_id
+            unfinished = unfinished & ~eos_hit
             if not unfinished.any():         
                 break
 

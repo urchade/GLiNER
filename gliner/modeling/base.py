@@ -288,10 +288,24 @@ class BaseModel(ABC, nn.Module):
 
     def generate_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, D
                             decoder_embedding_mask: torch.LongTensor = None,
+                            max_new_tokens: int = 32,
+                            eos_token_id: Optional[int] = None,
+                            pad_token_id: Optional[int] = None,
+                            temperature: float = 1.0,
+                            do_sample: bool = False,
+                            labels_trie = None,
                             **kwargs):
 
         span_tokens, _ = self.get_raw_decoder_inputs(decoder_embedding, decoder_embedding_mask)
-        results = self.decoder.generate_from_embeds(span_tokens, **kwargs)
+        results = self.decoder.generate_from_embeds(span_tokens,
+                                                    attention_mask = None,
+                                                    max_new_tokens = max_new_tokens,
+                                                    eos_token_id = eos_token_id,
+                                                    pad_token_id = pad_token_id,
+                                                    temperature = temperature,
+                                                    do_sample = do_sample,
+                                                    labels_trie = labels_trie,
+                                                    **kwargs)
         return results
     
     @abstractmethod
