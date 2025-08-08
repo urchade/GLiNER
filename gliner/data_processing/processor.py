@@ -431,7 +431,7 @@ class SpanProcessor(BaseProcessor):
         else:
             labels_batch = labels_batch[0]
         decoder_tokenized_input = None
-        if self.config.decoder_mode == 'span':
+        if self.config.decoder_mode == 'span' and self.decoder_tokenizer is not None:
             if not len(decoder_label_strings):
                 decoder_label_strings = ['other']
             decoder_tokenized_input = self.decoder_tokenizer(

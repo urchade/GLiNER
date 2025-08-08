@@ -497,7 +497,7 @@ class SpanModel(BaseModel):
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
 
-        decoder_embedding, decoder_mask, decoder_loss = None, None, None
+        decoder_embedding = decoder_mask = decoder_loss = decoder_span_idx = None
         if hasattr(self, "decoder"):
             if self.config.decoder_mode == 'span':
                 decoder_text_embeds = self.decoder.ids_to_embeds(decoder_input_ids)
