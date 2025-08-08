@@ -415,7 +415,10 @@ class SpanModel(BaseModel):
        
         if decoder_text_embeds is None or decoder_words_mask is None:
             return span_rep_kept, span_msk.unsqueeze(-1), span_sel_idx
-        
+                
+        if span_rep_kept.numel() == 0:
+            return None, None, None
+    
         decoder_text_embeds = decoder_text_embeds.to(dtype=span_rep_kept.dtype)
        
         S = span_rep_kept.shape[1]

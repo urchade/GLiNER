@@ -353,6 +353,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         # Unpack
         dec_embeds = model_output.decoder_embedding            # [N, L, H]
+        if dec_embeds is None:
+            return []
+        
         dec_mask   = model_output.decoder_embedding_mask       # [N, L]
 
         gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=15,

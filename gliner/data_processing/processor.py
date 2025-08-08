@@ -112,8 +112,8 @@ class BaseProcessor(ABC):
             
             if self.config.decoder_mode == 'prompt':
                 entities_ = [f"label{i}" for i in range(len(entities_))]
-            elif self.config.decoder_mode == 'span':
-                entities_ = ['label']
+            # elif self.config.decoder_mode == 'span':
+            #     entities_ = ['label']
 
             for ent in entities_:
                 input_text.append(self.ent_token)
@@ -400,8 +400,8 @@ class SpanProcessor(BaseProcessor):
                 (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
                 for idx in range(len(spans_idx))
             }
-            if self.config.decoder_mode == 'span':
-                num_classes = 1
+            # if self.config.decoder_mode == 'span':
+            #     num_classes = 1
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
             end_token_idx = (len(tokens) - 1)
             used_spans = set()
@@ -411,7 +411,7 @@ class SpanProcessor(BaseProcessor):
                 if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
                     if self.config.decoder_mode == 'span':
-                        class_id = 1
+                        class_id = classes_to_id[label]#1
                     else:
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
