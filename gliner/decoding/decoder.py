@@ -78,7 +78,7 @@ class SpanDecoder(BaseDecoder):
         """
         B, L, K, C = model_output.shape
         probs = torch.sigmoid(model_output)
-
+    
         span_label_maps = [{} for _ in range(B)]        # one dict per sample
         if self.config.decoder_mode == "span" and sel_idx is not None and gen_labels is not None:
             cursor = 0
