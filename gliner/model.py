@@ -373,7 +373,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, gen_constraints = None, **gen_kwargs
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, 
+        gen_constraints = None, num_gen_sequences = 1, **gen_kwargs
     ):
         """
         Predict entities for a batch of texts.
@@ -428,7 +429,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     labels_trie = self.set_labels_trie(gen_constraints)
                 else:
                     labels_trie = None
-                gen_labels = self.generate_labels(model_output, labels_trie=labels_trie, **gen_kwargs)
+                gen_labels = self.generate_labels(model_output, labels_trie=labels_trie, 
+                                                  num_return_sequences=num_gen_sequences, **gen_kwargs)
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],
@@ -438,7 +440,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 threshold=threshold,
                 multi_label=multi_label,
                 gen_labels=gen_labels,
-                sel_idx = model_output.decoder_span_idx
+                sel_idx = model_output.decoder_span_idx,
+                num_gen_sequences=num_gen_sequences
             )
             outputs.extend(decoded_outputs)
 
@@ -447,18 +450,20 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+            for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                entities.append(
-                    {
+                ent_details =  {
                         "start": start_token_idx_to_text_idx[start_token_idx],
                         "end": end_token_idx_to_text_idx[end_token_idx],
                         "text": texts[i][start_text_idx:end_text_idx],
                         "label": ent_type,
                         "score": ent_score,
                     }
-                )
+                if gen_ent_type is not None:
+                    ent_details['generated labels'] = gen_ent_type
+                entities.append(ent_details)
+
             all_entities.append(entities)
 
         return all_entities

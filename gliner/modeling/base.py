@@ -293,6 +293,7 @@ class BaseModel(ABC, nn.Module):
                             pad_token_id: Optional[int] = None,
                             temperature: float = 1.0,
                             do_sample: bool = False,
+                            num_return_sequences=1,
                             labels_trie = None,
                             **kwargs):
 
@@ -304,6 +305,7 @@ class BaseModel(ABC, nn.Module):
                                                     pad_token_id = pad_token_id,
                                                     temperature = temperature,
                                                     do_sample = do_sample,
+                                                    num_return_sequences=num_return_sequences,
                                                     labels_trie = labels_trie,
                                                     **kwargs)
         return results

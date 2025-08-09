@@ -75,7 +75,7 @@ class Decoder(nn.Module):
         return embedding_layer(input_ids)
     
     @torch.inference_mode()
-    def generate_from_embeds(
+    def generate_from_embeds_custom(
         self,
         inputs_embeds: torch.Tensor,                 # (B, L0, D)
         attention_mask: Optional[torch.Tensor] = None,
@@ -166,23 +166,63 @@ class Decoder(nn.Module):
 
         return out_ids 
     
-    def generate_from_embeds_base(
+    @torch.inference_mode()
+    def generate_from_embeds(
         self,
-        inputs_embeds: torch.Tensor,
+        inputs_embeds: torch.Tensor,                 # (B, L0, D)
         attention_mask: Optional[torch.Tensor] = None,
-        **gen_kwargs
+        max_new_tokens: int = 32,
+        eos_token_id: Optional[int] = None,
+        pad_token_id: Optional[int] = None,
+        temperature: float = 1.0,
+        do_sample: bool = False,
+        num_return_sequences=1,
+        labels_trie: Optional[LabelsTrie] = None,
+        **kwargs
     ):
+        model = self.decoder_layer.model
+        device, (B, L0, _) = inputs_embeds.device, inputs_embeds.shape
+        cfg = model.config
+
+        # Set token IDs if not provided
+        eos_token_id = eos_token_id or cfg.eos_token_id
+        pad_token_id = pad_token_id or cfg.pad_token_id or eos_token_id
+
+        # Create attention mask if not provided
         if attention_mask is None:
-            # create one that covers the provided prefix
-            attention_mask = torch.ones(
-                inputs_embeds.size()[:2], dtype=torch.long, device=inputs_embeds.device
-            )
-        
-        return self.decoder_layer.model.generate(
-            inputs_embeds=inputs_embeds,
+            attention_mask = torch.ones(B, L0, dtype=torch.long, device=device)
+
+        # Define prefix-constrained token function if trie is provided
+        if labels_trie is not None:
+            def prefix_allowed_tokens(batch_idx, input_ids):
+                current_seq = input_ids.tolist()
+                allowed_tokens = labels_trie.get(current_seq)
+                if not allowed_tokens:  # Empty or None
+                    allowed_tokens = [eos_token_id]
+                print(allowed_tokens)
+                return allowed_tokens
+        else:
+            prefix_allowed_tokens = None
+
+        # Generate new tokens using transformer's generate method
+        generated_ids = model.generate(
+            inputs_embeds=inputs_embeds, 
             attention_mask=attention_mask,
-            **gen_kwargs,
+            past_key_values=None,
+            max_new_tokens=max_new_tokens,
+            eos_token_id=eos_token_id,
+            pad_token_id=pad_token_id,
+            temperature=temperature,
+            do_sample=do_sample,
+            use_cache=True,
+            num_return_sequences=num_return_sequences,
+            num_beams=num_return_sequences,
+            prefix_allowed_tokens_fn=prefix_allowed_tokens,
+            **kwargs
         )
+
+        return generated_ids
+        
         
     def generate(self, *args, **kwargs):
         if "inputs_embeds" in kwargs:
