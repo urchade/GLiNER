@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 from torch import nn
-from transformers import AutoModelForCausalLM, AutoConfig
+from transformers import AutoModelForCausalLM, AutoConfig, LogitsProcessor, LogitsProcessorList
 
 from ..utils import is_module_available, MissedPackageException
 from typing import Optional, Union
@@ -15,6 +15,19 @@ IS_PEFT = is_module_available('peft')
 if IS_PEFT:
     from peft import LoraConfig, get_peft_model
 
+class NumericalStabilityProcessor(LogitsProcessor):
+    def __init__(self, epsilon=1e-6):
+        self.epsilon = epsilon
+        
+    def __call__(self, input_ids, scores):
+        scores = torch.where(
+            torch.isneginf(scores),
+            torch.tensor(torch.finfo(scores.dtype).min).to(scores.device),
+            scores
+        )
+        scores = torch.clamp(scores, min=-1e9, max=1e9)
+        return scores + self.epsilon
+    
 class DecoderTransformer(nn.Module):
     def __init__(
         self, 
@@ -199,7 +212,6 @@ class Decoder(nn.Module):
                 allowed_tokens = labels_trie.get(current_seq)
                 if not allowed_tokens:  # Empty or None
                     allowed_tokens = [eos_token_id]
-                print(allowed_tokens)
                 return allowed_tokens
         else:
             prefix_allowed_tokens = None
@@ -218,6 +230,9 @@ class Decoder(nn.Module):
             num_return_sequences=num_return_sequences,
             num_beams=num_return_sequences,
             prefix_allowed_tokens_fn=prefix_allowed_tokens,
+            logits_processor=LogitsProcessorList([
+                NumericalStabilityProcessor(),
+            ]),
             **kwargs
         )
 

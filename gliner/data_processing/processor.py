@@ -100,20 +100,22 @@ class BaseProcessor(ABC):
         texts = [self.prepare_text(text) for text in texts]
         return texts
 
-    def prepare_inputs(self, texts, entities):
+    def prepare_inputs(self, texts, entities, blank = None):
         input_texts = []
         prompt_lengths = []
         for id, text in enumerate(texts):
             input_text = []
-            if type(entities)==dict:
-                entities_=entities
+
+            if blank is not None:
+                entities_ = [blank]
             else:
-                entities_=entities[id]
-            
-            if self.config.decoder_mode == 'prompt':
-                entities_ = [f"label{i}" for i in range(len(entities_))]
-            # elif self.config.decoder_mode == 'span':
-            #     entities_ = ['label']
+                if type(entities)==dict:
+                    entities_=entities
+                else:
+                    entities_=entities[id]
+                
+                if self.config.decoder_mode == 'prompt':
+                    entities_ = [f"label{i}" for i in range(len(entities_))]
 
             for ent in entities_:
                 input_text.append(self.ent_token)
@@ -152,9 +154,9 @@ class BaseProcessor(ABC):
             words_masks.append(words_mask)
         return words_masks
     
-    def tokenize_inputs(self, texts, entities, prepare_labels: bool = False):
+    def tokenize_inputs(self, texts, entities, prepare_labels: bool = False, blank = None):
 
-        input_texts, prompt_lengths = self.prepare_inputs(texts, entities)
+        input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank)
 
         if self.preprocess_text:
             input_texts = self.prepare_texts(input_texts)
@@ -383,7 +385,7 @@ class SpanProcessor(BaseProcessor):
             "id_to_classes": id_to_classes,
         }
 
-    def create_labels(self, batch):
+    def create_labels(self, batch, blank = None):
         labels_batch = []
         decoder_label_strings = []
         for i in range(len(batch['tokens'])):
@@ -400,8 +402,8 @@ class SpanProcessor(BaseProcessor):
                 (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
                 for idx in range(len(spans_idx))
             }
-            # if self.config.decoder_mode == 'span':
-            #     num_classes = 1
+            if blank:
+                num_classes = 1
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
             end_token_idx = (len(tokens) - 1)
             used_spans = set()
@@ -411,7 +413,7 @@ class SpanProcessor(BaseProcessor):
                 if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
                     if self.config.decoder_mode == 'span':
-                        class_id = classes_to_id[label]#1
+                        class_id = classes_to_id[label] if not blank else 1
                     else:
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
@@ -449,9 +451,13 @@ class SpanProcessor(BaseProcessor):
         return labels_batch, decoder_tokenized_input
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels)
+        if random.randint(0, 1) and self.config.decoder_mode == 'span':
+            blank = "label"
+        else:
+            blank = None
+        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels, blank)
         if prepare_labels:
-            labels, decoder_tokenized_input = self.create_labels(batch)
+            labels, decoder_tokenized_input = self.create_labels(batch, blank=blank)
             tokenized_input['labels'] = labels
 
             if decoder_tokenized_input is not None:
