@@ -87,6 +87,7 @@ if __name__ == '__main__':
         focal_loss_gamma=config.loss_gamma,
         focal_loss_alpha=config.loss_alpha,
         focal_loss_prob_margin = config.loss_prob_margin,
+        loss_reduction=config.loss_reduction,
         lr_scheduler_type=config.scheduler_type,
         warmup_ratio=config.warmup_ratio,
         per_device_train_batch_size=config.train_batch_size,
