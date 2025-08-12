@@ -328,6 +328,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             tokens = self.data_processor.decoder_tokenizer.encode(label) # type: ignore
             if tokens[0] == self.data_processor.decoder_tokenizer.bos_token_id:
                 tokens = tokens[1:]
+            tokens.append(self.data_processor.decoder_tokenizer.eos_token_id)
             tokenized_labels.append(tokens) # type: ignore
         trie = LabelsTrie(tokenized_labels)
         return trie
@@ -356,7 +357,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         if dec_embeds is None:
             return []
         
-        dec_mask   = model_output.decoder_embedding_mask       # [N, L]
+        dec_mask = model_output.decoder_embedding_mask       # [N, L]
 
         gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=15,
                                                 eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,

@@ -498,7 +498,7 @@ class SpanModel(BaseModel):
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
-
+        
         decoder_embedding = decoder_mask = decoder_loss = decoder_span_idx = None
         if hasattr(self, "decoder"):
             if self.config.decoder_mode == 'span':
@@ -514,7 +514,6 @@ class SpanModel(BaseModel):
                                     decoder_labels_ids=decoder_labels_ids
             ) #(B, S, T, D)
             # decoder_embedding = self.span_attn_layer(decoder_embedding, decoder_mask)
-            
             if decoder_labels is not None:
                 decoder_loss, decoder_outputs = self.decode_labels(
                     decoder_embedding, decoder_mask, decoder_labels_ids, 

@@ -385,7 +385,49 @@ class SpanProcessor(BaseProcessor):
             "id_to_classes": id_to_classes,
         }
 
-    def create_labels(self, batch, blank = None):
+    def create_labels(self, batch, **kwargs):
+        labels_batch = []
+        for i in range(len(batch['tokens'])):
+            tokens = batch['tokens'][i]
+            classes_to_id = batch['classes_to_id'][i]
+            ner = batch['entities'][i]
+            num_classes = len(classes_to_id)
+
+            spans_idx = batch['span_idx'][i]
+
+            span_to_index = {
+                (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
+                for idx in range(len(spans_idx))
+            }
+
+            labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
+
+            lab_flt = []
+            for span in ner:
+                if span[2] in classes_to_id:
+                    lab_flt.append(((span[0], span[1]), classes_to_id[span[2]]))
+
+            for span, class_id in lab_flt:
+                if span in span_to_index:
+                    idx = span_to_index[span]
+                    labels_one_hot[idx, class_id] = 1.0
+
+            valid_span_mask = spans_idx[:, 1] > (len(tokens) - 1)
+            labels_one_hot[valid_span_mask, :] = 0.0
+
+            labels_one_hot = labels_one_hot[:, 1:]
+
+            labels_batch.append(labels_one_hot)
+
+        # Convert the list of tensors to a single tensor
+        if len(labels_batch) > 1:
+            labels_batch = pad_2d_tensor(labels_batch)
+        else:
+            labels_batch = labels_batch[0]
+
+        return labels_batch, None
+    
+    def create_labels1(self, batch, blank = None):
         labels_batch = []
         decoder_label_strings = []
         for i in range(len(batch['tokens'])):
@@ -402,7 +444,7 @@ class SpanProcessor(BaseProcessor):
                 (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
                 for idx in range(len(spans_idx))
             }
-            if blank:
+            if blank is not None:
                 num_classes = 1
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
             end_token_idx = (len(tokens) - 1)
@@ -413,7 +455,7 @@ class SpanProcessor(BaseProcessor):
                 if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
                     if self.config.decoder_mode == 'span':
-                        class_id = classes_to_id[label] if not blank else 1
+                        class_id = classes_to_id[label] if blank is None else 1
                     else:
                         class_id = classes_to_id[label]
                     if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
@@ -451,7 +493,7 @@ class SpanProcessor(BaseProcessor):
         return labels_batch, decoder_tokenized_input
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        if random.randint(0, 1) and self.config.decoder_mode == 'span':
+        if random.randint(0, 1) and self.decoder_tokenizer is not None:
             blank = "label"
         else:
             blank = None
