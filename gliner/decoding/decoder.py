@@ -147,10 +147,10 @@ class TokenDecoder(BaseDecoder):
                     combined = torch.cat([ins, start_score.unsqueeze(0), end_score.unsqueeze(0)])
                     # The span score is the minimum value among these scores
                     spn_score = combined.min().item()
-                    span_i.append((st, ed, id_to_classes[cls_st + 1], spn_score))
+                    span_i.append((st, ed, id_to_classes[cls_st + 1], None, spn_score))
         return span_i
 
-    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False):
+    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False, **kwargs):
         scores_start, scores_end, scores_inside = model_output
         spans = []
         for i, _ in enumerate(tokens):
