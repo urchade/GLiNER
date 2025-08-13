@@ -451,8 +451,8 @@ class SpanProcessor(BaseProcessor):
         return labels_batch, decoder_tokenized_input
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        if random.randint(0, 1) and self.decoder_tokenizer is not None:
-            blank = "label"
+        if random.randint(0, 10)==10 and self.decoder_tokenizer is not None:
+            blank = "entity"
         else:
             blank = None
         tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels, blank)
