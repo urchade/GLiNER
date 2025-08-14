@@ -228,6 +228,100 @@ Bill Gates => person
 Microsoft => organization
 ```
 
+## GLiNER with Decoder
+
+A new GLiNER architecture has recently been introduced. It first extracts spans from text, then uses their latent representations to guide the generation of label names for each span.
+This approach enables new use cases—such as entity linking—and expands GLiNER’s capabilities.
+
+Because modern decoders are typically large models trained on extensive datasets, integrating them allows GLiNER to tap into their richer knowledge capacity.
+
+```python
+from gliner import GLiNER
+model = GLiNER.from_pretrained('model-path')
+
+text = "Apple was founded as Apple Computer Company on April 1, 1976, by Steve Wozniak, Steve Jobs (1955–2011) and Ronald Wayne to develop and sell Wozniak's Apple I personal computer."
+
+labels = ["person", "other"]
+
+model.run(texts, labels, threshold=0.3, num_gen_sequences=1)
+```
+
+**Example output:**
+
+```json
+[
+  [
+    {
+      "start": 21,
+      "end": 26,
+      "text": "Apple",
+      "label": "other",
+      "score": 0.6795641779899597,
+      "generated labels": ["Organization"]
+    },
+    {
+      "start": 47,
+      "end": 60,
+      "text": "April 1, 1976",
+      "label": "other",
+      "score": 0.44296327233314514,
+      "generated labels": ["Date"]
+    },
+    {
+      "start": 65,
+      "end": 78,
+      "text": "Steve Wozniak",
+      "label": "person",
+      "score": 0.9934439659118652,
+      "generated labels": ["Person"]
+    },
+    {
+      "start": 80,
+      "end": 90,
+      "text": "Steve Jobs",
+      "label": "person",
+      "score": 0.9725918769836426,
+      "generated labels": ["Person"]
+    },
+    {
+      "start": 107,
+      "end": 119,
+      "text": "Ronald Wayne",
+      "label": "person",
+      "score": 0.9964536428451538,
+      "generated labels": ["Person"]
+    }
+  ]
+]
+```
+
+---
+
+You can also restrict the decoder to generate labels only from a predefined set:
+
+```python
+model.run(
+    texts, labels,
+    threshold=0.3,
+    num_gen_sequences=1,
+    gen_constraints=[
+        "organization type", "city", "organization",
+        "technology", "date", "person"
+    ]
+)
+```
+
+---
+
+Two label trie implementations are available.
+For a faster and more memory-efficient C++-based version, install **Cython**:
+
+```bash
+pip install cython
+```
+
+This significantly improves both performance and memory usage when working with millions of labels.
+
 ## Using FlashDeBERTa
 
 Most GLiNER models use the DeBERTa encoder as their backbone. This architecture offers strong token classification performance and typically requires less data to achieve good results. However, a major drawback has been its slower inference speed, and until recently, there was no flash attention implementation compatible with DeBERTa's disentangled attention mechanism.
