@@ -335,12 +335,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         
         dec_mask = model_output.decoder_embedding_mask       # [N, L]
 
-        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, max_new_tokens=15,
+        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, 
+                                                max_new_tokens=gen_kwargs.pop("max_new_tokens", 15),
                                                 eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
-                                                do_sample      = True,
-                                                temperature    = 0.01,
-                                                no_repeat_ngram_size = 1,
-                                                repetition_penalty   = 1.1,
+                                                do_sample = gen_kwargs.pop("do_sample", True),
+                                                temperature = gen_kwargs.pop("temperature", 0.01),
+                                                no_repeat_ngram_size = gen_kwargs.pop("no_repeat_ngram_size", 1),
+                                                repetition_penalty = gen_kwargs.pop("repetition_penalty", 1.1),
                                                 **gen_kwargs)  # [N, S]
 
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
