@@ -2,16 +2,15 @@ from typing import Optional, Union, Any, Dict, Tuple, List
 from dataclasses import dataclass, field
 
 import torch
+from torch import nn
 import transformers
 from numpy.ma.core import negative
 from transformers.training_args import OptimizerNames
 from transformers.trainer import (
     is_sagemaker_mp_enabled,
     get_parameter_names,
-   
 )
-from transformers.pytorch_utils import ALL_LAYERNORM_LAYERS #updated to fix this bug , previously it was called from training_args
-from transformers.trainer_utils import seed_worker
+from transformers.trainer_utils import set_seed
 
 if transformers.utils.is_apex_available():
     from apex import amp
@@ -19,6 +18,16 @@ if transformers.utils.is_apex_available():
 if is_sagemaker_mp_enabled():
     from transformers.trainer_pt_utils import smp_forward_backward
 from torch.utils.data import DataLoader, Dataset
+
+ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
+
+
+def seed_worker(_):
+    """
+    Helper function to set worker seed during Dataloader initialization.
+    """
+    worker_seed = torch.initial_seed() % 2**32
+    set_seed(worker_seed)
 
 @dataclass
 class TrainingArguments(transformers.TrainingArguments):

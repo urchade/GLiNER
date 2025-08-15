@@ -11,11 +11,11 @@ from torch.nn.utils.rnn import pad_sequence
 from transformers.utils import ModelOutput
 
 from .encoder import Encoder, BiEncoder
-from .layers import LstmSeq2SeqEncoder, CrossFuser, create_projection_layer
+from .decoder import Decoder
+from .layers import LstmSeq2SeqEncoder, CrossFuser, SelfAttentionBlock, create_projection_layer
 from .scorers import Scorer
-from .loss_functions import focal_loss_with_logits
+from .loss_functions import focal_loss_with_logits, cross_entropy_loss
 from .span_rep import SpanRepLayer
-
 
 @dataclass
 class GLiNERModelOutput(ModelOutput):
@@ -23,9 +23,12 @@ class GLiNERModelOutput(ModelOutput):
     logits: Optional[torch.FloatTensor] = None
     prompts_embedding: Optional[torch.FloatTensor] = None
     prompts_embedding_mask: Optional[torch.LongTensor] = None
+    decoder_loss: Optional[torch.FloatTensor] = None
+    decoder_embedding: Optional[torch.FloatTensor] = None
+    decoder_embedding_mask: Optional[torch.LongTensor] = None
+    decoder_span_idx: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
-
 
 def extract_word_embeddings(token_embeds, words_mask, attention_mask,
                             batch_size, max_text_length, embed_dim, text_lengths):
@@ -44,7 +47,6 @@ def extract_word_embeddings(token_embeds, words_mask, attention_mask,
                                     device=token_embeds.device).expand(batch_size, -1)
     mask = aranged_word_idx < text_lengths
     return words_embedding, mask
-
 
 def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids, attention_mask,
                                                 text_lengths, words_mask, embed_ent_token=True, **kwargs):
@@ -81,6 +83,7 @@ def extract_prompt_features_and_word_embeddings(config, token_embeds, input_ids,
 
 
 class BaseModel(ABC, nn.Module):
+    data_processor = None
     def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
         super(BaseModel, self).__init__()
         self.config = config
@@ -88,7 +91,17 @@ class BaseModel(ABC, nn.Module):
         if not config.labels_encoder:
             self.token_rep_layer = Encoder(config, from_pretrained, cache_dir = cache_dir)
         else:
-            self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir=cache_dir)
+            self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir = cache_dir)
+        
+        if config.labels_decoder:
+            self.decoder = Decoder(config, from_pretrained, cache_dir = cache_dir)
+            if self.config.hidden_size != self.decoder.decoder_hidden_size:
+                self._enc2dec_proj = create_projection_layer(
+                    self.config.hidden_size,
+                    self.config.dropout,
+                    self.decoder.decoder_hidden_size,
+                )
+
         if self.config.has_rnn:
             self.rnn = LstmSeq2SeqEncoder(config)
 
@@ -185,6 +198,117 @@ class BaseModel(ABC, nn.Module):
                 input_ids, attention_mask, text_lengths, words_mask, **kwargs
             )
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+
+    def select_decoder_embedding(
+        self,
+        representations: torch.FloatTensor,   # (B, N, D) – flattened span reps
+        rep_mask:       torch.LongTensor,     # (B, N)    – 0/1 or False/True
+    ):
+        """
+        Keeps only representations whose mask == 1 and (optionally) projects them
+        to the decoder hidden size.
+
+        Returns
+        -------
+        target_rep   : FloatTensor (B, M, D)   – kept reps, padded
+        target_mask  : LongTensor  (B, M)      – 1 where real, 0 where pad
+        sel_idx      : LongTensor  (B, M)      – original *flattened* span column
+                                                (‑1 for pad)
+        batch_idx_pad: LongTensor  (B, M)      – batch‑row index for each entry
+                                                (‑1 for pad)          ← NEW
+        """
+        B, N, D = representations.shape
+        lengths = rep_mask.sum(dim=-1)              # (B,)
+        max_len = lengths.max().item()
+
+        target_rep = representations.new_zeros(B, max_len, D)   # (B, M, D)
+        target_mask = rep_mask.new_zeros(B, max_len)             # (B, M)
+        sel_idx = rep_mask.new_full((B, max_len), -1)        # (B, M)
+
+        keep = rep_mask.bool()
+        if keep.any():
+            new_col_idx  = (rep_mask.cumsum(dim=1) - 1)[keep]  # (K,)
+            batch_idx, old_col_idx = torch.where(keep)                  # (K,)
+
+            target_rep [batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
+            target_mask[batch_idx, new_col_idx] = 1
+            sel_idx[batch_idx, new_col_idx] = old_col_idx
+
+        return target_rep, target_mask, sel_idx
+    
+    def get_raw_decoder_inputs(self, representations, rep_mask):
+        B, S, T, D = representations.shape
+        BN = B * S                                     # flattened span count
+        valid_spans = rep_mask.any(-1)
+        keep_mask = valid_spans.view(-1)             # (BN,)  → bool
+        if not keep_mask.any():                        # corner case: nothing to keep
+            empty = representations.new_empty(0, 0, D)
+            return empty, representations.new_empty(0, 0, dtype=rep_mask.dtype)
+
+        keep_idx = keep_mask.nonzero(as_tuple=False).squeeze(1)   # (M,)
+
+        span_tokens = representations.view(BN, T, D)[keep_idx]  # (M, T, D)
+        span_tokens_mask = rep_mask.view(BN, T)[keep_idx]            # (M, T)
+        return span_tokens, span_tokens_mask
+    
+    
+    def decode_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, T, D
+                            decoder_embedding_mask: torch.LongTensor = None, #B, N, T
+                            decoder_labels_ids: torch.FloatTensor = None, #(B*N, S)
+                            decoder_labels_mask: torch.LongTensor = None,
+                            decoder_labels: torch.FloatTensor = None,
+                            **kwargs):
+        span_tokens, span_tokens_mask = self.get_raw_decoder_inputs(decoder_embedding, decoder_embedding_mask)
+
+        label_embeds = self.decoder.ids_to_embeds(decoder_labels_ids)        # (M, L, D)
+
+        decoder_inputs = torch.cat([span_tokens, label_embeds[:, :-1, :]], dim=1)
+
+        attn_inputs    = torch.cat(
+            [span_tokens_mask.to(decoder_labels_mask.dtype),
+            decoder_labels_mask[:, :-1]], dim=1
+        )
+
+        decoder_outputs = self.decoder(inputs_embeds=decoder_inputs,
+                                    attention_mask=attn_inputs)           # (M, S+L‑1, V)
+
+        blank_for_spans = torch.full(                       
+            (decoder_labels.size(0), span_tokens.size(1)),
+            -100, dtype=decoder_labels.dtype, device=decoder_labels.device
+        )
+
+        targets = torch.cat([blank_for_spans, decoder_labels], dim=1)        # (M, S+L)
+
+        loss = cross_entropy_loss(
+            decoder_outputs,                      # logits
+            targets[:, 1:]                        # same length as logits
+        )
+
+        return (loss, decoder_outputs)
+
+    def generate_labels(self, decoder_embedding: torch.FloatTensor = None, #B, N, D
+                            decoder_embedding_mask: torch.LongTensor = None,
+                            max_new_tokens: int = 32,
+                            eos_token_id: Optional[int] = None,
+                            pad_token_id: Optional[int] = None,
+                            temperature: float = 1.0,
+                            do_sample: bool = False,
+                            num_return_sequences=1,
+                            labels_trie = None,
+                            **kwargs):
+
+        span_tokens, _ = self.get_raw_decoder_inputs(decoder_embedding, decoder_embedding_mask)
+        results = self.decoder.generate_from_embeds(span_tokens,
+                                                    attention_mask = None,
+                                                    max_new_tokens = max_new_tokens,
+                                                    eos_token_id = eos_token_id,
+                                                    pad_token_id = pad_token_id,
+                                                    temperature = temperature,
+                                                    do_sample = do_sample,
+                                                    num_return_sequences=num_return_sequences,
+                                                    labels_trie = labels_trie,
+                                                    **kwargs)
+        return results
     
     @staticmethod
     def _fit_length(
@@ -237,26 +361,22 @@ class BaseModel(ABC, nn.Module):
         # Create a mask of the same shape as labels:
         # For elements where labels==0, sample a Bernoulli random variable that is 1 with probability `negatives`
         # For elements where labels==1, set the mask to 1 (i.e. do not change these losses)
-        #if masking == "global":
         if masking == "global":
             mask_neg = torch.where(labels == 0,
                                    (torch.rand_like(labels) < negatives).float(),
                                    torch.ones_like(labels))
-
         elif masking == "label":
             neg_proposals = (labels.sum(dim=1) == 0).unsqueeze(1).expand_as(labels)
 
             mask_neg = torch.where(neg_proposals,
                                      (torch.rand_like(neg_proposals.float()) < negatives).float(),
                                         torch.ones_like(neg_proposals.float()))
-
         elif masking == "span":
             neg_proposals = (labels.sum(dim=2) == 0).unsqueeze(2).expand_as(labels)
 
             mask_neg = torch.where(neg_proposals,
                                    (torch.rand_like(neg_proposals.float()) < negatives).float(),
                                    torch.ones_like(neg_proposals.float()))
-
         else:
             mask_neg = 1.
 
@@ -279,10 +399,110 @@ class SpanModel(BaseModel):
                                            dropout = config.dropout)
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
+
+        # if self.config.labels_decoder is not None:
+        #     num_heads = self.decoder.decoder_hidden_size//(self.decoder.decoder_hidden_size//8)
+        #     self.span_attn_layer = SelfAttentionBlock(self.decoder.decoder_hidden_size, num_heads = num_heads)
+
+    def select_span_decoder_embedding(
+        self,
+        prompts_embedding, # (B, C, D)
+        prompts_embedding_mask, # (B, C)
+        span_rep, # (B, L, K, D)
+        span_scores, # (B, L, K, C)
+        span_mask, # (B, L, K)
+        decoder_text_embeds=None, # (B, T, D)
+        decoder_words_mask=None, # (B, T)
+        span_labels = None, # (B, L, K, C)
+        threshold = 0.5,
+        top_k = None,
+        decoder_input_ids = None, # for debugging purposes
+        decoder_labels_ids = None
+    ):
+        if self.config.decoder_mode == "prompt":
+            return self.select_decoder_embedding(
+                prompts_embedding, prompts_embedding_mask
+            )[:3] # ignore the extra batch‑idx from the helper
+        B, L, K, D = span_rep.shape
+        flat_rep = span_rep.view(B, L * K, D) # (B, N, D)
+        flat_mask = span_mask.view(B, L * K) # (B, N)
+        
+        if span_labels is not None:
+            flat_prob = span_labels.max(-1).values.view(B, L * K)
+            keep = (flat_prob == 1) & flat_mask.bool()
+        else:
+            flat_prob = torch.sigmoid(span_scores).max(-1).values.view(B, L * K)
+            keep = (flat_prob > threshold) & flat_mask.bool()
+        
+        if top_k:
+            sel_scores = flat_prob.masked_fill(~keep, -1.0)
+            top_idx = sel_scores.topk(
+                k=min(top_k, sel_scores.size(1)), dim=1
+            ).indices
+            keep.zero_()
+            keep.scatter_(1, top_idx, True)
+        
+        span_rep_kept, span_msk, span_sel_idx = \
+            self.select_decoder_embedding(flat_rep, keep.long()) # (B, S, …)
+        
+        if hasattr(self, "_enc2dec_proj"):
+            span_rep_kept = self._enc2dec_proj(span_rep_kept)
+        span_rep_kept = span_rep_kept.unsqueeze(2)
+        span_msk = span_msk.unsqueeze(-1)
+       
+        if decoder_text_embeds is None or decoder_words_mask is None:
+            return span_rep_kept, span_msk.unsqueeze(-1), span_sel_idx
+                
+        if span_rep_kept.numel() == 0:
+            return None, None, None
     
+        decoder_text_embeds = decoder_text_embeds.to(dtype=span_rep_kept.dtype)
+       
+        S = span_rep_kept.shape[1]
+        dec_D = span_rep_kept.shape[-1]
+        span_start = span_sel_idx//self.config.max_width+1
+        span_end = span_sel_idx%self.config.max_width+span_start
+
+        token_in_span = (
+            (decoder_words_mask.unsqueeze(1) >= span_start.unsqueeze(-1)) &
+            (decoder_words_mask.unsqueeze(1) <= span_end.unsqueeze(-1))
+        )
+       
+        tokens_per_span = token_in_span.sum(-1) # (B, S)
+        max_tokens = int(tokens_per_span.max()) # scalar python int
+        
+        span_rep_new = span_rep_kept.new_zeros(B, S, max_tokens + 1, dec_D) # (B,S,T+1,D)
+        span_rep_mask = torch.zeros(B, S, max_tokens + 1, dtype=torch.bool,
+        device=decoder_text_embeds.device)
+        
+        left_offset = (max_tokens + 1 - tokens_per_span).clamp(min=0) # (B,S)
+        pos_in_span = (token_in_span.cumsum(-1) - 1).masked_fill(~token_in_span, 0)
+        pos_in_span = pos_in_span + left_offset.unsqueeze(-1) # shift → right
+       
+        b_idx, s_idx, tok_idx = torch.where(token_in_span) # (N,)
+        span_rep_new[b_idx, s_idx, pos_in_span[b_idx, s_idx, tok_idx]] = \
+        decoder_text_embeds[b_idx, tok_idx]
+        span_rep_mask[b_idx, s_idx, pos_in_span[b_idx, s_idx, tok_idx]] = True
+        kept_pos = (left_offset - 1).clamp(min=0) # (B,S)
+
+        b_flat = torch.arange(B, device=decoder_text_embeds.device).view(-1, 1).expand(B, S).reshape(-1)
+        s_flat = torch.arange(S, device=decoder_text_embeds.device).view(1, -1).expand(B, S).reshape(-1)
+        t_flat = kept_pos.reshape(-1)
+
+        span_rep_new[b_flat, s_flat, t_flat] = span_rep_kept.reshape(-1, dec_D)
+        span_rep_mask[b_flat, s_flat, t_flat] = True
+        span_rep_mask = span_rep_mask & span_msk.bool()
+        return span_rep_new, span_rep_mask, span_sel_idx
+
+
     def forward(self,
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
+                decoder_input_ids: Optional[torch.FloatTensor] = None,
+                decoder_attention_mask: Optional[torch.LongTensor] = None,
+                decoder_labels_ids: Optional[torch.FloatTensor] = None,
+                decoder_labels_mask: Optional[torch.LongTensor] = None,
+                decoder_words_mask: Optional[torch.LongTensor] = None,
                 labels_embeddings: Optional[torch.FloatTensor] = None,
                 labels_input_ids: Optional[torch.FloatTensor] = None,
                 labels_attention_mask: Optional[torch.LongTensor] = None,
@@ -294,6 +514,9 @@ class SpanModel(BaseModel):
                 text_lengths: Optional[torch.Tensor] = None,
                 span_idx: Optional[torch.LongTensor] = None,
                 span_mask: Optional[torch.LongTensor] = None,
+                labels: Optional[torch.FloatTensor] = None,
+                decoder_labels:  Optional[torch.FloatTensor] = None,
+                threshold: Optional[float] = 0.5,
                 labels: Optional[torch.FloatTensor] = None, # B,L*K, C
                 **kwargs
                 ):
@@ -323,16 +546,41 @@ class SpanModel(BaseModel):
         prompts_embedding = self.prompt_rep_layer(prompts_embedding) 
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
+        
+        decoder_embedding = decoder_mask = decoder_loss = decoder_span_idx = None
+        if hasattr(self, "decoder"):
+            if self.config.decoder_mode == 'span':
+                decoder_text_embeds = self.decoder.ids_to_embeds(decoder_input_ids)
+            else:
+                decoder_text_embeds = None
+            decoder_embedding, decoder_mask, decoder_span_idx = self.select_span_decoder_embedding(
+                        prompts_embedding, prompts_embedding_mask, span_rep, scores, span_mask,
+                                    decoder_text_embeds = decoder_text_embeds,
+                                    decoder_words_mask = decoder_words_mask,
+                                    span_labels=labels, threshold=threshold,
+                                    decoder_input_ids=decoder_input_ids,
+                                    decoder_labels_ids=decoder_labels_ids
+            ) #(B, S, T, D)
+            # decoder_embedding = self.span_attn_layer(decoder_embedding, decoder_mask)
+            if decoder_labels is not None:
+                decoder_loss, decoder_outputs = self.decode_labels(
+                    decoder_embedding, decoder_mask, decoder_labels_ids, 
+                                        decoder_labels_mask, decoder_labels
+                )
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, decoder_loss=decoder_loss, **kwargs)
 
         output = GLiNERModelOutput(
             logits=scores,
             loss=loss,
+            decoder_loss=decoder_loss,
             prompts_embedding=prompts_embedding,
             prompts_embedding_mask=prompts_embedding_mask,
+            decoder_embedding=decoder_embedding,
+            decoder_embedding_mask=decoder_mask,
+            decoder_span_idx=decoder_span_idx,
             words_embedding=words_embedding,
             mask=mask,
         )
@@ -370,6 +618,10 @@ class SpanModel(BaseModel):
                 f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
                 f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
             loss = all_losses.sum()
+
+        if decoder_loss is not None:
+            loss = decoder_loss*0.75+loss*0.25
+        
         return loss
 
 

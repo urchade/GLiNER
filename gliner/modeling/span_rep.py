@@ -285,7 +285,70 @@ class SpanMarkerV0(nn.Module):
 
         return self.out_project(cat).view(B, L, self.max_width, D)
 
+class SpanMarkerV1(nn.Module):
+    """
+    Marks span endpoints and augments them with the first-token embedding.
 
+    For each candidate span we build
+        [ start_proj ‖ end_proj ‖ first_token_proj ]  →  MLP  → span_rep
+    and finally reshape to [B, L, max_width, D].
+    """
+
+    def __init__(self, hidden_size: int, max_width: int, dropout: float = 0.4):
+        super().__init__()
+        self.max_width = max_width
+
+        # Independent projections for the three ingredients
+        self.project_start  = create_projection_layer(hidden_size, dropout)
+        self.project_end    = create_projection_layer(hidden_size, dropout)
+        self.project_first  = create_projection_layer(hidden_size, dropout)
+
+        # 3 × hidden_size (start + end + first)  →  hidden_size
+        self.out_project = create_projection_layer(hidden_size * 3,
+                                                   dropout,
+                                                   hidden_size)
+
+    def forward(self, h: torch.Tensor, span_idx: torch.Tensor) -> torch.Tensor:
+        """
+        Parameters
+        ----------
+        h : torch.Tensor
+            Token representations, shape [B, L, D].
+        span_idx : torch.Tensor
+            Indices of candidate spans, shape [B, *, 2]
+            (* can be L × max_width or any flattened span dimension).
+
+        Returns
+        -------
+        torch.Tensor
+            Span representations, shape [B, L, max_width, D].
+        """
+        B, L, D = h.size()
+
+        # Pre-compute per-token projections
+        start_rep = self.project_start(h)          # [B, L, D]
+        end_rep   = self.project_end(h)            # [B, L, D]
+
+        # Project the first-token embedding once
+        average_token_proj = torch.mean(h, dim=1)
+
+        # Gather start/end representations for each span
+        start_span_rep = extract_elements(start_rep, span_idx[..., 0])  # [B, S, D]
+        end_span_rep   = extract_elements(end_rep,   span_idx[..., 1])  # [B, S, D]
+
+        # Broadcast first-token embedding to every span
+        first_span_rep = average_token_proj.unsqueeze(1).expand_as(start_span_rep)  # [B, S, D]
+
+        # Concatenate and project
+        span_feat = torch.cat((start_span_rep,
+                               end_span_rep,
+                               first_span_rep), dim=-1).relu()            # [B, S, 3D]
+
+        out = self.out_project(span_feat)          # [B, S, D]
+
+        # Reshape back to [B, L, max_width, D] (S = L × max_width)
+        return out.view(B, L, self.max_width, D)
+    
 class ConvShareV2(nn.Module):
     def __init__(self, hidden_size, max_width):
         super().__init__()
@@ -327,6 +390,8 @@ class SpanRepLayer(nn.Module):
             self.span_rep_layer = SpanMarker(hidden_size, max_width, **kwargs)
         elif span_mode == 'markerV0':
             self.span_rep_layer = SpanMarkerV0(hidden_size, max_width, **kwargs)
+        elif span_mode == 'markerV1':
+            self.span_rep_layer = SpanMarkerV1(hidden_size, max_width, **kwargs)
         elif span_mode == 'query':
             self.span_rep_layer = SpanQuery(
                 hidden_size, max_width, trainable=True)

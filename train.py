@@ -19,7 +19,9 @@ if __name__ == '__main__':
     parser.add_argument('--config', type=str, default= "configs/config.yaml")
     parser.add_argument('--log_dir', type=str, default = 'models/')
     parser.add_argument('--compile_model', type=bool, default = False)
-    parser.add_argument('--freeze_language_model', type=bool, default = False)
+    parser.add_argument('--freeze_text_encoder', type=bool, default = False)
+    parser.add_argument('--freeze_decoder', type=bool, default = False)
+    parser.add_argument('--freeze_labels_encoder', type=bool, default = False)
     parser.add_argument('--new_data_schema', type=bool, default = False)
     args = parser.parse_args()
     
@@ -27,7 +29,7 @@ if __name__ == '__main__':
     config.log_dir = args.log_dir
 
     with open(config.train_data, 'r') as f:
-        data = json.load(f)
+        data = [item for item in json.load(f) if len(item['tokenized_text']) and len(item['ner'])]
 
     print('Dataset size:', len(data))
     #shuffle
@@ -41,12 +43,12 @@ if __name__ == '__main__':
 
 
     if config.prev_path is not None:
-        tokenizer = AutoTokenizer.from_pretrained(config.prev_path)
+        tokenizer = AutoTokenizer.from_pretrained(config.prev_path, add_prefix_space=True)
         model = GLiNER.from_pretrained(config.prev_path)
         model_config = model.config
     else:
         model_config = GLiNERConfig(**vars(config))
-        tokenizer = AutoTokenizer.from_pretrained(model_config.model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_config.model_name, add_prefix_space=True)
     
         words_splitter = WordsSplitter(model_config.words_splitter_type)
 
@@ -64,10 +66,22 @@ if __name__ == '__main__':
         torch.set_float32_matmul_precision('high')
         model.compile_for_training()
         
-    if args.freeze_language_model:
+    if args.freeze_text_encoder:
         model.model.token_rep_layer.bert_layer.model.requires_grad_(False)
     else:
         model.model.token_rep_layer.bert_layer.model.requires_grad_(True)
+
+    if model.config.labels_encoder is not None:
+        if args.freeze_labels_encoder:
+            model.model.token_rep_layer.labels_encoder.model.requires_grad_(False)
+        else:
+            model.model.token_rep_layer.labels_encoder.model.requires_grad_(True)
+
+    if model.config.labels_decoder is not None:
+        if args.freeze_decoder:
+            model.model.decoder.decoder_layer.model.requires_grad_(False)
+        else:
+            model.model.decoder.decoder_layer.model.requires_grad_(True)
 
     if args.new_data_schema:
         train_dataset = GLiNERDataset(train_data, model_config, tokenizer, words_splitter)
@@ -94,10 +108,9 @@ if __name__ == '__main__':
         per_device_eval_batch_size=config.train_batch_size,
         max_grad_norm=config.max_grad_norm,
         max_steps=config.num_steps,
-        evaluation_strategy="epoch",
         save_steps = config.eval_every,
         save_total_limit=config.save_total_limit,
-        dataloader_num_workers = 8,
+        dataloader_num_workers = 1,
         use_cpu = False,
         report_to="none",
         bf16=True,

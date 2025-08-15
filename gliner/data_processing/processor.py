@@ -14,10 +14,11 @@ from .utils import pad_2d_tensor
 
 # Abstract base class for handling data processing
 class BaseProcessor(ABC):
-    def __init__(self, config, tokenizer, words_splitter, labels_tokenizer = None, preprocess_text=False):
+    def __init__(self, config, tokenizer, words_splitter, labels_tokenizer = None, decoder_tokenizer = None, preprocess_text=False):
         self.config = config
         self.transformer_tokenizer = tokenizer
         self.labels_tokenizer = labels_tokenizer
+        self.decoder_tokenizer = decoder_tokenizer
 
         self.words_splitter = words_splitter
         self.ent_token = config.ent_token
@@ -99,15 +100,23 @@ class BaseProcessor(ABC):
         texts = [self.prepare_text(text) for text in texts]
         return texts
 
-    def prepare_inputs(self, texts, entities):
+    def prepare_inputs(self, texts, entities, blank = None):
         input_texts = []
         prompt_lengths = []
         for id, text in enumerate(texts):
             input_text = []
-            if type(entities)==dict:
-                entities_=entities
+
+            if blank is not None:
+                entities_ = [blank]
             else:
-                entities_=entities[id]
+                if type(entities)==dict:
+                    entities_=entities
+                else:
+                    entities_=entities[id]
+                
+                if self.config.decoder_mode == 'prompt':
+                    entities_ = [f"label{i}" for i in range(len(entities_))]
+
             for ent in entities_:
                 input_text.append(self.ent_token)
                 input_text.append(ent)
@@ -118,7 +127,7 @@ class BaseProcessor(ABC):
             input_texts.append(input_text)
         return input_texts, prompt_lengths
     
-    def prepare_word_mask(self, texts, tokenized_inputs, prompt_lengths = None):
+    def prepare_word_mask(self, texts, tokenized_inputs, prompt_lengths = None, token_level=False):
         words_masks = []
         for id in range(len(texts)):
             if prompt_lengths is not None:
@@ -131,29 +140,75 @@ class BaseProcessor(ABC):
             for word_id in tokenized_inputs.word_ids(id):
                 if word_id is None:
                     words_mask.append(0)
-                elif word_id != prev_word_id:
+                elif word_id != prev_word_id or token_level:
                     if words_count<prompt_length:
                         words_mask.append(0)
                     else:
                         masking_word_id = word_id-prompt_length+1
                         words_mask.append(masking_word_id)
-                    words_count+=1
+                    if word_id != prev_word_id:
+                        words_count+=1
                 else:
                     words_mask.append(0)
                 prev_word_id = word_id
             words_masks.append(words_mask)
         return words_masks
     
-    def tokenize_inputs(self, texts, entities):
-        input_texts, prompt_lengths = self.prepare_inputs(texts, entities)
+    def tokenize_inputs(self, texts, entities, prepare_labels: bool = False, blank = None):
+
+        input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank)
 
         if self.preprocess_text:
             input_texts = self.prepare_texts(input_texts)
-            
-        tokenized_inputs = self.transformer_tokenizer(input_texts, is_split_into_words = True, return_tensors='pt',
-                                                                                truncation=True, padding="longest")
+
+        tokenized_inputs = self.transformer_tokenizer(
+            input_texts,
+            is_split_into_words=True,
+            return_tensors="pt",
+            truncation=True,
+            padding="longest",
+        )
         words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
-        tokenized_inputs['words_mask'] = torch.tensor(words_masks)
+        tokenized_inputs["words_mask"] = torch.tensor(words_masks)
+
+        if self.decoder_tokenizer is not None and self.config.decoder_mode == 'span':
+            decoder_input_texts = [[f" {t}" if i else t for i, t in enumerate(tokens)] for tokens in input_texts]
+            decoder_tokenized_inputs = self.decoder_tokenizer(
+                decoder_input_texts,
+                is_split_into_words=True,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+            )
+            tokenized_inputs['decoder_input_ids'] = decoder_tokenized_inputs['input_ids']
+            tokenized_inputs['decoder_attention_mask'] = decoder_tokenized_inputs['attention_mask']
+
+            if self.config.full_decoder_context:
+                decoder_words_masks = self.prepare_word_mask(texts, decoder_tokenized_inputs, prompt_lengths, token_level=True)
+                tokenized_inputs['decoder_words_mask'] = torch.tensor(decoder_words_masks)
+
+        if prepare_labels and self.config.decoder_mode == 'prompt':
+            if isinstance(entities, dict):
+                entities_ = list(entities)
+            else:
+                entities_ = [ent for sample_entities in entities for ent in sample_entities]
+
+            tokenized_targets = self.decoder_tokenizer(
+                entities_,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+            )
+
+            target_ids = tokenized_targets["input_ids"]
+            target_mask = tokenized_targets["attention_mask"]
+            tokenized_inputs["decoder_labels_mask"] = target_mask
+
+            tokenized_inputs["decoder_labels_ids"] = target_ids
+
+            labels = target_ids.clone()
+            tokenized_inputs["decoder_labels"] = labels
+
         return tokenized_inputs
 
     def batch_generate_class_mappings(self, batch_list: List[Dict], negatives: List[str]=None) -> Tuple[
@@ -329,57 +384,87 @@ class SpanProcessor(BaseProcessor):
             "classes_to_id": class_to_ids,
             "id_to_classes": id_to_classes,
         }
-
-    def create_labels(self, batch):
+    
+    def create_labels(self, batch, blank = None):
         labels_batch = []
+        decoder_label_strings = []
         for i in range(len(batch['tokens'])):
             tokens = batch['tokens'][i]
             classes_to_id = batch['classes_to_id'][i]
             ner = batch['entities'][i]
             num_classes = len(classes_to_id)
-
-            spans_idx = [(start, start + width)
-                         for start in range(len(tokens))
-                         for width in range(self.config.max_width)]
-            spans_idx = torch.LongTensor(spans_idx)
-
+            spans_idx = torch.LongTensor([
+                (start, start + width)
+                for start in range(len(tokens))
+                for width in range(self.config.max_width)
+            ])
             span_to_index = {
                 (spans_idx[idx, 0].item(), spans_idx[idx, 1].item()): idx
                 for idx in range(len(spans_idx))
             }
-
+            if blank is not None:
+                num_classes = 1
             labels_one_hot = torch.zeros(len(spans_idx), num_classes + 1, dtype=torch.float)
-
-            lab_flt = []
-            for span in ner:
-                if span[2] in classes_to_id:
-                    lab_flt.append(((span[0], span[1]), classes_to_id[span[2]]))
-
-            for span, class_id in lab_flt:
-                if span in span_to_index:
+            end_token_idx = (len(tokens) - 1)
+            used_spans = set()
+            span_labels_dict = {}
+            for (start, end, label) in ner:
+                span = (start, end)
+                if label in classes_to_id and span in span_to_index:
                     idx = span_to_index[span]
-                    labels_one_hot[idx, class_id] = 1.0
-
-            valid_span_mask = spans_idx[:, 1] > (len(tokens) - 1)
+                    if self.config.decoder_mode == 'span':
+                        class_id = classes_to_id[label] if blank is None else 1
+                    else:
+                        class_id = classes_to_id[label]
+                    if labels_one_hot[idx, class_id] == 0 and idx not in used_spans:
+                        used_spans.add(idx)
+                        if end <= end_token_idx:
+                            labels_one_hot[idx, class_id] = 1.0
+                            span_labels_dict[idx] = label
+            valid_span_mask = spans_idx[:, 1] > end_token_idx
             labels_one_hot[valid_span_mask, :] = 0.0
-
             labels_one_hot = labels_one_hot[:, 1:]
-
             labels_batch.append(labels_one_hot)
-
-        # Convert the list of tensors to a single tensor
+            sorted_idxs = sorted(span_labels_dict.keys())
+            for idx in sorted_idxs:
+                decoder_label_strings.append(span_labels_dict[idx])
         if len(labels_batch) > 1:
             labels_batch = pad_2d_tensor(labels_batch)
         else:
             labels_batch = labels_batch[0]
-
-        return labels_batch
+        decoder_tokenized_input = None
+        if self.config.decoder_mode == 'span' and self.decoder_tokenizer is not None:
+            if not len(decoder_label_strings):
+                decoder_label_strings = ['other']
+            decoder_tokenized_input = self.decoder_tokenizer(
+                decoder_label_strings,
+                return_tensors="pt",
+                truncation=True,
+                padding="longest",
+                add_special_tokens=True
+            )
+            decoder_input_ids = decoder_tokenized_input['input_ids']
+            decoder_attention_mask = decoder_tokenized_input['attention_mask']
+            decoder_labels = decoder_input_ids.clone()
+            decoder_labels.masked_fill(~decoder_attention_mask.bool(), -100)
+            decoder_tokenized_input["labels"] = decoder_labels
+        return labels_batch, decoder_tokenized_input
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
-        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'])
+        if random.randint(0, 10)==10 and self.decoder_tokenizer is not None:
+            blank = "entity"
+        else:
+            blank = None
+        tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], prepare_labels, blank)
         if prepare_labels:
-            labels = self.create_labels(batch)
+            labels, decoder_tokenized_input = self.create_labels(batch, blank=blank)
             tokenized_input['labels'] = labels
+
+            if decoder_tokenized_input is not None:
+                tokenized_input['decoder_labels_ids'] = decoder_tokenized_input['input_ids']
+                tokenized_input['decoder_labels_mask'] = decoder_tokenized_input['attention_mask']
+                tokenized_input['decoder_labels'] = decoder_tokenized_input['labels']
+
         return tokenized_input
 
 class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):   

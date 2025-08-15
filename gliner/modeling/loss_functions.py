@@ -79,3 +79,21 @@ def focal_loss_with_logits(
             f"Invalid value for argument 'reduction': '{reduction}'. "
             f"Supported reduction modes: 'none', 'mean', 'sum'"
         )
+
+
+def cross_entropy_loss(
+        inputs: torch.Tensor,
+        targets: torch.Tensor,
+        reduction: str = "sum",
+        label_smoothing: float = 0.0,
+        ignore_index: int = -100,  # default value for ignored index
+        **kwargs
+) -> torch.Tensor:
+
+    cls_size = inputs.shape[-1]
+    inputs = inputs.reshape(-1, cls_size)
+    targets = targets.reshape(-1)
+    loss = F.cross_entropy(inputs, targets, ignore_index = ignore_index, 
+                            label_smoothing = label_smoothing, reduction=reduction)
+
+    return loss

@@ -20,6 +20,7 @@ from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcess
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
+from .decoding.trie import LabelsTrie
 from .evaluation import Evaluator
 from .modeling.base import BaseModel, SpanModel, TokenModel
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
@@ -81,11 +82,19 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
                     self.data_processor = SpanBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
                 else:
-                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter)
+                    if config.labels_decoder is not None:
+                        decoder_tokenizer = AutoTokenizer.from_pretrained(config.labels_decoder, cache_dir=cache_dir, add_prefix_space=True)
+                        if decoder_tokenizer.pad_token is None:
+                            decoder_tokenizer.pad_token = decoder_tokenizer.eos_token
+                    else:
+                        decoder_tokenizer = None
+                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter, decoder_tokenizer=decoder_tokenizer)
             else:
                 self.data_processor = data_processor
             self.decoder = SpanDecoder(config)
 
+        self.model.data_processor = self.data_processor # for debugging purposes
+        
         if config.vocab_size != -1 and config.vocab_size != len(
             self.data_processor.transformer_tokenizer
         ):
@@ -225,7 +234,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         return model_input, raw_batch
 
     def predict_entities(
-        self, text, labels, flat_ner=True, threshold=0.5, multi_label=False
+        self, text, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
     ):
         """
         Predict entities for a single text input.
@@ -240,74 +249,110 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         Returns:
             The list of entity predictions.
         """
-        return self.batch_predict_entities(
+        return self.run(
             [text],
             labels,
             flat_ner=flat_ner,
             threshold=threshold,
             multi_label=multi_label,
+            **kwargs
         )[0]
 
-    @torch.no_grad()
     def batch_predict_entities(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
     ):
         """
-        Predict entities for a batch of texts.
+        DEPRECATED: Use `run` instead.
+
+        This method will be removed in a future release. It now forwards to
+        `GLiNER.run(...)` to perform inference.
 
         Args:
-            texts (List[str]): A list of input texts to predict entities for.
-            labels (List[str]): A list of labels to predict.
-            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
-            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
-
-        Returns:
-            The list of lists with predicted entities.
+            texts (List[str]): Input texts.
+            labels (List[str]): Labels to predict.
+            flat_ner (bool, optional): Use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold. Defaults to 0.5.
+            multi_label (bool, optional): Allow multiple labels per token/entity. Defaults to False.
+            **kwargs: Extra arguments forwarded to `run` (e.g., batch_size).
         """
-
-        model_input, raw_batch = self.prepare_model_inputs(texts, labels)
-
-        model_output = self.model(**model_input)[0]
-
-        if not isinstance(model_output, torch.Tensor):
-            model_output = torch.from_numpy(model_output)
-
-        outputs = self.decoder.decode(
-            raw_batch["tokens"],
-            raw_batch["id_to_classes"],
-            model_output,
+        warnings.warn(
+            "GLiNER.batch_predict_entities is deprecated and will be removed in a future release. "
+            "Please use GLiNER.run instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return self.run(
+            texts,
+            labels,
             flat_ner=flat_ner,
             threshold=threshold,
             multi_label=multi_label,
+            **kwargs,
         )
 
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = raw_batch["all_start_token_idx_to_text_idx"][
-                i
-            ]
-            end_token_idx_to_text_idx = raw_batch["all_end_token_idx_to_text_idx"][i]
-            entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                entities.append(
-                    {
-                        "start": start_token_idx_to_text_idx[start_token_idx],
-                        "end": end_token_idx_to_text_idx[end_token_idx],
-                        "text": texts[i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                )
-            all_entities.append(entities)
+    def set_labels_trie(self, labels: List[str]):
+        """
+        Initializing the labels trie
 
-        return all_entities
+        Args:
+            labels (List[str]): Labels that will be used.
+        """ 
+        tokenized_labels = []
+        if self.data_processor.decoder_tokenizer is None:
+            raise NotImplementedError("Label trie is implemented only to models with decoder.")
+        for label in labels:
+            tokens = self.data_processor.decoder_tokenizer.encode(label) # type: ignore
+            if tokens[0] == self.data_processor.decoder_tokenizer.bos_token_id:
+                tokens = tokens[1:]
+            tokens.append(self.data_processor.decoder_tokenizer.eos_token_id)
+            tokenized_labels.append(tokens) # type: ignore
+        trie = LabelsTrie(tokenized_labels)
+        return trie
+    
+    def generate_labels(self, model_output, **gen_kwargs):
+        """
+        Generate (or rewrite) the textual class labels for each example in the batch.
 
+        Parameters
+        ----------
+        model_output : Namespace
+            Must expose `decoder_embedding` (FloatTensor, shape [N, L, H]) and
+            `decoder_embedding_mask` (BoolTensor, shape [N, L]), where N is the total
+            number of label placeholders across the whole minibatch.
+        **gen_kwargs
+            Extra args forwarded to `self.model.generate_labels` (e.g. `max_new_tokens`).
+
+        Returns
+        -------
+        list[dict[int, str]]
+            One dict per example, mapping the *new* 1-based label-ids to the
+            generated label strings.
+        """
+        # Unpack
+        dec_embeds = model_output.decoder_embedding            # [N, L, H]
+        if dec_embeds is None:
+            return []
+        
+        dec_mask = model_output.decoder_embedding_mask       # [N, L]
+
+        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, 
+                                                max_new_tokens=gen_kwargs.pop("max_new_tokens", 15),
+                                                eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
+                                                do_sample = gen_kwargs.pop("do_sample", True),
+                                                temperature = gen_kwargs.pop("temperature", 0.01),
+                                                no_repeat_ngram_size = gen_kwargs.pop("no_repeat_ngram_size", 1),
+                                                repetition_penalty = gen_kwargs.pop("repetition_penalty", 1.1),
+                                                **gen_kwargs)  # [N, S]
+
+        gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
+            gen_ids, skip_special_tokens=True
+        ) 
+        return gen_texts
+    
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, 
+        gen_constraints = None, num_gen_sequences = 1, **gen_kwargs
     ):
         """
         Predict entities for a batch of texts.
@@ -325,9 +370,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         self.eval()
         # raw input preparation
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
-
-        # labels = list(dict.fromkeys(labels))
-
+        
         collator = DataCollator(
             self.config,
             data_processor=self.data_processor,
@@ -351,18 +394,32 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         batch[key] = batch[key].to(self.device)
 
             # Perform predictions
-            model_output = self.model(**batch)[0]
+            model_output = self.model(**batch, threshold=threshold)
+            model_logits = model_output[0]
 
-            if not isinstance(model_output, torch.Tensor):
-                model_output = torch.from_numpy(model_output)
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            gen_labels = None
+            id_to_classes = batch["id_to_classes"]
+            if self.config.labels_decoder is not None:
+                if gen_constraints is not None:
+                    labels_trie = self.set_labels_trie(gen_constraints)
+                else:
+                    labels_trie = None
+                gen_labels = self.generate_labels(model_output, labels_trie=labels_trie, 
+                                                  num_return_sequences=num_gen_sequences, **gen_kwargs)
 
             decoded_outputs = self.decoder.decode(
                 batch["tokens"],
-                batch["id_to_classes"],
-                model_output,
+                id_to_classes,
+                model_logits,
                 flat_ner=flat_ner,
                 threshold=threshold,
                 multi_label=multi_label,
+                gen_labels=gen_labels,
+                sel_idx = model_output.decoder_span_idx,
+                num_gen_sequences=num_gen_sequences
             )
             outputs.extend(decoded_outputs)
 
@@ -371,18 +428,20 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
             entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+            for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                entities.append(
-                    {
+                ent_details =  {
                         "start": start_token_idx_to_text_idx[start_token_idx],
                         "end": end_token_idx_to_text_idx[end_token_idx],
                         "text": texts[i][start_text_idx:end_text_idx],
                         "label": ent_type,
                         "score": ent_score,
                     }
-                )
+                if gen_ent_type is not None:
+                    ent_details['generated labels'] = gen_ent_type
+                entities.append(ent_details)
+
             all_entities.append(entities)
 
         return all_entities
@@ -494,11 +553,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         self.eval()
         # Create the dataset and data loader
-        # dataset = GLiNERDataset(test_data, config = self.config, data_processor=self.data_processor,
-        #                                             return_tokens = True, return_id_to_classes = True,
-        #                                             prepare_labels= False, return_entities = True,
-        #                                             entities=entity_types, get_negatives=False)
-        # collator = DataCollatorWithPadding(self.config)
         dataset = test_data
         collator = DataCollator(
             self.config,
