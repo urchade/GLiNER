@@ -63,39 +63,39 @@ class Trainer(transformers.Trainer):
             `torch.Tensor`: The tensor with training loss on this batch.
         """
         model.train()
-        # try:
-        inputs = self._prepare_inputs(inputs)
-        if is_sagemaker_mp_enabled():
-            loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
-            return loss_mb.reduce_mean().detach().to(self.args.device)
+        try:
+            inputs = self._prepare_inputs(inputs)
+            if is_sagemaker_mp_enabled():
+                loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
+                return loss_mb.reduce_mean().detach().to(self.args.device)
 
-        with self.compute_loss_context_manager():
-            loss = self.compute_loss(model, inputs)
+            with self.compute_loss_context_manager():
+                loss = self.compute_loss(model, inputs)
 
-        del inputs
-        torch.cuda.empty_cache()
+            del inputs
+            torch.cuda.empty_cache()
 
-        kwargs = {}
+            kwargs = {}
 
-        if self.args.n_gpu > 1:
-            loss = loss.mean()  # Average on multi-gpu training
+            if self.args.n_gpu > 1:
+                loss = loss.mean()  # Average on multi-gpu training
 
-        if self.use_apex:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            self.accelerator.backward(loss, **kwargs)
+            if self.use_apex:
+                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                    scaled_loss.backward()
+            else:
+                self.accelerator.backward(loss, **kwargs)
 
-        return loss.detach() / self.args.gradient_accumulation_steps
+            return loss.detach() / self.args.gradient_accumulation_steps
 
-        # except Exception as e:
-        #     print(f"Skipping iteration due to error: {e}")
-        #     model.zero_grad(set_to_none=True)
-        #     torch.cuda.empty_cache()
-        #     # Safely get device for DataParallel or normal model
-        #     _model = getattr(model, "module", model)
-        #     device = next(_model.parameters()).device
-        #     return torch.tensor(0.0, requires_grad=True, device=device)
+        except Exception as e:
+            print(f"Skipping iteration due to error: {e}")
+            model.zero_grad(set_to_none=True)
+            torch.cuda.empty_cache()
+            # Safely get device for DataParallel or normal model
+            _model = getattr(model, "module", model)
+            device = next(_model.parameters()).device
+            return torch.tensor(0.0, requires_grad=True, device=device)
 
     def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
         self.model.save_pretrained(output_dir)
