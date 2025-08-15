@@ -310,17 +310,52 @@ class BaseModel(ABC, nn.Module):
                                                     **kwargs)
         return results
     
+    @staticmethod
+    def _fit_length(
+        embedding: torch.Tensor,    # (B, L, D)
+        mask:      torch.Tensor,    # (B, L)
+        target_len: int
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Make `embedding` & `mask` exactly `target_len` along dim=1.
+
+        * pad with zeros  if L < target_len  
+        * truncate       if L > target_len
+        """
+        B, L, D = embedding.shape
+        if L == target_len:
+            return embedding, mask
+
+        if L < target_len:                              # → PAD
+            pad_len = target_len - L
+            pad_emb = torch.zeros(B, pad_len, D,
+                                  dtype=embedding.dtype,
+                                  device=embedding.device)
+            pad_msk = torch.zeros(B, pad_len,
+                                  dtype=mask.dtype,
+                                  device=mask.device)
+            embedding = torch.cat([embedding, pad_emb], dim=1)
+            mask      = torch.cat([mask,      pad_msk], dim=1)
+
+        else:                                           # → TRUNCATE
+            embedding = embedding[:, :target_len]
+            mask      = mask[:,      :target_len]
+
+        return embedding, mask
+    
     @abstractmethod
     def forward(self, x):
         pass
 
     def _loss(self, logits: torch.Tensor, labels: torch.Tensor,
-              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0, negatives=1., masking="label"):
+              alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, 
+                    label_smoothing: float = 0.0, negatives=1., masking="label"):
 
         # Compute the loss per element using the focal loss function
         all_losses = focal_loss_with_logits(logits, labels,
                                             alpha=alpha,
                                             gamma=gamma,
+                                            prob_margin=prob_margin,
                                             label_smoothing=label_smoothing)
 
         # Create a mask of the same shape as labels:
@@ -459,6 +494,7 @@ class SpanModel(BaseModel):
         span_rep_mask = span_rep_mask & span_msk.bool()
         return span_rep_new, span_rep_mask, span_sel_idx
 
+
     def forward(self,
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
@@ -481,6 +517,7 @@ class SpanModel(BaseModel):
                 labels: Optional[torch.FloatTensor] = None,
                 decoder_labels:  Optional[torch.FloatTensor] = None,
                 threshold: Optional[float] = 0.5,
+                labels: Optional[torch.FloatTensor] = None, # B,L*K, C
                 **kwargs
                 ):
 
@@ -491,11 +528,22 @@ class SpanModel(BaseModel):
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
                                                                                                     words_mask)
-        span_idx = span_idx * span_mask.unsqueeze(-1)
+        target_W = span_idx.size(1) // self.config.max_width
+        words_embedding, mask = self._fit_length(words_embedding, mask, target_W)         
+            
+        span_idx = span_idx * span_mask.unsqueeze(-1)  
 
         span_rep = self.span_rep_layer(words_embedding, span_idx)
 
-        prompts_embedding = self.prompt_rep_layer(prompts_embedding)
+        target_C = prompts_embedding.size(1)
+        if labels is not None:
+            target_C = max(target_C, labels.size(-1))
+
+        prompts_embedding, prompts_embedding_mask = self._fit_length(
+            prompts_embedding, prompts_embedding_mask, target_C
+        )
+
+        prompts_embedding = self.prompt_rep_layer(prompts_embedding) 
 
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
         
@@ -540,7 +588,7 @@ class SpanModel(BaseModel):
 
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1.0, masking="label", decoder_loss = None, **kwargs):
+             prob_margin: float = 0.0, reduction: str = 'sum', negatives=1.0, masking="label", **kwargs):
 
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -551,12 +599,13 @@ class SpanModel(BaseModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, masking=masking)
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, 
+                                        label_smoothing, negatives, masking=masking)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
 
-        mask_label = mask_label.view(-1, 1)
+        mask_label = mask_label.reshape(-1, 1)
 
         all_losses = all_losses * mask_label.float()
 
@@ -604,6 +653,17 @@ class TokenModel(BaseModel):
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
                                                                                                     words_mask)
+        if labels is not None:
+            target_W = labels.shape[1]
+            words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
+
+            target_C = prompts_embedding.size(1)
+            if labels is not None:
+                target_C = max(target_C, labels.size(-2))
+
+            prompts_embedding, prompts_embedding_mask = self._fit_length(
+                prompts_embedding, prompts_embedding_mask, target_C
+            )
 
         scores = self.scorer(words_embedding, prompts_embedding)
 
@@ -622,11 +682,11 @@ class TokenModel(BaseModel):
         return output
 
     def loss(self, scores, labels, prompts_embedding_mask, mask,
-             alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1, **kwargs):
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives)
+             alpha: float = -1., gamma: float = 0.0, prob_margin: float=  0.0,
+             label_smoothing: float = 0.0, reduction: str = 'sum', negatives=1, **kwargs):
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
-        all_losses = all_losses * prompts_embedding_mask.unsqueeze(1) * mask.unsqueeze(-1)
+        all_losses = all_losses * (mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
 
         if reduction == "mean":
             loss = all_losses.mean()

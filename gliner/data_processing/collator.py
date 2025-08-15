@@ -86,10 +86,10 @@ class DataCollatorWithPadding:
                 padded_batch[key] = torch.tensor(
                     [seq + [0] * (max_length - len(seq)) for seq in key_data],
                     dtype=torch.float32
-                ).to(self.device)
+                )
             elif isinstance(key_data[0], (int, float)):
                 # Directly convert numeric data to tensors
-                padded_batch[key] = torch.tensor(key_data, dtype=torch.float32).to(self.device)
+                padded_batch[key] = torch.tensor(key_data, dtype=torch.float32)
             else:
                 raise TypeError(f"Unsupported data type for key '{key}': {type(key_data[0])}")
         padded_batch = {k:v for k,v in padded_batch.items() if v is not None}

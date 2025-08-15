@@ -531,21 +531,21 @@ class TokenProcessor(BaseProcessor):
 
     def create_labels(self, entities_id, batch_size, seq_len, num_classes):
         word_labels = torch.zeros(
-            3, batch_size, seq_len, num_classes, dtype=torch.float
+            batch_size, seq_len, num_classes, 3, dtype=torch.float
         )
-        # get batch_nums and span_pos
-        for i, element in enumerate(entities_id):
-            for ent in element:
-                st, ed, sp_label = ent
-                sp_label = sp_label - 1
 
-                # prevent indexing errors
+        for i, sentence_entities in enumerate(entities_id):      
+            for st, ed, sp_label in sentence_entities:           
+                sp_label -= 1                                   
+
+                # skip entities that point beyond sequence length
                 if st >= seq_len or ed >= seq_len:
                     continue
 
-                word_labels[0, i, st, sp_label] = 1  # start
-                word_labels[1, i, ed, sp_label] = 1  # end
-                word_labels[2, i, st:ed + 1, sp_label] = 1  # inside
+                word_labels[i, st, sp_label, 0] = 1              # start token
+                word_labels[i, ed, sp_label, 1] = 1              # end token
+                word_labels[i, st:ed + 1, sp_label, 2] = 1       # inside tokens (inclusive)
+
         return word_labels
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):

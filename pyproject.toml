@@ -47,7 +47,20 @@ dynamic = ["version"]
 
 [project.optional-dependencies]
 gpu = ["onnxruntime-gpu"]
-
+tokenizers = [
+    "langdetect",
+    "python-mecab-ko",
+    "janome",
+    "jieba3",
+    "camel_tools",
+    "indic-nlp-library",
+    "spacy",
+    "stanza"
+]
+stanza = [
+    "stanza",
+    "langdetect"
+]
 
 [project.urls]
 Homepage = "https://github.com/urchade/GLiNER"

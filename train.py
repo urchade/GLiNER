@@ -25,8 +25,6 @@ if __name__ == '__main__':
     parser.add_argument('--new_data_schema', type=bool, default = False)
     args = parser.parse_args()
     
-    device = torch.device('cuda:0') if torch.cuda.is_available() else torch.device('cpu')
-
     config = load_config_as_namespace(args.config)
     config.log_dir = args.log_dir
 
@@ -66,7 +64,6 @@ if __name__ == '__main__':
 
     if args.compile_model:
         torch.set_float32_matmul_precision('high')
-        model.to(device)
         model.compile_for_training()
         
     if args.freeze_text_encoder:
@@ -103,6 +100,8 @@ if __name__ == '__main__':
         others_weight_decay=float(config.weight_decay_other),
         focal_loss_gamma=config.loss_gamma,
         focal_loss_alpha=config.loss_alpha,
+        focal_loss_prob_margin = config.loss_prob_margin,
+        loss_reduction=config.loss_reduction,
         lr_scheduler_type=config.scheduler_type,
         warmup_ratio=config.warmup_ratio,
         per_device_train_batch_size=config.train_batch_size,

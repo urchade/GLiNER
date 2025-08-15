@@ -84,7 +84,7 @@ European Championship => competitions
     <tr>
       <td align="center">
         <strong>Urchade Zaratiana</strong><br>
-        <em>PhD Student at LIPN</em><br>
+        <em>Member of technical staff at Fastino</em><br>
         <a href="https://www.linkedin.com/in/urchade-zaratiana/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
       </td>
       <td align="center">
