@@ -13,16 +13,16 @@ def open_content(path):
     train, dev, test, labels = None, None, None, None
     for p in paths:
         if "train" in p:
-            with open(p, "r") as f:
+            with open(p, "r", encoding='utf-8') as f:
                 train = json.load(f)
         elif "dev" in p:
-            with open(p, "r") as f:
+            with open(p, "r", encoding='utf-8') as f:
                 dev = json.load(f)
         elif "test" in p:
-            with open(p, "r") as f:
+            with open(p, "r", encoding='utf-8') as f:
                 test = json.load(f)
         elif "labels" in p:
-            with open(p, "r") as f:
+            with open(p, "r", encoding='utf-8') as f:
                 labels = json.load(f)
     return train, dev, test, labels
 

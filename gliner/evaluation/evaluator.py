@@ -134,7 +134,7 @@ class Evaluator:
 
     def get_entities_pr(self, ents):
         all_ents = []
-        for s, e, lab, _ in ents:
+        for s, e, lab, _, _ in ents:
             all_ents.append([lab, (s, e)])
         return all_ents
 
