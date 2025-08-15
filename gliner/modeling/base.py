@@ -587,7 +587,7 @@ class SpanModel(BaseModel):
 
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             prob_margin: float = 0.0, reduction: str = 'sum', negatives=1.0, masking="label", **kwargs):
+             reduction: str = 'sum', negatives=1.0, masking="label", decoder_loss = None, **kwargs):
 
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -598,13 +598,12 @@ class SpanModel(BaseModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, 
-                                        label_smoothing, negatives, masking=masking)
+        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, masking=masking)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
 
-        mask_label = mask_label.reshape(-1, 1)
+        mask_label = mask_label.view(-1, 1)
 
         all_losses = all_losses * mask_label.float()
 
@@ -622,7 +621,6 @@ class SpanModel(BaseModel):
             loss = decoder_loss*0.75+loss*0.25
         
         return loss
-
 
 class TokenModel(BaseModel):
     def __init__(self, config, encoder_from_pretrained, cache_dir:Optional[Union[str, Path]] = None):

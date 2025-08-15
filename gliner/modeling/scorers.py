@@ -31,5 +31,5 @@ class Scorer(nn.Module):
         cat = torch.cat([token_rep[0], label_rep[0], token_rep[1] * label_rep[1]], dim=-1)
 
         # (batch_size, seq_len, num_classes, 3)
-        scores = self.out_mlp(cat)
+        scores = self.out_mlp(cat).permute(3, 0, 1, 2)
         return scores
