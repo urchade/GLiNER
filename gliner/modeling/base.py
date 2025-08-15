@@ -514,10 +514,9 @@ class SpanModel(BaseModel):
                 text_lengths: Optional[torch.Tensor] = None,
                 span_idx: Optional[torch.LongTensor] = None,
                 span_mask: Optional[torch.LongTensor] = None,
-                labels: Optional[torch.FloatTensor] = None,
+                labels: Optional[torch.FloatTensor] = None,  # B,L*K, C
                 decoder_labels:  Optional[torch.FloatTensor] = None,
                 threshold: Optional[float] = 0.5,
-                labels: Optional[torch.FloatTensor] = None, # B,L*K, C
                 **kwargs
                 ):
 

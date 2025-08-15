@@ -194,6 +194,9 @@ class Decoder(nn.Module):
         **kwargs
     ):
         model = self.decoder_layer.model
+        inputs_embeds = inputs_embeds.to(dtype=model.dtype)
+        if attention_mask is not None:
+            attention_mask = attention_mask.to(dtype=model.dtype)
         device, (B, L0, _) = inputs_embeds.device, inputs_embeds.shape
         cfg = model.config
 
