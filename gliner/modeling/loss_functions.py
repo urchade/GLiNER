@@ -51,7 +51,9 @@ def focal_loss_with_logits(
     pm =  torch.clamp(p-prob_margin, max=1.0)
 
     # Compute the binary cross-entropy loss without reduction
-    loss = -targets*torch.log(p.clamp(min=eps)) - (1-targets)*torch.log(1-pm.clamp(min=eps))
+    pos_term = -targets * torch.log(p.clamp(min=eps))
+    neg_term = -(1.0 - targets) * torch.log((1.0 - pm).clamp(min=eps))
+    loss = (pos_term + neg_term)    
     # F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
 
     # Apply the valid mask to the loss
