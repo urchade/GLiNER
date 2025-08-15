@@ -151,6 +151,7 @@ class TokenDecoder(BaseDecoder):
         return span_i
 
     def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False, **kwargs):
+        model_output = model_output.permute(3, 0, 1, 2)
         scores_start, scores_end, scores_inside = model_output
         spans = []
         for i, _ in enumerate(tokens):
