@@ -369,6 +369,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         """
         self.eval()
         # raw input preparation
+        if isinstance(texts, str):
+            texts = [texts]
         input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
         
         collator = DataCollator(
