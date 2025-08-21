@@ -478,7 +478,7 @@ class SpanBiEncoderProcessor(SpanProcessor, BaseBiEncoderProcessor):
             entities = None
         tokenized_input = self.tokenize_inputs(batch['tokens'], entities)
         if prepare_labels:
-            labels = self.create_labels(batch)
+            labels, _ = self.create_labels(batch)
             tokenized_input['labels'] = labels
         return tokenized_input
 
