@@ -7,7 +7,8 @@ from transformers import AutoModel, AutoConfig
 
 from .layers import LayersFuser
 from ..utils import is_module_available, MissedPackageException
-from typing import Optional, Union
+from ..infer_packing import InferencePackingConfig, pack_requests, unpack_spans
+from typing import Optional, Union, List
 
 IS_LLM2VEC = is_module_available('llm2vec')
 IS_PEFT = is_module_available('peft')
@@ -145,10 +146,89 @@ class Encoder(nn.Module):
         return self.bert_layer.model.get_input_embeddings()
     
     def encode_text(self, input_ids, attention_mask, *args, **kwargs):
-        token_embeddings = self.bert_layer(input_ids, attention_mask, *args, **kwargs)
+        packing_config: Optional[InferencePackingConfig] = kwargs.pop("packing_config", None)
+        pair_attention_mask = kwargs.pop("pair_attention_mask", None)
+
+        if (
+            packing_config is not None
+            and not self.training
+            and pair_attention_mask is None
+            and isinstance(input_ids, torch.Tensor)
+            and isinstance(attention_mask, torch.Tensor)
+            and input_ids.dim() == 2
+        ):
+            token_embeddings = self._encode_with_packing(
+                input_ids,
+                attention_mask,
+                packing_config,
+                *args,
+                **kwargs,
+            )
+        else:
+            attn_to_use = pair_attention_mask if pair_attention_mask is not None else attention_mask
+            if attn_to_use is not None and isinstance(attn_to_use, torch.Tensor) and attn_to_use.dim() == 3:
+                attn_to_use = attn_to_use.to(torch.bool)
+            token_embeddings = self.bert_layer(
+                input_ids,
+                attn_to_use,
+                *args,
+                **kwargs,
+            )
+
         if hasattr(self, "projection"):
             token_embeddings = self.projection(token_embeddings)
         return token_embeddings
+
+    def _encode_with_packing(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        packing_config: InferencePackingConfig,
+        *args,
+        **kwargs,
+    ) -> torch.Tensor:
+        lengths = attention_mask.sum(dim=-1).tolist()
+        seq_len = int(input_ids.size(1))
+        if not lengths or all(int(l) == seq_len for l in lengths):
+            return self.bert_layer(input_ids, attention_mask, *args, **kwargs)
+
+        requests = []
+        for row, length in zip(input_ids, lengths):
+            length = int(length)
+            if length <= 0:
+                requests.append({"input_ids": []})
+            else:
+                requests.append({"input_ids": row[:length].tolist()})
+
+        pad_token_id = self.bert_layer.model.config.pad_token_id
+        if pad_token_id is None:
+            pad_token_id = 0
+
+        packed = pack_requests(requests, packing_config, pad_token_id)
+
+        device = input_ids.device
+        packed_ids = packed.input_ids.to(device=device)
+        packed_mask = packed.pair_attention_mask.to(device=device)
+        packed_fallback = packed.attention_mask.to(device=device)
+
+        attn_to_use = packed_mask if packed_mask.numel() else packed_fallback
+        token_embeddings = self.bert_layer(
+            packed_ids,
+            attn_to_use,
+            *args,
+            **kwargs,
+        )
+
+        unpacked: List[torch.Tensor] = unpack_spans(token_embeddings, packed)
+        hidden_size = token_embeddings.size(-1)
+        batch, seq = input_ids.size()
+        output = token_embeddings.new_zeros(batch, seq, hidden_size)
+        for idx, target in enumerate(unpacked):
+            tgt_len = int(target.size(0))
+            if tgt_len == 0:
+                continue
+            output[idx, :tgt_len] = target
+        return output
     
     def forward(self, *args, **kwargs) -> torch.Tensor:
         token_embeddings = self.encode_text(*args, **kwargs)
