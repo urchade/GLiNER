@@ -40,7 +40,7 @@ class TrainingArguments(transformers.TrainingArguments):
     focal_loss_prob_margin: Optional[float] = 0
     label_smoothing: Optional[float] = 0
     loss_reduction: Optional[str] = 'sum'
-    negatives: Optional[float] = 0.0
+    negatives: Optional[float] = 1.0
     masking: Optional[str] = 'global'
 
 class Trainer(transformers.Trainer):

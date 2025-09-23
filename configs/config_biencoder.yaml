@@ -23,7 +23,7 @@ loss_alpha: -1
 loss_gamma: 0
 label_smoothing: 0
 loss_reduction: "sum"
-negatives: 0.0
+negatives: 1.0
 masking: 'none'
 
 # Learning Rate and weight decay Configuration

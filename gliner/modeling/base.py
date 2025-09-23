@@ -349,7 +349,7 @@ class BaseModel(ABC, nn.Module):
 
     def _loss(self, logits: torch.Tensor, labels: torch.Tensor,
               alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, 
-                    label_smoothing: float = 0.0, negatives=0., masking="label"):
+                    label_smoothing: float = 0.0, negatives=1., masking="none"):
 
         # Compute the loss per element using the focal loss function
         all_losses = focal_loss_with_logits(logits, labels,
@@ -587,7 +587,7 @@ class SpanModel(BaseModel):
 
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
              alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=0.0, masking="label", decoder_loss = None, **kwargs):
+             reduction: str = 'sum', negatives=1.0, masking="none", decoder_loss = None, **kwargs):
 
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
@@ -598,7 +598,7 @@ class SpanModel(BaseModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, masking=masking)
+        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives=negatives, masking=masking)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
