@@ -9,7 +9,7 @@ fine_tune: true
 subtoken_pooling: first
 fuse_layers: false
 post_fusion_schema: null #"l2l-l2t-t2t"
-span_mode: token_level #token_level | markerV0
+span_mode: markerV0 #token_level | markerV0
 
 # Training Parameters
 num_steps: 15000
@@ -24,6 +24,8 @@ loss_gamma: 0
 loss_prob_margin: 0
 label_smoothing: 0
 loss_reduction: "sum"
+negatives: 0.0
+masking: 'none'
 
 # Learning Rate and weight decay Configuration
 lr_encoder: 1e-5
@@ -35,7 +37,7 @@ max_grad_norm: 10.0
 
 # Directory Paths
 root_dir: gliner_logs
-train_data: "data.json" #"data/nuner_train.json" # see https://github.com/urchade/GLiNER/tree/main/data
+train_data: "data/data.json" #"data/nuner_train.json" # see https://github.com/urchade/GLiNER/tree/main/data
 val_data_dir: "none"
 # "NER_datasets": val data from the paper can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
 
