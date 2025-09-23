@@ -20,6 +20,8 @@ loss_alpha: -1 # focal loss alpha, if -1, no focal loss
 loss_gamma: 0 # focal loss gamma, if 0, no focal loss
 label_smoothing: 0
 loss_reduction: "sum"
+negatives: 1.0
+masking: 'none'
 
 # Learning Rate and weight decay Configuration
 lr_encoder: 1e-5
