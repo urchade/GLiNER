@@ -240,6 +240,11 @@ Sequence packing allows GLiNER to combine multiple short requests into a single 
    python bench/bench_gliner_e2e.py
    ```
 
+   To isolate and measure the impact on the encoder:
+   ```bash
+   python bench/bench_infer_packing.py --batch_size 32 --scenario short_zipf
+   ```
+
 ### 🔌 Usage with spaCy
 
 GLiNER can be seamlessly integrated with spaCy. To begin, install the `gliner-spacy` library via pip:
