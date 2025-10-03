@@ -328,10 +328,17 @@ def main() -> None:
         )
         packed = pack_requests(requests, cfg, pad_token_id)
         mask_dtype = baseline_inputs["attention_mask"].dtype
-        packed_inputs = {
-            "input_ids": packed.input_ids.to(device),
-            "attention_mask": packed.pair_attention_mask.to(device=device, dtype=mask_dtype),
-        }
+
+        if args.model in ["microsoft/deberta-v3-small", "microsoft/deberta-v3-base"]:
+            packed_inputs = {
+                "input_ids": packed.input_ids.to(device),
+                "attention_mask": packed.attention_mask.to(device=device, dtype=mask_dtype),
+            }
+        else:
+            packed_inputs = {
+                "input_ids": packed.input_ids.to(device),
+                "attention_mask": packed.pair_attention_mask.to(device=device, dtype=mask_dtype),
+            }
 
         baseline_time = _measure(
             model, baseline_inputs, warmup=warmup, iters=iters, device=device
