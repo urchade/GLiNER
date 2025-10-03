@@ -237,13 +237,8 @@ Sequence packing allows GLiNER to combine multiple short requests into a single 
    The `bench/bench_infer_packing.py` script can now stress the full GLiNER pipeline in addition to encoder-only Hugging Face models:
 
    ```bash
-   python bench/bench_infer_packing.py \
-       --gliner_model urchade/gliner_medium-v2.1 \
-       --gliner_labels person organization location \
-       --batch_size 64 --scenario short_zipf --device cuda
+   python bench/bench_gliner_e2e.py
    ```
-
-   The benchmark prints JSON metrics and a human-readable table comparing baseline and packed execution, including padding ratios, tokens processed per second, and the achieved speedup.
 
 ### 🔌 Usage with spaCy
 
