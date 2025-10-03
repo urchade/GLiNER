@@ -234,7 +234,7 @@ Sequence packing allows GLiNER to combine multiple short requests into a single 
 
 2. **Benchmark the impact**
 
-   The `bench/bench_infer_packing.py` script can now stress the full GLiNER pipeline in addition to encoder-only Hugging Face models:
+   The `bench/bench_gliner_e2e.py` script can stress the full GLiNER pipeline in addition to encoder-only Hugging Face models:
 
    ```bash
    python bench/bench_gliner_e2e.py
