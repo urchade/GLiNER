@@ -23,6 +23,7 @@ from .decoding import SpanDecoder, TokenDecoder
 from .decoding.trie import LabelsTrie
 from .evaluation import Evaluator
 from .modeling.base import BaseModel, SpanModel, TokenModel
+from .infer_packing import InferencePackingConfig
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 
 
@@ -108,6 +109,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         # to suppress an AttributeError when training
         self._keys_to_ignore_on_save = None
+        self._inference_packing_config: Optional[InferencePackingConfig] = None
 
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
@@ -160,6 +162,18 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             self.config.encoder_config.vocab_size = model_embeds.num_embeddings
 
         return model_embeds
+
+    def configure_inference_packing(
+        self, config: Optional[InferencePackingConfig]
+    ) -> None:
+        """Configure default packing behaviour for inference calls.
+
+        Passing ``None`` disables packing by default. Individual inference
+        methods accept a ``packing_config`` argument to override this setting
+        on a per-call basis.
+        """
+
+        self._inference_packing_config = config
 
     def prepare_texts(self, texts: List[str]):
         """
@@ -351,8 +365,17 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     
     @torch.no_grad()
     def run(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, batch_size=8, 
-        gen_constraints = None, num_gen_sequences = 1, **gen_kwargs
+        self,
+        texts,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        gen_constraints=None,
+        num_gen_sequences=1,
+        packing_config: Optional[InferencePackingConfig] = None,
+        **gen_kwargs,
     ):
         """
         Predict entities for a batch of texts.
@@ -363,6 +386,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
             threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
             multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+            packing_config (Optional[InferencePackingConfig], optional):
+                Configuration describing how to pack encoder inputs. When ``None``
+                the instance-level configuration set via
+                :meth:`configure_inference_packing` is used.
 
         Returns:
             The list of lists with predicted entities.
@@ -387,6 +414,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         )
 
         outputs = []
+        active_packing = (
+            packing_config
+            if packing_config is not None
+            else self._inference_packing_config
+        )
         # Iterate over data batches
         for batch in data_loader:
             # Move the batch to the appropriate device
@@ -396,7 +428,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                         batch[key] = batch[key].to(self.device)
 
             # Perform predictions
-            model_output = self.model(**batch, threshold=threshold)
+            if active_packing is not None and not self.onnx_model:
+                model_inputs = dict(batch)
+                model_inputs["packing_config"] = active_packing
+            else:
+                model_inputs = batch
+
+            model_output = self.model(**model_inputs, threshold=threshold)
             model_logits = model_output[0]
 
             if not isinstance(model_logits, torch.Tensor):
@@ -475,7 +513,14 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @torch.no_grad()
     def batch_predict_with_embeds(
-        self, texts, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
+        self,
+        texts,
+        labels_embeddings,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        packing_config: Optional[InferencePackingConfig] = None,
     ):
         """
         Predict entities for a batch of texts.
@@ -493,7 +538,17 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         model_input, raw_batch = self.prepare_model_inputs(texts, labels, prepare_entities = False)
 
-        model_output = self.model(labels_embeddings = labels_embeddings, **model_input)[0]
+        active_packing = (
+            packing_config
+            if packing_config is not None
+            else self._inference_packing_config
+        )
+
+        model_kwargs = dict(model_input)
+        if active_packing is not None and not self.onnx_model:
+            model_kwargs["packing_config"] = active_packing
+
+        model_output = self.model(labels_embeddings = labels_embeddings, **model_kwargs)[0]
 
         if not isinstance(model_output, torch.Tensor):
             model_output = torch.from_numpy(model_output)

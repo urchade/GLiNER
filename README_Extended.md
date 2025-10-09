@@ -204,6 +204,47 @@ UEFA Nations League => competitions
 European Championship => competitions
 ```
 
+### ⚡ Accelerating Inference with Sequence Packing
+
+Sequence packing allows GLiNER to combine multiple short requests into a single transformer pass while keeping a block-diagonal attention mask. This drastically reduces the number of padding tokens the encoder needs to process and yields higher throughput.
+
+1. **Configure packing once for all predictions**
+
+   ```python
+   from gliner import GLiNER, InferencePackingConfig
+
+   model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
+
+   packing_cfg = InferencePackingConfig(
+       max_length=512,
+       sep_token_id=model.data_processor.transformer_tokenizer.sep_token_id,
+       streams_per_batch=1,
+   )
+
+   # Enable packing for every subsequent `run`/`predict_*` call.
+   model.configure_inference_packing(packing_cfg)
+
+   texts = ["Email CEO to approve budget", "Schedule yearly medical checkup"]
+   labels = ["person", "organization", "action"]
+
+   predictions = model.run(texts, labels, batch_size=16)
+   ```
+
+   You can override or disable the default configuration on a per-call basis by passing `packing_config=<new_cfg>` or `packing_config=None` respectively when invoking `model.run` or `model.predict_entities`.
+
+2. **Benchmark the impact**
+
+   The `bench/bench_gliner_e2e.py` script can stress the full GLiNER pipeline in addition to encoder-only Hugging Face models:
+
+   ```bash
+   python bench/bench_gliner_e2e.py
+   ```
+
+   To isolate and measure the impact on the encoder:
+   ```bash
+   python bench/bench_infer_packing.py --batch_size 32 --scenario short_zipf
+   ```
+
 ### 🔌 Usage with spaCy
 
 GLiNER can be seamlessly integrated with spaCy. To begin, install the `gliner-spacy` library via pip:
