@@ -390,7 +390,7 @@ class SpanProcessor(BaseProcessor):
         decoder_label_strings = []
         for i in range(len(batch['tokens'])):
             tokens = batch['tokens'][i]
-            classes_to_id = batch['classes_to_id'][i]
+            classes_to_id = batch['classes_to_id']
             ner = batch['entities'][i]
             num_classes = len(classes_to_id)
             spans_idx = torch.LongTensor([
