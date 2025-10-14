@@ -98,7 +98,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=4,
+        default=32,
         help="Batch size to use for the GLiNER dataloader",
     )
     parser.add_argument(
