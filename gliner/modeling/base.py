@@ -532,7 +532,8 @@ class SpanModel(BaseModel):
                                                                                                     labels_input_ids,
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
-                                                                                                    words_mask)
+                                                                                                    words_mask,
+                                                                                                    **encoder_kwargs)
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)         
             
@@ -661,7 +662,8 @@ class TokenModel(BaseModel):
                                                                                                     labels_input_ids,
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
-                                                                                                    words_mask)
+                                                                                                    words_mask,
+                                                                                                    **encoder_kwargs)
         if labels is not None:
             target_W = labels.shape[1]
             words_embedding, mask = self._fit_length(words_embedding, mask, target_W)

@@ -160,6 +160,7 @@ class Transformer(nn.Module):
                     mask_info=mask_info,
                 )
             else:
+                model_kwargs.pop("packing_config", None)
                 model_kwargs["attention_mask"] = mask_info["extended_mask"]
                 output = self.model(*args, **model_kwargs)
         else:
@@ -638,7 +639,10 @@ class BiEncoder(Encoder):
         return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
     def encode_labels(self, input_ids, attention_mask, *args, **kwargs):
-        labels_embeddings = self.labels_encoder(input_ids, attention_mask, *args, **kwargs)
+        label_kwargs = dict(kwargs)
+        label_kwargs.pop("packing_config", None)
+        label_kwargs.pop("pair_attention_mask", None)
+        labels_embeddings = self.labels_encoder(input_ids, attention_mask, *args, **label_kwargs)
         if hasattr(self, "labels_projection"):
             labels_embeddings = self.labels_projection(labels_embeddings)
         labels_embeddings = self.mean_pooling(labels_embeddings, attention_mask)
