@@ -520,6 +520,12 @@ class SpanModel(BaseModel):
                 **kwargs
                 ):
 
+        encoder_kwargs = {
+            key: kwargs[key]
+            for key in ("packing_config", "pair_attention_mask")
+            if key in kwargs
+        }
+
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids,
                                                                                                     attention_mask,
                                                                                                     labels_embeddings,
@@ -642,6 +648,12 @@ class TokenModel(BaseModel):
                 labels: Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
+
+        encoder_kwargs = {
+            key: kwargs[key]
+            for key in ("packing_config", "pair_attention_mask")
+            if key in kwargs
+        }
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids,
                                                                                                     attention_mask,

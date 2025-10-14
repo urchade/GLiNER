@@ -9,6 +9,7 @@ import sys
 import textwrap
 import time
 from typing import List, Sequence
+import traceback
 
 import torch
 
@@ -190,6 +191,7 @@ def main() -> None:
     try:
         model = GLiNER.from_pretrained(args.model, map_location=str(device))
     except Exception as exc:  # pragma: no cover - network / I/O failures
+        print(traceback.format_exc())
         raise SystemExit(
             "Failed to load GLiNER model. Use --model with a local path or ensure network access."
         ) from exc
@@ -234,7 +236,7 @@ def main() -> None:
         device=device,
         packing_config=packing_config,
     )
-    _display_predictions(texts, packed_preds)
+    # _display_predictions(texts, packed_preds)
 
     identical = baseline_preds == packed_preds
 
@@ -244,6 +246,12 @@ def main() -> None:
     if packed_time > 0:
         print(f"  Speedup        : {baseline_time / packed_time:.2f}x")
     print(f"Predictions identical: {identical}")
+
+    # if not identical:
+    #     print("WARNING: Predictions differ between baseline and packed runs!")
+    #     print(baseline_preds)
+    #     print("===================="*10)
+    #     print(packed_preds)
 
 
 if __name__ == "__main__":
