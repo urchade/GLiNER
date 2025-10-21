@@ -520,13 +520,20 @@ class SpanModel(BaseModel):
                 **kwargs
                 ):
 
+        encoder_kwargs = {
+            key: kwargs[key]
+            for key in ("packing_config", "pair_attention_mask")
+            if key in kwargs
+        }
+
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids,
                                                                                                     attention_mask,
                                                                                                     labels_embeddings,
                                                                                                     labels_input_ids,
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
-                                                                                                    words_mask)
+                                                                                                    words_mask,
+                                                                                                    **encoder_kwargs)
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)         
             
@@ -643,13 +650,20 @@ class TokenModel(BaseModel):
                 **kwargs
                 ):
 
+        encoder_kwargs = {
+            key: kwargs[key]
+            for key in ("packing_config", "pair_attention_mask")
+            if key in kwargs
+        }
+
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(input_ids,
                                                                                                     attention_mask,
                                                                                                     labels_embeddings,
                                                                                                     labels_input_ids,
                                                                                                     labels_attention_mask,
                                                                                                     text_lengths,
-                                                                                                    words_mask)
+                                                                                                    words_mask,
+                                                                                                    **encoder_kwargs)
         if labels is not None:
             target_W = labels.shape[1]
             words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
