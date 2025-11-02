@@ -4,7 +4,8 @@ import re
 import warnings
 from tqdm import tqdm
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Union, Type
+from abc import ABC, abstractmethod
 
 import onnxruntime as ort
 import torch
@@ -15,101 +16,97 @@ from transformers import AutoConfig, AutoTokenizer
 from safetensors import safe_open
 from safetensors.torch import save_file
 
-from .config import GLiNERConfig
-from .data_processing import SpanProcessor, SpanBiEncoderProcessor, TokenProcessor, TokenBiEncoderProcessor
+from .config import BaseGLiNERConfig, GLiNERConfig
+from .data_processing import BaseProcessor
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
 from .decoding.trie import LabelsTrie
 from .evaluation import Evaluator
-from .modeling.base import BaseModel, SpanModel, TokenModel
+from .training import TrainingArguments, Trainer
+from .modeling.base import BaseModel
 from .infer_packing import InferencePackingConfig
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
+from .utils import is_module_available
 
+if is_module_available("onnxruntime"):
+    import onnxruntime as ort
+    ONNX_AVAILABLE = True
+else:
+    ONNX_AVAILABLE = False
 
-class GLiNER(nn.Module, PyTorchModelHubMixin):
+class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
+    config_class: Type = None 
+    model_class: Type = None
+    data_processor_class: Type = None
+    decoder_class: Type = None
+
     def __init__(
         self,
-        config: GLiNERConfig,
-        model: Optional[Union[BaseModel, BaseORTModel]] = None,
-        tokenizer: Optional[Union[str, AutoTokenizer]] = None,
-        words_splitter: Optional[Union[str, WordsSplitter]] = None,
-        data_processor: Optional[Union[SpanProcessor, TokenProcessor]] = None,
-        encoder_from_pretrained: bool = True,
+        config: BaseGLiNERConfig,
+        model: Optional[BaseModel] = None,
+        tokenizer: Optional[BaseModel] = None,
+        data_processor: Optional[BaseProcessor] = None,
+        backbone_from_pretrained: Optional[bool] = False,
         cache_dir: Optional[Union[str, Path]] = None,
+        **kwargs
     ):
-        """
-        Initialize the GLiNER model.
-
-        Args:
-            config (GLiNERConfig): Configuration object for the GLiNER model.
-            model (Optional[Union[BaseModel, BaseORTModel]]): GLiNER model to use for predictions. Defaults to None.
-            tokenizer (Optional[Union[str, AutoTokenizer]]): Tokenizer to use. Can be a string (path or name) or an AutoTokenizer instance. Defaults to None.
-            words_splitter (Optional[Union[str, WordsSplitter]]): Words splitter to use. Can be a string or a WordsSplitter instance. Defaults to None.
-            data_processor (Optional[Union[SpanProcessor, TokenProcessor]]): Data processor - object that prepare input to a model. Defaults to None.
-            encoder_from_pretrained (bool): Whether to load the encoder from a pre-trained model or init from scratch. Defaults to True.
-        """
         super().__init__()
         self.config = config
 
-        if tokenizer is None and data_processor is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
-
-        if words_splitter is None and data_processor is None:
-            words_splitter = WordsSplitter(config.words_splitter_type)
-
-        if config.span_mode == "token_level":
-            if model is None:
-                self.model = TokenModel(config, encoder_from_pretrained, cache_dir=cache_dir)
-            else:
-                self.model = model
-            if data_processor is None:
-                if config.labels_encoder is not None:
-                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
-                    self.data_processor = TokenBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
-                else:
-                    self.data_processor = TokenProcessor(config, tokenizer, words_splitter)
-
-            else:
-                self.data_processor = data_processor
-            self.decoder = TokenDecoder(config)
+        if model is not None:
+            self.model = model
         else:
-            if model is None:
-                self.model = SpanModel(config, encoder_from_pretrained, cache_dir=cache_dir)
-            else:
-                self.model = model
-            if data_processor is None:
-                if config.labels_encoder is not None:
-                    labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
-                    self.data_processor = SpanBiEncoderProcessor(config, tokenizer, words_splitter, labels_tokenizer)
-                else:
-                    if config.labels_decoder is not None:
-                        decoder_tokenizer = AutoTokenizer.from_pretrained(config.labels_decoder, cache_dir=cache_dir, add_prefix_space=True)
-                        if decoder_tokenizer.pad_token is None:
-                            decoder_tokenizer.pad_token = decoder_tokenizer.eos_token
-                    else:
-                        decoder_tokenizer = None
-                    self.data_processor = SpanProcessor(config, tokenizer, words_splitter, decoder_tokenizer=decoder_tokenizer)
-            else:
-                self.data_processor = data_processor
-            self.decoder = SpanDecoder(config)
-
-        self.model.data_processor = self.data_processor # for debugging purposes
+            self.model = self._create_model(config, backbone_from_pretrained, cache_dir, **kwargs)
         
-        if config.vocab_size != -1 and config.vocab_size != len(
-            self.data_processor.transformer_tokenizer
-        ):
-            warnings.warn(f"""Vocab size of the model ({config.vocab_size}) does't match length of tokenizer ({len(self.data_processor.transformer_tokenizer)}). 
-                            You should to consider manually add new tokens to tokenizer or to load tokenizer with added tokens.""")
-
+        if data_processor is not None:
+            self.data_processor = data_processor
+        else:
+            self.data_processor = self._create_data_processor(config, tokenizer, cache_dir, **kwargs)
+    
         if isinstance(self.model, BaseORTModel):
             self.onnx_model = True
         else:
             self.onnx_model = False
 
-        # to suppress an AttributeError when training
         self._keys_to_ignore_on_save = None
         self._inference_packing_config: Optional[InferencePackingConfig] = None
+
+    @abstractmethod
+    def _create_model(self, config, backbone_from_pretrained, cache_dir, **kwargs):
+        """
+        Create model instance. Must be implemented by child classes.
+        
+        Returns:
+            Model instance
+        """
+        pass
+    
+    @abstractmethod
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, **kwargs):
+        """
+        Create data processor instance. Must be implemented by child classes.
+        
+        Returns:
+            Data processor instance
+        """
+        pass
+
+    @abstractmethod
+    def prepare_model_inputs(self):
+        pass
+
+    @abstractmethod
+    def resize_embeddings(self):
+        pass
+
+    @abstractmethod
+    def inference(self):
+        pass
+    
+    @abstractmethod
+    def evaluate(self):
+        pass
 
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
@@ -126,43 +123,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         device = next(self.model.parameters()).device
         return device
 
-    def resize_token_embeddings(
-        self,
-        add_tokens,
-        set_class_token_index=True,
-        add_tokens_to_tokenizer=True,
-        pad_to_multiple_of=None,
-    ) -> nn.Embedding:
-        """
-        Resize the token embeddings of the model.
-
-        Args:
-            add_tokens: The tokens to add to the embedding layer.
-            set_class_token_index (bool, optional): Whether to set the class token index. Defaults to True.
-            add_tokens_to_tokenizer (bool, optional): Whether to add the tokens to the tokenizer. Defaults to True.
-            pad_to_multiple_of (int, optional): If set, pads the embedding size to be a multiple of this value. Defaults to None.
-
-        Returns:
-            nn.Embedding: The resized embedding layer.
-        """
-        if set_class_token_index:
-            self.config.class_token_index = (
-                len(self.data_processor.transformer_tokenizer) + 1
-            )
-        if add_tokens_to_tokenizer:
-            self.data_processor.transformer_tokenizer.add_tokens(add_tokens)
-        new_num_tokens = len(self.data_processor.transformer_tokenizer)
-        model_embeds = self.model.token_rep_layer.resize_token_embeddings(
-            new_num_tokens, pad_to_multiple_of
-        )
-        # update vocab size
-        self.config.vocab_size = model_embeds.num_embeddings
-
-        if self.config.encoder_config is not None:
-            self.config.encoder_config.vocab_size = model_embeds.num_embeddings
-
-        return model_embeds
-
     def configure_inference_packing(
         self, config: Optional[InferencePackingConfig]
     ) -> None:
@@ -175,582 +135,20 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
         self._inference_packing_config = config
 
-    def prepare_texts(self, texts: List[str]):
-        """
-        Prepare inputs for the model.
-
-        Args:
-            texts (str): The input text or texts to process.
-            labels (str): The corresponding labels for the input texts.
-        """
-        all_tokens = []
-        all_start_token_idx_to_text_idx = []
-        all_end_token_idx_to_text_idx = []
-
-        for text in texts:
-            tokens = []
-            start_token_idx_to_text_idx = []
-            end_token_idx_to_text_idx = []
-            for token, start, end in self.data_processor.words_splitter(text):
-                tokens.append(token)
-                start_token_idx_to_text_idx.append(start)
-                end_token_idx_to_text_idx.append(end)
-            all_tokens.append(tokens)
-            all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
-            all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
-
-        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
-
-        return input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
-
-
-    def prepare_model_inputs(self, texts: List[str], labels: List[str], prepare_entities: bool = True):
-        """
-        Prepare inputs for the model.
-
-        Args:
-            texts (str): The input text or texts to process.
-            labels (str): The corresponding labels for the input texts.
-        """
-        # preserving the order of labels
-        labels = list(dict.fromkeys(labels))
-
-        class_to_ids = {k: v for v, k in enumerate(labels, start=1)}
-        id_to_classes = {k: v for v, k in class_to_ids.items()}
-
-        input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
-
-        raw_batch = self.data_processor.collate_raw_batch(input_x, labels,
-                                                        class_to_ids = class_to_ids,
-                                                        id_to_classes = id_to_classes)
-        raw_batch["all_start_token_idx_to_text_idx"] = all_start_token_idx_to_text_idx
-        raw_batch["all_end_token_idx_to_text_idx"] = all_end_token_idx_to_text_idx
-
-        model_input = self.data_processor.collate_fn(raw_batch, prepare_labels=False,
-                                                        prepare_entities=prepare_entities)
-        model_input.update(
-            {
-                "span_idx": raw_batch["span_idx"] if "span_idx" in raw_batch else None,
-                "span_mask": raw_batch["span_mask"]
-                if "span_mask" in raw_batch
-                else None,
-                "text_lengths": raw_batch["seq_length"],
-            }
-        )
-
-        device = self.device
-        for key in model_input:
-            if model_input[key] is not None and isinstance(
-                model_input[key], torch.Tensor
-            ):
-                model_input[key] = model_input[key].to(device)
-
-        return model_input, raw_batch
-
-    def predict_entities(
-        self, text, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
-    ):
-        """
-        Predict entities for a single text input.
-
-        Args:
-            text: The input text to predict entities for.
-            labels: The labels to predict.
-            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
-            multi_label (bool, optional): Whether to allow multiple labels per entity. Defaults to False.
-
-        Returns:
-            The list of entity predictions.
-        """
-        return self.run(
-            [text],
-            labels,
-            flat_ner=flat_ner,
-            threshold=threshold,
-            multi_label=multi_label,
-            **kwargs
-        )[0]
-
-    def batch_predict_entities(
-        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
-    ):
-        """
-        DEPRECATED: Use `run` instead.
-
-        This method will be removed in a future release. It now forwards to
-        `GLiNER.run(...)` to perform inference.
-
-        Args:
-            texts (List[str]): Input texts.
-            labels (List[str]): Labels to predict.
-            flat_ner (bool, optional): Use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold. Defaults to 0.5.
-            multi_label (bool, optional): Allow multiple labels per token/entity. Defaults to False.
-            **kwargs: Extra arguments forwarded to `run` (e.g., batch_size).
-        """
-        warnings.warn(
-            "GLiNER.batch_predict_entities is deprecated and will be removed in a future release. "
-            "Please use GLiNER.run instead.",
-            FutureWarning,
-            stacklevel=2,
-        )
-        return self.run(
-            texts,
-            labels,
-            flat_ner=flat_ner,
-            threshold=threshold,
-            multi_label=multi_label,
-            **kwargs,
-        )
-
-    def set_labels_trie(self, labels: List[str]):
-        """
-        Initializing the labels trie
-
-        Args:
-            labels (List[str]): Labels that will be used.
-        """ 
-        tokenized_labels = []
-        if self.data_processor.decoder_tokenizer is None:
-            raise NotImplementedError("Label trie is implemented only to models with decoder.")
-        for label in labels:
-            tokens = self.data_processor.decoder_tokenizer.encode(label) # type: ignore
-            if tokens[0] == self.data_processor.decoder_tokenizer.bos_token_id:
-                tokens = tokens[1:]
-            tokens.append(self.data_processor.decoder_tokenizer.eos_token_id)
-            tokenized_labels.append(tokens) # type: ignore
-        trie = LabelsTrie(tokenized_labels)
-        return trie
-    
-    def generate_labels(self, model_output, **gen_kwargs):
-        """
-        Generate (or rewrite) the textual class labels for each example in the batch.
-
-        Parameters
-        ----------
-        model_output : Namespace
-            Must expose `decoder_embedding` (FloatTensor, shape [N, L, H]) and
-            `decoder_embedding_mask` (BoolTensor, shape [N, L]), where N is the total
-            number of label placeholders across the whole minibatch.
-        **gen_kwargs
-            Extra args forwarded to `self.model.generate_labels` (e.g. `max_new_tokens`).
-
-        Returns
-        -------
-        list[dict[int, str]]
-            One dict per example, mapping the *new* 1-based label-ids to the
-            generated label strings.
-        """
-        # Unpack
-        dec_embeds = model_output.decoder_embedding            # [N, L, H]
-        if dec_embeds is None:
-            return []
-        
-        dec_mask = model_output.decoder_embedding_mask       # [N, L]
-
-        gen_ids = self.model.generate_labels(dec_embeds, dec_mask, 
-                                                max_new_tokens=gen_kwargs.pop("max_new_tokens", 15),
-                                                eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
-                                                do_sample = gen_kwargs.pop("do_sample", True),
-                                                temperature = gen_kwargs.pop("temperature", 0.01),
-                                                no_repeat_ngram_size = gen_kwargs.pop("no_repeat_ngram_size", 1),
-                                                repetition_penalty = gen_kwargs.pop("repetition_penalty", 1.1),
-                                                **gen_kwargs)  # [N, S]
-
-        gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
-            gen_ids, skip_special_tokens=True
-        ) 
-        return gen_texts
-    
-    @torch.no_grad()
-    def run(
-        self,
-        texts,
-        labels,
-        flat_ner=True,
-        threshold=0.5,
-        multi_label=False,
-        batch_size=8,
-        gen_constraints=None,
-        num_gen_sequences=1,
-        packing_config: Optional[InferencePackingConfig] = None,
-        **gen_kwargs,
-    ):
-        """
-        Predict entities for a batch of texts.
-
-        Args:
-            texts (List[str]): A list of input texts to predict entities for.
-            labels (List[str]): A list of labels to predict.
-            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
-            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
-            packing_config (Optional[InferencePackingConfig], optional):
-                Configuration describing how to pack encoder inputs. When ``None``
-                the instance-level configuration set via
-                :meth:`configure_inference_packing` is used.
-
-        Returns:
-            The list of lists with predicted entities.
-        """
-        self.eval()
-        # raw input preparation
-        if isinstance(texts, str):
-            texts = [texts]
-        input_x, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
-        
-        collator = DataCollator(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
-            entity_types=labels,
-        )
-        data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
-        )
-
-        outputs = []
-        active_packing = (
-            packing_config
-            if packing_config is not None
-            else self._inference_packing_config
-        )
-        # Iterate over data batches
-        for batch in data_loader:
-            # Move the batch to the appropriate device
-            if not self.onnx_model:
-                for key in batch:
-                    if isinstance(batch[key], torch.Tensor):
-                        batch[key] = batch[key].to(self.device)
-
-            # Perform predictions
-            if active_packing is not None and not self.onnx_model:
-                model_inputs = dict(batch)
-                model_inputs["packing_config"] = active_packing
-            else:
-                model_inputs = batch
-
-            model_output = self.model(**model_inputs, threshold=threshold)
-            model_logits = model_output[0]
-
-            if not isinstance(model_logits, torch.Tensor):
-                model_logits = torch.from_numpy(model_logits)
-            
-            gen_labels = None
-            id_to_classes = batch["id_to_classes"]
-            if self.config.labels_decoder is not None:
-                if gen_constraints is not None:
-                    labels_trie = self.set_labels_trie(gen_constraints)
-                else:
-                    labels_trie = None
-                gen_labels = self.generate_labels(model_output, labels_trie=labels_trie, 
-                                                  num_return_sequences=num_gen_sequences, **gen_kwargs)
-
-            decoded_outputs = self.decoder.decode(
-                batch["tokens"],
-                id_to_classes,
-                model_logits,
-                flat_ner=flat_ner,
-                threshold=threshold,
-                multi_label=multi_label,
-                gen_labels=gen_labels,
-                sel_idx = model_output.decoder_span_idx,
-                num_gen_sequences=num_gen_sequences
-            )
-            outputs.extend(decoded_outputs)
-
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
-            entities = []
-            for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                ent_details =  {
-                        "start": start_token_idx_to_text_idx[start_token_idx],
-                        "end": end_token_idx_to_text_idx[end_token_idx],
-                        "text": texts[i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                if gen_ent_type is not None:
-                    ent_details['generated labels'] = gen_ent_type
-                entities.append(ent_details)
-
-            all_entities.append(entities)
-
-        return all_entities
-
-    def predict_with_embeds(
-        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False
-    ):
-        """
-        Predict entities for a single text input.
-
-        Args:
-            text: The input text to predict entities for.
-            labels: The labels to predict.
-            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
-            multi_label (bool, optional): Whether to allow multiple labels per entity. Defaults to False.
-
-        Returns:
-            The list of entity predictions.
-        """
-        return self.batch_predict_with_embeds(
-            [text],
-            labels_embeddings,
-            labels,
-            flat_ner=flat_ner,
-            threshold=threshold,
-            multi_label=multi_label,
-        )[0]
-
-    @torch.no_grad()
-    def batch_predict_with_embeds(
-        self,
-        texts,
-        labels_embeddings,
-        labels,
-        flat_ner=True,
-        threshold=0.5,
-        multi_label=False,
-        packing_config: Optional[InferencePackingConfig] = None,
-    ):
-        """
-        Predict entities for a batch of texts.
-
-        Args:
-            texts (List[str]): A list of input texts to predict entities for.
-            labels (List[str]): A list of labels to predict.
-            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
-            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
-            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
-
-        Returns:
-            The list of lists with predicted entities.
-        """
-
-        model_input, raw_batch = self.prepare_model_inputs(texts, labels, prepare_entities = False)
-
-        active_packing = (
-            packing_config
-            if packing_config is not None
-            else self._inference_packing_config
-        )
-
-        model_kwargs = dict(model_input)
-        if active_packing is not None and not self.onnx_model:
-            model_kwargs["packing_config"] = active_packing
-
-        model_output = self.model(labels_embeddings = labels_embeddings, **model_kwargs)[0]
-
-        if not isinstance(model_output, torch.Tensor):
-            model_output = torch.from_numpy(model_output)
-
-        outputs = self.decoder.decode(
-            raw_batch["tokens"],
-            raw_batch["id_to_classes"],
-            model_output,
-            flat_ner=flat_ner,
-            threshold=threshold,
-            multi_label=multi_label,
-        )
-
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = raw_batch["all_start_token_idx_to_text_idx"][
-                i
-            ]
-            end_token_idx_to_text_idx = raw_batch["all_end_token_idx_to_text_idx"][i]
-            entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                entities.append(
-                    {
-                        "start": start_token_idx_to_text_idx[start_token_idx],
-                        "end": end_token_idx_to_text_idx[end_token_idx],
-                        "text": texts[i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                )
-            all_entities.append(entities)
-
-        return all_entities
-
-    def evaluate(
-        self,
-        test_data,
-        flat_ner=False,
-        multi_label=False,
-        threshold=0.5,
-        batch_size=12,
-        entity_types=None,
-    ):
-        """
-        Evaluate the model on a given test dataset.
-
-        Args:
-            test_data (List[Dict]): The test data containing text and entity annotations.
-            flat_ner (bool): Whether to use flat NER. Defaults to False.
-            multi_label (bool): Whether to use multi-label classification. Defaults to False.
-            threshold (float): The threshold for predictions. Defaults to 0.5.
-            batch_size (int): The batch size for evaluation. Defaults to 12.
-            entity_types (Optional[List[str]]): List of entity types to consider. Defaults to None.
-
-        Returns:
-            tuple: A tuple containing the evaluation output and the F1 score.
-        """
-        self.eval()
-        # Create the dataset and data loader
-        dataset = test_data
-        collator = DataCollator(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
-            entity_types=entity_types,
-        )
-        data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
-        )
-
-        all_preds = []
-        all_trues = []
-
-        # Iterate over data batches
-        for batch in data_loader:
-            # Move the batch to the appropriate device
-            for key in batch:
-                if isinstance(batch[key], torch.Tensor):
-                    batch[key] = batch[key].to(self.device)
-
-            # Perform predictions
-            model_output = self.model(**batch)[0]
-
-            if not isinstance(model_output, torch.Tensor):
-                model_output = torch.from_numpy(model_output)
-
-            decoded_outputs = self.decoder.decode(
-                batch["tokens"],
-                batch["id_to_classes"],
-                model_output,
-                flat_ner=flat_ner,
-                threshold=threshold,
-                multi_label=multi_label,
-            )
-            all_preds.extend(decoded_outputs)
-            all_trues.extend(batch["entities"])
-        # Evaluate the predictions
-        evaluator = Evaluator(all_trues, all_preds)
-        out, f1 = evaluator.evaluate()
-
-        return out, f1
-
-    def encode_labels(self, labels: List[str], batch_size: int = 8) -> torch.FloatTensor:
-        """
-        Embedding of labels.
-
-        Args:
-            labels (List[str]): A list of labels.
-            batch_size (int): Batch size for processing labels.
-
-        Returns:
-            labels_embeddings (torch.FloatTensor): Tensor containing label embeddings.
-        """
-        if self.config.labels_encoder is None:
-            raise NotImplementedError("Labels pre-encoding is supported only for bi-encoder model.")
-
-        # Create a DataLoader for efficient batching
-        dataloader = DataLoader(labels, batch_size=batch_size, collate_fn=lambda x: x)
-
-        labels_embeddings = []
-
-        for batch in tqdm(dataloader, desc="Encoding labels"):
-            tokenized_labels = self.data_processor.labels_tokenizer(batch, return_tensors='pt',
-                                                                truncation=True, padding="max_length").to(self.device)
-            with torch.no_grad():  # Disable gradient calculation for inference
-                curr_labels_embeddings = self.model.token_rep_layer.encode_labels(**tokenized_labels)
-            labels_embeddings.append(curr_labels_embeddings)
-
-        return torch.cat(labels_embeddings, dim=0)
-
-    def predict(self, batch, flat_ner=False, threshold=0.5, multi_label=False):
-        """
-        Predict the entities for a given batch of data.
-
-        Args:
-            batch (Dict): A batch of data containing tokenized text and other relevant fields.
-            flat_ner (bool): Whether to use flat NER. Defaults to False.
-            threshold (float): The threshold for predictions. Defaults to 0.5.
-            multi_label (bool): Whether to use multi-label classification. Defaults to False.
-
-        Returns:
-            List: Predicted entities for each example in the batch.
-        """
-        model_output = self.model(**batch)[0]
-
-        if not isinstance(model_output, torch.Tensor):
-            model_output = torch.from_numpy(model_output)
-
-        decoded_outputs = self.decoder.decode(
-            batch["tokens"],
-            batch["id_to_classes"],
-            model_output,
-            flat_ner=flat_ner,
-            threshold=threshold,
-            multi_label=multi_label,
-        )
-
-        return decoded_outputs
-
     def compile(self):
         self.model = torch.compile(self.model)
 
-    def compile_for_training(self):
-        print("Compiling transformer encoder...")
-        self.model.token_rep_layer = torch.compile(self.model.token_rep_layer)
-        print("Compiling RNN...")
-        self.model.rnn = torch.compile(self.model.rnn)
-        if hasattr(self.model, "span_rep_layer"):
-            print("Compiling span representation layer...")
-            self.model.span_rep_layer = torch.compile(self.model.span_rep_layer)
-        if hasattr(self.model, "prompt_rep_layer"):
-            print("Compiling prompt representation layer...")
-            self.model.prompt_rep_layer = torch.compile(self.model.prompt_rep_layer)
-        if hasattr(self.model, "scorer"):
-            print("Compiling scorer...")
-            self.model.scorer = torch.compile(self.model.scorer)
-
-    def set_sampling_params(
-        self, max_types, shuffle_types, random_drop, max_neg_type_ratio, max_len
-    ):
+    def _get_special_tokens(self):
         """
-        Sets sampling parameters on the given model.
-
-        Parameters:
-        - model: The model object to update.
-        - max_types: Maximum types parameter.
-        - shuffle_types: Boolean indicating whether to shuffle types.
-        - random_drop: Boolean indicating whether to randomly drop elements.
-        - max_neg_type_ratio: Maximum negative type ratio.
-        - max_len: Maximum length parameter.
+        Get special tokens to add to tokenizer.
+        Can be overridden by child classes.
+        
+        Returns:
+            List of special tokens
         """
-        self.config.max_types = max_types
-        self.config.shuffle_types = shuffle_types
-        self.config.random_drop = random_drop
-        self.config.max_neg_type_ratio = max_neg_type_ratio
-        self.config.max_len = max_len
-
+        tokens = ["[FLERT]", self.config.ent_token, self.config.sep_token]
+        return tokens
+    
     def prepare_state_dict(self, state_dict):
         """
         Prepare state dict in the case of torch.compile
@@ -760,121 +158,163 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             key = re.sub(r"_orig_mod\.", "", key)
             new_state_dict[key] = tensor
         return new_state_dict
-
+    
     def save_pretrained(
         self,
         save_directory: Union[str, Path],
         *,
-        config: Optional[GLiNERConfig] = None,
+        config: Optional[BaseGLiNERConfig] = None,
         repo_id: Optional[str] = None,
         push_to_hub: bool = False,
-        safe_serialization = False,
+        safe_serialization: bool = False,
         **push_to_hub_kwargs,
     ) -> Optional[str]:
         """
-        Save weights in local directory.
+        Save model weights and configuration to local directory.
 
         Args:
-            save_directory (`str` or `Path`):
-                Path to directory in which the model weights and configuration will be saved.
-            safe_serialization (`bool`):
-                Whether to save the model using `safetensors` or the traditional way for PyTorch.
-            config (`dict` or `DataclassInstance`, *optional*):
-                Model configuration specified as a key/value dictionary or a dataclass instance.
-            push_to_hub (`bool`, *optional*, defaults to `False`):
-                Whether or not to push your model to the Huggingface Hub after saving it.
-            repo_id (`str`, *optional*):
-                ID of your repository on the Hub. Used only if `push_to_hub=True`. Will default to the folder name if
-                not provided.
-            kwargs:
-                Additional key word arguments passed along to the [`~ModelHubMixin.push_to_hub`] method.
+            save_directory: Path to directory for saving
+            config: Model configuration (uses self.config if None)
+            repo_id: Repository ID for hub upload
+            push_to_hub: Whether to push to HuggingFace Hub
+            safe_serialization: Whether to use safetensors format
+            **push_to_hub_kwargs: Additional arguments for push_to_hub
+            
+        Returns:
+            Repository URL if pushed to hub, None otherwise
         """
         save_directory = Path(save_directory)
         save_directory.mkdir(parents=True, exist_ok=True)
 
-        # save model weights/files
+        # Save model weights
         model_state_dict = self.prepare_state_dict(self.model.state_dict())
-        # save model weights using safetensors
+        
         if safe_serialization:
-            save_file(model_state_dict, os.path.join(save_directory, "model.safetensors"))
+            save_file(model_state_dict, save_directory / "model.safetensors")
         else:
-            torch.save(
-                model_state_dict,
-                os.path.join(save_directory, "pytorch_model.bin"),
-            )
+            torch.save(model_state_dict, save_directory / "pytorch_model.bin")
 
-        # save config (if provided)
+        # Save config
         if config is None:
             config = self.config
         if config is not None:
             config.to_json_file(save_directory / "gliner_config.json")
 
+        # Save tokenizer
         self.data_processor.transformer_tokenizer.save_pretrained(save_directory)
-        # push to the Hub if required
+        
+        # Push to hub if requested
         if push_to_hub:
-            kwargs = push_to_hub_kwargs.copy()  # soft-copy to avoid mutating input
-            if config is not None:  # kwarg for `push_to_hub`
+            kwargs = push_to_hub_kwargs.copy()
+            if config is not None:
                 kwargs["config"] = config
             if repo_id is None:
-                repo_id = save_directory.name  # Defaults to `save_directory` name
+                repo_id = save_directory.name
             return self.push_to_hub(repo_id=repo_id, **kwargs)
+        
         return None
 
     @classmethod
-    def _from_pretrained(
-        cls,
-        *,
-        model_id: str,
-        revision: Optional[str],
-        cache_dir: Optional[Union[str, Path]],
-        force_download: bool,
-        proxies: Optional[Dict],
-        resume_download: bool,
-        local_files_only: bool,
-        token: Union[str, bool, None],
-        map_location: str = "cpu",
-        strict: bool = False,
-        load_tokenizer: Optional[bool] = False,
-        resize_token_embeddings: Optional[bool] = True,
-        load_onnx_model: Optional[bool] = False,
-        onnx_model_file: Optional[str] = "model.onnx",
-        compile_torch_model: Optional[bool] = False,
-        session_options: Optional[ort.SessionOptions] = None,
-        _attn_implementation: Optional[str] = None,
-        max_length: Optional[int] = None,
-        max_width: Optional[int] = None,
-        post_fusion_schema: Optional[str] = None,
-        **model_kwargs,
-    ):
+    def _load_config(cls, config_file: Path, **config_overrides) -> object:
         """
-        Load a pretrained model from a given model ID.
-
+        Load configuration from file with optional overrides.
+        
         Args:
-            model_id (str): Identifier of the model to load.
-            revision (Optional[str]): Specific model revision to use.
-            cache_dir (Optional[Union[str, Path]]): Directory to store downloaded models.
-            force_download (bool): Force re-download even if the model exists.
-            proxies (Optional[Dict]): Proxy configuration for downloads.
-            resume_download (bool): Resume interrupted downloads.
-            local_files_only (bool): Use only local files, don't download.
-            token (Union[str, bool, None]): Token for API authentication.
-            map_location (str): Device to map model to. Defaults to "cpu".
-            strict (bool): Enforce strict state_dict loading.
-            load_tokenizer (Optional[bool]): Whether to load the tokenizer. Defaults to False.
-            resize_token_embeddings (Optional[bool]): Resize token embeddings. Defaults to True.
-            load_onnx_model (Optional[bool]): Load ONNX version of the model. Defaults to False.
-            onnx_model_file (Optional[str]): Filename for ONNX model. Defaults to 'model.onnx'.
-            compile_torch_model (Optional[bool]): Compile the PyTorch model. Defaults to False.
-            session_options (Optional[onnxruntime.SessionOptions]): ONNX Runtime session options. Defaults to None.
-            **model_kwargs: Additional keyword arguments for model initialization.
-
+            config_file: Path to config file
+            **config_overrides: Config parameters to override
+            
         Returns:
-            An instance of the model loaded from the pretrained weights.
+            Config instance
         """
-        # Newer format: Use "pytorch_model.bin" and "gliner_config.json"
-        model_dir = Path(model_id)  # / "pytorch_model.bin"
+        with open(config_file, "r") as f:
+            config_dict = json.load(f)
+        
+        # Apply overrides
+        for key, value in config_overrides.items():
+            if value is not None:
+                config_dict[key] = value
+        
+        # Use specific config class if defined, otherwise auto-detect
+        if cls.config_class is not None:
+            config = cls.config_class(**config_dict)
+        else:
+            config = GLiNERConfig(**config_dict)
+        
+        return config
+    
+    @classmethod
+    def _load_tokenizer(cls, model_dir: Path, cache_dir: Optional[Path] = None):
+        """
+        Load tokenizer from directory.
+        
+        Args:
+            model_dir: Directory containing tokenizer files
+            cache_dir: Cache directory for downloads
+            
+        Returns:
+            Tokenizer instance or None
+        """
+        if os.path.exists(model_dir / "tokenizer_config.json"):
+            return AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
+        return None
+    
+    @classmethod
+    def _load_state_dict(cls, model_file: Path, map_location: str = "cpu"):
+        """
+        Load state dict from file.
+        
+        Args:
+            model_file: Path to model file
+            map_location: Device to map tensors to
+            
+        Returns:
+            State dict
+        """
+        if model_file.suffix == ".safetensors" or str(model_file).endswith(".safetensors"):
+            state_dict = {}
+            with safe_open(model_file, framework="pt", device=map_location) as f:
+                for key in f.keys():
+                    state_dict[key] = f.get_tensor(key)
+        else:
+            state_dict = torch.load(
+                model_file, 
+                map_location=torch.device(map_location), 
+                weights_only=True
+            )
+        return state_dict
+    
+    @classmethod
+    def _download_model(
+        cls,
+        model_id: str,
+        revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        force_download: bool = False,
+        proxies: Optional[Dict] = None,
+        resume_download: bool = False,
+        token: Union[str, bool, None] = None,
+        local_files_only: bool = False,
+    ) -> Path:
+        """
+        Download model from HuggingFace Hub or use local directory.
+        
+        Args:
+            model_id: Model identifier or local path
+            revision: Model revision
+            cache_dir: Cache directory
+            force_download: Force redownload
+            proxies: Proxy configuration
+            resume_download: Resume interrupted downloads
+            token: HF token
+            local_files_only: Only use local files
+            
+        Returns:
+            Path to model directory
+        """
+        model_dir = Path(model_id)
+        
         if not model_dir.exists():
-            model_dir = snapshot_download(
+            model_dir = Path(snapshot_download(
                 repo_id=model_id,
                 revision=revision,
                 cache_dir=cache_dir,
@@ -883,139 +323,329 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 resume_download=resume_download,
                 token=token,
                 local_files_only=local_files_only,
-            )
-        model_file = os.path.join(model_dir, "model.safetensors")
-        if not os.path.exists(model_file):
-            model_file = os.path.join(model_dir, "pytorch_model.bin")
-        config_file = Path(model_dir) / "gliner_config.json"
-
-        if load_tokenizer:
-            tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
-        else:
-            if os.path.exists(os.path.join(model_dir, "tokenizer_config.json")):
-                tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
-            else:
-                tokenizer = None
-        with open(config_file, "r") as f:
-            config_ = json.load(f)
-        config = GLiNERConfig(**config_)
-
-        if _attn_implementation is not None:
-            config._attn_implementation = _attn_implementation
-            
-        if max_length is not None:
-            config.max_len = max_length
-        if max_width is not None:
-            config.max_width = max_width
-        if post_fusion_schema is not None:
-            config.post_fusion_schema = post_fusion_schema
-            print('Post fusion is set.')
-
-        add_tokens = ["[FLERT]", config.ent_token, config.sep_token]
-
-        if not load_onnx_model:
-            gliner = cls(config, tokenizer=tokenizer, encoder_from_pretrained=False, cache_dir=cache_dir)
-            # to be able to load GLiNER models from previous version
-            if (
-                config.class_token_index == -1 or config.vocab_size == -1
-            ) and resize_token_embeddings and not config.labels_encoder:
-                gliner.resize_token_embeddings(add_tokens=add_tokens)
-            if model_file.endswith("safetensors"):
-                state_dict = {}
-                with safe_open(model_file, framework="pt", device=map_location) as f:
-                    for key in f.keys():
-                        state_dict[key] = f.get_tensor(key)
-            else:
-                state_dict = torch.load(model_file, map_location=torch.device(map_location), weights_only=True)
-            gliner.model.load_state_dict(state_dict, strict=strict)
-            gliner.model.to(map_location)
-            if compile_torch_model and "cuda" in map_location:
-                print("Compiling torch model...")
-                gliner.compile()
-            elif compile_torch_model:
-                warnings.warn(
-                    "It's not possible to compile this model putting it to CPU, you should set `map_location` to `cuda`."
-                )
-            gliner.eval()
-        else:
-            model_file = Path(model_dir) / onnx_model_file
-            if not os.path.exists(model_file):
-                raise FileNotFoundError(
-                    f"The ONNX model can't be loaded from {model_file}."
-                )
-            if session_options is None:
-                session_options = ort.SessionOptions()
-                session_options.graph_optimization_level = (
-                    ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-                )
-            providers = ['CPUExecutionProvider']
-            if "cuda" in map_location:
-                if not torch.cuda.is_available():
-                    raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
-                providers = ['CUDAExecutionProvider']
-            ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
-            if config.span_mode == "token_level":
-                model = TokenORTModel(ort_session)
-            else:
-                model = SpanORTModel(ort_session)
-
-            gliner = cls(config, tokenizer=tokenizer, model=model)
-            if (
-                config.class_token_index == -1 or config.vocab_size == -1
-            ) and resize_token_embeddings:
-                gliner.data_processor.transformer_tokenizer.add_tokens(add_tokens)
-
-        if (len(gliner.data_processor.transformer_tokenizer)!=gliner.config.vocab_size
-                                                        and gliner.config.vocab_size!=-1):
-            new_num_tokens = len(gliner.data_processor.transformer_tokenizer)
-            model_embeds = gliner.model.token_rep_layer.resize_token_embeddings(
-                new_num_tokens, None
-            )
-        return gliner
-
-    @staticmethod
+            ))
+        
+        return model_dir
+    
+    @classmethod
     def load_from_config(gliner_config: GLiNERConfig):
-        # Initialize tokenizer
-        tokenizer = AutoTokenizer.from_pretrained(
-            gliner_config.model_name,
-            model_max_length=gliner_config.max_len
+        pass
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        model_id: str,
+        revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        force_download: bool = False,
+        proxies: Optional[Dict] = None,
+        resume_download: bool = False,
+        local_files_only: bool = False,
+        token: Union[str, bool, None] = None,
+        map_location: str = "cpu",
+        strict: bool = False,
+        load_tokenizer: Optional[bool] = None,
+        resize_token_embeddings: Optional[bool] = True,
+        compile_torch_model: Optional[bool] = False,
+        # Config overrides
+        max_length: Optional[int] = None,
+        max_width: Optional[int] = None,
+        post_fusion_schema: Optional[str] = None,
+        _attn_implementation: Optional[str] = None,
+        **model_kwargs,
+    ):
+        """
+        Load pretrained model from HuggingFace Hub or local directory.
+
+        Args:
+            model_id: Model identifier or local path
+            revision: Model revision
+            cache_dir: Cache directory
+            force_download: Force redownload
+            proxies: Proxy configuration
+            resume_download: Resume interrupted downloads
+            local_files_only: Only use local files
+            token: HF token for private repos
+            map_location: Device to map model to
+            strict: Enforce strict state_dict loading
+            load_tokenizer: Whether to load tokenizer
+            resize_token_embeddings: Whether to resize embeddings
+            compile_torch_model: Whether to compile with torch.compile
+            max_length: Override max_length in config
+            max_width: Override max_width in config
+            post_fusion_schema: Override post_fusion_schema in config
+            _attn_implementation: Override attention implementation
+            **model_kwargs: Additional model initialization arguments
+            
+        Returns:
+            Model instance
+        """
+        # Download or locate model
+        model_dir = cls._download_model(
+            model_id, revision, cache_dir, force_download,
+            proxies, resume_download, token, local_files_only
         )
+        
+        # Find model file
+        model_file = model_dir / "model.safetensors"
+        if not model_file.exists():
+            model_file = model_dir / "pytorch_model.bin"
+        
+        if not model_file.exists():
+            raise FileNotFoundError(f"No model file found in {model_dir}")
+        
+        # Load config
+        config_file = model_dir / "gliner_config.json"
+        if not config_file.exists():
+            raise FileNotFoundError(f"No config file found in {model_dir}")
+        
+        config = cls._load_config(
+            config_file,
+            max_len=max_length,
+            max_width=max_width,
+            post_fusion_schema=post_fusion_schema,
+            _attn_implementation=_attn_implementation,
+        )
+        
+        # Load tokenizer
+        if load_tokenizer is None:
+            load_tokenizer = True
+        
+        tokenizer = None
+        if load_tokenizer:
+            tokenizer = cls._load_tokenizer(model_dir, cache_dir)
+        
+        # Create model instance
+        instance = cls(
+            config,
+            tokenizer=tokenizer,
+            backbone_from_pretrained=False,
+            cache_dir=cache_dir,
+            **model_kwargs
+        )
+        
+        # Resize token embeddings if needed
+        add_tokens = instance._get_special_tokens()
+        if resize_token_embeddings and (
+            config.class_token_index == -1 or config.vocab_size == -1
+        ):
+            instance.resize_embeddings(add_tokens=add_tokens)
+        
+        # Load state dict
+        state_dict = cls._load_state_dict(model_file, map_location)
+        instance.model.load_state_dict(state_dict, strict=strict)
+        instance.model.to(map_location)
+        
+        if compile_torch_model:
+            if "cuda" in map_location:
+                print("Compiling torch model...")
+                instance.compile()
+            else:
+                warnings.warn(
+                    "Cannot compile model on CPU. Set `map_location='cuda'` to compile."
+                )
+        
+        instance.eval()
+        return instance
 
-        # Add special tokens and update config
-        gliner_config.class_token_index = len(tokenizer)
-        tokenizer.add_tokens([
-            gliner_config.ent_token,
-            gliner_config.sep_token
-        ])
-        gliner_config.vocab_size = len(tokenizer)
-
-        # Select appropriate processor
-        words_splitter = WordsSplitter()
-        if gliner_config.span_mode == "token_level":
-            data_processor = TokenProcessor(
-                gliner_config,
-                tokenizer,
-                words_splitter,
-                preprocess_text=True
-            )
+    def _create_data_collator(self, use_new_schema: bool = False):
+        """
+        Create data collator. Override in child classes if needed.
+        
+        Args:
+            use_new_schema: Whether to use new data schema
+            
+        Returns:
+            Data collator instance
+        """
+        if use_new_schema:
+            return DataCollatorWithPadding(self.config)
         else:
-            data_processor = SpanProcessor(
-                gliner_config,
-                tokenizer,
-                words_splitter,
-                preprocess_text=True
+            return DataCollator(
+                self.config, 
+                data_processor=self.data_processor, 
+                prepare_labels=True
             )
+    
+    def freeze_component(self, component_name: str):
+        """
+        Freeze a specific component of the model.
+        
+        Args:
+            component_name: Name of component to freeze (e.g., 'text_encoder', 'labels_encoder', 'decoder')
+        """
+        components = self._get_freezable_components()
+        if component_name in components:
+            components[component_name].requires_grad_(False)
+            print(f"Frozen: {component_name}")
+        else:
+            print(f"Warning: Component '{component_name}' not found or not freezable")
+    
+    def unfreeze_component(self, component_name: str):
+        """
+        Unfreeze a specific component of the model.
+        
+        Args:
+            component_name: Name of component to unfreeze
+        """
+        components = self._get_freezable_components()
+        if component_name in components:
+            components[component_name].requires_grad_(True)
+            print(f"Unfrozen: {component_name}")
+        else:
+            print(f"Warning: Component '{component_name}' not found")
+    
 
-        # Instantiate model and apply token resizing
-        model = GLiNER(
-            gliner_config,
-            data_processor=data_processor
+    @classmethod
+    def create_training_args(
+        cls,
+        output_dir: Union[str, Path],
+        learning_rate: float = 5e-5,
+        weight_decay: float = 0.01,
+        others_lr: Optional[float] = None,
+        others_weight_decay: Optional[float] = None,
+        focal_loss_alpha: float = -1,
+        focal_loss_gamma: float = 0.0,
+        focal_loss_prob_margin: float = 0.0,
+        loss_reduction: str = 'sum',
+        negatives: float = 1.0,
+        masking: str = 'none',
+        lr_scheduler_type: str = 'linear',
+        warmup_ratio: float = 0.1,
+        per_device_train_batch_size: int = 8,
+        per_device_eval_batch_size: int = 8,
+        max_grad_norm: float = 1.0,
+        max_steps: int = 10000,
+        save_steps: int = 1000,
+        save_total_limit: int = 10,
+        logging_steps: int = 10,
+        use_cpu: bool = False,
+        bf16: bool = True,
+        dataloader_num_workers: int = 1,
+        report_to: str = "none",
+        **kwargs
+    ) -> TrainingArguments:
+        """
+        Create training arguments with sensible defaults.
+        
+        Args:
+            output_dir: Directory to save model checkpoints
+            learning_rate: Learning rate for main parameters
+            weight_decay: Weight decay for main parameters
+            others_lr: Learning rate for other parameters
+            others_weight_decay: Weight decay for other parameters
+            focal_loss_alpha: Alpha for focal loss
+            focal_loss_gamma: Gamma for focal loss
+            focal_loss_prob_margin: Probability margin for focal loss
+            loss_reduction: Loss reduction method
+            negatives: Negative sampling ratio
+            masking: Masking strategy
+            lr_scheduler_type: Learning rate scheduler type
+            warmup_ratio: Warmup ratio
+            per_device_train_batch_size: Training batch size
+            per_device_eval_batch_size: Evaluation batch size
+            max_grad_norm: Maximum gradient norm
+            max_steps: Maximum training steps
+            save_steps: Save checkpoint every N steps
+            save_total_limit: Maximum number of checkpoints to keep
+            logging_steps: Log every N steps
+            use_cpu: Whether to use CPU
+            bf16: Whether to use bfloat16
+            dataloader_num_workers: Number of dataloader workers
+            report_to: Where to report metrics
+            **kwargs: Additional training arguments
+            
+        Returns:
+            TrainingArguments instance
+        """
+        return TrainingArguments(
+            output_dir=output_dir,
+            learning_rate=learning_rate,
+            weight_decay=weight_decay,
+            others_lr=others_lr or learning_rate,
+            others_weight_decay=others_weight_decay or weight_decay,
+            focal_loss_gamma=focal_loss_gamma,
+            focal_loss_alpha=focal_loss_alpha,
+            focal_loss_prob_margin=focal_loss_prob_margin,
+            loss_reduction=loss_reduction,
+            negatives=negatives,
+            masking=masking,
+            lr_scheduler_type=lr_scheduler_type,
+            warmup_ratio=warmup_ratio,
+            per_device_train_batch_size=per_device_train_batch_size,
+            per_device_eval_batch_size=per_device_eval_batch_size,
+            max_grad_norm=max_grad_norm,
+            max_steps=max_steps,
+            save_steps=save_steps,
+            save_total_limit=save_total_limit,
+            dataloader_num_workers=dataloader_num_workers,
+            logging_steps=logging_steps,
+            use_cpu=use_cpu,
+            report_to=report_to,
+            bf16=bf16,
+            **kwargs
         )
-
-        model.resize_token_embeddings(
-            [gliner_config.ent_token, gliner_config.sep_token],
-            set_class_token_index=False,
-            add_tokens_to_tokenizer=False
+    
+    def train(
+        self,
+        train_dataset,
+        eval_dataset,
+        training_args: Optional[TrainingArguments] = None,
+        freeze_components: Optional[List[str]] = None,
+        compile_model: bool = False,
+        use_new_data_schema: bool = False,
+        output_dir: Optional[Union[str, Path]] = None,
+        **training_kwargs
+    ) -> Trainer:
+        """
+        Train the model.
+        
+        Args:
+            train_data: Training data (path to JSON file or list of samples)
+            training_args: Training arguments (created with defaults if None)
+            eval_data: Evaluation data (optional, uses test_split if None)
+            test_split: Fraction of train_data to use for eval if eval_data is None
+            freeze_components: List of component names to freeze (e.g., ['text_encoder', 'decoder'])
+            compile_model: Whether to compile model with torch.compile
+            use_new_data_schema: Whether to use new data schema
+            output_dir: Output directory (required if training_args is None)
+            **training_kwargs: Additional kwargs for creating training args
+            
+        Returns:
+            Trained Trainer instance
+        """ 
+        # Create training arguments if not provided
+        if training_args is None:
+            if output_dir is None:
+                raise ValueError("Either training_args or output_dir must be provided")
+            training_args = self.create_training_args(
+                output_dir=output_dir,
+                **training_kwargs
+            )
+        
+        # Compile model if requested
+        if compile_model:
+            self.compile()
+        
+        # Freeze components if specified
+        if freeze_components:
+            for component_name in freeze_components:
+                self.freeze_component(component_name)
+        
+        # Create data collator
+        data_collator = self._create_data_collator(use_new_data_schema)
+        
+        # Create trainer
+        trainer = Trainer(
+            model=self,
+            args=training_args,
+            train_dataset=train_dataset,
+            eval_dataset=eval_dataset,
+            tokenizer=self.data_processor.transformer_tokenizer,
+            data_collator=data_collator,
         )
-
-        return model
+        
+        # Train
+        trainer.train()
+        
+        return trainer
