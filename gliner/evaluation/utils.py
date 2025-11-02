@@ -57,7 +57,6 @@ def _prf_divide(
 
     return result
 
-
 def _warn_prf(average: str, modifier: str, msg_start: str, result_size: int):
     axis0, axis1 = ("label", "sample") if average == "samples" else ("sample", "label")
     if result_size == 1:

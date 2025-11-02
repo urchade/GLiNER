@@ -629,3 +629,46 @@ class SpanRelexDecoder(BaseSpanDecoder):
             )
         
         return spans, relations
+    
+
+class TokenDecoder(BaseDecoder):
+    def get_indices_above_threshold(self, scores, threshold):
+        scores = torch.sigmoid(scores)
+        return [k.tolist() for k in torch.where(scores > threshold)]
+
+    def calculate_span_score(self, start_idx, end_idx, scores_inside_i, start_i, end_i, id_to_classes, threshold):
+        span_i = []
+        for st, cls_st in zip(*start_idx):
+            for ed, cls_ed in zip(*end_idx):
+                if ed >= st and cls_st == cls_ed:
+                    ins = scores_inside_i[st:ed + 1, cls_st]
+                    if (ins < threshold).any():
+                        continue
+                    # Get the start and end scores for this span
+                    start_score = start_i[st, cls_st]
+                    end_score = end_i[ed, cls_st]
+                    # Concatenate the inside scores with start and end scores
+                    combined = torch.cat([ins, start_score.unsqueeze(0), end_score.unsqueeze(0)])
+                    # The span score is the minimum value among these scores
+                    spn_score = combined.min().item()
+                    span_i.append((st, ed, id_to_classes[cls_st + 1], None, spn_score))
+        return span_i
+
+    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False, **kwargs):
+        model_output = model_output.permute(3, 0, 1, 2)
+        scores_start, scores_end, scores_inside = model_output
+        spans = []
+        for i, _ in enumerate(tokens):
+            id_to_class_i = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
+            span_scores = self.calculate_span_score(
+                self.get_indices_above_threshold(scores_start[i], threshold),
+                self.get_indices_above_threshold(scores_end[i], threshold),
+                torch.sigmoid(scores_inside[i]),
+                torch.sigmoid(scores_start[i]),
+                torch.sigmoid(scores_end[i]),
+                id_to_class_i,
+                threshold
+            )
+            span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+            spans.append(span_i)
+        return spans

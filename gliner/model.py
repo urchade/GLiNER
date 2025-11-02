@@ -16,15 +16,25 @@ from transformers import AutoConfig, AutoTokenizer
 from safetensors import safe_open
 from safetensors.torch import save_file
 
-from .config import BaseGLiNERConfig, GLiNERConfig
-from .data_processing import BaseProcessor
+from .config import (BaseGLiNERConfig, 
+                     UniEncoderSpanConfig, 
+                     UniEncoderTokenConfig,
+                     BiEncoderSpanConfig,
+                     BiEncoderTokenConfig,
+                     GLiNERConfig)
+from .data_processing import (BaseProcessor, UniEncoderSpanProcessor, UniEncoderTokenProcessor, 
+                                                BiEncoderSpanProcessor, BiEncoderTokenProcessor)
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
 from .decoding.trie import LabelsTrie
-from .evaluation import Evaluator
+from .evaluation import BaseNEREvaluator
 from .training import TrainingArguments, Trainer
-from .modeling.base import BaseModel
+from .modeling.base import (BaseModel, 
+                            UniEncoderSpanModel, 
+                            UniEncoderTokenModel,
+                            BiEncoderSpanModel,
+                            BiEncoderTokenModel)
 from .infer_packing import InferencePackingConfig
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 from .utils import is_module_available
@@ -69,6 +79,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         else:
             self.onnx_model = False
 
+        self.decoder = self.decoder_class(config)
+
         self._keys_to_ignore_on_save = None
         self._inference_packing_config: Optional[InferencePackingConfig] = None
 
@@ -93,10 +105,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         pass
 
     @abstractmethod
-    def prepare_model_inputs(self):
-        pass
-
-    @abstractmethod
     def resize_embeddings(self):
         pass
 
@@ -107,7 +115,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     @abstractmethod
     def evaluate(self):
         pass
-
+    
     def forward(self, *args, **kwargs):
         """Wrapper function for the model's forward pass."""
         output = self.model(*args, **kwargs)
@@ -649,3 +657,440 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         trainer.train()
         
         return trainer
+
+
+class BaseEncoderGLiNER(BaseGLiNER):
+    def _create_model(self, config, backbone_from_pretrained, cache_dir, **kwargs):
+         self.model = self.model_class(config, backbone_from_pretrained, cache_dir=cache_dir, **kwargs)
+    
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+
+        self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
+
+    def resize_embeddings(self):
+        if (len(self.data_processor.transformer_tokenizer)!=self.config.vocab_size
+                                                        and self.config.vocab_size!=-1):
+            new_num_tokens = len(self.data_processor.transformer_tokenizer)
+            model_embeds = self.model.token_rep_layer.resize_token_embeddings(
+                new_num_tokens, None
+            )
+
+    def prepare_inputs(self, texts: List[str]):
+        """
+        Prepare inputs for the model.
+
+        Args:
+            texts (str): The input text or texts to process.
+            labels (str): The corresponding labels for the input texts.
+        """
+        all_tokens = []
+        all_start_token_idx_to_text_idx = []
+        all_end_token_idx_to_text_idx = []
+
+        for text in texts:
+            tokens = []
+            start_token_idx_to_text_idx = []
+            end_token_idx_to_text_idx = []
+            for token, start, end in self.data_processor.words_splitter(text):
+                tokens.append(token)
+                start_token_idx_to_text_idx.append(start)
+                end_token_idx_to_text_idx.append(end)
+            all_tokens.append(tokens)
+            all_start_token_idx_to_text_idx.append(start_token_idx_to_text_idx)
+            all_end_token_idx_to_text_idx.append(end_token_idx_to_text_idx)
+        return all_tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
+    
+    def prepare_base_input(self, all_tokens):
+        input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
+        return input_x
+
+    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None):
+        """Shared batch processing logic"""
+        outputs = []
+        is_onnx = self.onnx_model
+        device = self.device
+        
+        for batch in data_loader:
+            # Move to device once (outside condition)
+            if not is_onnx:
+                batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+            
+            # Prepare model inputs
+            model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
+            
+            # Get predictions
+            model_logits = self.model(**model_inputs, threshold=threshold)[0]
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            # Decode
+            decoded = self.decoder.decode(
+                batch["tokens"], batch["id_to_classes"], model_logits,
+                flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+            )
+            outputs.extend(decoded)
+        
+        return outputs
+
+    @torch.no_grad()
+    def inference(
+        self,
+        texts,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        packing_config: Optional[InferencePackingConfig] = None,
+    ):
+        """
+        Predict entities for a batch of texts.
+
+        Args:
+            texts (List[str]): A list of input texts to predict entities for.
+            labels (List[str]): A list of labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+            packing_config (Optional[InferencePackingConfig], optional):
+                Configuration describing how to pack encoder inputs. When ``None``
+                the instance-level configuration set via
+                :meth:`configure_inference_packing` is used.
+
+        Returns:
+            The list of lists with predicted entities.
+        """
+        self.eval()
+        # raw input preparation
+        if isinstance(texts, str):
+            texts = [texts]
+
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
+        
+        input_x = self.prepare_base_input(tokens)
+
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+
+        active_packing = (
+            packing_config
+            if packing_config is not None
+            else self._inference_packing_config
+        )
+        outputs = self._process_batches(data_loader, threshold, flat_ner, multi_label, 
+                                                        packing_config=active_packing)
+
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                ent_details =  {
+                        "start": start_token_idx_to_text_idx[start_token_idx],
+                        "end": end_token_idx_to_text_idx[end_token_idx],
+                        "text": texts[i][start_text_idx:end_text_idx],
+                        "label": ent_type,
+                        "score": ent_score,
+                    }
+                entities.append(ent_details)
+
+            all_entities.append(entities)
+
+        return all_entities
+    
+    def predict_entities(
+        self, text, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
+    ):
+        """
+        Predict entities for a single text input.
+
+        Args:
+            text: The input text to predict entities for.
+            labels: The labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per entity. Defaults to False.
+
+        Returns:
+            The list of entity predictions.
+        """
+        return self.inference(
+            [text],
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            **kwargs
+        )[0]
+
+    def batch_predict_entities(
+        self, texts, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
+    ):
+        """
+        DEPRECATED: Use `run` instead.
+
+        This method will be removed in a future release. It now forwards to
+        `GLiNER.run(...)` to perform inference.
+
+        Args:
+            texts (List[str]): Input texts.
+            labels (List[str]): Labels to predict.
+            flat_ner (bool, optional): Use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold. Defaults to 0.5.
+            multi_label (bool, optional): Allow multiple labels per token/entity. Defaults to False.
+            **kwargs: Extra arguments forwarded to `run` (e.g., batch_size).
+        """
+        warnings.warn(
+            "GLiNER.batch_predict_entities is deprecated and will be removed in a future release. "
+            "Please use GLiNER.run instead.",
+            FutureWarning,
+            stacklevel=2,
+        )
+        return self.inference(
+            texts,
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            **kwargs,
+        )
+    
+    def evaluate(
+        self,
+        test_data,
+        flat_ner=False,
+        multi_label=False,
+        threshold=0.5,
+        batch_size=12,
+        entity_types=None,
+    ):
+        """
+        Evaluate the model on a given test dataset.
+
+        Args:
+            test_data (List[Dict]): The test data containing text and entity annotations.
+            flat_ner (bool): Whether to use flat NER. Defaults to False.
+            multi_label (bool): Whether to use multi-label classification. Defaults to False.
+            threshold (float): The threshold for predictions. Defaults to 0.5.
+            batch_size (int): The batch size for evaluation. Defaults to 12.
+            entity_types (Optional[List[str]]): List of entity types to consider. Defaults to None.
+
+        Returns:
+            tuple: A tuple containing the evaluation output and the F1 score.
+        """
+        self.eval()
+        # Create the dataset and data loader
+        dataset = test_data
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=entity_types,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+
+        all_preds = self._process_batches(data_loader, threshold, flat_ner, multi_label)
+        all_trues = []
+
+        # Iterate over data batches
+        for batch in data_loader:
+            all_trues.extend(batch["entities"])
+
+        # Evaluate the predictions
+        evaluator = BaseNEREvaluator(all_trues, all_preds)
+        out, f1 = evaluator.evaluate()
+
+        return out, f1
+    
+class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+        labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+
+        self.data_processor = self.data_processor_class(config, tokenizer, words_splitter, labels_tokenizer=labels_tokenizer)
+
+    def resize_embeddings(self):
+        warnings.warn("Resizing embeddings is not supported for bi-encoder models.")
+
+    @torch.no_grad()
+    def batch_predict_with_embeds(
+        self,
+        texts,
+        labels_embeddings,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        packing_config: Optional[InferencePackingConfig] = None,
+    ):
+        """
+        Predict entities for a batch of texts using pre-computed label embeddings.
+
+        Args:
+            texts (List[str]): A list of input texts to predict entities for.
+            labels_embeddings: Pre-computed embeddings for the labels.
+            labels (List[str]): A list of labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
+            batch_size (int, optional): Batch size for processing. Defaults to 8.
+            packing_config (Optional[InferencePackingConfig], optional):
+                Configuration describing how to pack encoder inputs. When ``None``
+                the instance-level configuration set via
+                :meth:`configure_inference_packing` is used.
+
+        Returns:
+            The list of lists with predicted entities.
+        """
+        self.eval()
+        
+        # Raw input preparation
+        if isinstance(texts, str):
+            texts = [texts]
+
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        
+        input_x = self.prepare_base_input(tokens)
+
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+
+        active_packing = (
+            packing_config
+            if packing_config is not None
+            else self._inference_packing_config
+        )
+
+        # Process batches with embeddings
+        outputs = []
+        is_onnx = self.onnx_model
+        device = self.device
+        
+        for batch in data_loader:
+            # Move to device once (outside condition)
+            if not is_onnx:
+                batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+            
+            # Prepare model inputs with labels_embeddings
+            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
+            model_inputs["labels_embeddings"] = labels_embeddings
+            
+            # Get predictions
+            model_logits = self.model(**model_inputs, threshold=threshold)[0]
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            # Decode
+            decoded = self.decoder.decode(
+                batch["tokens"], batch["id_to_classes"], model_logits,
+                flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
+            )
+            outputs.extend(decoded)
+
+        # Convert outputs to entities with text indices
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                entities.append(
+                    {
+                        "start": start_token_idx_to_text_idx[start_token_idx],
+                        "end": end_token_idx_to_text_idx[end_token_idx],
+                        "text": texts[i][start_text_idx:end_text_idx],
+                        "label": ent_type,
+                        "score": ent_score,
+                    }
+                )
+            all_entities.append(entities)
+
+        return all_entities
+
+    def predict_with_embeds(
+        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
+    ):
+        """
+        Predict entities for a single text input using pre-computed label embeddings.
+
+        Args:
+            text: The input text to predict entities for.
+            labels_embeddings: Pre-computed embeddings for the labels.
+            labels: The labels to predict.
+            flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
+            threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
+            multi_label (bool, optional): Whether to allow multiple labels per entity. Defaults to False.
+
+        Returns:
+            The list of entity predictions.
+        """
+        return self.batch_predict_with_embeds(
+            [text],
+            labels_embeddings,
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            **kwargs
+        )[0]
+
+class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
+    config_class = UniEncoderSpanConfig 
+    model_class = UniEncoderSpanModel
+    data_processor_class = UniEncoderSpanProcessor
+    decoder_class = SpanDecoder
+
+class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
+    config_class = UniEncoderTokenConfig 
+    model_class = UniEncoderTokenModel
+    data_processor_class = UniEncoderTokenProcessor
+    decoder_class = TokenDecoder
+
+
+class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
+    config_class = BiEncoderSpanConfig 
+    model_class = BiEncoderSpanModel
+    data_processor_class = BiEncoderSpanProcessor
+    decoder_class = SpanDecoder
+
+class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
+    config_class = BiEncoderTokenConfig 
+    model_class = BiEncoderTokenModel
+    data_processor_class = BiEncoderTokenProcessor
+    decoder_class = TokenDecoder
