@@ -4,7 +4,7 @@ import re
 import warnings
 from tqdm import tqdm
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Type
+from typing import Dict, List, Optional, Union, Type, Any
 from abc import ABC, abstractmethod
 
 import onnxruntime as ort
@@ -22,8 +22,13 @@ from .config import (BaseGLiNERConfig,
                      BiEncoderSpanConfig,
                      BiEncoderTokenConfig,
                      GLiNERConfig)
-from .data_processing import (BaseProcessor, UniEncoderSpanProcessor, UniEncoderTokenProcessor, 
-                                                BiEncoderSpanProcessor, BiEncoderTokenProcessor)
+from .data_processing import (BaseProcessor, 
+                              UniEncoderSpanProcessor, 
+                              UniEncoderTokenProcessor, 
+                              BiEncoderSpanProcessor, 
+                              BiEncoderTokenProcessor,
+                              RelationExtractionSpanProcessor,
+                              EncoderDecoderSpanProcessor)
 from .data_processing.collator import DataCollator, DataCollatorWithPadding
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
@@ -34,7 +39,11 @@ from .modeling.base import (BaseModel,
                             UniEncoderSpanModel, 
                             UniEncoderTokenModel,
                             BiEncoderSpanModel,
-                            BiEncoderTokenModel)
+                            BiEncoderTokenModel,
+                            UniEncoderSpanRelexModel,
+                            BiEncoderSpanRelexModel,
+                            UniEncoderSpanDecoderModel,
+                            )
 from .infer_packing import InferencePackingConfig
 from .onnx.model import BaseORTModel, SpanORTModel, TokenORTModel
 from .utils import is_module_available
@@ -1094,3 +1103,921 @@ class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     model_class = BiEncoderTokenModel
     data_processor_class = BiEncoderTokenProcessor
     decoder_class = TokenDecoder
+
+
+class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
+    """
+    GLiNER model with span-based encoding and label decoding capabilities.
+    Supports generating textual labels for entities.
+    """
+    config_class = GLiNERConfig  # Uses base config with labels_decoder settings
+    model_class = UniEncoderSpanDecoderModel
+    data_processor_class = EncoderDecoderSpanProcessor
+    decoder_class = SpanDecoder
+    
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+        """Create data processor with decoder tokenizer."""
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+        
+        if words_splitter is None:
+            words_splitter = WordsSplitter(config.words_splitter_type)
+        
+        # Load decoder tokenizer
+        decoder_tokenizer = None
+        if config.labels_decoder is not None:
+            decoder_tokenizer = AutoTokenizer.from_pretrained(
+                config.labels_decoder, 
+                cache_dir=cache_dir, 
+                add_prefix_space=True
+            )
+            if decoder_tokenizer.pad_token is None:
+                decoder_tokenizer.pad_token = decoder_tokenizer.eos_token
+        
+        self.data_processor = self.data_processor_class(
+            config, tokenizer, words_splitter, decoder_tokenizer=decoder_tokenizer
+        )
+    
+    def set_labels_trie(self, labels: List[str]):
+        """
+        Initialize the labels trie for constrained generation.
+        
+        Args:
+            labels (List[str]): Labels that will be used for constrained generation.
+            
+        Returns:
+            LabelsTrie: Trie structure for constrained beam search.
+        """
+        if self.data_processor.decoder_tokenizer is None:
+            raise NotImplementedError("Label trie is implemented only for models with decoder.")
+        
+        tokenized_labels = []
+        for label in labels:
+            tokens = self.data_processor.decoder_tokenizer.encode(label)
+            if tokens[0] == self.data_processor.decoder_tokenizer.bos_token_id:
+                tokens = tokens[1:]
+            tokens.append(self.data_processor.decoder_tokenizer.eos_token_id)
+            tokenized_labels.append(tokens)
+        
+        trie = LabelsTrie(tokenized_labels)
+        return trie
+    
+    def generate_labels(self, model_output, **gen_kwargs):
+        """
+        Generate textual class labels for each entity span.
+        
+        Args:
+            model_output: Model output containing decoder_embedding and decoder_embedding_mask
+            **gen_kwargs: Generation parameters (max_new_tokens, temperature, etc.)
+            
+        Returns:
+            List[str]: Generated label strings
+        """
+        dec_embeds = model_output.decoder_embedding
+        if dec_embeds is None:
+            return []
+        
+        dec_mask = model_output.decoder_embedding_mask
+        
+        gen_ids = self.model.generate_labels(
+            dec_embeds, dec_mask,
+            max_new_tokens=gen_kwargs.pop("max_new_tokens", 15),
+            eos_token_id=self.data_processor.decoder_tokenizer.eos_token_id,
+            pad_token_id=self.data_processor.decoder_tokenizer.pad_token_id,
+            do_sample=gen_kwargs.pop("do_sample", True),
+            temperature=gen_kwargs.pop("temperature", 0.01),
+            num_return_sequences=gen_kwargs.pop("num_return_sequences", 1),
+            **gen_kwargs
+        )
+        
+        gen_texts = self.data_processor.decoder_tokenizer.batch_decode(
+            gen_ids, skip_special_tokens=True
+        )
+        return gen_texts
+    
+    @torch.no_grad()
+    def inference(
+        self,
+        texts,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        gen_constraints=None,
+        num_gen_sequences=1,
+        packing_config: Optional[InferencePackingConfig] = None,
+        **gen_kwargs,
+    ):
+        """
+        Predict entities with optional label generation.
+        
+        Args:
+            texts: Input texts
+            labels: Entity type labels
+            flat_ner: Whether to use flat NER
+            threshold: Confidence threshold
+            multi_label: Allow multiple labels per span
+            batch_size: Batch size for processing
+            gen_constraints: Labels to constrain generation
+            num_gen_sequences: Number of label sequences to generate per span
+            packing_config: Inference packing configuration
+            **gen_kwargs: Additional generation parameters
+            
+        Returns:
+            List of entity predictions with optional generated labels
+        """
+        self.eval()
+        
+        if isinstance(texts, str):
+            texts = [texts]
+        
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        input_x = self.prepare_base_input(tokens)
+        
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+        
+        active_packing = packing_config if packing_config is not None else self._inference_packing_config
+        
+        outputs = []
+        for batch in data_loader:
+            if not self.onnx_model:
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+            
+            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
+            model_output = self.model(**model_inputs, threshold=threshold)
+            
+            model_logits = model_output.logits
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            # Generate labels if decoder is available
+            gen_labels = None
+            if self.config.labels_decoder is not None:
+                labels_trie = self.set_labels_trie(gen_constraints) if gen_constraints else None
+                gen_labels = self.generate_labels(
+                    model_output, 
+                    labels_trie=labels_trie,
+                    num_return_sequences=num_gen_sequences,
+                    **gen_kwargs
+                )
+            
+            decoded = self.decoder.decode(
+                batch["tokens"],
+                batch["id_to_classes"],
+                model_logits,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+                gen_labels=gen_labels,
+                sel_idx=model_output.decoder_span_idx,
+                num_gen_sequences=num_gen_sequences
+            )
+            outputs.extend(decoded)
+        
+        # Convert to entity format
+        all_entities = []
+        for i, output in enumerate(outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            
+            for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                
+                ent_details = {
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score,
+                }
+                
+                if gen_ent_type is not None:
+                    ent_details['generated_labels'] = gen_ent_type
+                
+                entities.append(ent_details)
+            
+            all_entities.append(entities)
+        
+        return all_entities
+
+
+class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
+    """
+    GLiNER model for both entity recognition and relation extraction.
+    Performs joint entity and relation prediction.
+    """
+    config_class = GLiNERConfig  # Uses base config with relations_layer settings
+    model_class = UniEncoderSpanRelexModel
+    data_processor_class = RelationExtractionSpanProcessor
+    decoder_class = SpanDecoder
+    
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+        """Create relation extraction data processor."""
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+        
+        if words_splitter is None:
+            words_splitter = WordsSplitter(config.words_splitter_type)
+        
+        self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
+    
+    @torch.no_grad()
+    def inference(
+        self,
+        texts,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        packing_config: Optional[InferencePackingConfig] = None,
+        return_relations=True,
+    ):
+        """
+        Predict entities and relations.
+        
+        Args:
+            texts: Input texts
+            labels: Entity type labels
+            flat_ner: Whether to use flat NER
+            threshold: Confidence threshold
+            multi_label: Allow multiple labels per span
+            batch_size: Batch size
+            packing_config: Inference packing configuration
+            return_relations: Whether to return relation predictions
+            
+        Returns:
+            Tuple of (entities, relations) if return_relations=True, else just entities
+        """
+        self.eval()
+        
+        if isinstance(texts, str):
+            texts = [texts]
+        
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        input_x = self.prepare_base_input(tokens)
+        
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+        
+        active_packing = packing_config if packing_config is not None else self._inference_packing_config
+        
+        all_entity_outputs = []
+        all_relation_outputs = []
+        
+        for batch in data_loader:
+            if not self.onnx_model:
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+            
+            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
+            model_output = self.model(**model_inputs, threshold=threshold)
+            
+            # Decode entities
+            model_logits = model_output.logits
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            decoded_entities = self.decoder.decode(
+                batch["tokens"],
+                batch["id_to_classes"],
+                model_logits,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+            )
+            all_entity_outputs.extend(decoded_entities)
+            
+            # Store relations if available
+            if return_relations and hasattr(model_output, 'rel_logits') and model_output.rel_logits is not None:
+                all_relation_outputs.append({
+                    'rel_idx': model_output.rel_idx,
+                    'rel_logits': model_output.rel_logits,
+                    'rel_mask': model_output.rel_mask,
+                })
+        
+        # Convert entities to standard format
+        all_entities = []
+        for i, output in enumerate(all_entity_outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                
+                entities.append({
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score,
+                })
+            
+            all_entities.append(entities)
+        
+        if return_relations:
+            # Process relations
+            all_relations = self._process_relations(
+                all_relation_outputs, all_entities, threshold
+            )
+            return all_entities, all_relations
+        
+        return all_entities
+    
+    def _process_relations(self, relation_outputs, all_entities, threshold=0.5):
+        """Process relation predictions into readable format."""
+        all_relations = []
+        
+        for rel_output in relation_outputs:
+            if rel_output is None:
+                all_relations.append([])
+                continue
+            
+            rel_idx = rel_output['rel_idx']  # (B, P, 2)
+            rel_logits = rel_output['rel_logits']  # (B, P, C)
+            rel_mask = rel_output['rel_mask']  # (B, P)
+            
+            batch_relations = []
+            for b in range(rel_idx.size(0)):
+                relations = []
+                for p in range(rel_idx.size(1)):
+                    if not rel_mask[b, p]:
+                        continue
+                    
+                    head_idx = rel_idx[b, p, 0].item()
+                    tail_idx = rel_idx[b, p, 1].item()
+                    
+                    # Get relation type with highest score
+                    scores = torch.sigmoid(rel_logits[b, p])
+                    max_score, max_idx = scores.max(dim=0)
+                    
+                    if max_score >= threshold:
+                        relations.append({
+                            'head': head_idx,
+                            'tail': tail_idx,
+                            'relation': max_idx.item(),
+                            'score': max_score.item(),
+                        })
+                
+                batch_relations.append(relations)
+            
+            all_relations.extend(batch_relations)
+        
+        return all_relations
+
+
+class BiEncoderSpanRelexGLiNER(BaseBiEncoderGLiNER):
+    """
+    Bi-encoder GLiNER model for entity recognition and relation extraction.
+    Uses separate encoders for text and labels.
+    """
+    config_class = GLiNERConfig
+    model_class = BiEncoderSpanRelexModel
+    data_processor_class = RelationExtractionSpanProcessor
+    decoder_class = SpanDecoder
+    
+    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+        """Create bi-encoder relation extraction data processor."""
+        labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
+        if tokenizer is None:
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+        
+        if words_splitter is None:
+            words_splitter = WordsSplitter(config.words_splitter_type)
+        
+        self.data_processor = self.data_processor_class(
+            config, tokenizer, words_splitter
+        )
+        # Store labels tokenizer separately for encoding
+        self.data_processor.labels_tokenizer = labels_tokenizer
+    
+    @torch.no_grad()
+    def inference(
+        self,
+        texts,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        batch_size=8,
+        packing_config: Optional[InferencePackingConfig] = None,
+        return_relations=True,
+    ):
+        """
+        Predict entities and relations using bi-encoder architecture.
+        
+        Similar to UniEncoderSpanRelexGLiNER but with bi-encoder support.
+        """
+        self.eval()
+        
+        if isinstance(texts, str):
+            texts = [texts]
+        
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        input_x = self.prepare_base_input(tokens)
+        
+        collator = DataCollator(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+            entity_types=labels,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+        
+        active_packing = packing_config if packing_config is not None else self._inference_packing_config
+        
+        all_entity_outputs = []
+        all_relation_outputs = []
+        
+        for batch in data_loader:
+            if not self.onnx_model:
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
+                        for k, v in batch.items()}
+            
+            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
+            model_output = self.model(**model_inputs, threshold=threshold)
+            
+            model_logits = model_output.logits
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+            
+            decoded_entities = self.decoder.decode(
+                batch["tokens"],
+                batch["id_to_classes"],
+                model_logits,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+            )
+            all_entity_outputs.extend(decoded_entities)
+            
+            if return_relations and hasattr(model_output, 'rel_logits') and model_output.rel_logits is not None:
+                all_relation_outputs.append({
+                    'rel_idx': model_output.rel_idx,
+                    'rel_logits': model_output.rel_logits,
+                    'rel_mask': model_output.rel_mask,
+                })
+        
+        # Convert to entity format (same as UniEncoderSpanRelexGLiNER)
+        all_entities = []
+        for i, output in enumerate(all_entity_outputs):
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities = []
+            
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+                
+                entities.append({
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": texts[i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score,
+                })
+            
+            all_entities.append(entities)
+        
+        if return_relations:
+            all_relations = self._process_relations(
+                all_relation_outputs, all_entities, threshold
+            )
+            return all_entities, all_relations
+        
+        return all_entities
+    
+    def _process_relations(self, relation_outputs, all_entities, threshold=0.5):
+        """Process relation predictions (same as UniEncoderSpanRelexGLiNER)."""
+        all_relations = []
+        
+        for rel_output in relation_outputs:
+            if rel_output is None:
+                all_relations.append([])
+                continue
+            
+            rel_idx = rel_output['rel_idx']
+            rel_logits = rel_output['rel_logits']
+            rel_mask = rel_output['rel_mask']
+            
+            batch_relations = []
+            for b in range(rel_idx.size(0)):
+                relations = []
+                for p in range(rel_idx.size(1)):
+                    if not rel_mask[b, p]:
+                        continue
+                    
+                    head_idx = rel_idx[b, p, 0].item()
+                    tail_idx = rel_idx[b, p, 1].item()
+                    
+                    scores = torch.sigmoid(rel_logits[b, p])
+                    max_score, max_idx = scores.max(dim=0)
+                    
+                    if max_score >= threshold:
+                        relations.append({
+                            'head': head_idx,
+                            'tail': tail_idx,
+                            'relation': max_idx.item(),
+                            'score': max_score.item(),
+                        })
+                
+                batch_relations.append(relations)
+            
+            all_relations.extend(batch_relations)
+        
+        return all_relations
+    
+
+
+class GLiNER(nn.Module, PyTorchModelHubMixin):
+    """
+    Meta GLiNER class that automatically instantiates the appropriate GLiNER variant.
+    
+    This class provides a unified interface for all GLiNER models, automatically switching to 
+    specialized model types based on the model configuration. It supports various NER architectures
+    including uni-encoder, bi-encoder, decoder-based, and relation extraction models.
+    
+    The class automatically detects the model type based on:
+    - span_mode: Token-level vs span-level
+    - labels_encoder: Uni-encoder vs bi-encoder
+    - labels_decoder: Standard vs decoder-based
+    - relations_layer: NER-only vs joint entity-relation extraction
+    
+    Attributes:
+        model: The loaded GLiNER model instance (automatically typed)
+        config: Model configuration
+        data_processor: Data processor for the model
+        decoder: Decoder for predictions
+        
+    Examples:
+        Load a pretrained uni-encoder span model:
+        >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+        
+        Load a bi-encoder model:
+        >>> model = GLiNER.from_pretrained("urchade/gliner_bi-small-v1.0")
+        
+        Load from local configuration:
+        >>> config = GLiNERConfig.from_pretrained("config.json")
+        >>> model = GLiNER.from_config(config)
+        
+        Initialize from scratch:
+        >>> config = GLiNERConfig(model_name="microsoft/deberta-v3-small")
+        >>> model = GLiNER(config)
+    """
+    
+    def __init__(
+        self, 
+        config: Union[str, Path, GLiNERConfig],
+        **kwargs
+    ):
+        """
+        Initialize a GLiNER model with automatic type detection.
+        
+        This constructor determines the appropriate GLiNER variant based on the configuration
+        and replaces itself with an instance of that variant.
+        
+        Args:
+            config: Model configuration (GLiNERConfig object, path to config file, or dict)
+            **kwargs: Additional arguments passed to the specific GLiNER variant
+            
+        Examples:
+            >>> config = GLiNERConfig(model_name="bert-base-cased")
+            >>> model = GLiNER(config)
+            
+            >>> model = GLiNER("path/to/gliner_config.json")
+        """
+        super().__init__()
+        
+        # Load config if it's a path or dict
+        if isinstance(config, (str, Path)):
+            config_path = Path(config)
+            if config_path.exists():
+                with open(config_path, "r") as f:
+                    config_dict = json.load(f)
+                config = GLiNERConfig(**config_dict)
+            else:
+                raise FileNotFoundError(f"Config file not found: {config}")
+        elif isinstance(config, dict):
+            config = GLiNERConfig(**config)
+        
+        # Determine the appropriate GLiNER class based on config
+        gliner_class = self._get_gliner_class(config)
+        
+        # Create instance of the appropriate class
+        new_instance = gliner_class(config, **kwargs)
+        
+        # Replace this instance with the specific GLiNER variant
+        self.__class__ = type(new_instance)
+        self.__dict__ = new_instance.__dict__
+    
+    @staticmethod
+    def _get_gliner_class(config: GLiNERConfig):
+        """
+        Determine the appropriate GLiNER class based on configuration.
+        
+        Args:
+            config: GLiNER configuration object
+            
+        Returns:
+            The appropriate GLiNER class
+        """
+        is_token_level = config.span_mode == "token_level"
+        has_labels_encoder = config.labels_encoder is not None
+        has_labels_decoder = config.labels_decoder is not None
+        has_relations = config.relations_layer is not None
+        
+        # Priority order: relations > decoder > bi-encoder > token vs span
+        
+        if has_relations:
+            if has_labels_encoder:
+                return BiEncoderSpanRelexGLiNER
+            else:
+                return UniEncoderSpanRelexGLiNER
+        
+        if has_labels_decoder:
+            if has_labels_encoder:
+                warnings.warn(
+                    "labels_encoder and labels_decoder are both set. "
+                    "Using decoder model (labels_encoder will be ignored)."
+                )
+            return UniEncoderSpanDecoderGLiNER
+        
+        if has_labels_encoder:
+            if is_token_level:
+                return BiEncoderTokenGLiNER
+            else:
+                return BiEncoderSpanGLiNER
+        
+        # Default: uni-encoder
+        if is_token_level:
+            return UniEncoderTokenGLiNER
+        else:
+            return UniEncoderSpanGLiNER
+    
+    @classmethod
+    def from_pretrained(
+        cls,
+        model_id: str,
+        revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        force_download: bool = False,
+        proxies: Optional[Dict] = None,
+        resume_download: bool = False,
+        local_files_only: bool = False,
+        token: Union[str, bool, None] = None,
+        map_location: str = "cpu",
+        strict: bool = False,
+        load_tokenizer: Optional[bool] = None,
+        resize_token_embeddings: Optional[bool] = True,
+        compile_torch_model: Optional[bool] = False,
+        # Config overrides
+        max_length: Optional[int] = None,
+        max_width: Optional[int] = None,
+        post_fusion_schema: Optional[str] = None,
+        _attn_implementation: Optional[str] = None,
+        **model_kwargs,
+    ):
+        """
+        Load a pretrained GLiNER model with automatic type detection.
+        
+        This method loads the configuration, determines the appropriate GLiNER variant,
+        and delegates to that variant's from_pretrained method.
+        
+        Args:
+            model_id: Model identifier or local path
+            revision: Model revision
+            cache_dir: Cache directory
+            force_download: Force redownload
+            proxies: Proxy configuration
+            resume_download: Resume interrupted downloads
+            local_files_only: Only use local files
+            token: HF token for private repos
+            map_location: Device to map model to
+            strict: Enforce strict state_dict loading
+            load_tokenizer: Whether to load tokenizer
+            resize_token_embeddings: Whether to resize embeddings
+            compile_torch_model: Whether to compile with torch.compile
+            max_length: Override max_length in config
+            max_width: Override max_width in config
+            post_fusion_schema: Override post_fusion_schema in config
+            _attn_implementation: Override attention implementation
+            **model_kwargs: Additional model initialization arguments
+            
+        Returns:
+            Appropriate GLiNER model instance
+            
+        Examples:
+            >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+            >>> model = GLiNER.from_pretrained("urchade/gliner_bi-small-v1.0")
+            >>> model = GLiNER.from_pretrained("path/to/local/model")
+        """
+        model_dir = Path(model_id)
+        if not model_dir.exists():
+            model_dir = Path(snapshot_download(
+                repo_id=model_id,
+                revision=revision,
+                cache_dir=cache_dir,
+                force_download=force_download,
+                proxies=proxies,
+                resume_download=resume_download,
+                token=token,
+                local_files_only=local_files_only,
+            ))
+        
+        # Load config to determine model type
+        config_file = model_dir / "gliner_config.json"
+        if not config_file.exists():
+            raise FileNotFoundError(f"No config file found in {model_dir}")
+        
+        with open(config_file, "r") as f:
+            config_dict = json.load(f)
+        
+        # Apply config overrides
+        if max_length is not None:
+            config_dict["max_len"] = max_length
+        if max_width is not None:
+            config_dict["max_width"] = max_width
+        if post_fusion_schema is not None:
+            config_dict["post_fusion_schema"] = post_fusion_schema
+        if _attn_implementation is not None:
+            config_dict["_attn_implementation"] = _attn_implementation
+        
+        config = GLiNERConfig(**config_dict)
+        
+        # Determine the appropriate class
+        gliner_class = cls._get_gliner_class(config)
+        
+        # Delegate to the specific class's from_pretrained method
+        return gliner_class.from_pretrained(
+            model_id=model_id,
+            revision=revision,
+            cache_dir=cache_dir,
+            force_download=force_download,
+            proxies=proxies,
+            resume_download=resume_download,
+            local_files_only=local_files_only,
+            token=token,
+            map_location=map_location,
+            strict=strict,
+            load_tokenizer=load_tokenizer,
+            resize_token_embeddings=resize_token_embeddings,
+            compile_torch_model=compile_torch_model,
+            max_length=max_length,
+            max_width=max_width,
+            post_fusion_schema=post_fusion_schema,
+            _attn_implementation=_attn_implementation,
+            **model_kwargs,
+        )
+    
+    @classmethod
+    def from_config(
+        cls,
+        config: Union[GLiNERConfig, str, Path, Dict],
+        **kwargs
+    ):
+        """
+        Create a GLiNER model from configuration.
+        
+        Args:
+            config: Model configuration (GLiNERConfig, path, or dict)
+            **kwargs: Additional arguments for model initialization
+            
+        Returns:
+            Appropriate GLiNER model instance
+            
+        Examples:
+            >>> config = GLiNERConfig(model_name="microsoft/deberta-v3-small")
+            >>> model = GLiNER.from_config(config)
+            
+            >>> model = GLiNER.from_config("path/to/config.json")
+        """
+        # Load config if needed
+        if isinstance(config, (str, Path)):
+            config_path = Path(config)
+            if config_path.exists():
+                with open(config_path, "r") as f:
+                    config_dict = json.load(f)
+                config = GLiNERConfig(**config_dict)
+            else:
+                raise FileNotFoundError(f"Config file not found: {config}")
+        elif isinstance(config, dict):
+            config = GLiNERConfig(**config)
+        
+        # Determine the appropriate class
+        gliner_class = cls._get_gliner_class(config)
+        
+        # Create instance
+        return gliner_class(config, **kwargs)
+    
+    @property
+    def model_map(self) -> Dict[str, Dict[str, Any]]:
+        """
+        Map configuration patterns to their corresponding GLiNER classes.
+        
+        Returns:
+            Dictionary mapping model types to their classes and descriptions
+        """
+        return {
+            "uni_encoder_span": {
+                "class": UniEncoderSpanGLiNER,
+                "description": "Standard span-based NER with single encoder",
+                "config": {"span_mode": "span_level", "labels_encoder": None, "labels_decoder": None, "relations_layer": None},
+            },
+            "uni_encoder_token": {
+                "class": UniEncoderTokenGLiNER,
+                "description": "Token-level NER with single encoder",
+                "config": {"span_mode": "token_level", "labels_encoder": None, "labels_decoder": None, "relations_layer": None},
+            },
+            "bi_encoder_span": {
+                "class": BiEncoderSpanGLiNER,
+                "description": "Span-based NER with separate text and label encoders",
+                "config": {"span_mode": "span_level", "labels_encoder": "required", "labels_decoder": None, "relations_layer": None},
+            },
+            "bi_encoder_token": {
+                "class": BiEncoderTokenGLiNER,
+                "description": "Token-level NER with separate text and label encoders",
+                "config": {"span_mode": "token_level", "labels_encoder": "required", "labels_decoder": None, "relations_layer": None},
+            },
+            "span_decoder": {
+                "class": UniEncoderSpanDecoderGLiNER,
+                "description": "Span-based NER with label generation decoder",
+                "config": {"span_mode": "span_level", "labels_decoder": "required", "relations_layer": None},
+            },
+            "span_relex": {
+                "class": UniEncoderSpanRelexGLiNER,
+                "description": "Joint entity and relation extraction with single encoder",
+                "config": {"span_mode": "span_level", "labels_encoder": None, "relations_layer": "required"},
+            },
+            "bi_span_relex": {
+                "class": BiEncoderSpanRelexGLiNER,
+                "description": "Joint entity and relation extraction with separate encoders",
+                "config": {"span_mode": "span_level", "labels_encoder": "required", "relations_layer": "required"},
+            },
+        }
+    
+    def get_model_type(self) -> str:
+        """
+        Get the type of the current model instance.
+        
+        Returns:
+            String identifier of the model type
+        """
+        class_name = self.__class__.__name__
+        
+        type_mapping = {
+            "UniEncoderSpanGLiNER": "uni_encoder_span",
+            "UniEncoderTokenGLiNER": "uni_encoder_token",
+            "BiEncoderSpanGLiNER": "bi_encoder_span",
+            "BiEncoderTokenGLiNER": "bi_encoder_token",
+            "UniEncoderSpanDecoderGLiNER": "span_decoder",
+            "UniEncoderSpanRelexGLiNER": "span_relex",
+            "BiEncoderSpanRelexGLiNER": "bi_span_relex",
+        }
+        
+        return type_mapping.get(class_name, "unknown")
+    
+    def __repr__(self) -> str:
+        """String representation of the model."""
+        model_type = self.get_model_type()
+        model_info = self.model_map.get(model_type, {})
+        description = model_info.get("description", "Unknown model type")
+        
+        return (
+            f"{self.__class__.__name__}(\n"
+            f"  type={model_type},\n"
+            f"  description='{description}',\n"
+            f"  config={self.config.__class__.__name__}\n"
+            f")"
+        )

@@ -5,7 +5,7 @@ import onnxruntime as ort
 import numpy as np
 import torch
 
-from ..modeling.base import GLiNERModelOutput
+from ..modeling.outputs import GLiNERBaseOutput
 
 class BaseORTModel(ABC):
     def __init__(self, session: ort.InferenceSession):
@@ -85,7 +85,7 @@ class SpanORTModel(BaseORTModel):
         }
         prepared_inputs = self.prepare_inputs(inputs)
         inference_output = self.run_inference(prepared_inputs)
-        outputs = GLiNERModelOutput(
+        outputs = GLiNERBaseOutput(
             logits=inference_output['logits']
         )
         return outputs
@@ -113,7 +113,7 @@ class TokenORTModel(BaseORTModel):
         }
         prepared_inputs = self.prepare_inputs(inputs)
         inference_output = self.run_inference(prepared_inputs)
-        outputs = GLiNERModelOutput(
+        outputs = GLiNERBaseOutput(
             logits=inference_output['logits']
         )
         return outputs

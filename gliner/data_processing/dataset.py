@@ -4,7 +4,7 @@ from typing import Optional, List
 from torch.utils.data import Dataset
 from transformers import AutoTokenizer
 
-from . import TokenProcessor, SpanProcessor, WordsSplitter
+from . import  WordsSplitter
 from ..config import GLiNERConfig
 
 class GLiNERDataset(Dataset):

@@ -1,7 +1,7 @@
 import torch
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
-from .processor import SpanProcessor, TokenProcessor
+from .processor import *
 from .utils import pad_2d_tensor
 
 class DataCollator:

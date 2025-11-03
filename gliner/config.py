@@ -105,6 +105,7 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
                  labels_decoder: str = None,
                  decoder_mode: str = None,
                  full_decoder_context: bool = True,
+                 blank_entity_prob: float = 0.1,
                  labels_decoder_config: Optional[dict] = None,
                  **kwargs):
         super().__init__(**kwargs)
@@ -115,7 +116,7 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
                                                    else "gpt2")
             labels_decoder_config = CONFIG_MAPPING[labels_decoder_config["model_type"]](**labels_decoder_config)
         self.labels_decoder_config = labels_decoder_config
-        
+        self.blank_entity_prob = blank_entity_prob
         self.labels_decoder = labels_decoder
         self.decoder_mode = decoder_mode  # 'prompt' or 'span'
         self.full_decoder_context = full_decoder_context
