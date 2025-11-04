@@ -5,6 +5,7 @@ import warnings
 
 import torch
 import torch.nn as nn
+from torch.nn import functional as F
 from torch.nn.utils.rnn import pad_sequence
 
 from .encoder import Encoder, BiEncoder
@@ -42,29 +43,22 @@ class BaseModel(ABC, nn.Module):
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         Make `embedding` & `mask` exactly `target_len` along dim=1.
-
         * pad with zeros  if L < target_len  
         * truncate       if L > target_len
         """
-        B, L, D = embedding.shape
+        L = embedding.shape[1]
+        
         if L == target_len:
             return embedding, mask
-
-        if L < target_len:                              # → PAD
+        
+        if L < target_len:
             pad_len = target_len - L
-            pad_emb = torch.zeros(B, pad_len, D,
-                                  dtype=embedding.dtype,
-                                  device=embedding.device)
-            pad_msk = torch.zeros(B, pad_len,
-                                  dtype=mask.dtype,
-                                  device=mask.device)
-            embedding = torch.cat([embedding, pad_emb], dim=1)
-            mask      = torch.cat([mask,      pad_msk], dim=1)
-
-        else:                                           # → TRUNCATE
+            embedding = F.pad(embedding, (0, 0, 0, pad_len))  
+            mask = F.pad(mask, (0, pad_len))                  
+        else:
             embedding = embedding[:, :target_len]
-            mask      = mask[:,      :target_len]
-
+            mask = mask[:, :target_len]
+        
         return embedding, mask
     
     @abstractmethod
@@ -162,6 +156,15 @@ class BaseUniEncoderModel(BaseModel):
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
     
 class UniEncoderSpanModel(BaseUniEncoderModel):
+    def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
+        super().__init__(config, from_pretrained, cache_dir)
+        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
+                                          hidden_size = config.hidden_size, 
+                                          max_width = config.max_width,
+                                          dropout = config.dropout)
+        
+        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
+
     def forward(self,
                 input_ids: Optional[torch.FloatTensor] = None,
                 attention_mask: Optional[torch.LongTensor] = None,
@@ -270,8 +273,6 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
                 prompts_embedding_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
-                span_idx: Optional[torch.LongTensor] = None,
-                span_mask: Optional[torch.LongTensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
@@ -304,7 +305,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
 
         output = GLiNERBaseOutput(
             logits=scores,
@@ -518,8 +519,6 @@ class BiEncoderTokenModel(BaseBiEncoderModel):
                 prompts_embedding_mask: Optional[torch.LongTensor] = None,
                 words_mask: Optional[torch.LongTensor] = None,
                 text_lengths: Optional[torch.Tensor] = None,
-                span_idx: Optional[torch.LongTensor] = None,
-                span_mask: Optional[torch.LongTensor] = None,
                 labels: Optional[torch.FloatTensor] = None,
                 **kwargs
                 ):
@@ -551,7 +550,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
 
         output = GLiNERBaseOutput(
             logits=scores,
@@ -581,18 +580,9 @@ class BiEncoderTokenModel(BaseBiEncoderModel):
             loss = all_losses.sum()
         return loss
     
-class UniEncoderSpanDecoderModel(BaseUniEncoderModel):
+class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
     def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
         super().__init__(config, from_pretrained, cache_dir)
-        
-        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
-                                          hidden_size = config.hidden_size, 
-                                          max_width = config.max_width,
-                                          dropout = config.dropout)
-        
-        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
-        
-
         self.decoder = Decoder(config, from_pretrained, cache_dir = cache_dir)
         if self.config.hidden_size != self.decoder.decoder_hidden_size:
             self._enc2dec_proj = create_projection_layer(
@@ -600,7 +590,7 @@ class UniEncoderSpanDecoderModel(BaseUniEncoderModel):
                 self.config.dropout,
                 self.decoder.decoder_hidden_size,
             )
-
+        
     def select_decoder_embedding(
         self,
         representations: torch.FloatTensor,   # (B, N, D)
@@ -1076,7 +1066,7 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
         )
 
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
-
+        batch_size, _, embed_dim = prompts_embedding.shape
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
         
         # Relation extraction
@@ -1091,8 +1081,8 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
             )
             pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
 
-            rel_prompts_embedding, rel_prompts_embedding_mask = extract_rel_features(
-                self.config, token_embeds, input_ids, attention_mask, self.config.embed_rel_token
+            rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
+                self.config.embed_rel_token, token_embeds, input_ids, attention_mask, batch_size, embed_dim
             )
 
             B, E, D = target_span_rep.shape
@@ -1194,334 +1184,6 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
 
         logits = logits.unsqueeze(-1)  # (B, E, E, 1)
         labels = labels.unsqueeze(-1)  # (B, E, E, 1)
-
-        all_losses = self._loss(logits.view(B, -1, 1), labels.view(B, -1, 1),
-                                alpha, gamma, label_smoothing, negatives, masking)
-
-        masked_loss = all_losses * adj_mask.unsqueeze(-1).view(B, -1, 1)
-
-        if reduction == "mean":
-            num_valid = adj_mask.sum()
-            loss = masked_loss.sum() / num_valid if num_valid > 0 else 0.0
-        elif reduction == 'sum':
-            loss = masked_loss.sum()
-        else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
-                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = masked_loss.sum()
-        return loss
-
-    def rel_loss(self, logits, labels, rel_mask, rel_prompts_embedding_mask,
-                 alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-                 reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
-        B, E, E, C = logits.shape
-
-        all_losses = self._loss(logits.view(B, -1, C), labels.view(B, -1, C),
-                                alpha, gamma, label_smoothing, negatives, masking)
-
-        pair_mask = rel_mask.view(B, -1, 1).expand(B, E*E, C)
-        class_mask = rel_prompts_embedding_mask.unsqueeze(1).expand(B, E*E, C)
-
-        masked_loss = all_losses * pair_mask * class_mask
-
-        if reduction == "mean":
-            num_valid = (pair_mask * class_mask).sum()
-            loss = masked_loss.sum() / num_valid if num_valid > 0 else 0.0
-        elif reduction == 'sum':
-            loss = masked_loss.sum()
-        else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
-                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = masked_loss.sum()
-        return loss
-
-
-class BiEncoderSpanRelexModel(BaseBiEncoderModel):
-    def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
-        super().__init__(config, from_pretrained, cache_dir)
-        
-        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
-                                          hidden_size = config.hidden_size, 
-                                          max_width = config.max_width,
-                                          dropout = config.dropout)
-        
-        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
-        
-        # Relation extraction components
-        if config.relations_layer is not None:
-            self.relations_rep_layer = RelationsRepLayer(in_dim=config.hidden_size, 
-                                                         relation_mode=config.relations_layer)
-        
-            if config.triples_layer is not None:
-                self.triples_score_layer = TriplesScoreLayer(config.triples_layer)
-            else:
-                self.pair_rep_layer = create_projection_layer(config.hidden_size*2, 
-                                                              config.dropout, 
-                                                              config.hidden_size)
-    
-    def select_span_target_embedding(
-        self,
-        span_rep: torch.FloatTensor,
-        span_scores: torch.FloatTensor,
-        span_mask: torch.LongTensor,
-        span_labels: Optional[torch.FloatTensor] = None,
-        threshold = 0.5,
-        top_k = None,
-    ):
-        """Select entity spans for relation extraction."""
-        B, L, K, D = span_rep.shape
-
-        span_rep_flat = span_rep.view(B, L * K, D)
-        span_mask_flat = span_mask.view(B, L * K)
-
-        if span_labels is not None:
-            span_prob_flat = span_labels.max(dim=-1).values.view(B, L * K)
-            keep = (span_prob_flat == 1).bool()
-        else:
-            span_prob_flat = torch.sigmoid(span_scores).max(dim=-1).values.view(B, L * K)
-            keep = (span_prob_flat > threshold) & span_mask_flat.bool()
-        
-        if top_k is not None and top_k > 0:
-            sel_scores = span_prob_flat.masked_fill(~keep, -1.0)
-            top_idx = sel_scores.topk(
-                k=min(top_k, sel_scores.size(1)),
-                dim=1
-            ).indices
-            keep = torch.zeros_like(keep)
-            keep.scatter_(1, top_idx, True)
-
-        rep_mask = keep.long()
-
-        target_rep, target_mask = self.select_target_embedding(
-            representations=span_rep_flat,
-            rep_mask=rep_mask
-        )
-
-        return target_rep, target_mask
-    
-    def select_target_embedding(
-        self,
-        representations: torch.FloatTensor = None,
-        rep_mask: torch.LongTensor = None
-    ):
-        """Keep only representations where mask == 1."""
-        B, N, D = representations.shape
-        lengths = rep_mask.sum(dim=-1)
-        max_len = lengths.max().item()
-
-        if max_len != N:
-            target_rep = representations.new_zeros(B, max_len, D)
-            target_mask = rep_mask.new_zeros(B, max_len)
-
-            new_col_idx = (rep_mask.cumsum(dim=1) - 1)
-            keep = rep_mask.bool()
-
-            batch_idx, old_col_idx = torch.where(keep)
-            new_col_idx = new_col_idx[keep]
-
-            target_rep[batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
-            target_mask[batch_idx, new_col_idx] = 1
-        else:
-            target_rep = representations
-            target_mask = rep_mask
-
-        return target_rep, target_mask
-    
-    def forward(self,
-                input_ids: Optional[torch.FloatTensor] = None,
-                attention_mask: Optional[torch.LongTensor] = None,
-                labels_embeds: Optional[torch.FloatTensor] = None,
-                labels_input_ids: Optional[torch.FloatTensor] = None,
-                labels_attention_mask: Optional[torch.LongTensor] = None,
-                words_embedding: Optional[torch.FloatTensor] = None,
-                mask: Optional[torch.LongTensor] = None,
-                prompts_embedding: Optional[torch.FloatTensor] = None,
-                prompts_embedding_mask: Optional[torch.LongTensor] = None,
-                words_mask: Optional[torch.LongTensor] = None,
-                text_lengths: Optional[torch.Tensor] = None,
-                span_idx: Optional[torch.LongTensor] = None,
-                span_mask: Optional[torch.LongTensor] = None,
-                labels: Optional[torch.FloatTensor] = None,
-                adj_matrix: Optional[torch.FloatTensor] = None,
-                rel_matrix: Optional[torch.FloatTensor] = None,
-                threshold: Optional[float] = 0.5,
-                **kwargs
-                ):
-
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask")
-            if key in kwargs
-        }
-
-        # Get token embeddings for relation labels
-        if labels_embeds is not None:
-            token_embeds = self.token_rep_layer.encode_text(input_ids, attention_mask, **encoder_kwargs)
-        else:
-            token_embeds, labels_embeds = self.token_rep_layer(input_ids, attention_mask,
-                                                               labels_input_ids, labels_attention_mask,
-                                                               **encoder_kwargs)
-        
-        batch_size, sequence_length, embed_dim = token_embeds.shape
-        max_text_length = text_lengths.max()
-        
-        words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask,
-                                                        batch_size, max_text_length, embed_dim, text_lengths)
-        
-        if self.config.has_rnn:
-            words_embedding = self.rnn(words_embedding, mask)
-        
-        labels_embeds = labels_embeds.unsqueeze(0)
-        labels_embeds = labels_embeds.expand(batch_size, -1, -1)
-        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
-                                device=attention_mask.device)
-        
-        labels_embeds = labels_embeds.to(words_embedding.dtype)
-        
-        if hasattr(self, "cross_fuser"):
-            words_embedding, prompts_embedding = self.features_enhancement(words_embedding, labels_embeds, 
-                                                                           text_mask=mask, labels_mask=labels_mask)
-        else:
-            prompts_embedding = labels_embeds
-        
-        prompts_embedding_mask = labels_mask
-
-        target_W = span_idx.size(1) // self.config.max_width
-        words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
-            
-        span_idx = span_idx * span_mask.unsqueeze(-1)
-
-        span_rep = self.span_rep_layer(words_embedding, span_idx)
-
-        target_C = prompts_embedding.size(1)
-        if labels is not None:
-            target_C = max(target_C, labels.size(-1))
-
-        prompts_embedding, prompts_embedding_mask = self._fit_length(
-            prompts_embedding, prompts_embedding_mask, target_C
-        )
-
-        prompts_embedding = self.prompt_rep_layer(prompts_embedding)
-
-        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
-        
-        # Relation extraction
-        pair_idx, pair_mask, pair_scores = None, None, None
-        rel_prompts_embedding_mask = None
-        full_rel_logits = None
-        pred_adj_matrix = None
-        
-        if hasattr(self, "relations_rep_layer"):
-            target_span_rep, target_span_mask = self.select_span_target_embedding(
-                span_rep, scores, span_mask, labels, threshold
-            )
-            pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
-
-            rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
-                self.config.rel_token_index, token_embeds, input_ids, attention_mask, self.config.embed_rel_token
-            )
-
-            B, E, D = target_span_rep.shape
-            _, C_rel, _ = rel_prompts_embedding.shape
-
-            head_rep = target_span_rep.unsqueeze(2).expand(B, E, E, D)
-            tail_rep = target_span_rep.unsqueeze(1).expand(B, E, E, D)
-
-            if hasattr(self, "pair_rep_layer"):
-                pair_rep = torch.cat((head_rep, tail_rep), dim=-1)
-                pair_rep = self.pair_rep_layer(pair_rep)
-                full_rel_logits = torch.einsum("BEED,BCD->BEEC", pair_rep, rel_prompts_embedding)
-
-            elif hasattr(self, "triples_score_layer"):
-                h = head_rep.unsqueeze(3).expand(B, E, E, C_rel, D)
-                t = tail_rep.unsqueeze(3).expand(B, E, E, C_rel, D)
-                r = rel_prompts_embedding.unsqueeze(1).unsqueeze(1).expand(B, E, E, C_rel, D)
-
-                h_flat = h.reshape(B * E * E * C_rel, D)
-                t_flat = t.reshape(B * E * E * C_rel, D)
-                r_flat = r.reshape(B * E * E * C_rel, D)
-
-                triple_scores_flat = self.triples_score_layer(h_flat, r_flat, t_flat)
-                full_rel_logits = triple_scores_flat.view(B, E, E, C_rel)
-
-            # Build pairs for output
-            pair_idx, pair_mask, head_rep_out, tail_rep_out = build_entity_pairs(
-                pred_adj_matrix, target_span_rep, threshold=0.5
-            )
-
-            # Gather rel_logits for selected pairs
-            batch_idx = torch.arange(B, device=pair_idx.device).unsqueeze(1).expand(B, pair_idx.size(1))
-            head_idx = pair_idx[..., 0].clamp_min(0)
-            tail_idx = pair_idx[..., 1].clamp_min(0)
-            pair_scores = full_rel_logits[batch_idx, head_idx, tail_idx]
-
-        loss = None
-        if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
-
-            if adj_matrix is not None and rel_matrix is not None and hasattr(self, "relations_rep_layer"):
-                adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
-                adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
-
-                rel_mask = adj_mask
-                rel_loss = self.rel_loss(full_rel_logits, rel_matrix, rel_mask, 
-                                        rel_prompts_embedding_mask, **kwargs)
-
-                loss = loss + adj_loss + rel_loss
-
-        output = GLiNERRelexOutput(
-            logits=scores,
-            loss=loss,
-            prompts_embedding=prompts_embedding,
-            prompts_embedding_mask=prompts_embedding_mask,
-            words_embedding=words_embedding,
-            mask=mask,
-            rel_idx=pair_idx,
-            rel_logits=pair_scores,
-            rel_mask=pair_mask
-        )
-        return output
-
-    def loss(self, scores, labels, prompts_embedding_mask, mask_label,
-             alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1.0, masking="label", **kwargs):
-
-        batch_size = scores.shape[0]
-        num_classes = prompts_embedding_mask.shape[-1]
-
-        BS, SL, WD, CL = scores.shape
-
-        scores = scores.view(BS, -1, CL)
-        labels = labels.view(BS, -1, CL)
-
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, masking=masking)
-
-        masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
-        all_losses = masked_loss.view(-1, num_classes)
-
-        mask_label = mask_label.reshape(-1, 1)
-        all_losses = all_losses * mask_label.float()
-
-        if reduction == "mean":
-            loss = all_losses.mean()
-        elif reduction == 'sum':
-            loss = all_losses.sum()
-        else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
-                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = all_losses.sum()
-        return loss
-    
-    def adj_loss(self, logits, labels, adj_mask,
-                 alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-                 reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
-        B, E, E = logits.shape
-
-        logits = logits.unsqueeze(-1)
-        labels = labels.unsqueeze(-1)
 
         all_losses = self._loss(logits.view(B, -1, 1), labels.view(B, -1, 1),
                                 alpha, gamma, label_smoothing, negatives, masking)
