@@ -2,18 +2,18 @@
 
 ## 🎉 GLiNER2 is Here!
 
-> **The wait is over — GLiNER2 is now available!**  
-> 
-> GLiNER2 extends beyond NER to support **Text Classification** and **Structured Data Extraction** in a unified model. Extract entities, classify text, and parse structured data—all in one efficient forward pass.
->
-> **What's new:**
-> - **Multi-task capability**: NER, classification, and structured extraction in a single model
-> - **Schema-driven interface**: Define custom schemas with field types, constraints, and descriptions
-> - **CPU-first design**: Fast inference on standard hardware without GPU requirements
+**The wait is over — GLiNER2 is now available!**
 
-> **🔗 Repository**: https://github.com/fastino-ai/GLiNER2  
-> **📦 Install**: `pip install gliner2`  
-> **📄 Paper**: https://arxiv.org/abs/2507.18546
+GLiNER2 extends beyond NER to support **Text Classification** and **Structured Data Extraction** in a unified model. Extract entities, classify text, and parse structured data—all in one efficient forward pass.
+
+**What's new:**
+- **Multi-task capability**: NER, classification, and structured extraction in a single model
+- **Schema-driven interface**: Define custom schemas with field types, constraints, and descriptions
+- **CPU-first design**: Fast inference on standard hardware without GPU requirements
+
+**🔗 Repository**: https://github.com/fastino-ai/GLiNER2  
+**📦 Install**: `pip install gliner2`  
+**📄 Paper**: https://arxiv.org/abs/2507.18546
 
 ---
 
