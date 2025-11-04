@@ -15,6 +15,7 @@ def extract_word_embeddings(token_embeds, words_mask, attention_mask,
     aranged_word_idx = torch.arange(max_text_length,
                                     dtype=attention_mask.dtype,
                                     device=token_embeds.device).expand(batch_size, -1)
+
     mask = aranged_word_idx < text_lengths
     return words_embedding, mask
 

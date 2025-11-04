@@ -44,7 +44,7 @@ class TestExtractWordEmbeddings:
         
         max_text_length=torch.count_nonzero(words_mask, dim=1).max().item()
         attention_mask = torch.ones(batch_size, seq_length, dtype=torch.long)
-        text_lengths = torch.tensor([2, 1], dtype=torch.long)
+        text_lengths = torch.tensor([2, 1], dtype=torch.long).unsqueeze(-1)
         
         return {
             'token_embeds': token_embeds,
@@ -119,7 +119,7 @@ class TestExtractWordEmbeddings:
         token_embeds = torch.randn(batch_size, seq_length, embed_dim)
         words_mask = torch.zeros(batch_size, seq_length, dtype=torch.long)
         attention_mask = torch.ones(batch_size, seq_length, dtype=torch.long)
-        text_lengths = torch.tensor([0], dtype=torch.long)
+        text_lengths = torch.tensor([0], dtype=torch.long).unsqueeze(-1)
         
         words_embedding, mask = extract_word_embeddings(
             token_embeds, words_mask, attention_mask,
@@ -289,7 +289,7 @@ class TestExtractPromptFeaturesAndWordEmbeddings:
         words_mask[1, 4] = 1
         
         attention_mask = torch.ones(batch_size, seq_length, dtype=torch.long)
-        text_lengths = torch.tensor([2, 1], dtype=torch.long)
+        text_lengths = torch.tensor([2, 1], dtype=torch.long).unsqueeze(-1)
         
         return {
             'class_token_index': class_token_index,
@@ -759,29 +759,20 @@ class TestUniEncoderSpanModel:
             'input_ids': torch.randint(0, 1000, (B, L)),
             'attention_mask': torch.ones(B, L, dtype=torch.long),
             'words_mask': torch.randint(0, W, (B, L)),
-            'text_lengths': torch.tensor([W, W-2]),
-            'span_idx': torch.randint(0, W, (B, L, max_width, 2)),
-            'span_mask': torch.randint(0, 2, (B, L, max_width)),
-            'labels': torch.zeros(B, L, max_width, C),
+            'text_lengths': torch.tensor([W, W-2]).unsqueeze(-1),
+            'span_idx': torch.randint(0, W, (B, L*max_width, 2)),
+            'span_mask': torch.randint(0, 2, (B, L*max_width)),
+            'labels': torch.zeros(B, L*max_width, C),
         }
     
     def test_forward_output_shape_without_labels(self, mock_config, model_inputs):
         """Should return output with correct logits shape without labels."""
-        from unittest.mock import Mock
         
         # Remove labels to test inference mode
         model_inputs_no_labels = {k: v for k, v in model_inputs.items() if k != 'labels'}
         
         # Mock the model components
         model = UniEncoderSpanModel(mock_config, from_pretrained=False)
-        
-        # Mock the token_rep_layer to return appropriate shape
-        model.token_rep_layer = Mock()
-        model.token_rep_layer.return_value = torch.randn(
-            model_inputs['input_ids'].shape[0],
-            model_inputs['input_ids'].shape[1],
-            mock_config.hidden_size
-        )
         
         with torch.no_grad():
             output = model(**model_inputs_no_labels)
@@ -1106,10 +1097,10 @@ class TestBiEncoderSpanModel:
             'labels_input_ids': torch.randint(0, 1000, (C, 10)),
             'labels_attention_mask': torch.ones(C, 10, dtype=torch.long),
             'words_mask': torch.randint(0, W, (B, L)),
-            'text_lengths': torch.tensor([W, W-2]),
-            'span_idx': torch.randint(0, W, (B, L, max_width, 2)),
-            'span_mask': torch.randint(0, 2, (B, L, max_width)),
-            'labels': torch.zeros(B, L, max_width, C),
+            'text_lengths': torch.tensor([W, W-2]).unsqueeze(-1),
+            'span_idx': torch.randint(0, W, (B, L*max_width, 2)),
+            'span_mask': torch.randint(0, 2, (B, L*max_width)),
+            'labels': torch.zeros(B, L*max_width, C),
         }
     
     def test_forward_output_shape_without_labels(self, mock_config, model_inputs):
@@ -1121,20 +1112,6 @@ class TestBiEncoderSpanModel:
         
         # Mock the model components
         model = BiEncoderSpanModel(mock_config, from_pretrained=False)
-        
-        # Mock the token_rep_layer to return appropriate shapes
-        model.token_rep_layer = Mock()
-        model.token_rep_layer.return_value = (
-            torch.randn(
-                model_inputs['input_ids'].shape[0],
-                model_inputs['input_ids'].shape[1],
-                mock_config.hidden_size
-            ),
-            torch.randn(
-                model_inputs['labels_input_ids'].shape[0],
-                mock_config.hidden_size
-            )
-        )
         
         with torch.no_grad():
             output = model(**model_inputs_no_labels)

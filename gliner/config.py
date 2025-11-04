@@ -107,6 +107,8 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
                  full_decoder_context: bool = True,
                  blank_entity_prob: float = 0.1,
                  labels_decoder_config: Optional[dict] = None,
+                 decoder_loss_coef=0.5,
+                 span_loss_coef=0.5,
                  **kwargs):
         super().__init__(**kwargs)
         
@@ -120,6 +122,8 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.labels_decoder = labels_decoder
         self.decoder_mode = decoder_mode  # 'prompt' or 'span'
         self.full_decoder_context = full_decoder_context
+        self.decoder_loss_coef = decoder_loss_coef
+        self.span_loss_coef = span_loss_coef
         
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token-level'")
