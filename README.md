@@ -1,5 +1,22 @@
 # 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
+## 🎉 GLiNER2 is Here!
+
+> **The wait is over — GLiNER2 is now available!**  
+> 
+> GLiNER2 extends beyond NER to support **Text Classification** and **Structured Data Extraction** in a unified model. Extract entities, classify text, and parse structured data—all in one efficient forward pass.
+>
+> **What's new:**
+> - **Multi-task capability**: NER, classification, and structured extraction in a single model
+> - **Schema-driven interface**: Define custom schemas with field types, constraints, and descriptions
+> - **CPU-first design**: Fast inference on standard hardware without GPU requirements
+
+> **🔗 Repository**: https://github.com/fastino-ai/GLiNER2  
+> **📦 Install**: `pip install gliner2`  
+> **📄 Paper**: https://arxiv.org/abs/2507.18546
+
+---
+
 GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
 
 <p align="center">
