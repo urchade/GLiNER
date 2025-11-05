@@ -1,4 +1,4 @@
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, List, Dict, Tuple
 from abc import ABC, abstractmethod
 from functools import partial
 import torch
@@ -7,65 +7,72 @@ from .utils import has_overlapping, has_overlapping_nested
 
 
 class BaseDecoder(ABC):
+    """
+    Abstract base class for all decoders.
+    
+    Args:
+        config: Configuration object containing decoder parameters.
+    """
+    
     def __init__(self, config):
         self.config = config
 
     @abstractmethod
     def decode(self, *args, **kwargs):
+        """
+        Decode model output into structured predictions.
+        
+        Args:
+            *args: Variable positional arguments.
+            **kwargs: Variable keyword arguments.
+            
+        Returns:
+            Decoded predictions in the appropriate format.
+        """
         pass
     
-    def update_id_to_classes(self, id_to_classes: Union[Dict, List[Dict]], 
-                            gen_labels: Optional[List[str]], 
-                            batch_size: int) -> Union[Dict, List[Dict]]:
+    def _get_id_to_class_for_sample(
+        self, 
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], 
+        sample_idx: int
+    ) -> Dict[int, str]:
         """
-        Update id_to_classes mapping with generated labels when using labels_decoder.
+        Get id_to_classes mapping for a specific sample.
         
-        For prompt decoder mode, maps generated labels back to class IDs.
-        
-        Parameters
-        ----------
-        id_to_classes : dict or list[dict]
-            Original mapping from class IDs to class names
-        gen_labels : list[str] or None
-            Generated labels from the decoder
-        batch_size : int
-            Number of samples in the batch
+        Args:
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Either a single 
+                mapping shared across all samples or per-sample mappings.
+            sample_idx (int): Index of the sample in the batch.
             
-        Returns
-        -------
-        Updated id_to_classes mapping
+        Returns:
+            Dict[int, str]: Mapping from class IDs to class names for this sample.
         """
-        if self.config.labels_decoder is not None and gen_labels is not None:
-            if self.config.decoder_mode == 'prompt':
-                new_id_to_classes = []
-                cursor = 0
-                for i in range(batch_size):
-                    original = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
-                    k = len(original)  # Number of labels for this example
-                    # Map each class ID to its generated label
-                    mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
-                    new_id_to_classes.append(mapping)
-                    cursor += k
-                id_to_classes = new_id_to_classes
+        if isinstance(id_to_classes, list):
+            return id_to_classes[sample_idx]
         return id_to_classes
     
-    def greedy_search(self, spans: List[tuple], flat_ner: bool = True, 
-                     multi_label: bool = False) -> List[tuple]:
+    def greedy_search(
+        self, 
+        spans: List[tuple], 
+        flat_ner: bool = True, 
+        multi_label: bool = False
+    ) -> List[tuple]:
         """
         Perform greedy search to remove overlapping spans.
         
-        Parameters
-        ----------
-        spans : list[tuple]
-            List of span tuples (start, end, label, gen_label, score)
-        flat_ner : bool
-            Whether to use flat NER (no nesting) or nested NER
-        multi_label : bool
-            Whether to allow multiple labels for the same span
+        Sorts spans by confidence score (descending) and keeps only non-overlapping
+        spans according to the specified NER mode.
+        
+        Args:
+            spans (List[tuple]): List of span tuples containing at minimum 
+                (start, end, ..., score).
+            flat_ner (bool): Whether to use flat NER (no nesting allowed) or 
+                nested NER (allows nesting).
+            multi_label (bool): Whether to allow multiple labels for the same 
+                span position.
             
-        Returns
-        -------
-        Filtered list of non-overlapping spans
+        Returns:
+            List[tuple]: Filtered list of non-overlapping spans, sorted by start position.
         """
         if flat_ner:
             has_ov = partial(has_overlapping, multi_label=multi_label)
@@ -92,42 +99,29 @@ class BaseDecoder(ABC):
 
 
 class BaseSpanDecoder(BaseDecoder):
-    """Base class for span-based decoders with common decoding logic."""
+    """
+    Base class for span-based decoders with common decoding logic.
     
-    def _get_id_to_class_for_sample(self, id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], 
-                                    sample_idx: int) -> Dict[int, str]:
-        """
-        Get id_to_classes mapping for a specific sample.
-        
-        Parameters
-        ----------
-        id_to_classes : dict or list[dict]
-            Either a single mapping or per-sample mappings
-        sample_idx : int
-            Index of the sample in the batch
-            
-        Returns
-        -------
-        dict mapping class IDs to class names for this sample
-        """
-        if isinstance(id_to_classes, list):
-            return id_to_classes[sample_idx]
-        return id_to_classes
+    Provides shared functionality for finding candidate spans, validating them,
+    and decoding batch items.
+    """
     
-    def _find_candidate_spans(self, probs: torch.Tensor, threshold: float):
+    def _find_candidate_spans(
+        self, 
+        probs: torch.Tensor, 
+        threshold: float
+    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         """
         Find all span candidates above threshold.
         
-        Parameters
-        ----------
-        probs : torch.Tensor (L, K, C)
-            Probabilities for one sample
-        threshold : float
-            Confidence threshold
+        Args:
+            probs (torch.Tensor): Probability tensor of shape (L, K, C) for one sample,
+                where L is sequence length, K is max span width, C is number of classes.
+            threshold (float): Confidence threshold for predictions.
             
-        Returns
-        -------
-        Tuple of (start_indices, width_indices, class_indices)
+        Returns:
+            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: Tuple of 
+                (start_indices, width_indices, class_indices) for spans above threshold.
         """
         return torch.where(probs > threshold)
     
@@ -135,77 +129,101 @@ class BaseSpanDecoder(BaseDecoder):
         """
         Check if a span is valid (doesn't exceed sentence length).
         
-        Parameters
-        ----------
-        start : int
-            Start position
-        width : int
-            Span width (0-indexed)
-        tokens : list[str]
-            Tokens for this sample
+        Args:
+            start (int): Start position of the span.
+            width (int): Span width (0-indexed, so actual span length is width + 1).
+            tokens (List[str]): List of tokens for this sample.
             
-        Returns
-        -------
-        bool indicating if span is valid
+        Returns:
+            bool: True if span is valid, False otherwise.
         """
         end = start + width + 1
         return end <= len(tokens)
     
-    def _build_span_tuple(self, start: int, width: int, class_idx: int, 
-                         flat_idx: int, score: float, 
-                         id_to_class: Dict[int, str], 
-                         span_label_map: Dict[int, List[str]]) -> tuple:
+    @abstractmethod
+    def _build_span_tuple(
+        self,
+        start: int,
+        width: int,
+        class_idx: int,
+        flat_idx: int,
+        score: float,
+        id_to_class: Dict[int, str],
+        span_label_map: Dict[int, List[str]]
+    ) -> tuple:
         """
-        Build a span tuple. Should be overridden by subclasses.
+        Build a span tuple with decoder-specific format.
         
-        Parameters
-        ----------
-        start : int
-            Start position
-        width : int
-            Width index (0-indexed)
-        class_idx : int
-            Class index
-        flat_idx : int
-            Flat span index (start * K + width)
-        score : float
-            Confidence score
-        id_to_class : dict
-            Mapping from class IDs to class names
-        span_label_map : dict
-            Mapping from flat indices to generated labels
+        Args:
+            start (int): Start position of the span.
+            width (int): Span width (0-indexed).
+            class_idx (int): Class index.
+            flat_idx (int): Flattened span index (start * K + width).
+            score (float): Confidence score for this span.
+            id_to_class (Dict[int, str]): Mapping from class IDs to class names.
+            span_label_map (Dict[int, List[str]]): Mapping from flat span indices 
+                to generated labels (empty for non-generative decoders).
             
-        Returns
-        -------
-        tuple representing the span
+        Returns:
+            tuple: Span tuple in decoder-specific format.
         """
         raise NotImplementedError("Subclasses must implement _build_span_tuple")
     
-    def _prepare_span_label_map(self, sel_idx: Optional[torch.LongTensor],
-                                gen_labels: Optional[List[str]],
-                                num_gen_sequences: int,
-                                batch_idx: int) -> Dict[int, List[str]]:
+    def _decode_batch_item(
+        self,
+        probs_i: torch.Tensor,
+        tokens_i: List[str],
+        id_to_class_i: Dict[int, str],
+        K: int,
+        threshold: float,
+        flat_ner: bool,
+        multi_label: bool,
+        span_label_map: Dict[int, List[str]]
+    ) -> List[tuple]:
         """
-        Prepare span label mapping for a specific batch element.
-        Should be overridden by subclasses that use generative labels.
+        Decode spans for a single batch item.
         
-        Parameters
-        ----------
-        sel_idx : torch.LongTensor (B, M) or None
-            Selected span indices
-        gen_labels : list[str] or None
-            Generated labels
-        num_gen_sequences : int
-            Number of sequences per span
-        batch_idx : int
-            Current batch index
+        Finds all candidate spans above threshold, validates them, builds span tuples,
+        and applies greedy search to remove overlaps.
+        
+        Args:
+            probs_i (torch.Tensor): Probability tensor of shape (L, K, C) for this sample.
+            tokens_i (List[str]): List of tokens for this sample.
+            id_to_class_i (Dict[int, str]): Class ID to class name mapping for this sample.
+            K (int): Maximum span width.
+            threshold (float): Confidence threshold for predictions.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            multi_label (bool): Whether to allow multiple labels per span.
+            span_label_map (Dict[int, List[str]]): Mapping from flat span indices to 
+                generated labels (empty dict for non-generative decoders).
             
-        Returns
-        -------
-        dict mapping flat span indices to labels (empty dict by default)
+        Returns:
+            List[tuple]: List of decoded span tuples for this sample.
         """
-        return {}
-    
+        span_i = []
+        
+        # Find all spans above threshold
+        s_idx, k_idx, c_idx = self._find_candidate_spans(probs_i, threshold)
+        
+        for s, k, c in zip(s_idx.tolist(), k_idx.tolist(), c_idx.tolist()):
+            # Skip if span exceeds sentence length
+            if not self._is_valid_span(s, k, tokens_i):
+                continue
+            
+            # Calculate flat index (matches encoder's indexing)
+            flat_idx = s * K + k
+            score = probs_i[s, k, c].item()
+            
+            # Build span tuple (implementation varies by subclass)
+            span_tuple = self._build_span_tuple(
+                s, k, c, flat_idx, score, id_to_class_i, span_label_map
+            )
+            span_i.append(span_tuple)
+        
+        # Remove overlapping spans using greedy search
+        span_i = self.greedy_search(span_i, flat_ner, multi_label=multi_label)
+        return span_i
+
     def decode(
         self,
         tokens: List[List[str]],
@@ -219,26 +237,20 @@ class BaseSpanDecoder(BaseDecoder):
         """
         Decode model output to extract named entity spans.
         
-        Parameters
-        ----------
-        tokens : list[list[str]]
-            Tokenized input text for each sample in the batch
-        id_to_classes : dict or list[dict]
-            Mapping from class IDs to class names
-        model_output : torch.Tensor (B, L, K, C)
-            Raw logits from the model
-        flat_ner : bool
-            Whether to enforce non-overlapping spans
-        threshold : float
-            Confidence threshold for span predictions
-        multi_label : bool
-            Whether to allow multiple labels per span
-        **kwargs : additional arguments for subclasses
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
+                class IDs to class names. Can be a single dict (shared) or list (per-sample).
+            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C),
+                where B is batch size, L is sequence length, K is max span width, 
+                C is number of classes.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for span predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            **kwargs: Additional keyword arguments (unused in base class).
             
-        Returns
-        -------
-        list[list[tuple]]
-            For each sample, list of span tuples
+        Returns:
+            List[List[tuple]]: For each sample in batch, list of span tuples.
         """
         B, L, K, C = model_output.shape
         probs = torch.sigmoid(model_output)
@@ -249,123 +261,130 @@ class BaseSpanDecoder(BaseDecoder):
             probs_i = probs[i]
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
             
-            # Prepare span label map (empty for base decoder)
-            span_label_map = self._prepare_span_label_map(
-                kwargs.get('sel_idx'),
-                kwargs.get('gen_labels'),
-                kwargs.get('num_gen_sequences', 1),
-                i
+            # For base decoder, span_label_map is empty
+            span_label_map = {}
+            
+            span_i = self._decode_batch_item(
+                probs_i=probs_i,
+                tokens_i=tokens[i],
+                id_to_class_i=id_to_class_i,
+                K=K,
+                threshold=threshold,
+                flat_ner=flat_ner,
+                multi_label=multi_label,
+                span_label_map=span_label_map
             )
-            
-            span_i = []
-            
-            # Find all spans above threshold
-            s_idx, k_idx, c_idx = self._find_candidate_spans(probs_i, threshold)
-            
-            for s, k, c in zip(s_idx.tolist(), k_idx.tolist(), c_idx.tolist()):
-                # Skip if span exceeds sentence length
-                if not self._is_valid_span(s, k, tokens[i]):
-                    continue
-                
-                # Calculate flat index (matches encoder's indexing)
-                flat_idx = s * K + k
-                score = probs_i[s, k, c].item()
-                
-                # Build span tuple (implementation varies by subclass)
-                span_tuple = self._build_span_tuple(
-                    s, k, c, flat_idx, score, id_to_class_i, span_label_map
-                )
-                span_i.append(span_tuple)
-            
-            # Remove overlapping spans using greedy search
-            span_i = self.greedy_search(span_i, flat_ner, multi_label=multi_label)
             spans.append(span_i)
         
         return spans
 
 
 class SpanDecoder(BaseSpanDecoder):
-    """Simple span decoder without generative labels."""
+    """
+    Simple span decoder without generative labels.
     
-    def _build_span_tuple(self, start: int, width: int, class_idx: int,
-                         flat_idx: int, score: float,
-                         id_to_class: Dict[int, str],
-                         span_label_map: Dict[int, List[str]]) -> tuple:
+    Returns spans in format: (start, end, entity_type, score)
+    """
+    
+    def _build_span_tuple(
+        self,
+        start: int,
+        width: int,
+        class_idx: int,
+        flat_idx: int,
+        score: float,
+        id_to_class: Dict[int, str],
+        span_label_map: Dict[int, List[str]]
+    ) -> tuple:
         """
         Build span tuple without generative labels.
         
-        Returns
-        -------
-        tuple: (start, end, entity_type, score)
+        Args:
+            start (int): Start position of the span.
+            width (int): Span width (0-indexed).
+            class_idx (int): Class index.
+            flat_idx (int): Flattened span index (unused in this decoder).
+            score (float): Confidence score for this span.
+            id_to_class (Dict[int, str]): Mapping from class IDs to class names.
+            span_label_map (Dict[int, List[str]]): Unused in this decoder.
+        
+        Returns:
+            tuple: Span tuple in format (start, end, entity_type, score).
         """
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
         return (start, start + width, ent_type, score)
 
 
 class SpanGenerativeDecoder(BaseSpanDecoder):
-    """Span decoder with generative label support."""
+    """
+    Span decoder with generative label support.
     
-    def update_id_to_classes(self, id_to_classes: Union[Dict, List[Dict]], 
-                            gen_labels: Optional[List[str]], 
-                            batch_size: int) -> Union[Dict, List[Dict]]:
-        """
-        Update id_to_classes mapping with generated labels.
-        
-        For prompt decoder mode, maps generated labels back to class IDs.
-        
-        Parameters
-        ----------
-        id_to_classes : dict or list[dict]
-            Original mapping from class IDs to class names
-        gen_labels : list[str] or None
-            Generated labels from the decoder
-        batch_size : int
-            Number of samples in the batch
-            
-        Returns
-        -------
-        Updated id_to_classes mapping
-        """
-        if self.config.labels_decoder is not None and gen_labels is not None:
-            if self.config.decoder_mode == 'prompt':
-                new_id_to_classes = []
-                cursor = 0
-                for i in range(batch_size):
-                    original = (id_to_classes[i] if isinstance(id_to_classes, list) 
-                              else id_to_classes)
-                    k = len(original)  # Number of labels for this example
-                    # Map each class ID to its generated label
-                    mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
-                    new_id_to_classes.append(mapping)
-                    cursor += k
-                id_to_classes = new_id_to_classes
-        return id_to_classes
+    Supports two decoder modes:
+    - 'prompt': Generated labels replace the original class names
+    - 'span': Generated labels are added as additional fields to each span
     
-    def _build_span_label_map(self, sel_idx: torch.LongTensor,
-                              gen_labels: List[str],
-                              num_gen_sequences: int,
-                              batch_size: int) -> List[Dict[int, List[str]]]:
+    Returns spans in format: (start, end, entity_type, generated_entity_type, score)
+    """
+    
+    def _update_id_to_classes_with_generated(
+        self,
+        id_to_classes: Union[Dict, List[Dict]], 
+        gen_labels: List[str], 
+        batch_size: int
+    ) -> Union[Dict, List[Dict]]:
         """
-        Build mapping from flat span indices to generated labels.
+        Update id_to_classes mapping with generated labels for prompt mode.
         
-        For decoder_mode=='span', maps each valid span index to its generated label(s).
+        In prompt mode, the generated labels replace the original class names in the
+        id_to_class mapping. This method maps generated labels back to class IDs.
         
-        Parameters
-        ----------
-        sel_idx : torch.LongTensor (B, M)
-            Indices of selected spans. -1 indicates padding.
-        gen_labels : list[str]
-            All generated labels (flattened across batch)
-        num_gen_sequences : int
-            Number of label sequences generated per span
-        batch_size : int
-            Number of samples in the batch
+        Args:
+            id_to_classes (Union[Dict, List[Dict]]): Original mapping from class IDs 
+                to class names.
+            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.
+            batch_size (int): Number of samples in the batch.
             
-        Returns
-        -------
-        list of dicts, one per batch element
-            Each dict maps flat_span_idx -> list of generated labels
+        Returns:
+            Union[Dict, List[Dict]]: Updated id_to_classes mapping with generated labels.
         """
+        new_id_to_classes = []
+        cursor = 0
+        
+        for i in range(batch_size):
+            original = (id_to_classes[i] if isinstance(id_to_classes, list) 
+                       else id_to_classes)
+            k = len(original)  # Number of labels for this example
+            
+            # Map each class ID to its generated label
+            mapping = {idx + 1: gen_labels[cursor + idx] for idx in range(k)}
+            new_id_to_classes.append(mapping)
+            cursor += k
+            
+        return new_id_to_classes
+    
+    def _build_span_label_map_for_batch(
+        self,
+        sel_idx: torch.LongTensor,
+        gen_labels: List[str],
+        num_gen_sequences: int
+    ) -> List[Dict[int, List[str]]]:
+        """
+        Build mapping from flat span indices to generated labels for span mode.
+        
+        In span mode, each valid span gets one or more generated labels. This method
+        creates a mapping from flat span index to its corresponding generated label(s).
+        
+        Args:
+            sel_idx (torch.LongTensor): Tensor of shape (B, M) containing indices of 
+                selected spans. -1 indicates padding.
+            gen_labels (List[str]): All generated labels, flattened across batch.
+            num_gen_sequences (int): Number of label sequences generated per span.
+            
+        Returns:
+            List[Dict[int, List[str]]]: One dict per batch element, mapping 
+                flat_span_idx -> list of generated labels.
+        """
+        batch_size = sel_idx.shape[0]
         span_label_maps = [{} for _ in range(batch_size)]
         cursor = 0  # Tracks position in gen_labels
         
@@ -394,74 +413,211 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         
         return span_label_maps
     
-    def _prepare_span_label_map(self, sel_idx: Optional[torch.LongTensor],
-                                gen_labels: Optional[List[str]],
-                                num_gen_sequences: int,
-                                batch_idx: int) -> Dict[int, List[str]]:
-        """
-        Prepare span label mapping for this batch element.
-        
-        This caches the full mapping on first call and returns the appropriate
-        batch element's mapping.
-        """
-        # Cache the full mapping if not already done
-        if not hasattr(self, '_cached_span_label_maps'):
-            if (self.config.decoder_mode == "span" and 
-                sel_idx is not None and 
-                gen_labels is not None):
-                batch_size = sel_idx.shape[0]
-                self._cached_span_label_maps = self._build_span_label_map(
-                    sel_idx, gen_labels, num_gen_sequences, batch_size
-                )
-            else:
-                self._cached_span_label_maps = None
-        
-        # Return the mapping for this batch element
-        if self._cached_span_label_maps is not None:
-            return self._cached_span_label_maps[batch_idx]
-        return {}
-    
-    def _build_span_tuple(self, start: int, width: int, class_idx: int,
-                         flat_idx: int, score: float,
-                         id_to_class: Dict[int, str],
-                         span_label_map: Dict[int, List[str]]) -> tuple:
+    def _build_span_tuple(
+        self,
+        start: int,
+        width: int,
+        class_idx: int,
+        flat_idx: int,
+        score: float,
+        id_to_class: Dict[int, str],
+        span_label_map: Dict[int, List[str]]
+    ) -> tuple:
         """
         Build span tuple with generative labels.
         
-        Returns
-        -------
-        tuple: (start, end, entity_type, generated_entity_type, score)
+        Args:
+            start (int): Start position of the span.
+            width (int): Span width (0-indexed).
+            class_idx (int): Class index.
+            flat_idx (int): Flattened span index (start * K + width).
+            score (float): Confidence score for this span.
+            id_to_class (Dict[int, str]): Mapping from class IDs to class names.
+            span_label_map (Dict[int, List[str]]): Mapping from flat span indices 
+                to generated labels.
+        
+        Returns:
+            tuple: Span tuple in format (start, end, entity_type, generated_entity_type, score).
+                generated_entity_type is None if not found in span_label_map.
         """
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
         gen_ent_type = span_label_map.get(flat_idx, None)
         return (start, start + width, ent_type, gen_ent_type, score)
     
-    def decode(self, *args, **kwargs) -> List[List[tuple]]:
+    def decode_generative(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        gen_labels: List[str],
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False
+    ) -> List[List[tuple]]:
         """
-        Decode with generative labels support.
+        Decode model output with generated labels.
         
-        Clears the cache before decoding to ensure fresh mappings.
+        Handles both 'prompt' and 'span' decoder modes:
+        - prompt mode: Generated labels replace class names in id_to_classes
+        - span mode: Generated labels are added to span tuples via span_label_map
+        
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
+                class IDs to class names.
+            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C).
+            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.
+            sel_idx (Optional[torch.LongTensor]): Tensor of shape (B, M) with selected 
+                span indices. Required for span mode, unused for prompt mode.
+            num_gen_sequences (int): Number of label sequences generated per span.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for span predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples with generated labels.
         """
-        # Clear cache before new decode call
-        if hasattr(self, '_cached_span_label_maps'):
-            delattr(self, '_cached_span_label_maps')
+        B, L, K, C = model_output.shape
+        probs = torch.sigmoid(model_output)
         
-        return super().decode(*args, **kwargs)
+        # Handle prompt mode: update id_to_classes with generated labels
+        if self.config.decoder_mode == 'prompt':
+            id_to_classes = self._update_id_to_classes_with_generated(
+                id_to_classes, gen_labels, B
+            )
+            # In prompt mode, span_label_map is empty (labels already in id_to_classes)
+            span_label_maps = [{} for _ in range(B)]
+        
+        # Handle span mode: build span_label_map from sel_idx and gen_labels
+        elif self.config.decoder_mode == 'span':
+            if sel_idx is not None:
+                span_label_maps = self._build_span_label_map_for_batch(
+                    sel_idx, gen_labels, num_gen_sequences
+                )
+            else:
+                span_label_maps = [{} for _ in range(B)]
+        
+        else:
+            # No decoder mode or unknown mode
+            span_label_maps = [{} for _ in range(B)]
+        
+        # Decode spans for each sample in the batch
+        spans = []
+        for i in range(B):
+            probs_i = probs[i]
+            id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            span_label_map_i = span_label_maps[i]
+            
+            span_i = self._decode_batch_item(
+                probs_i=probs_i,
+                tokens_i=tokens[i],
+                id_to_class_i=id_to_class_i,
+                K=K,
+                threshold=threshold,
+                flat_ner=flat_ner,
+                multi_label=multi_label,
+                span_label_map=span_label_map_i
+            )
+            spans.append(span_i)
+        
+        return spans
+    
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        gen_labels: Optional[List[str]] = None,
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        **kwargs
+    ) -> List[List[tuple]]:
+        """
+        Decode model output, with optional generative label support.
+        
+        If gen_labels are provided and decoder has a labels_decoder, uses generative
+        decoding. Otherwise falls back to standard span decoding.
+        
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
+                class IDs to class names.
+            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C).
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for span predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            gen_labels (Optional[List[str]]): Generated labels from decoder. If provided,
+                triggers generative decoding.
+            sel_idx (Optional[torch.LongTensor]): Selected span indices for span mode.
+            num_gen_sequences (int): Number of label sequences generated per span.
+            **kwargs: Additional keyword arguments (unused).
+            
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples.
+        """
+        # Use generative decoding if labels_decoder is configured and gen_labels provided
+        if self.config.labels_decoder is not None and gen_labels is not None:
+            return self.decode_generative(
+                tokens=tokens,
+                id_to_classes=id_to_classes,
+                model_output=model_output,
+                gen_labels=gen_labels,
+                sel_idx=sel_idx,
+                num_gen_sequences=num_gen_sequences,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label
+            )
+        
+        # Fall back to standard decoding without generative labels
+        return super().decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label
+        )
 
 
 class SpanRelexDecoder(BaseSpanDecoder):
-    """Span decoder with relation extraction support."""
+    """
+    Span decoder with relation extraction support.
     
-    def _build_span_tuple(self, start: int, width: int, class_idx: int,
-                         flat_idx: int, score: float,
-                         id_to_class: Dict[int, str],
-                         span_label_map: Dict[int, List[str]]) -> tuple:
+    Decodes both entity spans and relations between them.
+    Returns: (spans, relations) where spans are entity tuples and relations are
+    (head_idx, relation_label, tail_idx, score) tuples.
+    """
+    
+    def _build_span_tuple(
+        self,
+        start: int,
+        width: int,
+        class_idx: int,
+        flat_idx: int,
+        score: float,
+        id_to_class: Dict[int, str],
+        span_label_map: Dict[int, List[str]]
+    ) -> tuple:
         """
         Build span tuple for relation extraction.
         
-        Returns
-        -------
-        tuple: (start, end, entity_type, score)
+        Args:
+            start (int): Start position of the span.
+            width (int): Span width (0-indexed).
+            class_idx (int): Class index.
+            flat_idx (int): Flattened span index (unused in this decoder).
+            score (float): Confidence score for this span.
+            id_to_class (Dict[int, str]): Mapping from class IDs to class names.
+            span_label_map (Dict[int, List[str]]): Unused in this decoder.
+        
+        Returns:
+            tuple: Span tuple in format (start, end, entity_type, score).
         """
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
         return (start, start + width, ent_type, score)
@@ -477,23 +633,21 @@ class SpanRelexDecoder(BaseSpanDecoder):
         """
         Decode relations between entity spans.
         
-        Parameters
-        ----------
-        model_output : GLiNERRelexOutput
-            Model output containing relation predictions
-        spans : list[list[tuple]]
-            Decoded entity spans for each sample
-        rel_id_to_classes : dict or list[dict]
-            Mapping from relation class IDs to relation names
-        threshold : float
-            Confidence threshold for relations
-        batch_size : int
-            Number of samples in batch
+        Extracts relation predictions from model output and maps them to actual
+        entity span pairs.
+        
+        Args:
+            model_output: Model output object containing relation predictions.
+                Must have attributes: rel_idx, rel_logits, and optionally rel_mask.
+            spans (List[List[tuple]]): Decoded entity spans for each sample.
+            rel_id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping 
+                from relation class IDs to relation names.
+            threshold (float): Confidence threshold for relations.
+            batch_size (int): Number of samples in batch.
             
-        Returns
-        -------
-        list[list[tuple]]
-            For each sample, list of (head_idx, relation_label, tail_idx, score)
+        Returns:
+            List[List[tuple]]: For each sample, list of relation tuples in format
+                (head_idx, relation_label, tail_idx, score).
         """
         relations = [[] for _ in range(batch_size)]
         
@@ -573,37 +727,28 @@ class SpanRelexDecoder(BaseSpanDecoder):
         multi_label: bool = False,
         rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
         **kwargs
-    ) -> tuple:
+    ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
         """
         Decode model output to extract entities and relations.
         
-        Parameters
-        ----------
-        tokens : list[list[str]]
-            Tokenized input text for each sample in the batch
-        id_to_classes : dict or list[dict]
-            Mapping from entity class IDs (1-based) to entity names.
-            Can be a single dict (shared) or list (per-sample).
-        model_output : GLiNERRelexOutput
-            Model output containing both entity logits and relation predictions
-        flat_ner : bool
-            Whether to enforce non-overlapping entity spans
-        threshold : float
-            Confidence threshold for both entities and relations
-        multi_label : bool
-            Whether to allow multiple labels per entity span
-        rel_id_to_classes : dict or list[dict] or None
-            Mapping from relation class IDs (1-based) to relation names.
-            If None, relation decoding is skipped.
-        **kwargs : additional arguments
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
+                entity class IDs (1-based) to entity names.
+            model_output: Model output object containing both entity logits and 
+                relation predictions.
+            flat_ner (bool): Whether to enforce non-overlapping entity spans.
+            threshold (float): Confidence threshold for both entities and relations.
+            multi_label (bool): Whether to allow multiple labels per entity span.
+            rel_id_to_classes (Optional[Union[Dict[int, str], List[Dict[int, str]]]]): 
+                Mapping from relation class IDs (1-based) to relation names.
+                If None, relation decoding is skipped.
+            **kwargs: Additional keyword arguments (unused).
             
-        Returns
-        -------
-        tuple: (spans, relations)
-            spans : list[list[tuple]]
-                For each sample, list of (start, end, entity_type, score)
-            relations : list[list[tuple]]
-                For each sample, list of (head_idx, relation_label, tail_idx, score)
+        Returns:
+            Tuple[List[List[tuple]], List[List[tuple]]]: Tuple of (spans, relations) where:
+                - spans: For each sample, list of (start, end, entity_type, score)
+                - relations: For each sample, list of (head_idx, relation_label, tail_idx, score)
         """
         # Decode entity spans using base class logic
         spans = super().decode(
@@ -629,14 +774,62 @@ class SpanRelexDecoder(BaseSpanDecoder):
             )
         
         return spans, relations
-    
+
 
 class TokenDecoder(BaseDecoder):
-    def get_indices_above_threshold(self, scores, threshold):
+    """
+    Token-based decoder for sequence labeling tasks.
+    
+    Uses BIO-style tagging with separate start, end, and inside predictions
+    to identify entity spans.
+    """
+    
+    def _get_indices_above_threshold(
+        self, 
+        scores: torch.Tensor, 
+        threshold: float
+    ) -> List[torch.Tensor]:
+        """
+        Get indices where scores exceed threshold.
+        
+        Args:
+            scores (torch.Tensor): Score tensor for one sample.
+            threshold (float): Confidence threshold.
+            
+        Returns:
+            List[torch.Tensor]: List of tensors containing indices above threshold.
+        """
         scores = torch.sigmoid(scores)
         return [k.tolist() for k in torch.where(scores > threshold)]
 
-    def calculate_span_score(self, start_idx, end_idx, scores_inside_i, start_i, end_i, id_to_classes, threshold):
+    def _calculate_span_score(
+        self,
+        start_idx: tuple,
+        end_idx: tuple,
+        scores_inside_i: torch.Tensor,
+        start_i: torch.Tensor,
+        end_i: torch.Tensor,
+        id_to_classes: Dict[int, str],
+        threshold: float
+    ) -> List[tuple]:
+        """
+        Calculate spans and their scores from start/end/inside predictions.
+        
+        Matches start and end positions of the same class, validates inside scores,
+        and computes final span scores.
+        
+        Args:
+            start_idx (tuple): Tuple of (positions, classes) for start predictions.
+            end_idx (tuple): Tuple of (positions, classes) for end predictions.
+            scores_inside_i (torch.Tensor): Inside scores for this sample.
+            start_i (torch.Tensor): Start scores for this sample.
+            end_i (torch.Tensor): End scores for this sample.
+            id_to_classes (Dict[int, str]): Mapping from class IDs to class names.
+            threshold (float): Confidence threshold.
+            
+        Returns:
+            List[tuple]: List of span tuples (start, end, entity_type, None, score).
+        """
         span_i = []
         for st, cls_st in zip(*start_idx):
             for ed, cls_ed in zip(*end_idx):
@@ -646,7 +839,7 @@ class TokenDecoder(BaseDecoder):
                         continue
                     # Get the start and end scores for this span
                     start_score = start_i[st, cls_st]
-                    end_score = end_i[ed, cls_st]
+                    end_score = end_i[ed, cls_ed]
                     # Concatenate the inside scores with start and end scores
                     combined = torch.cat([ins, start_score.unsqueeze(0), end_score.unsqueeze(0)])
                     # The span score is the minimum value among these scores
@@ -654,15 +847,43 @@ class TokenDecoder(BaseDecoder):
                     span_i.append((st, ed, id_to_classes[cls_st + 1], None, spn_score))
         return span_i
 
-    def decode(self, tokens, id_to_classes, model_output, flat_ner=False, threshold=0.5, multi_label=False, **kwargs):
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        **kwargs
+    ) -> List[List[tuple]]:
+        """
+        Decode token-level predictions to extract spans.
+        
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
+                class IDs to class names.
+            model_output (torch.Tensor): Raw logits from the model with shape (3, B, L, C),
+                where the first dimension represents [start, end, inside] predictions.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            **kwargs: Additional keyword arguments (unused).
+            
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples in format
+                (start, end, entity_type, None, score).
+        """
         model_output = model_output.permute(3, 0, 1, 2)
         scores_start, scores_end, scores_inside = model_output
         spans = []
+        
         for i, _ in enumerate(tokens):
-            id_to_class_i = id_to_classes[i] if isinstance(id_to_classes, list) else id_to_classes
-            span_scores = self.calculate_span_score(
-                self.get_indices_above_threshold(scores_start[i], threshold),
-                self.get_indices_above_threshold(scores_end[i], threshold),
+            id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            span_scores = self._calculate_span_score(
+                self._get_indices_above_threshold(scores_start[i], threshold),
+                self._get_indices_above_threshold(scores_end[i], threshold),
                 torch.sigmoid(scores_inside[i]),
                 torch.sigmoid(scores_start[i]),
                 torch.sigmoid(scores_end[i]),
@@ -671,4 +892,5 @@ class TokenDecoder(BaseDecoder):
             )
             span_i = self.greedy_search(span_scores, flat_ner, multi_label)
             spans.append(span_i)
+            
         return spans
