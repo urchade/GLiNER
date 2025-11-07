@@ -6,6 +6,10 @@ from .processor import (BaseProcessor,
                         BiEncoderTokenProcessor, 
                         EncoderDecoderSpanProcessor, 
                         RelationExtractionSpanProcessor)
-from .collator import DataCollator
+from .collator import (UniEncoderSpanDataCollator,
+                        BiEncoderSpanDataCollator,
+                        EncoderDecoderSpanDataCollator,
+                        RelationExtractionSpanDataCollator,
+                        UniEncoderTokenDataCollator,
+                        BiEncoderTokenDataCollator)
 from .tokenizer import WordsSplitter
-from .dataset import GLiNERDataset

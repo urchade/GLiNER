@@ -5,7 +5,6 @@ from transformers.models.auto import CONFIG_MAPPING
 
 class BaseGLiNERConfig(PretrainedConfig):
     """Base configuration class for all GLiNER models."""
-    model_type = "gliner"
     is_composition = True
     
     def __init__(self, 
@@ -253,11 +252,13 @@ class GLiNERConfig(BaseGLiNERConfig):
     @property
     def model_type(self):
         """Auto-detect model type based on configuration."""
+        span_mode_normalized = self.span_mode.replace('_', '-') if self.span_mode else None
+        
         if self.labels_decoder:
             return "encoder-decoder"
         elif self.labels_encoder:
             return 'bi-encoder'
-        elif self.span_mode == 'token-level':
+        elif span_mode_normalized == 'token-level':
             return 'uni-encoder-token'
         else:
             return 'uni-encoder-span'

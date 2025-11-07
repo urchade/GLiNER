@@ -10,6 +10,7 @@ from torch.utils.data import DataLoader
 from torch.nn.utils.rnn import pad_sequence
 import torch.nn.functional as F
 
+from .tokenizer import WordsSplitter
 from .utils import (pad_2d_tensor, 
                     get_negatives, 
                     prepare_word_mask, 
@@ -20,7 +21,10 @@ class BaseProcessor(ABC):
     def __init__(self, config, tokenizer, words_splitter):
         self.config = config
         self.transformer_tokenizer = tokenizer
-        self.words_splitter = words_splitter
+        if words_splitter is None:
+            self.words_splitter = WordsSplitter(splitter_type=config.words_splitter_type)
+        else:
+            self.words_splitter = words_splitter
         self.ent_token = config.ent_token
         self.sep_token = config.sep_token
 
@@ -92,7 +96,6 @@ class BaseProcessor(ABC):
             prompt.append(self.sep_token)
             prompt_lengths.append(len(prompt))
             input_texts.append(prompt + list(text))
-
         return input_texts, prompt_lengths
 
     def _select_entities(
@@ -104,8 +107,8 @@ class BaseProcessor(ABC):
         if blank is not None:
             return [blank]
         if isinstance(entities, dict):
-            return list(entities.get(i, []))
-        if entities and isinstance(entities[0], (list, tuple)):  # per-item lists
+            return list(entities)
+        if entities and isinstance(entities[0], (list, tuple, dict)):  # per-item lists
             return list(entities[i])  # type: ignore[index]
         if entities and isinstance(entities[0], str):            # same for all
             return list(entities)      # type: ignore[list-item]
@@ -228,8 +231,6 @@ class BaseProcessor(ABC):
     
 class UniEncoderSpanProcessor(BaseProcessor):    
     def preprocess_example(self, tokens, ner, classes_to_id):
-        if not len(ner):
-            ner = [(0, 0, "other")]
         max_width = self.config.max_width
         num_tokens = len(tokens)
         if num_tokens == 0:

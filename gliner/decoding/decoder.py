@@ -828,7 +828,7 @@ class TokenDecoder(BaseDecoder):
             threshold (float): Confidence threshold.
             
         Returns:
-            List[tuple]: List of span tuples (start, end, entity_type, None, score).
+            List[tuple]: List of span tuples (start, end, entity_type, score).
         """
         span_i = []
         for st, cls_st in zip(*start_idx):
@@ -844,7 +844,7 @@ class TokenDecoder(BaseDecoder):
                     combined = torch.cat([ins, start_score.unsqueeze(0), end_score.unsqueeze(0)])
                     # The span score is the minimum value among these scores
                     spn_score = combined.min().item()
-                    span_i.append((st, ed, id_to_classes[cls_st + 1], None, spn_score))
+                    span_i.append((st, ed, id_to_classes[cls_st + 1], spn_score))
         return span_i
 
     def decode(
@@ -864,7 +864,7 @@ class TokenDecoder(BaseDecoder):
             tokens (List[List[str]]): Tokenized input text for each sample in the batch.
             id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from 
                 class IDs to class names.
-            model_output (torch.Tensor): Raw logits from the model with shape (3, B, L, C),
+            model_output (torch.Tensor): Raw logits from the model with shape ( B, L, C, 3),
                 where the first dimension represents [start, end, inside] predictions.
             flat_ner (bool): Whether to enforce non-overlapping spans.
             threshold (float): Confidence threshold for predictions.

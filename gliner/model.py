@@ -29,7 +29,12 @@ from .data_processing import (BaseProcessor,
                               BiEncoderTokenProcessor,
                               RelationExtractionSpanProcessor,
                               EncoderDecoderSpanProcessor)
-from .data_processing.collator import DataCollator, DataCollatorWithPadding
+from .data_processing.collator import (UniEncoderSpanDataCollator,
+                                       BiEncoderSpanDataCollator,
+                                       EncoderDecoderSpanDataCollator,
+                                       RelationExtractionSpanDataCollator,
+                                       UniEncoderTokenDataCollator,
+                                       BiEncoderTokenDataCollator)
 from .data_processing.tokenizer import WordsSplitter
 from .decoding import SpanDecoder, TokenDecoder
 from .decoding.trie import LabelsTrie
@@ -57,6 +62,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     config_class: Type = None 
     model_class: Type = None
     data_processor_class: Type = None
+    data_collator_class: Type = None
     decoder_class: Type = None
 
     def __init__(
@@ -80,7 +86,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if data_processor is not None:
             self.data_processor = data_processor
         else:
-            self.data_processor = self._create_data_processor(config, tokenizer, cache_dir, **kwargs)
+            self.data_processor = self._create_data_processor(config, cache_dir, tokenizer, **kwargs)
     
         if isinstance(self.model, BaseORTModel):
             self.onnx_model = True
@@ -245,6 +251,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         with open(config_file, "r") as f:
             config_dict = json.load(f)
         
+        config_dict.pop("model_type", None)
+
         # Apply overrides
         for key, value in config_overrides.items():
             if value is not None:
@@ -464,23 +472,18 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         instance.eval()
         return instance
 
-    def _create_data_collator(self, use_new_schema: bool = False):
+    def _create_data_collator(self, **kwargs):
         """
         Create data collator. Override in child classes if needed.
         
-        Args:
-            use_new_schema: Whether to use new data schema
-            
         Returns:
             Data collator instance
         """
-        if use_new_schema:
-            return DataCollatorWithPadding(self.config)
-        else:
-            return DataCollator(
+        return self.data_collator_class(
                 self.config, 
                 data_processor=self.data_processor, 
-                prepare_labels=True
+                prepare_labels=True,
+                **kwargs
             )
     
     def freeze_component(self, component_name: str):
@@ -602,14 +605,13 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             **kwargs
         )
     
-    def train(
+    def train_model(
         self,
         train_dataset,
         eval_dataset,
         training_args: Optional[TrainingArguments] = None,
         freeze_components: Optional[List[str]] = None,
         compile_model: bool = False,
-        use_new_data_schema: bool = False,
         output_dir: Optional[Union[str, Path]] = None,
         **training_kwargs
     ) -> Trainer:
@@ -649,7 +651,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 self.freeze_component(component_name)
         
         # Create data collator
-        data_collator = self._create_data_collator(use_new_data_schema)
+        data_collator = self._create_data_collator()
         
         # Create trainer
         trainer = Trainer(
@@ -670,12 +672,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 class BaseEncoderGLiNER(BaseGLiNER):
     def _create_model(self, config, backbone_from_pretrained, cache_dir, **kwargs):
          self.model = self.model_class(config, backbone_from_pretrained, cache_dir=cache_dir, **kwargs)
+         return self.model
     
     def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
         if tokenizer is None:
             tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
-
-        self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
+        self.data_processor = self.data_processor_class(config, tokenizer, words_splitter, 
+                                                        splitter_type=config.words_splitter_type)
+        return self.data_processor
 
     def resize_embeddings(self):
         if (len(self.data_processor.transformer_tokenizer)!=self.config.vocab_size
@@ -733,7 +737,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             model_logits = self.model(**model_inputs, threshold=threshold)[0]
             if not isinstance(model_logits, torch.Tensor):
                 model_logits = torch.from_numpy(model_logits)
-            
+
             # Decode
             decoded = self.decoder.decode(
                 batch["tokens"], batch["id_to_classes"], model_logits,
@@ -776,21 +780,27 @@ class BaseEncoderGLiNER(BaseGLiNER):
         if isinstance(texts, str):
             texts = [texts]
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_texts(texts)
+        entity_types = list(dict.fromkeys(labels))
+
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         
         input_x = self.prepare_base_input(tokens)
 
-        collator = DataCollator(
+        collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
             return_entities=True,
             return_id_to_classes=True,
             prepare_labels=False,
-            entity_types=labels,
         )
+
+        def collate_fn(batch, entity_types=entity_types):
+            batch_out = collator(batch, entity_types=entity_types)
+            return batch_out
+
         data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
 
         active_packing = (
@@ -866,7 +876,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         """
         warnings.warn(
             "GLiNER.batch_predict_entities is deprecated and will be removed in a future release. "
-            "Please use GLiNER.run instead.",
+            "Please use GLiNER.inference instead.",
             FutureWarning,
             stacklevel=2,
         )
@@ -905,14 +915,13 @@ class BaseEncoderGLiNER(BaseGLiNER):
         self.eval()
         # Create the dataset and data loader
         dataset = test_data
-        collator = DataCollator(
+        collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
             return_entities=True,
             return_id_to_classes=True,
             prepare_labels=False,
-            entity_types=entity_types,
         )
         data_loader = torch.utils.data.DataLoader(
             dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
@@ -938,8 +947,9 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
 
         self.data_processor = self.data_processor_class(config, tokenizer, words_splitter, labels_tokenizer=labels_tokenizer)
-
-    def resize_embeddings(self):
+        return self.data_processor
+    
+    def resize_embeddings(self, **kwargs):
         warnings.warn("Resizing embeddings is not supported for bi-encoder models.")
 
     @torch.no_grad()
@@ -947,7 +957,6 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         self,
         texts,
         labels_embeddings,
-        labels,
         flat_ner=True,
         threshold=0.5,
         multi_label=False,
@@ -960,7 +969,6 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         Args:
             texts (List[str]): A list of input texts to predict entities for.
             labels_embeddings: Pre-computed embeddings for the labels.
-            labels (List[str]): A list of labels to predict.
             flat_ner (bool, optional): Whether to use flat NER. Defaults to True.
             threshold (float, optional): Confidence threshold for predictions. Defaults to 0.5.
             multi_label (bool, optional): Whether to allow multiple labels per token. Defaults to False.
@@ -979,21 +987,27 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         if isinstance(texts, str):
             texts = [texts]
 
+        entity_types = list(dict.fromkeys(labels))
+
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         
         input_x = self.prepare_base_input(tokens)
 
-        collator = DataCollator(
+        collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
             return_entities=True,
             return_id_to_classes=True,
             prepare_labels=False,
-            entity_types=labels,
         )
+    
+        def collate_fn(batch, entity_types=entity_types):
+            batch_out = collator(batch, entity_types=entity_types)
+            return batch_out
+        
         data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
 
         active_packing = (
@@ -1082,12 +1096,14 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderSpanConfig 
     model_class = UniEncoderSpanModel
     data_processor_class = UniEncoderSpanProcessor
+    data_collator_class = UniEncoderSpanDataCollator
     decoder_class = SpanDecoder
 
 class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderTokenConfig 
     model_class = UniEncoderTokenModel
     data_processor_class = UniEncoderTokenProcessor
+    data_collator_class = UniEncoderTokenDataCollator
     decoder_class = TokenDecoder
 
 
@@ -1095,12 +1111,14 @@ class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderSpanConfig 
     model_class = BiEncoderSpanModel
     data_processor_class = BiEncoderSpanProcessor
+    data_collator_class = BiEncoderSpanDataCollator
     decoder_class = SpanDecoder
 
 class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderTokenConfig 
     model_class = BiEncoderTokenModel
     data_processor_class = BiEncoderTokenProcessor
+    data_collator_class = BiEncoderTokenDataCollator
     decoder_class = TokenDecoder
 
 
@@ -1112,6 +1130,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
     config_class = GLiNERConfig  # Uses base config with labels_decoder settings
     model_class = UniEncoderSpanDecoderModel
     data_processor_class = EncoderDecoderSpanProcessor
+    data_collator_class = EncoderDecoderSpanDataCollator
     decoder_class = SpanDecoder
     
     def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
@@ -1136,6 +1155,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         self.data_processor = self.data_processor_class(
             config, tokenizer, words_splitter, decoder_tokenizer=decoder_tokenizer
         )
+        return self.data_processor
     
     def set_labels_trie(self, labels: List[str]):
         """
@@ -1231,20 +1251,26 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         if isinstance(texts, str):
             texts = [texts]
         
+        entity_types = list(dict.fromkeys(labels))
+
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         input_x = self.prepare_base_input(tokens)
         
-        collator = DataCollator(
+        collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
             return_entities=True,
             return_id_to_classes=True,
             prepare_labels=False,
-            entity_types=labels,
         )
+
+        def collate_fn(batch, entity_types=entity_types):
+            batch_out = collator(batch, entity_types=entity_types)
+            return batch_out
+
         data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
         
         active_packing = packing_config if packing_config is not None else self._inference_packing_config
@@ -1323,6 +1349,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     config_class = GLiNERConfig  # Uses base config with relations_layer settings
     model_class = UniEncoderSpanRelexModel
     data_processor_class = RelationExtractionSpanProcessor
+    data_collator_class = RelationExtractionSpanDataCollator
     decoder_class = SpanDecoder
     
     def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
@@ -1334,6 +1361,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             words_splitter = WordsSplitter(config.words_splitter_type)
         
         self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
+        return self.data_processor
     
     @torch.no_grad()
     def inference(
@@ -1371,14 +1399,14 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         input_x = self.prepare_base_input(tokens)
         
-        collator = DataCollator(
+        collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
             return_entities=True,
             return_id_to_classes=True,
+            return_rel_id_to_classes=True,
             prepare_labels=False,
-            entity_types=labels,
         )
         data_loader = torch.utils.data.DataLoader(
             input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
@@ -1592,10 +1620,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # Priority order: relations > decoder > bi-encoder > token vs span
         
         if has_relations:
-            if has_labels_encoder:
-                return BiEncoderSpanRelexGLiNER
-            else:
-                return UniEncoderSpanRelexGLiNER
+            return UniEncoderSpanRelexGLiNER
         
         if has_labels_decoder:
             if has_labels_encoder:
@@ -1695,21 +1720,14 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         with open(config_file, "r") as f:
             config_dict = json.load(f)
         
-        # Apply config overrides
-        if max_length is not None:
-            config_dict["max_len"] = max_length
-        if max_width is not None:
-            config_dict["max_width"] = max_width
-        if post_fusion_schema is not None:
-            config_dict["post_fusion_schema"] = post_fusion_schema
-        if _attn_implementation is not None:
-            config_dict["_attn_implementation"] = _attn_implementation
-        
+        config_dict.pop("model_type", None)
+
         config = GLiNERConfig(**config_dict)
         
         # Determine the appropriate class
         gliner_class = cls._get_gliner_class(config)
         
+        print(f"Loading the following GLiNER type: {gliner_class}...")
         # Delegate to the specific class's from_pretrained method
         return gliner_class.from_pretrained(
             model_id=model_id,
@@ -1810,11 +1828,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 "class": UniEncoderSpanRelexGLiNER,
                 "description": "Joint entity and relation extraction with single encoder",
                 "config": {"span_mode": "span_level", "labels_encoder": None, "relations_layer": "required"},
-            },
-            "bi_span_relex": {
-                "class": BiEncoderSpanRelexGLiNER,
-                "description": "Joint entity and relation extraction with separate encoders",
-                "config": {"span_mode": "span_level", "labels_encoder": "required", "relations_layer": "required"},
             },
         }
     
