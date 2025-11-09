@@ -115,20 +115,23 @@ class Transformer(nn.Module):
     def forward(self, *args, **kwargs):
         pair_attention_mask = kwargs.pop("pair_attention_mask", None)
         base_attention_mask = kwargs.pop("attention_mask", None)
-
+        # Extract input_ids if present
         args = list(args)
-        input_ids = kwargs.get("input_ids")
+        input_ids = kwargs.pop("input_ids", None)
         if input_ids is None and args:
             input_ids = args[0]
             args = args[1:]
         args = tuple(args)
 
+        # Set default kwargs
         kwargs.setdefault("output_attentions", False)
+        kwargs.setdefault("return_dict", True)
+        
+        # Handle output_hidden_states based on fuse_layers config
         if self.config.fuse_layers:
             kwargs["output_hidden_states"] = True
         else:
             kwargs.setdefault("output_hidden_states", False)
-        kwargs.setdefault("return_dict", True)
 
         if pair_attention_mask is not None:
             mask_info = self._prepare_pair_attention_masks(
@@ -166,8 +169,9 @@ class Transformer(nn.Module):
         else:
             if base_attention_mask is not None:
                 kwargs["attention_mask"] = base_attention_mask
-            output = self.model(*args, **kwargs)
+            output = self.model(input_ids, *args, **kwargs)
 
+        # Common logic for both paths
         if self.config.fuse_layers:
             encoder_layer = self.layers_fuser(output.hidden_states)
         else:
@@ -642,7 +646,8 @@ class BiEncoder(Encoder):
         label_kwargs = dict(kwargs)
         label_kwargs.pop("packing_config", None)
         label_kwargs.pop("pair_attention_mask", None)
-        labels_embeddings = self.labels_encoder(input_ids, attention_mask, *args, **label_kwargs)
+        label_kwargs["attention_mask"] = attention_mask
+        labels_embeddings = self.labels_encoder(input_ids, *args, **label_kwargs)
         if hasattr(self, "labels_projection"):
             labels_embeddings = self.labels_projection(labels_embeddings)
         labels_embeddings = self.mean_pooling(labels_embeddings, attention_mask)

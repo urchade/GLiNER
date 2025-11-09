@@ -378,15 +378,14 @@ class BaseBiEncoderModel(BaseModel):
         words_embedding, mask = extract_word_embeddings(token_embeds, words_mask, attention_mask,
                                                         batch_size, max_text_length, embed_dim, text_lengths)
         
-        if self.config.has_rnn:
-            words_embedding = self.rnn(words_embedding, mask)
-        
         labels_embeds = labels_embeds.unsqueeze(0)
         labels_embeds = labels_embeds.expand(batch_size, -1, -1)
         labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype,
                                 device=attention_mask.device)
         
         labels_embeds = labels_embeds.to(words_embedding.dtype)
+        
+        print(input_ids, labels_input_ids)
         
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, 
@@ -456,7 +455,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
-
+                
         output = GLiNERBaseOutput(
             logits=scores,
             loss=loss,

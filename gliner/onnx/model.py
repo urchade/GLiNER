@@ -5,7 +5,7 @@ import onnxruntime as ort
 import numpy as np
 import torch
 
-from ..modeling.outputs import GLiNERBaseOutput
+from ..modeling.outputs import GLiNERBaseOutput, GLiNERRelexOutput
 
 class BaseORTModel(ABC):
     def __init__(self, session: ort.InferenceSession):
@@ -58,7 +58,7 @@ class BaseORTModel(ABC):
     def __call__(self, *args, **kwargs):
         return self.forward(*args, **kwargs)
     
-class SpanORTModel(BaseORTModel):
+class UniEncoderSpanORTModel(BaseORTModel):
     def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
                 words_mask: torch.Tensor, text_lengths: torch.Tensor, 
                 span_idx: torch.Tensor, span_mask: torch.Tensor, **kwargs) -> Dict[str, Any]:
@@ -90,9 +90,51 @@ class SpanORTModel(BaseORTModel):
         )
         return outputs
 
-class TokenORTModel(BaseORTModel):
-    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
+class BiEncoderSpanORTModel(BaseORTModel):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor,
                 words_mask: torch.Tensor, text_lengths: torch.Tensor, 
+                span_idx: torch.Tensor, span_mask: torch.Tensor, 
+                labels_embeds: Optional[torch.Tensor] = None,
+                labels_input_ids: Optional[torch.FloatTensor] = None,
+                labels_attention_mask: Optional[torch.LongTensor] = None,
+                **kwargs) -> Dict[str, Any]:
+        """
+        Forward pass for span model using ONNX inference.
+
+        Args:
+            input_ids (torch.Tensor): Input IDs tensor.
+            attention_mask (torch.Tensor): Attention mask tensor.
+            span_idx (torch.Tensor): Span indices tensor.
+            span_mask (torch.Tensor): Span mask tensor.
+            **kwargs: Additional arguments.
+        
+        Returns:
+            Dict[str, Any]: Model outputs.
+        """
+        inputs = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'words_mask': words_mask,
+            'text_lengths': text_lengths,
+            'span_idx': span_idx,
+            'span_mask': span_mask
+        }
+        if labels_embeds is not None:
+            inputs["labels_embeds"] = labels_embeds
+        else:
+            inputs["labels_input_ids"] = labels_input_ids
+            inputs["labels_attention_mask"] = labels_attention_mask
+
+        prepared_inputs = self.prepare_inputs(inputs)
+        inference_output = self.run_inference(prepared_inputs)
+        outputs = GLiNERBaseOutput(
+            logits=inference_output['logits']
+        )
+        return outputs
+    
+class UniEncoderTokenORTModel(BaseORTModel):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
+                words_mask: torch.Tensor, text_lengths: torch.Tensor,
                 **kwargs) -> Dict[str, Any]:
         """
         Forward pass for token model using ONNX inference.
@@ -115,5 +157,78 @@ class TokenORTModel(BaseORTModel):
         inference_output = self.run_inference(prepared_inputs)
         outputs = GLiNERBaseOutput(
             logits=inference_output['logits']
+        )
+        return outputs
+    
+class BiEncoderTokenORTModel(BaseORTModel):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
+                words_mask: torch.Tensor, text_lengths: torch.Tensor,
+                labels_embeds: Optional[torch.Tensor] = None,
+                labels_input_ids: Optional[torch.FloatTensor] = None,
+                labels_attention_mask: Optional[torch.LongTensor] = None,
+                **kwargs) -> Dict[str, Any]:
+        """
+        Forward pass for token model using ONNX inference.
+
+        Args:
+            input_ids (torch.Tensor): Input IDs tensor.
+            attention_mask (torch.Tensor): Attention mask tensor.
+            **kwargs: Additional arguments.
+        
+        Returns:
+            Dict[str, Any]: Model outputs.
+        """
+        inputs = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'words_mask': words_mask,
+            'text_lengths': text_lengths,
+        }
+
+        if labels_embeds is not None:
+            inputs["labels_embeds"] = labels_embeds
+        else:
+            inputs["labels_input_ids"] = labels_input_ids
+            inputs["labels_attention_mask"] = labels_attention_mask
+
+        prepared_inputs = self.prepare_inputs(inputs)
+        inference_output = self.run_inference(prepared_inputs)
+        outputs = GLiNERBaseOutput(
+            logits=inference_output['logits']
+        )
+        return outputs
+
+class UniEncoderSpanRelexORTModel(BaseORTModel):
+    def forward(self, input_ids: torch.Tensor, attention_mask: torch.Tensor, 
+                words_mask: torch.Tensor, text_lengths: torch.Tensor, 
+                span_idx: torch.Tensor, span_mask: torch.Tensor, **kwargs) -> Dict[str, Any]:
+        """
+        Forward pass for span model using ONNX inference.
+
+        Args:
+            input_ids (torch.Tensor): Input IDs tensor.
+            attention_mask (torch.Tensor): Attention mask tensor.
+            span_idx (torch.Tensor): Span indices tensor.
+            span_mask (torch.Tensor): Span mask tensor.
+            **kwargs: Additional arguments.
+        
+        Returns:
+            Dict[str, Any]: Model outputs.
+        """
+        inputs = {
+            'input_ids': input_ids,
+            'attention_mask': attention_mask,
+            'words_mask': words_mask,
+            'text_lengths': text_lengths,
+            'span_idx': span_idx,
+            'span_mask': span_mask
+        }
+        prepared_inputs = self.prepare_inputs(inputs)
+        inference_output = self.run_inference(prepared_inputs)
+        outputs = GLiNERRelexOutput(
+            logits=inference_output['logits'],
+            rel_idx=inference_output['rel_idx'],
+            rel_logits=inference_output['rel_logits'],
+            rel_mask=inference_output['rel_mask']
         )
         return outputs
