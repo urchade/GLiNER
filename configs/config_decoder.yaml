@@ -16,7 +16,10 @@ model:
   max_types: 100
   max_len: 512
   max_neg_type_ratio: 1
-
+  blank_entity_prob: 0.1
+  decoder_loss_coef: 0.5
+  span_loss_coef: 0.5
+  
 data:
   # Directory Paths
   root_dir: gliner_logs

@@ -2784,7 +2784,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         
         # Determine the appropriate class
         gliner_class = cls._get_gliner_class(config)
-        
+
         # Create instance
         return gliner_class(config, **kwargs)
     
