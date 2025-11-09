@@ -597,7 +597,7 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
     
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         blank = None
-        if random.uniform(0, 1)<self.config.blank_entity_prob:
+        if random.uniform(0, 1)<self.config.blank_entity_prob and prepare_labels:
             blank = "entity"
         
         tokenized_input = self.tokenize_inputs(batch['tokens'], batch['classes_to_id'], blank)

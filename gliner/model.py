@@ -500,6 +500,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         compile_torch_model: Optional[bool] = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
+        session_options = None,
         # Config overrides
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
@@ -602,7 +603,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             
             instance.eval()
         else:
-            model_file = Path(model_dir) / onnx_model_file
+            model_file = Path(onnx_model_file)
             if not os.path.exists(model_file):
                 raise FileNotFoundError(
                     f"The ONNX model can't be loaded from {model_file}."
@@ -682,7 +683,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         Concrete exporters can call this and then select the keys they need.
         """
         if labels is None or len(labels) == 0:
-            labels = ["label"]
+            labels = ["person", 'organization', 'country']
 
         if isinstance(text, str):
             texts = [text]
@@ -714,6 +715,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to("cpu")
 
+        print(batch.keys())
         return batch
 
     def _run_torch_onnx_export(
@@ -735,6 +737,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             output_names=output_names,
             dynamic_axes=dynamic_axes,
             opset_version=opset,
+            dynamo=False
         )
 
     def _maybe_quantize_onnx(
@@ -778,10 +781,35 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 **kwargs
             )
     
+    def _get_freezable_components(self):
+        """
+        Get dictionary mapping component names to their actual modules.
+        Returns:
+            dict: Mapping of component names to module objects
+        """
+        components = {}
+        
+        # Text encoder (always present)
+        if hasattr(self, 'model') and hasattr(self.model, 'token_rep_layer'):
+            if hasattr(self.model.token_rep_layer, 'bert_layer'):
+                components['text_encoder'] = self.model.token_rep_layer.bert_layer.model
+        
+        # Labels encoder (optional)
+        if self.config.labels_encoder is not None:
+            if hasattr(self.model, 'token_rep_layer') and hasattr(self.model.token_rep_layer, 'labels_encoder'):
+                components['labels_encoder'] = self.model.token_rep_layer.labels_encoder.model
+        
+        # Decoder (optional)
+        if self.config.labels_decoder is not None:
+            if hasattr(self.model, 'decoder') and hasattr(self.model.decoder, 'decoder_layer'):
+                components['decoder'] = self.model.decoder.decoder_layer.model
+        
+        return components
+
+
     def freeze_component(self, component_name: str):
         """
         Freeze a specific component of the model.
-        
         Args:
             component_name: Name of component to freeze (e.g., 'text_encoder', 'labels_encoder', 'decoder')
         """
@@ -790,12 +818,13 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             components[component_name].requires_grad_(False)
             print(f"Frozen: {component_name}")
         else:
-            print(f"Warning: Component '{component_name}' not found or not freezable")
-    
+            available = ', '.join(components.keys())
+            print(f"Warning: Component '{component_name}' not found. Available components: {available}")
+
+
     def unfreeze_component(self, component_name: str):
         """
         Unfreeze a specific component of the model.
-        
         Args:
             component_name: Name of component to unfreeze
         """
@@ -804,8 +833,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             components[component_name].requires_grad_(True)
             print(f"Unfrozen: {component_name}")
         else:
-            print(f"Warning: Component '{component_name}' not found")
-    
+            available = ', '.join(components.keys())
+            print(f"Warning: Component '{component_name}' not found. Available components: {available}")
 
     @classmethod
     def create_training_args(
