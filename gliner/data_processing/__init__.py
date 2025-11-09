@@ -4,11 +4,11 @@ from .processor import (BaseProcessor,
                         BaseBiEncoderProcessor,
                         BiEncoderSpanProcessor, 
                         BiEncoderTokenProcessor, 
-                        EncoderDecoderSpanProcessor, 
+                        UniEncoderSpanDecoderProcessor, 
                         RelationExtractionSpanProcessor)
 from .collator import (UniEncoderSpanDataCollator,
                         BiEncoderSpanDataCollator,
-                        EncoderDecoderSpanDataCollator,
+                        UniEncoderSpanDecoderDataCollator,
                         RelationExtractionSpanDataCollator,
                         UniEncoderTokenDataCollator,
                         BiEncoderTokenDataCollator)

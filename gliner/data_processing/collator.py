@@ -9,7 +9,7 @@ from .processor import (
     UniEncoderTokenProcessor,
     BiEncoderSpanProcessor,
     BiEncoderTokenProcessor,
-    EncoderDecoderSpanProcessor,
+    UniEncoderSpanDecoderProcessor,
     RelationExtractionSpanProcessor
 )
 from .utils import pad_2d_tensor
@@ -211,7 +211,7 @@ class SpanDataCollator(BaseSpanCollator):
     Automatically adapts behavior based on processor type.
     
     Required Processors: UniEncoderSpanProcessor, BiEncoderSpanProcessor, 
-                         or EncoderDecoderSpanProcessor
+                         or UniEncoderSpanDecoderProcessor
     """
     
     def __init__(
@@ -220,7 +220,7 @@ class SpanDataCollator(BaseSpanCollator):
         data_processor: Optional[Union[
             UniEncoderSpanProcessor, 
             BiEncoderSpanProcessor,
-            EncoderDecoderSpanProcessor
+            UniEncoderSpanDecoderProcessor
         ]] = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
@@ -275,7 +275,7 @@ class SpanDataCollator(BaseSpanCollator):
         self._add_span_fields(model_input, raw_batch)
         
         # Add decoder-specific fields for EncoderDecoder models
-        if isinstance(self.data_processor, EncoderDecoderSpanProcessor):
+        if isinstance(self.data_processor, UniEncoderSpanDecoderProcessor):
             decoder_fields = ['decoder_labels_ids', 'decoder_labels_mask', 'decoder_labels']
             for field in decoder_fields:
                 if field in model_input:
@@ -471,7 +471,7 @@ class BiEncoderSpanDataCollator(SpanDataCollator):
     pass
 
 
-class EncoderDecoderSpanDataCollator(SpanDataCollator):
+class UniEncoderSpanDecoderDataCollator(SpanDataCollator):
     """
     Backward compatibility alias for SpanDataCollator with EncoderDecoderSpanProcessor.
     

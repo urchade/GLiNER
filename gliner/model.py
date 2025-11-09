@@ -21,6 +21,8 @@ from .config import (BaseGLiNERConfig,
                      UniEncoderTokenConfig,
                      BiEncoderSpanConfig,
                      BiEncoderTokenConfig,
+                     UniEncoderSpanDecoderConfig,
+                     UniEncoderSpanRelexConfig,
                      GLiNERConfig)
 from .data_processing import (BaseProcessor, 
                               UniEncoderSpanProcessor, 
@@ -28,15 +30,15 @@ from .data_processing import (BaseProcessor,
                               BiEncoderSpanProcessor, 
                               BiEncoderTokenProcessor,
                               RelationExtractionSpanProcessor,
-                              EncoderDecoderSpanProcessor)
+                              UniEncoderSpanDecoderProcessor)
 from .data_processing.collator import (UniEncoderSpanDataCollator,
                                        BiEncoderSpanDataCollator,
-                                       EncoderDecoderSpanDataCollator,
+                                       UniEncoderSpanDecoderDataCollator,
                                        RelationExtractionSpanDataCollator,
                                        UniEncoderTokenDataCollator,
                                        BiEncoderTokenDataCollator)
 from .data_processing.tokenizer import WordsSplitter
-from .decoding import SpanDecoder, TokenDecoder
+from .decoding import SpanDecoder, TokenDecoder, SpanGenerativeDecoder
 from .decoding.trie import LabelsTrie
 from .evaluation import BaseNEREvaluator
 from .training import TrainingArguments, Trainer
@@ -61,6 +63,7 @@ else:
 class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     config_class: Type = None 
     model_class: Type = None
+    ort_model_class: Type = None
     data_processor_class: Type = None
     data_collator_class: Type = None
     decoder_class: Type = None
@@ -495,6 +498,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        load_onnx_model: Optional[bool] = False,
+        onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
@@ -563,37 +568,59 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if load_tokenizer:
             tokenizer = cls._load_tokenizer(model_dir, cache_dir)
         
-        # Create model instance
-        instance = cls(
-            config,
-            tokenizer=tokenizer,
-            backbone_from_pretrained=False,
-            cache_dir=cache_dir,
-            **model_kwargs
-        )
-        
-        # Resize token embeddings if needed
-        add_tokens = instance._get_special_tokens()
-        if resize_token_embeddings and (
-            config.class_token_index == -1 or config.vocab_size == -1
-        ):
-            instance.resize_embeddings(add_tokens=add_tokens)
-        
-        # Load state dict
-        state_dict = cls._load_state_dict(model_file, map_location)
-        instance.model.load_state_dict(state_dict, strict=strict)
-        instance.model.to(map_location)
-        
-        if compile_torch_model:
-            if "cuda" in map_location:
-                print("Compiling torch model...")
-                instance.compile()
-            else:
-                warnings.warn(
-                    "Cannot compile model on CPU. Set `map_location='cuda'` to compile."
+        if not load_onnx_model:
+            # Create model instance
+            instance = cls(
+                config,
+                tokenizer=tokenizer,
+                backbone_from_pretrained=False,
+                cache_dir=cache_dir,
+                **model_kwargs
+            )
+            
+            # Resize token embeddings if needed
+            add_tokens = instance._get_special_tokens()
+            if resize_token_embeddings and (
+                config.class_token_index == -1 or config.vocab_size == -1
+            ):
+                instance.resize_embeddings(add_tokens=add_tokens)
+                instance.data_processor.transformer_tokenizer.add_tokens(add_tokens)
+
+            # Load state dict
+            state_dict = cls._load_state_dict(model_file, map_location)
+            instance.model.load_state_dict(state_dict, strict=strict)
+            instance.model.to(map_location)
+            
+            if compile_torch_model:
+                if "cuda" in map_location:
+                    print("Compiling torch model...")
+                    instance.compile()
+                else:
+                    warnings.warn(
+                        "Cannot compile model on CPU. Set `map_location='cuda'` to compile."
+                    )
+            
+            instance.eval()
+        else:
+            model_file = Path(model_dir) / onnx_model_file
+            if not os.path.exists(model_file):
+                raise FileNotFoundError(
+                    f"The ONNX model can't be loaded from {model_file}."
                 )
-        
-        instance.eval()
+            if session_options is None:
+                session_options = ort.SessionOptions()
+                session_options.graph_optimization_level = (
+                    ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+                )
+            providers = ['CPUExecutionProvider']
+            if "cuda" in map_location:
+                if not torch.cuda.is_available():
+                    raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
+                providers = ['CUDAExecutionProvider']
+            ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
+            model = cls.ort_model_class(ort_session)
+            instance = cls(config, tokenizer=tokenizer, model=model)
+
         return instance
 
     @abstractmethod
@@ -1387,6 +1414,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
 class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderSpanConfig 
     model_class = UniEncoderSpanModel
+    ort_model_class: Type = UniEncoderSpanORTModel
     data_processor_class = UniEncoderSpanProcessor
     data_collator_class = UniEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -1489,6 +1517,7 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
 class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderTokenConfig 
     model_class = UniEncoderTokenModel
+    ort_model_class: Type = UniEncoderTokenORTModel
     data_processor_class = UniEncoderTokenProcessor
     data_collator_class = UniEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -1576,6 +1605,7 @@ class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
 class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderSpanConfig 
     model_class = BiEncoderSpanModel
+    ort_model_class: Type = BiEncoderSpanORTModel
     data_processor_class = BiEncoderSpanProcessor
     data_collator_class = BiEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -1763,6 +1793,7 @@ class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
 class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderTokenConfig 
     model_class = BiEncoderTokenModel
+    ort_model_class: Type = BiEncoderTokenORTModel
     data_processor_class = BiEncoderTokenProcessor
     data_collator_class = BiEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -1929,11 +1960,12 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
     GLiNER model with span-based encoding and label decoding capabilities.
     Supports generating textual labels for entities.
     """
-    config_class = GLiNERConfig  # Uses base config with labels_decoder settings
+    config_class = UniEncoderSpanDecoderConfig  # Uses base config with labels_decoder settings
     model_class = UniEncoderSpanDecoderModel
-    data_processor_class = EncoderDecoderSpanProcessor
-    data_collator_class = EncoderDecoderSpanDataCollator
-    decoder_class = SpanDecoder
+    ort_model_class: Type = None
+    data_processor_class = UniEncoderSpanDecoderProcessor
+    data_collator_class = UniEncoderSpanDecoderDataCollator
+    decoder_class = SpanGenerativeDecoder
     
     def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
         """Create data processor with decoder tokenizer."""
@@ -2057,7 +2089,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
 
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         input_x = self.prepare_base_input(tokens)
-        
+                
         collator = self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
@@ -2161,8 +2193,9 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     GLiNER model for both entity recognition and relation extraction.
     Performs joint entity and relation prediction.
     """
-    config_class = GLiNERConfig  # Uses base config with relations_layer settings
+    config_class = UniEncoderSpanRelexConfig
     model_class = UniEncoderSpanRelexModel
+    ort_model_class: Type = UniEncoderSpanRelexORTModel
     data_processor_class = RelationExtractionSpanProcessor
     data_collator_class = RelationExtractionSpanDataCollator
     decoder_class = SpanDecoder
@@ -2587,6 +2620,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        load_onnx_model: Optional[bool] = False,
+        onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
         max_length: Optional[int] = None,
         max_width: Optional[int] = None,
@@ -2676,6 +2711,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
             _attn_implementation=_attn_implementation,
+            load_onnx_model=load_onnx_model,
+            onnx_model_file=onnx_model_file,
             **model_kwargs,
         )
     

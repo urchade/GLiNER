@@ -13,12 +13,14 @@ class GLiNERBaseOutput(ModelOutput):
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
 
+@dataclass
 class GLiNERDecoderOutput(GLiNERBaseOutput):
     decoder_loss: Optional[torch.FloatTensor] = None
     decoder_embedding: Optional[torch.FloatTensor] = None
     decoder_embedding_mask: Optional[torch.LongTensor] = None
     decoder_span_idx: Optional[torch.LongTensor] = None
 
+@dataclass
 class GLiNERRelexOutput(GLiNERBaseOutput):
     rel_idx: Optional[torch.LongTensor] = None
     rel_logits: Optional[torch.FloatTensor] = None

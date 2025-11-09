@@ -478,7 +478,7 @@ class BiEncoderTokenProcessor(UniEncoderTokenProcessor, BaseBiEncoderProcessor):
         return tokenized_input
     
 
-class EncoderDecoderSpanProcessor(UniEncoderSpanProcessor):
+class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
     def __init__(self, config, tokenizer, words_splitter, decoder_tokenizer):
         super().__init__(config, tokenizer, words_splitter)
         self.decoder_tokenizer = decoder_tokenizer
