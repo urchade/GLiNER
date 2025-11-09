@@ -384,9 +384,7 @@ class BaseBiEncoderModel(BaseModel):
                                 device=attention_mask.device)
         
         labels_embeds = labels_embeds.to(words_embedding.dtype)
-        
-        print(input_ids, labels_input_ids)
-        
+                
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(words_embedding, labels_embeds, 
                                                                       text_mask=mask, labels_mask=labels_mask)

@@ -1307,6 +1307,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         self,
         texts,
         labels_embeddings,
+        labels,
         flat_ner=True,
         threshold=0.5,
         multi_label=False,
@@ -1349,9 +1350,11 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             return_id_to_classes=True,
             prepare_labels=False,
         )
-    
-        def collate_fn(batch):
-            batch_out = collator(batch)
+
+        entity_types = list(dict.fromkeys(labels))
+
+        def collate_fn(batch, entity_types=entity_types):
+            batch_out = collator(batch, entity_types=entity_types)
             return batch_out
         
         data_loader = torch.utils.data.DataLoader(
