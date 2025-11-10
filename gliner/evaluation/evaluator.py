@@ -67,8 +67,8 @@ class BaseNEREvaluator(BaseEvaluator):
 
     def get_entities_pr(self, ents):
         all_ents = []
-        for s, e, lab, _, _ in ents:
-            all_ents.append([lab, (s, e)])
+        for ent in ents:
+            all_ents.append([ent[2], (ent[0], ent[1])])
         return all_ents
 
     def transform_data(self):
