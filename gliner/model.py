@@ -1174,7 +1174,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
         return input_x
 
-    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None):
+    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, **external_inputs):
         """Shared batch processing logic"""
         outputs = []
         is_onnx = self.onnx_model
@@ -1187,7 +1187,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
                         for k, v in batch.items()}
             
             # Prepare model inputs
-            model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
+            model_inputs = batch.copy() if packing_config is None else {**batch, **external_inputs, "packing_config": packing_config}
             
             # Get predictions
             model_logits = self.model(**model_inputs, threshold=threshold)[0]
@@ -1213,6 +1213,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label=False,
         batch_size=8,
         packing_config: Optional[InferencePackingConfig] = None,
+        **external_inputs
     ):
         """
         Predict entities for a batch of texts.
@@ -1265,7 +1266,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             else self._inference_packing_config
         )
         outputs = self._process_batches(data_loader, threshold, flat_ner, multi_label, 
-                                                        packing_config=active_packing)
+                                            packing_config=active_packing, **external_inputs)
 
         all_entities = []
         for i, output in enumerate(outputs):
@@ -1468,87 +1469,8 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         Returns:
             The list of lists with predicted entities.
         """
-        self.eval()
-        
-        # Raw input preparation
-        if isinstance(texts, str):
-            texts = [texts]
-
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
-        
-        input_x = self.prepare_base_input(tokens)
-
-        collator = self.data_collator_class(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
-        )
-
-        entity_types = list(dict.fromkeys(labels))
-
-        def collate_fn(batch, entity_types=entity_types):
-            batch_out = collator(batch, entity_types=entity_types)
-            return batch_out
-        
-        data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
-        )
-
-        active_packing = (
-            packing_config
-            if packing_config is not None
-            else self._inference_packing_config
-        )
-
-        # Process batches with embeddings
-        outputs = []
-        is_onnx = self.onnx_model
-        device = self.device
-        
-        for batch in data_loader:
-            # Move to device once (outside condition)
-            if not is_onnx:
-                batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v 
-                        for k, v in batch.items()}
-            
-            # Prepare model inputs with labels_embeddings
-            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
-            model_inputs["labels_embeddings"] = labels_embeddings
-            
-            # Get predictions
-            model_logits = self.model(**model_inputs, threshold=threshold)[0]
-            if not isinstance(model_logits, torch.Tensor):
-                model_logits = torch.from_numpy(model_logits)
-            
-            # Decode
-            decoded = self.decoder.decode(
-                batch["tokens"], batch["id_to_classes"], model_logits,
-                flat_ner=flat_ner, threshold=threshold, multi_label=multi_label
-            )
-            outputs.extend(decoded)
-
-        # Convert outputs to entities with text indices
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
-            entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                entities.append(
-                    {
-                        "start": start_token_idx_to_text_idx[start_token_idx],
-                        "end": end_token_idx_to_text_idx[end_token_idx],
-                        "text": texts[i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                )
-            all_entities.append(entities)
+        all_entities = self.inference(texts, labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
+                                batch_size=batch_size, packing_config=packing_config, labels_embeddings=labels_embeddings)
 
         return all_entities
 
