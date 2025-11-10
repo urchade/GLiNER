@@ -4,7 +4,7 @@ import re
 import warnings
 from tqdm import tqdm
 from pathlib import Path
-from typing import Dict, List, Optional, Union, Type, Any
+from typing import Dict, List, Optional, Union, Type, Any, Tuple
 from abc import ABC, abstractmethod
 
 import onnxruntime as ort
@@ -486,6 +486,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def from_pretrained(
         cls,
         model_id: str,
+        model_dir: Optional[str] = None,
         revision: Optional[str] = None,
         cache_dir: Optional[Union[str, Path]] = None,
         force_download: bool = False,
@@ -535,10 +536,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             Model instance
         """
         # Download or locate model
-        model_dir = cls._download_model(
-            model_id, revision, cache_dir, force_download,
-            proxies, resume_download, token, local_files_only
-        )
+        if model_dir is None:
+            model_dir = cls._download_model(
+                model_id, revision, cache_dir, force_download,
+                proxies, resume_download, token, local_files_only
+            )
         
         # Find model file
         model_file = model_dir / "model.safetensors"
@@ -672,6 +674,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         except Exception:
             return None, None
 
+
     def _build_dummy_batch(
         self,
         labels: Optional[List[str]] = None,
@@ -715,7 +718,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             if isinstance(v, torch.Tensor):
                 batch[k] = v.to("cpu")
 
-        print(batch.keys())
         return batch
 
     def _run_torch_onnx_export(
@@ -767,6 +769,136 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             warnings.warn(f"Quantization failed: {e}")
             return None
         
+    def _get_onnx_input_spec(self) -> Dict[str, Any]:
+        """
+        Define ONNX input specification for this model type.
+        Must be implemented by child classes that support ONNX export.
+        
+        Returns:
+            Dictionary with:
+                - input_names: List of input tensor names
+                - output_names: List of output tensor names
+                - dynamic_axes: Dynamic axis specifications
+        """
+        raise NotImplementedError(
+            f"{self.__class__.__name__} must implement _get_onnx_input_spec() "
+            "or override export_to_onnx() entirely."
+        )
+    
+    def _create_onnx_wrapper(self, core_model: nn.Module) -> nn.Module:
+        """
+        Create ONNX export wrapper.
+        
+        Default implementation creates a simple passthrough wrapper.
+        Override this method for custom wrapper logic.
+        
+        Args:
+            core_model: The model to wrap
+            
+        Returns:
+            Wrapped model for ONNX export
+        """
+        class DefaultWrapper(nn.Module):
+            def __init__(self, core):
+                super().__init__()
+                self.core = core
+            
+            def forward(self, *args, **kwargs):
+                out = self.core(*args, **kwargs)
+                return out.logits if hasattr(out, "logits") else out[0]
+        
+        return DefaultWrapper(core_model)
+    
+    def _get_onnx_export_kwargs(self) -> Dict[str, Any]:
+        """
+        Get additional kwargs for ONNX export (e.g., labels for bi-encoders).
+        Override in child classes as needed.
+        
+        Returns:
+            Dictionary of kwargs to pass to _build_dummy_batch
+        """
+        return {}
+    
+    def _prepare_onnx_batch(self, batch: Dict[str, torch.Tensor], **export_kwargs) -> Tuple[tuple, Dict[str, Any]]:
+        """
+        Prepare batch for ONNX export. Can be overridden for special preprocessing.
+        
+        Args:
+            batch: Dummy batch from _build_dummy_batch
+            **export_kwargs: Additional export arguments
+            
+        Returns:
+            Tuple of (input_tuple, updated_spec) where input_tuple contains the actual
+            inputs to pass to the wrapper and updated_spec may have modified input_names/dynamic_axes
+        """
+        spec = self._get_onnx_input_spec()
+        all_inputs = tuple(batch[name] for name in spec["input_names"])
+        return all_inputs, spec
+    
+    def export_to_onnx(
+        self,
+        save_dir: Union[str, Path],
+        onnx_filename: str = "model.onnx",
+        quantized_filename: str = "model_quantized.onnx",
+        quantize: bool = False,
+        opset: int = 19,
+        **export_kwargs,
+    ) -> Dict[str, Optional[str]]:
+        """
+        Unified ONNX export method using specifications from child classes.
+        
+        Args:
+            save_dir: Directory to save ONNX files
+            onnx_filename: Name of the ONNX model file
+            quantized_filename: Name of the quantized model file
+            quantize: Whether to create a quantized version
+            opset: ONNX opset version
+            **export_kwargs: Additional export arguments (model-specific)
+            
+        Returns:
+            Dictionary with paths to exported models:
+                - onnx_path: Path to standard ONNX model
+                - quantized_path: Path to quantized model (if quantize=True)
+        """
+        self._check_onnx_export_preconditions()
+        
+        save_dir = Path(save_dir)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        onnx_path = save_dir / onnx_filename
+        
+        # Merge export kwargs with model-specific kwargs
+        batch_kwargs = {**self._get_onnx_export_kwargs(), **export_kwargs}
+        batch = self._build_dummy_batch(**batch_kwargs)
+        
+        core = self.model.to("cpu").eval()
+        
+        # Prepare inputs and get spec (allows for dynamic modification)
+        all_inputs, spec = self._prepare_onnx_batch(batch, **export_kwargs)
+        
+        # Create wrapper
+        wrapper = self._create_onnx_wrapper(core)
+        
+        # Export
+        self._run_torch_onnx_export(
+            wrapper,
+            all_inputs,
+            spec["input_names"],
+            spec["output_names"],
+            spec["dynamic_axes"],
+            onnx_path,
+            opset,
+        )
+        
+        # Quantize if requested
+        q_path = self._maybe_quantize_onnx(
+            onnx_path, save_dir / quantized_filename, quantize
+        )
+        
+        return {
+            "onnx_path": str(onnx_path),
+            "quantized_path": str(q_path) if q_path is not None else None,
+        }
+
     def _create_data_collator(self, **kwargs):
         """
         Create data collator. Override in child classes if needed.
@@ -1443,6 +1575,146 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             **kwargs
         )[0]
 
+    def _get_onnx_export_kwargs(self) -> Dict[str, Any]:
+        """Provide default labels for bi-encoder ONNX export."""
+        return {"labels": ["organization", "person", "country"]}
+    
+    def _get_base_input_names(self) -> List[str]:
+        """
+        Get base input names (text-related inputs).
+        Override in child classes for different architectures.
+        """
+        raise NotImplementedError
+    
+    def _get_label_input_names(self) -> List[str]:
+        """Get label encoder input names."""
+        return ["labels_input_ids", "labels_attention_mask"]
+    
+    def _get_embedding_input_name(self) -> str:
+        """Get name for pre-computed embeddings input."""
+        return "labels_embeddings"
+    
+    def _get_base_dynamic_axes(self) -> Dict[str, Dict[int, str]]:
+        """
+        Get base dynamic axes (text-related).
+        Override in child classes for different architectures.
+        """
+        raise NotImplementedError
+    
+    def _get_label_dynamic_axes(self) -> Dict[str, Dict[int, str]]:
+        """Get label encoder dynamic axes."""
+        return {
+            "labels_input_ids": {0: "num_labels", 1: "label_seq_length"},
+            "labels_attention_mask": {0: "num_labels", 1: "label_seq_length"},
+        }
+    
+    def _get_embedding_dynamic_axes(self) -> Dict[str, Dict[int, str]]:
+        """Get pre-computed embeddings dynamic axes."""
+        return {
+            "labels_embeddings": {0: "num_labels", 1: "hidden_size"},
+        }
+    
+    def _get_output_spec(self) -> Dict[str, Any]:
+        """
+        Get output specification.
+        Override in child classes for different output shapes.
+        """
+        raise NotImplementedError
+    
+    def _get_onnx_input_spec(self) -> Dict[str, Any]:
+        """
+        Build full input spec with label encoder.
+        This is the default spec (without pre-computed embeddings).
+        """
+        base_names = self._get_base_input_names()
+        label_names = self._get_label_input_names()
+        
+        base_axes = self._get_base_dynamic_axes()
+        label_axes = self._get_label_dynamic_axes()
+        output_spec = self._get_output_spec()
+        
+        return {
+            "input_names": base_names + label_names,
+            "output_names": ["logits"],
+            "dynamic_axes": {**base_axes, **label_axes, **output_spec},
+        }
+    
+    def _create_onnx_wrapper(self, core_model: nn.Module) -> nn.Module:
+        """
+        Create flexible wrapper that handles both modes.
+        The wrapper signature adapts based on input spec.
+        """
+        input_names = self._get_onnx_input_spec()["input_names"]
+        
+        class BiEncoderWrapper(nn.Module):
+            def __init__(self, core, param_names):
+                super().__init__()
+                self.core = core
+                self.param_names = param_names
+            
+            def forward(self, *args):
+                # Build kwargs from positional args
+                kwargs = dict(zip(self.param_names, args))
+                out = self.core(**kwargs)
+                return out.logits if hasattr(out, "logits") else out[0]
+        
+        return BiEncoderWrapper(core_model, input_names)
+    
+    def _prepare_onnx_batch(
+        self, 
+        batch: Dict[str, torch.Tensor], 
+        from_labels_embeddings: bool = False,
+        labels: Optional[List[str]] = None,
+        **export_kwargs
+    ) -> Tuple[tuple, Dict[str, Any]]:
+        """
+        Prepare batch for bi-encoder export with optional pre-computed embeddings.
+        
+        Args:
+            batch: Dummy batch
+            from_labels_embeddings: If True, use pre-computed embeddings mode
+            labels: Labels for embedding computation
+            **export_kwargs: Additional arguments
+            
+        Returns:
+            Tuple of (inputs, spec)
+        """
+        if from_labels_embeddings:
+            if not hasattr(self, "encode_labels"):
+                raise RuntimeError(
+                    "from_labels_embeddings=True requires encode_labels() method"
+                )
+            
+            # Compute embeddings
+            if labels is None:
+                labels = batch.get("labels", ["organization", "person", "country"])
+            labels_embeds = self.encode_labels(labels).to("cpu")
+            
+            # Build spec with embeddings
+            base_names = self._get_base_input_names()
+            embed_name = self._get_embedding_input_name()
+            
+            base_axes = self._get_base_dynamic_axes()
+            embed_axes = self._get_embedding_dynamic_axes()
+            output_spec = self._get_output_spec()
+            
+            spec = {
+                "input_names": base_names + [embed_name],
+                "output_names": ["logits"],
+                "dynamic_axes": {**base_axes, **embed_axes, **output_spec},
+            }
+            
+            # Build inputs
+            all_inputs = tuple(
+                labels_embeds if name == embed_name else batch[name]
+                for name in spec["input_names"]
+            )
+            
+            return all_inputs, spec
+        else:
+            # Use default spec (full bi-encoder)
+            return super()._prepare_onnx_batch(batch, **export_kwargs)
+        
 class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderSpanConfig 
     model_class = UniEncoderSpanModel
@@ -1451,61 +1723,41 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     data_collator_class = UniEncoderSpanDataCollator
     decoder_class = SpanDecoder
 
-    def export_to_onnx(
-        self,
-        save_dir: Union[str, Path],
-        onnx_filename: str = "model.onnx",
-        quantized_filename: str = "model_quantized.onnx",
-        quantize: bool = False,
-        opset: int = 19,
-    ) -> Dict[str, Optional[str]]:
-        self._check_onnx_export_preconditions()
-
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = save_dir / onnx_filename
-
-        batch = self._build_dummy_batch()
-        core = self.model.to("cpu").eval()
-
-        # Required inputs for span uni-encoder
-        all_inputs = (
-            batch["input_ids"],
-            batch["attention_mask"],
-            batch["words_mask"],
-            batch["text_lengths"],
-            batch["span_idx"],
-            batch["span_mask"],
-        )
-        input_names = [
-            "input_ids",
-            "attention_mask",
-            "words_mask",
-            "text_lengths",
-            "span_idx",
-            "span_mask",
-        ]
-        dynamic_axes = {
-            "input_ids": {0: "batch_size", 1: "sequence_length"},
-            "attention_mask": {0: "batch_size", 1: "sequence_length"},
-            "words_mask": {0: "batch_size", 1: "sequence_length"},
-            "text_lengths": {0: "batch_size", 1: "value"},
-            "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
-            "span_mask": {0: "batch_size", 1: "num_spans"},
-            # For UniEncoderSpanORTModel
-            "logits": {
-                0: "batch_size",
-                1: "sequence_length",
-                2: "num_spans",
-                3: "num_classes",
+    def _get_onnx_input_spec(self) -> Dict[str, Any]:
+        """Define ONNX input specification for UniEncoderSpan model."""
+        return {
+            "input_names": [
+                "input_ids",
+                "attention_mask",
+                "words_mask",
+                "text_lengths",
+                "span_idx",
+                "span_mask",
+            ],
+            "output_names": ["logits"],
+            "dynamic_axes": {
+                "input_ids": {0: "batch_size", 1: "sequence_length"},
+                "attention_mask": {0: "batch_size", 1: "sequence_length"},
+                "words_mask": {0: "batch_size", 1: "sequence_length"},
+                "text_lengths": {0: "batch_size", 1: "value"},
+                "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
+                "span_mask": {0: "batch_size", 1: "num_spans"},
+                "logits": {
+                    0: "batch_size",
+                    1: "sequence_length",
+                    2: "num_spans",
+                    3: "num_classes",
+                },
             },
         }
-
-        class _Wrapper(nn.Module):
-            def __init__(self, core_model):
+    
+    def _create_onnx_wrapper(self, core_model: nn.Module) -> nn.Module:
+        """Create wrapper for UniEncoderSpan ONNX export."""
+        class UniEncoderSpanWrapper(nn.Module):
+            def __init__(self, core):
                 super().__init__()
-                self.core = core_model
-
+                self.core = core
+            
             def forward(
                 self,
                 input_ids,
@@ -1523,28 +1775,9 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
                     span_idx=span_idx,
                     span_mask=span_mask,
                 )
-                logits = out.logits if hasattr(out, "logits") else out[0]
-                return logits
-
-        wrapper = _Wrapper(core)
-        self._run_torch_onnx_export(
-            wrapper,
-            all_inputs,
-            input_names,
-            ["logits"],
-            dynamic_axes,
-            onnx_path,
-            opset,
-        )
-
-        q_path = self._maybe_quantize_onnx(
-            onnx_path, save_dir / quantized_filename, quantize
-        )
-
-        return {
-            "onnx_path": str(onnx_path),
-            "quantized_path": str(q_path) if q_path is not None else None,
-        }
+                return out.logits if hasattr(out, "logits") else out[0]
+        
+        return UniEncoderSpanWrapper(core_model)
     
 class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderTokenConfig 
@@ -1554,49 +1787,37 @@ class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     data_collator_class = UniEncoderTokenDataCollator
     decoder_class = TokenDecoder
 
-    def export_to_onnx(
-        self,
-        save_dir: Union[str, Path],
-        onnx_filename: str = "model.onnx",
-        quantized_filename: str = "model_quantized.onnx",
-        quantize: bool = False,
-        opset: int = 19,
-    ) -> Dict[str, Optional[str]]:
-        self._check_onnx_export_preconditions()
-
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = save_dir / onnx_filename
-
-        batch = self._build_dummy_batch()
-        core = self.model.to("cpu").eval()
-
-        all_inputs = (
-            batch["input_ids"],
-            batch["attention_mask"],
-            batch["words_mask"],
-            batch["text_lengths"],
-        )
-        input_names = ["input_ids", "attention_mask", "words_mask", "text_lengths"]
-        dynamic_axes = {
-            "input_ids": {0: "batch_size", 1: "sequence_length"},
-            "attention_mask": {0: "batch_size", 1: "sequence_length"},
-            "words_mask": {0: "batch_size", 1: "sequence_length"},
-            "text_lengths": {0: "batch_size", 1: "value"},
-            # For UniEncoderTokenORTModel
-            "logits": {
-                0: "position",   # as in your original script
-                1: "batch_size",
-                2: "sequence_length",
-                3: "num_classes",
+    def _get_onnx_input_spec(self) -> Dict[str, Any]:
+        """Define ONNX input specification for UniEncoderToken model."""
+        return {
+            "input_names": [
+                "input_ids",
+                "attention_mask",
+                "words_mask",
+                "text_lengths",
+            ],
+            "output_names": ["logits"],
+            "dynamic_axes": {
+                "input_ids": {0: "batch_size", 1: "sequence_length"},
+                "attention_mask": {0: "batch_size", 1: "sequence_length"},
+                "words_mask": {0: "batch_size", 1: "sequence_length"},
+                "text_lengths": {0: "batch_size", 1: "value"},
+                "logits": {
+                    0: "position",
+                    1: "batch_size",
+                    2: "sequence_length",
+                    3: "num_classes",
+                },
             },
         }
-
-        class _Wrapper(nn.Module):
-            def __init__(self, core_model):
+    
+    def _create_onnx_wrapper(self, core_model: nn.Module) -> nn.Module:
+        """Create wrapper for UniEncoderToken ONNX export."""
+        class UniEncoderTokenWrapper(nn.Module):
+            def __init__(self, core):
                 super().__init__()
-                self.core = core_model
-
+                self.core = core
+            
             def forward(
                 self,
                 input_ids,
@@ -1610,29 +1831,9 @@ class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
                     words_mask=words_mask,
                     text_lengths=text_lengths,
                 )
-                logits = out.logits if hasattr(out, "logits") else out[0]
-                return logits
-
-        wrapper = _Wrapper(core)
-        self._run_torch_onnx_export(
-            wrapper,
-            all_inputs,
-            input_names,
-            ["logits"],
-            dynamic_axes,
-            onnx_path,
-            opset,
-        )
-
-        q_path = self._maybe_quantize_onnx(
-            onnx_path, save_dir / quantized_filename, quantize
-        )
-
-        return {
-            "onnx_path": str(onnx_path),
-            "quantized_path": str(q_path) if q_path is not None else None,
-        }
-    
+                return out.logits if hasattr(out, "logits") else out[0]
+        
+        return UniEncoderTokenWrapper(core_model)
 
 class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderSpanConfig 
@@ -1641,186 +1842,39 @@ class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     data_processor_class = BiEncoderSpanProcessor
     data_collator_class = BiEncoderSpanDataCollator
     decoder_class = SpanDecoder
-
-    def export_to_onnx(
-        self,
-        save_dir: Union[str, Path],
-        onnx_filename: str = "model.onnx",
-        quantized_filename: str = "model_quantized.onnx",
-        from_labels_embeddings: bool = False,
-        quantize: bool = False,
-        opset: int = 19,
-    ) -> Dict[str, Optional[str]]:
-        self._check_onnx_export_preconditions()
-
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = save_dir / onnx_filename
-
-        # Dummy labels so collator/encoder builds label representations
-        labels = ["organization", "person", "country"]
-        batch = self._build_dummy_batch(labels=labels)
-        core = self.model.to("cpu").eval()
-
-        if not from_labels_embeddings:
-            all_inputs = (
-                batch["input_ids"],
-                batch["attention_mask"],
-                batch["words_mask"],
-                batch["text_lengths"],
-                batch["span_idx"],
-                batch["span_mask"],
-                batch["labels_input_ids"],
-                batch["labels_attention_mask"],
-            )
-            input_names = [
-                "input_ids",
-                "attention_mask",
-                "words_mask",
-                "text_lengths",
-                "span_idx",
-                "span_mask",
-                "labels_input_ids",
-                "labels_attention_mask",
-            ]
-            dynamic_axes = {
-                "input_ids": {0: "batch_size", 1: "sequence_length"},
-                "attention_mask": {0: "batch_size", 1: "sequence_length"},
-                "words_mask": {0: "batch_size", 1: "sequence_length"},
-                "text_lengths": {0: "batch_size", 1: "value"},
-                "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
-                "span_mask": {0: "batch_size", 1: "num_spans"},
-                "labels_input_ids": {0: "num_labels", 1: "label_seq_length"},
-                "labels_attention_mask": {0: "num_labels", 1: "label_seq_length"},
-                "logits": {
-                    0: "batch_size",
-                    1: "sequence_length",
-                    2: "num_spans",
-                    3: "num_classes",
-                },
-            }
-
-            class _Wrapper(nn.Module):
-                def __init__(self, core_model):
-                    super().__init__()
-                    self.core = core_model
-
-                def forward(
-                    self,
-                    input_ids,
-                    attention_mask,
-                    words_mask,
-                    text_lengths,
-                    span_idx,
-                    span_mask,
-                    labels_input_ids,
-                    labels_attention_mask,
-                ):
-                    out = self.core(
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
-                        words_mask=words_mask,
-                        text_lengths=text_lengths,
-                        span_idx=span_idx,
-                        span_mask=span_mask,
-                        labels_input_ids=labels_input_ids,
-                        labels_attention_mask=labels_attention_mask,
-                    )
-                    logits = out.logits if hasattr(out, "logits") else out[0]
-                    return logits
-
-            wrapper = _Wrapper(core)
-
-        else:
-            if not hasattr(self, "encode_labels"):
-                raise RuntimeError(
-                    "from_labels_embeddings=True requires `encode_labels(labels)` "
-                    "to be implemented on the bi-encoder model."
-                )
-
-            labels_embeds = self.encode_labels(labels).to("cpu")
-            all_inputs = (
-                batch["input_ids"],
-                batch["attention_mask"],
-                batch["words_mask"],
-                batch["text_lengths"],
-                batch["span_idx"],
-                batch["span_mask"],
-                labels_embeds,
-            )
-            input_names = [
-                "input_ids",
-                "attention_mask",
-                "words_mask",
-                "text_lengths",
-                "span_idx",
-                "span_mask",
-                "labels_embeds",  
-            ]
-            dynamic_axes = {
-                "input_ids": {0: "batch_size", 1: "sequence_length"},
-                "attention_mask": {0: "batch_size", 1: "sequence_length"},
-                "words_mask": {0: "batch_size", 1: "sequence_length"},
-                "text_lengths": {0: "batch_size", 1: "value"},
-                "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
-                "span_mask": {0: "batch_size", 1: "num_spans"},
-                "labels_embeds": {0: "num_labels", 1: "hidden_size"},
-                "logits": {
-                    0: "batch_size",
-                    1: "sequence_length",
-                    2: "num_spans",
-                    3: "num_classes",
-                },
-            }
-
-            class _Wrapper(nn.Module):
-                def __init__(self, core_model):
-                    super().__init__()
-                    self.core = core_model
-
-                def forward(
-                    self,
-                    input_ids,
-                    attention_mask,
-                    words_mask,
-                    text_lengths,
-                    span_idx,
-                    span_mask,
-                    labels_embeds,
-                ):
-                    out = self.core(
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
-                        words_mask=words_mask,
-                        text_lengths=text_lengths,
-                        span_idx=span_idx,
-                        span_mask=span_mask,
-                        labels_embeds=labels_embeds,
-                    )
-                    logits = out.logits if hasattr(out, "logits") else out[0]
-                    return logits
-
-            wrapper = _Wrapper(core)
-
-        self._run_torch_onnx_export(
-            wrapper,
-            all_inputs,
-            input_names,
-            ["logits"],
-            dynamic_axes,
-            onnx_path,
-            opset,
-        )
-
-        q_path = self._maybe_quantize_onnx(
-            onnx_path, save_dir / quantized_filename, quantize
-        )
-
+    
+    def _get_base_input_names(self) -> List[str]:
+        """Base inputs for span-based bi-encoder."""
+        return [
+            "input_ids",
+            "attention_mask",
+            "words_mask",
+            "text_lengths",
+            "span_idx",
+            "span_mask",
+        ]
+    
+    def _get_base_dynamic_axes(self) -> Dict[str, Dict[int, str]]:
+        """Base dynamic axes for span-based bi-encoder."""
         return {
-            "onnx_path": str(onnx_path),
-            "quantized_path": str(q_path) if q_path is not None else None,
+            "input_ids": {0: "batch_size", 1: "sequence_length"},
+            "attention_mask": {0: "batch_size", 1: "sequence_length"},
+            "words_mask": {0: "batch_size", 1: "sequence_length"},
+            "text_lengths": {0: "batch_size", 1: "value"},
+            "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
+            "span_mask": {0: "batch_size", 1: "num_spans"},
         }
     
+    def _get_output_spec(self) -> Dict[str, Any]:
+        """Output specification for span-based model."""
+        return {
+            "logits": {
+                0: "batch_size",
+                1: "sequence_length",
+                2: "num_spans",
+                3: "num_classes",
+            },
+        }
 
 class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderTokenConfig 
@@ -1830,161 +1884,33 @@ class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     data_collator_class = BiEncoderTokenDataCollator
     decoder_class = TokenDecoder
 
-    def export_to_onnx(
-        self,
-        save_dir: Union[str, Path],
-        onnx_filename: str = "model.onnx",
-        quantized_filename: str = "model_quantized.onnx",
-        from_labels_embeddings: bool = False,
-        quantize: bool = False,
-        opset: int = 19,
-    ) -> Dict[str, Optional[str]]:
-        self._check_onnx_export_preconditions()
-
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = save_dir / onnx_filename
-
-        labels = ["organization", "person", "country"]
-        batch = self._build_dummy_batch(labels=labels)
-        core = self.model.to("cpu").eval()
-
-        if not from_labels_embeddings:
-            all_inputs = (
-                batch["input_ids"],
-                batch["attention_mask"],
-                batch["words_mask"],
-                batch["text_lengths"],
-                batch["labels_input_ids"],
-                batch["labels_attention_mask"],
-            )
-            input_names = [
-                "input_ids",
-                "attention_mask",
-                "words_mask",
-                "text_lengths",
-                "labels_input_ids",
-                "labels_attention_mask",
-            ]
-            dynamic_axes = {
-                "input_ids": {0: "batch_size", 1: "sequence_length"},
-                "attention_mask": {0: "batch_size", 1: "sequence_length"},
-                "words_mask": {0: "batch_size", 1: "sequence_length"},
-                "text_lengths": {0: "batch_size", 1: "value"},
-                "labels_input_ids": {0: "num_labels", 1: "label_seq_length"},
-                "labels_attention_mask": {0: "num_labels", 1: "label_seq_length"},
-                "logits": {
-                    0: "position",
-                    1: "batch_size",
-                    2: "sequence_length",
-                    3: "num_classes",
-                },
-            }
-
-            class _Wrapper(nn.Module):
-                def __init__(self, core_model):
-                    super().__init__()
-                    self.core = core_model
-
-                def forward(
-                    self,
-                    input_ids,
-                    attention_mask,
-                    words_mask,
-                    text_lengths,
-                    labels_input_ids,
-                    labels_attention_mask,
-                ):
-                    out = self.core(
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
-                        words_mask=words_mask,
-                        text_lengths=text_lengths,
-                        labels_input_ids=labels_input_ids,
-                        labels_attention_mask=labels_attention_mask,
-                    )
-                    logits = out.logits if hasattr(out, "logits") else out[0]
-                    return logits
-
-            wrapper = _Wrapper(core)
-        else:
-            if not hasattr(self, "encode_labels"):
-                raise RuntimeError(
-                    "from_labels_embeddings=True requires `encode_labels(labels)` "
-                    "to be implemented on the bi-encoder model."
-                )
-
-            labels_embeds = self.encode_labels(labels).to("cpu")
-            all_inputs = (
-                batch["input_ids"],
-                batch["attention_mask"],
-                batch["words_mask"],
-                batch["text_lengths"],
-                labels_embeds,
-            )
-            input_names = [
-                "input_ids",
-                "attention_mask",
-                "words_mask",
-                "text_lengths",
-                "labels_embeds",
-            ]
-            dynamic_axes = {
-                "input_ids": {0: "batch_size", 1: "sequence_length"},
-                "attention_mask": {0: "batch_size", 1: "sequence_length"},
-                "words_mask": {0: "batch_size", 1: "sequence_length"},
-                "text_lengths": {0: "batch_size", 1: "value"},
-                "labels_embeds": {0: "num_labels", 1: "hidden_size"},
-                "logits": {
-                    0: "position",
-                    1: "batch_size",
-                    2: "sequence_length",
-                    3: "num_classes",
-                },
-            }
-
-            class _Wrapper(nn.Module):
-                def __init__(self, core_model):
-                    super().__init__()
-                    self.core = core_model
-
-                def forward(
-                    self,
-                    input_ids,
-                    attention_mask,
-                    words_mask,
-                    text_lengths,
-                    labels_embeds,
-                ):
-                    out = self.core(
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
-                        words_mask=words_mask,
-                        text_lengths=text_lengths,
-                        labels_embeds=labels_embeds,
-                    )
-                    logits = out.logits if hasattr(out, "logits") else out[0]
-                    return logits
-
-            wrapper = _Wrapper(core)
-
-        self._run_torch_onnx_export(
-            wrapper,
-            all_inputs,
-            input_names,
-            ["logits"],
-            dynamic_axes,
-            onnx_path,
-            opset,
-        )
-
-        q_path = self._maybe_quantize_onnx(
-            onnx_path, save_dir / quantized_filename, quantize
-        )
-
+    def _get_base_input_names(self) -> List[str]:
+        """Base inputs for token-based bi-encoder."""
+        return [
+            "input_ids",
+            "attention_mask",
+            "words_mask",
+            "text_lengths",
+        ]
+    
+    def _get_base_dynamic_axes(self) -> Dict[str, Dict[int, str]]:
+        """Base dynamic axes for token-based bi-encoder."""
         return {
-            "onnx_path": str(onnx_path),
-            "quantized_path": str(q_path) if q_path is not None else None,
+            "input_ids": {0: "batch_size", 1: "sequence_length"},
+            "attention_mask": {0: "batch_size", 1: "sequence_length"},
+            "words_mask": {0: "batch_size", 1: "sequence_length"},
+            "text_lengths": {0: "batch_size", 1: "value"},
+        }
+    
+    def _get_output_spec(self) -> Dict[str, Any]:
+        """Output specification for token-based model."""
+        return {
+            "logits": {
+                0: "position",
+                1: "batch_size",
+                2: "sequence_length",
+                3: "num_classes",
+            },
         }
     
 class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
@@ -2214,10 +2140,20 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         quantize: bool = False,
         opset: int = 19,
     ) -> Dict[str, Optional[str]]:
+        """
+        ONNX export not supported for encoder-decoder models.
+        
+        Raises:
+            NotImplementedError: Always raised as this model type cannot be exported to ONNX
+        """
         raise NotImplementedError(
             "ONNX export is not supported for encoder-decoder GLiNER models "
             "(UniEncoderSpanDecoderGLiNER) because of the generative decoder head. "
-            "Export the encoder-only variant or add a dedicated export pipeline."
+            "The decoder requires iterative generation which is not suitable for "
+            "static ONNX graph export. Consider:\n"
+            "1. Export the encoder-only variant (UniEncoderSpanGLiNER)\n"
+            "2. Use PyTorch for inference with this model\n"
+            "3. Implement a custom ONNX pipeline with separate encoder/decoder exports"
         )
     
 class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
@@ -2399,75 +2335,59 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         
         return all_relations
 
-    def export_to_onnx(
-        self,
-        save_dir: Union[str, Path],
-        onnx_filename: str = "model.onnx",
-        quantized_filename: str = "model_quantized.onnx",
-        quantize: bool = False,
-        opset: int = 19,
-    ) -> Dict[str, Optional[str]]:
-        self._check_onnx_export_preconditions()
-
-        save_dir = Path(save_dir)
-        save_dir.mkdir(parents=True, exist_ok=True)
-        onnx_path = save_dir / onnx_filename
-
-        # Use dummy labels; collator will construct spans + relation candidates
-        batch = self._build_dummy_batch(labels=["head", "tail"])
-        core = self.model.to("cpu").eval()
-
-        all_inputs = (
-            batch["input_ids"],
-            batch["attention_mask"],
-            batch["words_mask"],
-            batch["text_lengths"],
-            batch["span_idx"],
-            batch["span_mask"],
-        )
-        input_names = [
-            "input_ids",
-            "attention_mask",
-            "words_mask",
-            "text_lengths",
-            "span_idx",
-            "span_mask",
-        ]
-        dynamic_axes = {
-            "input_ids": {0: "batch_size", 1: "sequence_length"},
-            "attention_mask": {0: "batch_size", 1: "sequence_length"},
-            "words_mask": {0: "batch_size", 1: "sequence_length"},
-            "text_lengths": {0: "batch_size", 1: "value"},
-            "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
-            "span_mask": {0: "batch_size", 1: "num_spans"},
-            # For UniEncoderSpanRelexORTModel
-            "logits": {
-                0: "batch_size",
-                1: "sequence_length",
-                2: "num_spans",
-                3: "num_ent_classes",
-            },
-            "rel_idx": {
-                0: "batch_size",
-                1: "num_pairs",
-                2: "pair_index",
-            },
-            "rel_logits": {
-                0: "batch_size",
-                1: "num_pairs",
-                2: "num_rel_classes",
-            },
-            "rel_mask": {
-                0: "batch_size",
-                1: "num_pairs",
+    def _get_onnx_input_spec(self) -> Dict[str, Any]:
+        """Define ONNX input specification for UniEncoderSpanRelex model."""
+        return {
+            "input_names": [
+                "input_ids",
+                "attention_mask",
+                "words_mask",
+                "text_lengths",
+                "span_idx",
+                "span_mask",
+            ],
+            "output_names": ["logits", "rel_idx", "rel_logits", "rel_mask"],
+            "dynamic_axes": {
+                "input_ids": {0: "batch_size", 1: "sequence_length"},
+                "attention_mask": {0: "batch_size", 1: "sequence_length"},
+                "words_mask": {0: "batch_size", 1: "sequence_length"},
+                "text_lengths": {0: "batch_size", 1: "value"},
+                "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
+                "span_mask": {0: "batch_size", 1: "num_spans"},
+                "logits": {
+                    0: "batch_size",
+                    1: "sequence_length",
+                    2: "num_spans",
+                    3: "num_ent_classes",
+                },
+                "rel_idx": {
+                    0: "batch_size",
+                    1: "num_pairs",
+                    2: "pair_index",
+                },
+                "rel_logits": {
+                    0: "batch_size",
+                    1: "num_pairs",
+                    2: "num_rel_classes",
+                },
+                "rel_mask": {
+                    0: "batch_size",
+                    1: "num_pairs",
+                },
             },
         }
-
-        class _Wrapper(nn.Module):
-            def __init__(self, core_model):
+    
+    def _get_onnx_export_kwargs(self) -> Dict[str, Any]:
+        """Provide default labels for relation extraction ONNX export."""
+        return {"labels": ["head", "tail"]}
+    
+    def _create_onnx_wrapper(self, core_model: nn.Module) -> nn.Module:
+        """Create wrapper for UniEncoderSpanRelex ONNX export."""
+        class UniEncoderSpanRelexWrapper(nn.Module):
+            def __init__(self, core):
                 super().__init__()
-                self.core = core_model
-
+                self.core = core
+            
             def forward(
                 self,
                 input_ids,
@@ -2485,33 +2405,10 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                     span_idx=span_idx,
                     span_mask=span_mask,
                 )
-                # GLiNERRelexOutput expected
-                logits = out.logits
-                rel_idx = out.rel_idx
-                rel_logits = out.rel_logits
-                rel_mask = out.rel_mask
-                return logits, rel_idx, rel_logits, rel_mask
-
-        wrapper = _Wrapper(core)
-        self._run_torch_onnx_export(
-            wrapper,
-            all_inputs,
-            input_names,
-            ["logits", "rel_idx", "rel_logits", "rel_mask"],
-            dynamic_axes,
-            onnx_path,
-            opset,
-        )
-
-        # Quantization for multi-output models is still fine (weights only)
-        q_path = self._maybe_quantize_onnx(
-            onnx_path, save_dir / quantized_filename, quantize
-        )
-
-        return {
-            "onnx_path": str(onnx_path),
-            "quantized_path": str(q_path) if q_path is not None else None,
-        }
+                # Return all outputs for relation extraction
+                return out.logits, out.rel_idx, out.rel_logits, out.rel_mask
+        
+        return UniEncoderSpanRelexWrapper(core_model)
 
 
 class GLiNER(nn.Module, PyTorchModelHubMixin):
@@ -2727,6 +2624,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # Delegate to the specific class's from_pretrained method
         return gliner_class.from_pretrained(
             model_id=model_id,
+            model_dir=model_dir,
             revision=revision,
             cache_dir=cache_dir,
             force_download=force_download,
@@ -2839,13 +2737,12 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         class_name = self.__class__.__name__
         
         type_mapping = {
-            "UniEncoderSpanGLiNER": "uni_encoder_span",
-            "UniEncoderTokenGLiNER": "uni_encoder_token",
-            "BiEncoderSpanGLiNER": "bi_encoder_span",
-            "BiEncoderTokenGLiNER": "bi_encoder_token",
-            "UniEncoderSpanDecoderGLiNER": "span_decoder",
-            "UniEncoderSpanRelexGLiNER": "span_relex",
-            "BiEncoderSpanRelexGLiNER": "bi_span_relex",
+            "UniEncoderSpanGLiNER": "gliner_uni_encoder_span",
+            "UniEncoderTokenGLiNER": "gliner_uni_encoder_token",
+            "BiEncoderSpanGLiNER": "gliner_bi_encoder_span",
+            "BiEncoderTokenGLiNER": "gliner_bi_encoder_token",
+            "UniEncoderSpanDecoderGLiNER": "gliner_uni_encoder_span_decoder",
+            "UniEncoderSpanRelexGLiNER": "gliner_uni_encoder_span_relex",
         }
         
         return type_mapping.get(class_name, "unknown")
