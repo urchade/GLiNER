@@ -12,7 +12,7 @@ import torch
 from torch.utils.data import DataLoader
 from huggingface_hub import PyTorchModelHubMixin, snapshot_download
 from torch import nn
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoTokenizer
 from safetensors import safe_open
 from safetensors.torch import save_file
 
@@ -51,7 +51,12 @@ from .modeling.base import (BaseModel,
                             UniEncoderSpanDecoderModel,
                             )
 from .infer_packing import InferencePackingConfig
-from .onnx.model import BaseORTModel, UniEncoderSpanORTModel, UniEncoderTokenORTModel, BiEncoderSpanORTModel, BiEncoderTokenORTModel, UniEncoderSpanRelexORTModel
+from .onnx.model import (BaseORTModel, 
+                         UniEncoderSpanORTModel, 
+                         UniEncoderTokenORTModel, 
+                         BiEncoderSpanORTModel, 
+                         BiEncoderTokenORTModel, 
+                         UniEncoderSpanRelexORTModel)
 from .utils import is_module_available
 
 if is_module_available("onnxruntime"):
@@ -461,11 +466,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             config_instance.class_token_index == -1 or config_instance.vocab_size == -1
         ):
             add_tokens = instance._get_special_tokens()
-            instance.resize_embeddings(add_tokens=add_tokens)
-
             if tokenizer is not None:
                 tokenizer.add_tokens(add_tokens, special_tokens=True)
-                
+            instance.resize_embeddings()
+
         # Move to device
         instance.model.to(map_location)
         
@@ -586,8 +590,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             if resize_token_embeddings and (
                 config.class_token_index == -1 or config.vocab_size == -1
             ):
-                instance.resize_embeddings(add_tokens=add_tokens)
                 instance.data_processor.transformer_tokenizer.add_tokens(add_tokens)
+                instance.resize_embeddings(add_tokens=add_tokens)
 
             # Load state dict
             state_dict = cls._load_state_dict(model_file, map_location)
@@ -1137,7 +1141,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         if (len(self.data_processor.transformer_tokenizer)!=self.config.vocab_size
                                                         and self.config.vocab_size!=-1):
             new_num_tokens = len(self.data_processor.transformer_tokenizer)
-            model_embeds = self.model.token_rep_layer.resize_token_embeddings(
+            self.model.token_rep_layer.resize_token_embeddings(
                 new_num_tokens, None
             )
 
@@ -2650,41 +2654,51 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
     def from_config(
         cls,
         config: Union[GLiNERConfig, str, Path, Dict],
-        **kwargs
+        cache_dir: Optional[Union[str, Path]] = None,
+        load_tokenizer: bool = True,
+        resize_token_embeddings: bool = True,
+        backbone_from_pretrained: bool = True,
+        compile_torch_model: bool = False,
+        map_location: str = "cpu",
+        # Config overrides
+        max_length: Optional[int] = None,
+        max_width: Optional[int] = None,
+        post_fusion_schema: Optional[str] = None,
+        _attn_implementation: Optional[str] = None,
+        **model_kwargs,
     ):
-        """
-        Create a GLiNER model from configuration.
+        """Create a GLiNER model from configuration."""
         
-        Args:
-            config: Model configuration (GLiNERConfig, path, or dict)
-            **kwargs: Additional arguments for model initialization
-            
-        Returns:
-            Appropriate GLiNER model instance
-            
-        Examples:
-            >>> config = GLiNERConfig(model_name="microsoft/deberta-v3-small")
-            >>> model = GLiNER.from_config(config)
-            
-            >>> model = GLiNER.from_config("path/to/config.json")
-        """
         # Load config if needed
         if isinstance(config, (str, Path)):
             config_path = Path(config)
             if config_path.exists():
                 with open(config_path, "r") as f:
                     config_dict = json.load(f)
-                config = GLiNERConfig(**config_dict)
+                config_ = GLiNERConfig(**config_dict)
             else:
                 raise FileNotFoundError(f"Config file not found: {config}")
         elif isinstance(config, dict):
-            config = GLiNERConfig(**config)
+            config_ = GLiNERConfig(**config)
         
         # Determine the appropriate class
-        gliner_class = cls._get_gliner_class(config)
-
-        # Create instance
-        return gliner_class(config, **kwargs)
+        gliner_class = cls._get_gliner_class(config_)
+        
+        # Delegate to that class's load_from_config
+        return gliner_class.load_from_config(
+            config=config,
+            cache_dir=cache_dir,
+            load_tokenizer=load_tokenizer,
+            resize_token_embeddings=resize_token_embeddings,
+            backbone_from_pretrained=backbone_from_pretrained,
+            compile_torch_model=compile_torch_model,
+            map_location=map_location,
+            max_length=max_length,
+            max_width=max_width,
+            post_fusion_schema=post_fusion_schema,
+            _attn_implementation=_attn_implementation,
+            **model_kwargs,
+        )
     
     @property
     def model_map(self) -> Dict[str, Dict[str, Any]]:
