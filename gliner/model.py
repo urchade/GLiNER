@@ -2797,32 +2797,32 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             Dictionary mapping model types to their classes and descriptions
         """
         return {
-            "uni_encoder_span": {
+            "gliner_uni_encoder_span": {
                 "class": UniEncoderSpanGLiNER,
                 "description": "Standard span-based NER with single encoder",
                 "config": {"span_mode": "span_level", "labels_encoder": None, "labels_decoder": None, "relations_layer": None},
             },
-            "uni_encoder_token": {
+            "gliner_uni_encoder_token": {
                 "class": UniEncoderTokenGLiNER,
                 "description": "Token-level NER with single encoder",
                 "config": {"span_mode": "token_level", "labels_encoder": None, "labels_decoder": None, "relations_layer": None},
             },
-            "bi_encoder_span": {
+            "gliner_bi_encoder_span": {
                 "class": BiEncoderSpanGLiNER,
                 "description": "Span-based NER with separate text and label encoders",
                 "config": {"span_mode": "span_level", "labels_encoder": "required", "labels_decoder": None, "relations_layer": None},
             },
-            "bi_encoder_token": {
+            "gliner_bi_encoder_token": {
                 "class": BiEncoderTokenGLiNER,
                 "description": "Token-level NER with separate text and label encoders",
                 "config": {"span_mode": "token_level", "labels_encoder": "required", "labels_decoder": None, "relations_layer": None},
             },
-            "span_decoder": {
+            "gliner_uni_encoder_span_decoder": {
                 "class": UniEncoderSpanDecoderGLiNER,
                 "description": "Span-based NER with label generation decoder",
                 "config": {"span_mode": "span_level", "labels_decoder": "required", "relations_layer": None},
             },
-            "span_relex": {
+            "gliner_uni_encoder_span_relex": {
                 "class": UniEncoderSpanRelexGLiNER,
                 "description": "Joint entity and relation extraction with single encoder",
                 "config": {"span_mode": "span_level", "labels_encoder": None, "relations_layer": "required"},
