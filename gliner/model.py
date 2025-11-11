@@ -1137,13 +1137,22 @@ class BaseEncoderGLiNER(BaseGLiNER):
         self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
         return self.data_processor
 
-    def resize_embeddings(self):
+    def set_class_indices(self):
+        self.config.class_token_index = (
+            len(self.data_processor.transformer_tokenizer) - 3
+        )
+
+    def resize_embeddings(self, set_class_token_index=True):
+        if set_class_token_index:
+            self.set_class_indices()
+
         if (len(self.data_processor.transformer_tokenizer)!=self.config.vocab_size
                                                         and self.config.vocab_size!=-1):
             new_num_tokens = len(self.data_processor.transformer_tokenizer)
-            self.model.token_rep_layer.resize_token_embeddings(
+            model_embeds = self.model.token_rep_layer.resize_token_embeddings(
                 new_num_tokens, None
             )
+            self.config.vocab_size = model_embeds.num_embeddings
 
     def prepare_inputs(self, texts: List[str]):
         """
@@ -2105,13 +2114,35 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
         return self.data_processor
     
+    def _get_special_tokens(self):
+        """
+        Get special tokens to add to tokenizer.
+        Can be overridden by child classes.
+        
+        Returns:
+            List of special tokens
+        """
+        tokens = [self.config.ent_token, self.config.sep_token, self.config.rel_token]
+        return tokens
+    
+    def set_class_indices(self):
+        self.config.class_token_index = (
+            len(self.data_processor.transformer_tokenizer) - 3
+        )
+
+        self.config.rel_token_index = (
+            len(self.data_processor.transformer_tokenizer) - 1
+        )
+
     @torch.no_grad()
     def inference(
         self,
         texts,
         labels,
+        relations,
         flat_ner=True,
         threshold=0.5,
+        relation_threshold=None,
         multi_label=False,
         batch_size=8,
         packing_config: Optional[InferencePackingConfig] = None,
@@ -2121,12 +2152,14 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         Predict entities and relations.
         
         Args:
-            texts: Input texts
-            labels: Entity type labels
-            flat_ner: Whether to use flat NER
-            threshold: Confidence threshold
+            texts: Input texts (str or List[str])
+            labels: Entity type labels (List[str])
+            relations: Relation type labels (List[str])
+            flat_ner: Whether to use flat NER (no nested entities)
+            threshold: Confidence threshold for entities
+            relation_threshold: Confidence threshold for relations (defaults to threshold)
             multi_label: Allow multiple labels per span
-            batch_size: Batch size
+            batch_size: Batch size for processing
             packing_config: Inference packing configuration
             return_relations: Whether to return relation predictions
             
@@ -2137,6 +2170,13 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         
         if isinstance(texts, str):
             texts = [texts]
+        
+        if relation_threshold is None:
+            relation_threshold = threshold
+        
+        # Prepare entity and relation types
+        entity_types = list(dict.fromkeys(labels))
+        relation_types = list(dict.fromkeys(relations))
         
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
         input_x = self.prepare_base_input(tokens)
@@ -2150,19 +2190,34 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             return_rel_id_to_classes=True,
             prepare_labels=False,
         )
+        
+        def collate_fn(batch):
+            batch_out = collator(
+                batch, 
+                entity_types=entity_types,
+                relation_types=relation_types
+            )
+            return batch_out
+        
         data_loader = torch.utils.data.DataLoader(
-            input_x, batch_size=batch_size, shuffle=False, collate_fn=collator
+            input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
         )
         
         active_packing = packing_config if packing_config is not None else self._inference_packing_config
         
         all_entity_outputs = []
         all_relation_outputs = []
+        all_id_to_classes = []
+        all_rel_id_to_classes = []
         
         for batch in data_loader:
             if not self.onnx_model:
                 batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v 
                         for k, v in batch.items()}
+            
+            # Store id_to_classes before model forward pass
+            batch_id_to_classes = batch.get("id_to_classes", [])
+            batch_rel_id_to_classes = batch.get("rel_id_to_classes", [])
             
             model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
             model_output = self.model(**model_inputs, threshold=threshold)
@@ -2181,14 +2236,26 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 multi_label=multi_label,
             )
             all_entity_outputs.extend(decoded_entities)
+            all_id_to_classes.extend(batch_id_to_classes)
+            all_rel_id_to_classes.extend(batch_rel_id_to_classes)
             
-            # Store relations if available
+            # Store relation outputs if available
             if return_relations and hasattr(model_output, 'rel_logits') and model_output.rel_logits is not None:
-                all_relation_outputs.append({
-                    'rel_idx': model_output.rel_idx,
-                    'rel_logits': model_output.rel_logits,
-                    'rel_mask': model_output.rel_mask,
-                })
+                rel_logits = model_output.rel_logits
+                if not isinstance(rel_logits, torch.Tensor):
+                    rel_logits = torch.from_numpy(rel_logits)
+                
+                for b in range(len(batch["tokens"])):
+                    all_relation_outputs.append({
+                        'rel_adj': model_output.rel_adj[b] if hasattr(model_output, 'rel_adj') else None,
+                        'rel_logits': rel_logits[b],
+                        'entities': decoded_entities[b],
+                        'rel_id_to_class': batch_rel_id_to_classes[b] if b < len(batch_rel_id_to_classes) else {},
+                    })
+            else:
+                # Append empty relation outputs for each batch item
+                for _ in range(len(batch["tokens"])):
+                    all_relation_outputs.append(None)
         
         # Convert entities to standard format
         all_entities = []
@@ -2214,50 +2281,118 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         if return_relations:
             # Process relations
             all_relations = self._process_relations(
-                all_relation_outputs, all_entities, threshold
+                all_relation_outputs, 
+                all_start_token_idx_to_text_idx,
+                all_end_token_idx_to_text_idx,
+                relation_threshold
             )
             return all_entities, all_relations
         
         return all_entities
     
-    def _process_relations(self, relation_outputs, all_entities, threshold=0.5):
-        """Process relation predictions into readable format."""
+    def _process_relations(
+        self, 
+        relation_outputs, 
+        all_start_token_idx_to_text_idx,
+        all_end_token_idx_to_text_idx,
+        threshold=0.5
+    ):
+        """
+        Process relation predictions into readable format.
+        
+        Args:
+            relation_outputs: List of relation output dicts per example
+            all_start_token_idx_to_text_idx: Token to text index mappings (start)
+            all_end_token_idx_to_text_idx: Token to text index mappings (end)
+            threshold: Confidence threshold for relations
+            
+        Returns:
+            List of relation lists, one per example
+        """
         all_relations = []
         
-        for rel_output in relation_outputs:
+        for i, rel_output in enumerate(relation_outputs):
             if rel_output is None:
                 all_relations.append([])
                 continue
             
-            rel_idx = rel_output['rel_idx']  # (B, P, 2)
-            rel_logits = rel_output['rel_logits']  # (B, P, C)
-            rel_mask = rel_output['rel_mask']  # (B, P)
+            relations = []
+            entities_list = rel_output['entities']  # Token-level entities
+            rel_logits = rel_output['rel_logits']  # (E, E, C) where E is num entities
+            rel_id_to_class = rel_output['rel_id_to_class']
             
-            batch_relations = []
-            for b in range(rel_idx.size(0)):
-                relations = []
-                for p in range(rel_idx.size(1)):
-                    if not rel_mask[b, p]:
+            if entities_list is None or len(entities_list) == 0:
+                all_relations.append([])
+                continue
+            
+            num_entities = len(entities_list)
+            
+            # Build entity index mapping (token indices to entity info)
+            entity_map = {}
+            for ent_idx, (start_tok, end_tok, ent_type, ent_score) in enumerate(entities_list):
+                entity_map[ent_idx] = {
+                    'start_token': start_tok,
+                    'end_token': end_tok,
+                    'type': ent_type,
+                    'score': ent_score,
+                }
+            
+            # Process adjacency matrix if available
+            rel_adj = rel_output.get('rel_adj')
+            
+            # Iterate through potential entity pairs
+            for head_idx in range(num_entities):
+                for tail_idx in range(num_entities):
+                    if head_idx == tail_idx:
                         continue
                     
-                    head_idx = rel_idx[b, p, 0].item()
-                    tail_idx = rel_idx[b, p, 1].item()
+                    # Check if there's a relation (from adjacency matrix or logits)
+                    has_relation = True
+                    if rel_adj is not None:
+                        if not isinstance(rel_adj, torch.Tensor):
+                            rel_adj = torch.tensor(rel_adj)
+                        has_relation = rel_adj[head_idx, tail_idx] > 0
                     
-                    # Get relation type with highest score
-                    scores = torch.sigmoid(rel_logits[b, p])
+                    if not has_relation:
+                        continue
+                    
+                    # Get relation scores
+                    if isinstance(rel_logits, torch.Tensor):
+                        scores = torch.sigmoid(rel_logits[head_idx, tail_idx])
+                    else:
+                        scores = torch.sigmoid(torch.tensor(rel_logits[head_idx, tail_idx]))
+                    
                     max_score, max_idx = scores.max(dim=0)
                     
                     if max_score >= threshold:
+                        head_entity = entity_map[head_idx]
+                        tail_entity = entity_map[tail_idx]
+                        
+                        # Convert to text indices
+                        start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
+                        end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+                        
+                        rel_type_id = max_idx.item() + 1  # Convert 0-based to 1-based
+                        rel_type = rel_id_to_class.get(rel_type_id, f"REL_{rel_type_id}")
+                        
                         relations.append({
-                            'head': head_idx,
-                            'tail': tail_idx,
-                            'relation': max_idx.item(),
+                            'head': {
+                                'start': start_token_idx_to_text_idx[head_entity['start_token']],
+                                'end': end_token_idx_to_text_idx[head_entity['end_token']],
+                                'type': head_entity['type'],
+                                'entity_idx': head_idx,
+                            },
+                            'tail': {
+                                'start': start_token_idx_to_text_idx[tail_entity['start_token']],
+                                'end': end_token_idx_to_text_idx[tail_entity['end_token']],
+                                'type': tail_entity['type'],
+                                'entity_idx': tail_idx,
+                            },
+                            'relation': rel_type,
                             'score': max_score.item(),
                         })
-                
-                batch_relations.append(relations)
             
-            all_relations.extend(batch_relations)
+            all_relations.append(relations)
         
         return all_relations
 

@@ -362,10 +362,9 @@ class TokenDataCollator(BaseTokenCollator):
         return self._filter_none_values(model_input)
 
 
-class RelationExtractionSpanDataCollator(BaseTokenCollator):
+class RelationExtractionSpanDataCollator(BaseSpanCollator):
     """
     Data collator for RelationExtractionSpanProcessor.
-    
     Handles joint entity and relation extraction at span level.
     Produces both entity labels and relation adjacency matrices.
     
@@ -405,11 +404,52 @@ class RelationExtractionSpanDataCollator(BaseTokenCollator):
         )
         self.return_rel_id_to_classes = return_rel_id_to_classes
     
+    def collate_batch(
+        self,
+        input_x: List[Dict[str, Any]],
+        entity_types: Optional[Union[List[str], List[List[str]]]] = None,
+        relation_types: Optional[Union[List[str], List[List[str]]]] = None,
+        ner_negatives: Optional[List[str]] = None,
+        rel_negatives: Optional[List[str]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Collate raw batch data for relation extraction.
+        
+        Args:
+            input_x: List of input examples.
+            entity_types: Optional entity type specifications.
+            relation_types: Optional relation type specifications.
+            ner_negatives: Optional negative entity types for sampling.
+            rel_negatives: Optional negative relation types for sampling.
+            **kwargs: Additional arguments.
+            
+        Returns:
+            Collated raw batch with entity and relation information.
+        """
+        if not self.data_processor:
+            raise ValueError("data_processor must be provided for collate_batch")
+        
+        # Call processor's collate_raw_batch with both entity and relation types
+        raw_batch = self.data_processor.collate_raw_batch(
+            input_x,
+            entity_types=entity_types,
+            relation_types=relation_types,
+            ner_negatives=ner_negatives,
+            rel_negatives=rel_negatives,
+            key='ner',
+            **kwargs
+        )
+        
+        return raw_batch
+    
     def __call__(
         self, 
         input_x: List[Dict[str, Any]], 
         entity_types: Optional[Union[List[str], List[List[str]]]] = None,
         relation_types: Optional[Union[List[str], List[List[str]]]] = None,
+        ner_negatives: Optional[List[str]] = None,
+        rel_negatives: Optional[List[str]] = None,
         **kwargs
     ) -> Dict[str, Any]:
         """
@@ -420,30 +460,37 @@ class RelationExtractionSpanDataCollator(BaseTokenCollator):
                 and 'relations' fields.
             entity_types: Optional entity type specifications.
             relation_types: Optional relation type specifications.
+            ner_negatives: Optional negative entity types for sampling.
+            rel_negatives: Optional negative relation types for sampling.
             **kwargs: Additional arguments for collation.
-        
+            
         Returns:
             Model-ready batch with entity spans, relation adjacency matrix,
             and relation classification targets.
         """
+        # Collate raw batch with both entity and relation types
         raw_batch = self.collate_batch(
             input_x, 
             entity_types=entity_types,
+            relation_types=relation_types,
+            ner_negatives=ner_negatives,
+            rel_negatives=rel_negatives,
             **kwargs
         )
+        
         model_input = self.collate_function(
             raw_batch, 
-            prepare_labels=self.prepare_labels, 
+            prepare_labels=self.prepare_labels,
+            prepare_entities=True,
             **kwargs
         )
         
         self._add_span_fields(model_input, raw_batch)
         
-        # Add relation-specific fields
         if self.prepare_labels:
             model_input.update({
-                "adj_matrix": model_input.get('adj_matrix'),
-                "rel_matrix": model_input.get('rel_matrix')
+                "adj_matrix": raw_batch.get('adj_matrix'),
+                "rel_matrix": raw_batch.get('rel_matrix')
             })
         
         self._add_conditional_returns(model_input, raw_batch)
@@ -451,7 +498,22 @@ class RelationExtractionSpanDataCollator(BaseTokenCollator):
         if self.return_rel_id_to_classes:
             model_input['rel_id_to_classes'] = raw_batch.get('rel_id_to_classes')
         
+        if 'rel_class_to_ids' in raw_batch:
+            model_input['rel_class_to_ids'] = raw_batch['rel_class_to_ids']
+        
         return self._filter_none_values(model_input)
+    
+    def _filter_none_values(self, batch_dict: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Remove None values from batch dictionary.
+        
+        Args:
+            batch_dict: Dictionary potentially containing None values.
+            
+        Returns:
+            Dictionary with None values removed.
+        """
+        return {k: v for k, v in batch_dict.items() if v is not None}
 
 class UniEncoderSpanDataCollator(SpanDataCollator):
     """
