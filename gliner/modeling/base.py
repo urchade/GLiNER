@@ -1091,7 +1091,7 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
             if hasattr(self, "pair_rep_layer"):
                 pair_rep = torch.cat((head_rep, tail_rep), dim=-1)
                 pair_rep = self.pair_rep_layer(pair_rep)
-                full_rel_logits = torch.einsum("BEED,BCD->BEEC", pair_rep, rel_prompts_embedding)
+                full_rel_logits = torch.einsum("BEND,BCD->BENC", pair_rep, rel_prompts_embedding)
 
             elif hasattr(self, "triples_score_layer"):
                 h = head_rep.unsqueeze(3).expand(B, E, E, C_rel, D)

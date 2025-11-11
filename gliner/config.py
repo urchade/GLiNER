@@ -258,6 +258,8 @@ class GLiNERConfig(BaseGLiNERConfig):
             return "encoder-decoder"
         elif self.labels_encoder:
             return 'bi-encoder'
+        elif self.relations_layer is not None:
+            return 'uni-encoder-span-relex'
         elif span_mode_normalized == 'token-level':
             return 'uni-encoder-token'
         else:

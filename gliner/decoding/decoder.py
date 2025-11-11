@@ -626,6 +626,9 @@ class SpanRelexDecoder(BaseSpanDecoder):
         self,
         model_output,
         spans: List[List[tuple]],
+        rel_idx: Optional[torch.Tensor],
+        rel_logits: Optional[torch.Tensor],
+        rel_mask: Optional[torch.Tensor],
         rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
         threshold: float,
         batch_size: int
@@ -652,18 +655,11 @@ class SpanRelexDecoder(BaseSpanDecoder):
         relations = [[] for _ in range(batch_size)]
         
         # Check if relation outputs are available
-        if not hasattr(model_output, 'rel_idx') or model_output.rel_idx is None:
+        if rel_idx is None or rel_logits is None:
             return relations
-        if not hasattr(model_output, 'rel_logits') or model_output.rel_logits is None:
-            return relations
-        
-        rel_idx = model_output.rel_idx          # (B, N, 2) - head/tail indices
-        rel_logits = model_output.rel_logits    # (B, N, C_rel) - relation scores
         
         # Get or create relation mask
-        if hasattr(model_output, 'rel_mask') and model_output.rel_mask is not None:
-            rel_mask = model_output.rel_mask
-        else:
+        if rel_mask is None:
             # Create default mask (all valid)
             rel_mask = torch.ones(
                 rel_idx[..., 0].shape, 
@@ -722,6 +718,9 @@ class SpanRelexDecoder(BaseSpanDecoder):
         tokens: List[List[str]],
         id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
         model_output,
+        rel_idx = None,
+        rel_logits = None,
+        rel_mask = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
@@ -754,7 +753,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         spans = super().decode(
             tokens=tokens,
             id_to_classes=id_to_classes,
-            model_output=model_output.logits,  # Pass just the logits tensor
+            model_output=model_output,  # Pass just the logits tensor
             flat_ner=flat_ner,
             threshold=threshold,
             multi_label=multi_label,
@@ -767,6 +766,9 @@ class SpanRelexDecoder(BaseSpanDecoder):
         if rel_id_to_classes is not None:
             relations = self._decode_relations(
                 model_output=model_output,
+                rel_idx=rel_idx,
+                rel_logits=rel_logits,
+                rel_mask=rel_mask,
                 spans=spans,
                 rel_id_to_classes=rel_id_to_classes,
                 threshold=threshold,
