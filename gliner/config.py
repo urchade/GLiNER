@@ -6,7 +6,7 @@ from transformers.models.auto import CONFIG_MAPPING
 class BaseGLiNERConfig(PretrainedConfig):
     """Base configuration class for all GLiNER models."""
     is_composition = True
-    
+    model_type = None
     def __init__(self, 
                  model_name: str = "microsoft/deberta-v3-small",
                  name: str = "gliner",
@@ -79,10 +79,8 @@ class UniEncoderSpanConfig(UniEncoderConfig):
         super().__init__(**kwargs)
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanConfig requires span_mode != 'token-level'")
-    
-    @property
-    def model_type(self):
-        return "uni-encoder-span"
+
+        self.model_type = "uni-encoder-span"
 
 
 class UniEncoderTokenConfig(UniEncoderConfig):
@@ -91,10 +89,7 @@ class UniEncoderTokenConfig(UniEncoderConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = 'token-level'
-    
-    @property
-    def model_type(self):
-        return "uni-encoder-token"
+        self.model_type = "uni-encoder-token"
 
 
 class UniEncoderSpanDecoderConfig(UniEncoderConfig):
@@ -123,13 +118,9 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.full_decoder_context = full_decoder_context
         self.decoder_loss_coef = decoder_loss_coef
         self.span_loss_coef = span_loss_coef
-        
+        self.model_type = "encoder-decoder"
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token-level'")
-    
-    @property
-    def model_type(self):
-        return "encoder-decoder"
 
 
 class UniEncoderSpanRelexConfig(UniEncoderConfig):
@@ -149,14 +140,9 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         self.embed_rel_token = embed_rel_token
         self.rel_token_index = rel_token_index
         self.rel_token = rel_token
-        
+        self.model_type = "uni-encoder-span-relex"
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token-level'")
-    
-    @property
-    def model_type(self):
-        return "uni-encoder-span-relex"
-
 
 class BiEncoderConfig(BaseGLiNERConfig):
     """Base configuration for bi-encoder GLiNER models."""
@@ -184,11 +170,7 @@ class BiEncoderSpanConfig(BiEncoderConfig):
         super().__init__(**kwargs)
         if self.span_mode == 'token-level':
             raise ValueError("BiEncoderSpanConfig requires span_mode != 'token-level'")
-    
-    @property
-    def model_type(self):
-        return "bi-encoder-span"
-
+        self.model_type = "bi-encoder-span"
 
 class BiEncoderTokenConfig(BiEncoderConfig):
     """Configuration for bi-encoder token-based GLiNER model."""
@@ -196,11 +178,7 @@ class BiEncoderTokenConfig(BiEncoderConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = 'token-level'
-    
-    @property
-    def model_type(self):
-        return "bi-encoder-token"
-
+        self.model_type = "bi-encoder-token"
 
 # Legacy GLiNERConfig for backward compatibility
 class GLiNERConfig(BaseGLiNERConfig):
@@ -249,7 +227,6 @@ class GLiNERConfig(BaseGLiNERConfig):
         self.rel_token_index = rel_token_index
         self.rel_token = rel_token
     
-    @property
     def model_type(self):
         """Auto-detect model type based on configuration."""
         span_mode_normalized = self.span_mode.replace('_', '-') if self.span_mode else None

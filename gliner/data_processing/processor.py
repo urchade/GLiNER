@@ -748,6 +748,25 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         num_tokens = len(tokens)
         spans_idx = prepare_span_idx(num_tokens, max_width)
         
+        if ner is not None and len(ner) > 0:
+            indexed_ner = list(enumerate(ner))
+            indexed_ner_sorted = sorted(indexed_ner, key=lambda x: (x[1][0], x[1][1]))
+            
+            ner_sorted = [entity for _, entity in indexed_ner_sorted]
+            
+            old_to_new_idx = {old_idx: new_idx for new_idx, (old_idx, _) in enumerate(indexed_ner_sorted)}
+            
+            if relations is not None and len(relations) > 0:
+                updated_relations = []
+                for head_idx, tail_idx, rel_type in relations:
+                    if head_idx in old_to_new_idx and tail_idx in old_to_new_idx:
+                        new_head_idx = old_to_new_idx[head_idx]
+                        new_tail_idx = old_to_new_idx[tail_idx]
+                        updated_relations.append((new_head_idx, new_tail_idx, rel_type))
+                relations = sorted(updated_relations, key=lambda x: (x[0], x[1]))
+            
+            ner = ner_sorted
+            
         # Process entity labels
         dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
         span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
@@ -775,12 +794,9 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 head_idx, tail_idx, rel_type = rel
                 
                 # Check if both entities are valid and map to span indices
-                if head_idx in entity_to_span_idx and tail_idx in entity_to_span_idx:
-                    span_head = entity_to_span_idx[head_idx]
-                    span_tail = entity_to_span_idx[tail_idx]
-                    
+                if head_idx in entity_to_span_idx and tail_idx in entity_to_span_idx:                    
                     if rel_type in rel_classes_to_id:
-                        rel_idx_list.append([span_head, span_tail])
+                        rel_idx_list.append([head_idx, tail_idx])
                         rel_label_list.append(rel_classes_to_id[rel_type])
         
         # Convert to tensors
@@ -836,9 +852,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         B = len(batch['tokens'])
         entity_label = batch['span_label']
         
-        entities_list = batch['entities']
-        
-        max_En = torch.max(torch.sum(entity_label > 0, dim=-1)).item()
+        batch_ents = torch.sum(entity_label > 0, dim=-1)
+        max_En = torch.max(batch_ents).item()
         
         # Get the actual relation class count
         rel_class_to_ids = batch['rel_class_to_ids']
@@ -853,17 +868,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
         rel_matrix = torch.zeros(B, max_Rn, C, dtype=torch.float)
 
-        for i in range(B):
-            seq_len = batch['seq_length'][i].item()
-            entities = entities_list[i]
-            
-            # Filter valid entities (within sequence length)
-            valid_entities = [ent for ent in entities if ent[1] <= seq_len - 1]
-            N = len(valid_entities)
-
-            valid_ent_mask = [ent[1] <= seq_len - 1 for ent in entities]
-            valid_ent_old_indices = [idx for idx, is_valid in enumerate(valid_ent_mask) if is_valid]
-            new_ent_idx = {old: new for new, old in enumerate(valid_ent_old_indices)}
+        for i in range(B):            
+            N = batch_ents[i]
 
             adj = torch.zeros(N, N)
             pos_pairs = []
@@ -876,15 +882,10 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                     e1 = rel_idx_i[k, 0].item()
                     e2 = rel_idx_i[k, 1].item()
                     
-                    # Map span indices back to entity indices
-                    # This assumes the span indices in rel_idx correspond to entity positions
-                    if e1 < len(entities) and e2 < len(entities):
-                        if e1 in new_ent_idx and e2 in new_ent_idx:
-                            new_e1 = new_ent_idx[e1]
-                            new_e2 = new_ent_idx[e2]
-                            adj[new_e1, new_e2] = 1.0
-                            class_id = rel_label_i[k].item()
-                            pos_pairs.append(class_id)
+                    if e1 < N and e2 < N:
+                        adj[e1, e2] = 1.0
+                        class_id = rel_label_i[k].item()
+                        pos_pairs.append(class_id)
 
             adj_matrix[i, :N, :N] = adj
 

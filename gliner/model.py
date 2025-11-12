@@ -1136,7 +1136,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
     def set_class_indices(self):
         self.config.class_token_index = (
-            len(self.data_processor.transformer_tokenizer) - 3
+            len(self.data_processor.transformer_tokenizer) - 2
         )
 
     def resize_embeddings(self, set_class_token_index=True):

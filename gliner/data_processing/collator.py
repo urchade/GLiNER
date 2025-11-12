@@ -487,12 +487,6 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
         
         self._add_span_fields(model_input, raw_batch)
         
-        if self.prepare_labels:
-            model_input.update({
-                "adj_matrix": raw_batch.get('adj_matrix'),
-                "rel_matrix": raw_batch.get('rel_matrix')
-            })
-        
         self._add_conditional_returns(model_input, raw_batch)
         
         if self.return_rel_id_to_classes:

@@ -208,7 +208,6 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         )
 
         prompts_embedding = self.prompt_rep_layer(prompts_embedding) 
-
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
 
         loss = None
@@ -226,9 +225,9 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         return output
 
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
-             alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1.0, masking="none",  **kwargs):
-
+             alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, 
+             label_smoothing: float = 0.0, reduction: str = 'sum', negatives=1.0, 
+             masking="none",  **kwargs):
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
 
@@ -238,7 +237,8 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives=negatives, masking=masking)
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, 
+                                                    negatives=negatives, masking=masking)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -919,17 +919,10 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         return loss
     
 
-class UniEncoderSpanRelexModel(BaseUniEncoderModel):
+class UniEncoderSpanRelexModel(UniEncoderSpanModel):
     def __init__(self, config, from_pretrained = False, cache_dir: Optional[Union[str, Path]] = None):
         super().__init__(config, from_pretrained, cache_dir)
-        
-        self.span_rep_layer = SpanRepLayer(span_mode = config.span_mode, 
-                                          hidden_size = config.hidden_size, 
-                                          max_width = config.max_width,
-                                          dropout = config.dropout)
-        
-        self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
-        
+
         # Relation extraction components
         if config.relations_layer is not None:
             self.relations_rep_layer = RelationsRepLayer(in_dim=config.hidden_size, 
@@ -1038,7 +1031,7 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
 
         # Get token embeddings for relation labels
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **encoder_kwargs)
-        
+
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = \
             self._extract_prompt_features_and_word_embeddings(
                 token_embeds, input_ids, attention_mask, text_lengths, words_mask
@@ -1069,7 +1062,6 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
         # Relation extraction
         pair_idx, pair_mask, pair_scores = None, None, None
         rel_prompts_embedding_mask = None
-        full_rel_logits = None
         pred_adj_matrix = None
         
         if hasattr(self, "relations_rep_layer"):
@@ -1079,42 +1071,42 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
             pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
 
             rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
-                self.config.embed_rel_token, token_embeds, input_ids, attention_mask, batch_size, embed_dim
+                self.config.rel_token_index, token_embeds, input_ids, attention_mask, 
+                batch_size, embed_dim, self.config.embed_rel_token
             )
 
             B, E, D = target_span_rep.shape
-            _, C_rel, _ = rel_prompts_embedding.shape
+            C_rel = rel_prompts_embedding.size(1)
 
-            head_rep = target_span_rep.unsqueeze(2).expand(B, E, E, D)
-            tail_rep = target_span_rep.unsqueeze(1).expand(B, E, E, D)
-
-            if hasattr(self, "pair_rep_layer"):
-                pair_rep = torch.cat((head_rep, tail_rep), dim=-1)
-                pair_rep = self.pair_rep_layer(pair_rep)
-                full_rel_logits = torch.einsum("BEND,BCD->BENC", pair_rep, rel_prompts_embedding)
-
-            elif hasattr(self, "triples_score_layer"):
-                h = head_rep.unsqueeze(3).expand(B, E, E, C_rel, D)
-                t = tail_rep.unsqueeze(3).expand(B, E, E, C_rel, D)
-                r = rel_prompts_embedding.unsqueeze(1).unsqueeze(1).expand(B, E, E, C_rel, D)
-
-                h_flat = h.reshape(B * E * E * C_rel, D)
-                t_flat = t.reshape(B * E * E * C_rel, D)
-                r_flat = r.reshape(B * E * E * C_rel, D)
-
-                triple_scores_flat = self.triples_score_layer(h_flat, r_flat, t_flat)
-                full_rel_logits = triple_scores_flat.view(B, E, E, C_rel)
-
-            # Build pairs for output
-            pair_idx, pair_mask, head_rep_out, tail_rep_out = build_entity_pairs(
-                pred_adj_matrix, target_span_rep, threshold=0.5
+            adj_for_selection = adj_matrix if (labels is not None and adj_matrix is not None) else pred_adj_matrix
+            
+            # Build entity pairs based on adjacency matrix
+            pair_idx, pair_mask, head_rep_selected, tail_rep_selected = build_entity_pairs(
+                adj_for_selection, target_span_rep, threshold=threshold
             )
-
-            # Gather rel_logits for selected pairs
-            batch_idx = torch.arange(B, device=pair_idx.device).unsqueeze(1).expand(B, pair_idx.size(1))
-            head_idx = pair_idx[..., 0].clamp_min(0)
-            tail_idx = pair_idx[..., 1].clamp_min(0)
-            pair_scores = full_rel_logits[batch_idx, head_idx, tail_idx]
+            
+            N = head_rep_selected.size(1)  # Number of selected pairs
+            # Compute relation logits for selected pairs only
+            if hasattr(self, "pair_rep_layer"):
+                # Option 1: Concatenate and project pair representations
+                pair_rep = torch.cat((head_rep_selected, tail_rep_selected), dim=-1)  # (B, N, 2D)
+                pair_rep = self.pair_rep_layer(pair_rep)  # (B, N, D)
+                pair_scores = torch.einsum("BND,BCD->BNC", pair_rep, rel_prompts_embedding)  # (B, N, C_rel)
+                
+            elif hasattr(self, "triples_score_layer"):
+                # Option 2: Use triples score layer
+                # Expand to (B, N, C_rel, D)
+                h = head_rep_selected.unsqueeze(2).expand(B, N, C_rel, D)  # (B, N, C_rel, D)
+                t = tail_rep_selected.unsqueeze(2).expand(B, N, C_rel, D)  # (B, N, C_rel, D)
+                r = rel_prompts_embedding.unsqueeze(1).expand(B, N, C_rel, D)  # (B, N, C_rel, D)
+                
+                # Flatten for triples score layer
+                h_flat = h.reshape(B * N * C_rel, D)
+                t_flat = t.reshape(B * N * C_rel, D)
+                r_flat = r.reshape(B * N * C_rel, D)
+                
+                triple_scores_flat = self.triples_score_layer(h_flat, r_flat, t_flat)
+                pair_scores = triple_scores_flat.view(B, N, C_rel)  # (B, N, C_rel)
 
         loss = None
         if labels is not None:
@@ -1124,9 +1116,19 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
                 adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
                 adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
 
-                rel_mask = adj_mask
-                rel_loss = self.rel_loss(full_rel_logits, rel_matrix, rel_mask, 
-                                        rel_prompts_embedding_mask, **kwargs)
+                # Gather ground truth relation labels for selected pairs
+                rel_labels_selected = rel_matrix
+                # Create mask for valid pairs
+                rel_mask_selected = pair_mask.unsqueeze(-1).expand(B, N, C_rel)  # (B, N, C_rel)
+                class_mask = rel_prompts_embedding_mask.unsqueeze(1).expand(B, N, C_rel)  # (B, N, C_rel)
+                
+                rel_loss = self.rel_loss(
+                    pair_scores,           # (B, N, C_rel)
+                    rel_labels_selected,   # (B, N, C_rel)
+                    rel_mask_selected,     # (B, N, C_rel)
+                    class_mask,            # (B, N, C_rel)
+                    **kwargs
+                )
 
                 loss = loss + adj_loss + rel_loss
 
@@ -1142,37 +1144,6 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
             rel_mask=pair_mask
         )
         return output
-
-    def loss(self, scores, labels, prompts_embedding_mask, mask_label,
-             alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-             reduction: str = 'sum', negatives=1.0, masking="label", **kwargs):
-
-        batch_size = scores.shape[0]
-        num_classes = prompts_embedding_mask.shape[-1]
-
-        BS, SL, WD, CL = scores.shape
-
-        scores = scores.view(BS, -1, CL)
-        labels = labels.view(BS, -1, CL)
-
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives, masking=masking)
-
-        masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
-        all_losses = masked_loss.view(-1, num_classes)
-
-        mask_label = mask_label.reshape(-1, 1)
-        all_losses = all_losses * mask_label.float()
-
-        if reduction == "mean":
-            loss = all_losses.mean()
-        elif reduction == 'sum':
-            loss = all_losses.sum()
-        else:
-            warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
-                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
-            loss = all_losses.sum()
-        return loss
     
     def adj_loss(self, logits, labels, adj_mask,
                  alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
@@ -1199,27 +1170,45 @@ class UniEncoderSpanRelexModel(BaseUniEncoderModel):
             loss = masked_loss.sum()
         return loss
 
-    def rel_loss(self, logits, labels, rel_mask, rel_prompts_embedding_mask,
-                 alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-                 reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
-        B, E, E, C = logits.shape
-
-        all_losses = self._loss(logits.view(B, -1, C), labels.view(B, -1, C),
-                                alpha, gamma, label_smoothing, negatives, masking)
-
-        pair_mask = rel_mask.view(B, -1, 1).expand(B, E*E, C)
-        class_mask = rel_prompts_embedding_mask.unsqueeze(1).expand(B, E*E, C)
-
-        masked_loss = all_losses * pair_mask * class_mask
-
+    def rel_loss(self, logits, labels, pair_mask, class_mask,
+                alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
+                reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
+        """
+        Compute relation classification loss for selected pairs.
+        
+        Parameters
+        ----------
+        logits : torch.Tensor
+            Predicted relation scores, shape (B, N, C)
+        labels : torch.Tensor
+            Ground truth relation labels, shape (B, N, C)
+        pair_mask : torch.Tensor
+            Mask for valid pairs, shape (B, N, C)
+        class_mask : torch.Tensor
+            Mask for valid relation classes, shape (B, N, C)
+        """
+        B, N, C = logits.shape
+        
+        # Compute loss
+        all_losses = self._loss(
+            logits.view(B, -1, C), 
+            labels.view(B, -1, C),
+            alpha, gamma, label_smoothing, negatives, masking
+        )  # (B, N, C)
+        
+        # Apply both pair mask and class mask
+        combined_mask = pair_mask * class_mask  # (B, N, C)
+        masked_loss = all_losses * combined_mask.view(B, -1, C)
+        
         if reduction == "mean":
-            num_valid = (pair_mask * class_mask).sum()
-            loss = masked_loss.sum() / num_valid if num_valid > 0 else 0.0
+            num_valid = combined_mask.sum()
+            loss = masked_loss.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=logits.device)
         elif reduction == 'sum':
             loss = masked_loss.sum()
         else:
             warnings.warn(
-                f"Invalid Value for config 'loss_reduction': '{reduction} \n Supported reduction modes:"
+                f"Invalid Value for config 'loss_reduction': '{reduction}' \n Supported reduction modes:"
                 f" 'none', 'mean', 'sum'. It will be used 'sum' instead.")
             loss = masked_loss.sum()
+        
         return loss

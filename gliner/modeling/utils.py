@@ -61,13 +61,16 @@ def extract_prompt_features_and_word_embeddings(class_token_index, token_embeds,
 
 
 def build_entity_pairs(
-    adj: torch.Tensor,           # (B, E, E) –  scores / mask (diag is ignored)
-    span_rep: torch.Tensor,      # (B, E, D) –  entity/span embeddings
+    adj: torch.Tensor,           # (B, E, E) – scores / mask (diag is ignored)
+    span_rep: torch.Tensor,      # (B, E, D) – entity/span embeddings
     threshold: float = 0.5,      # keep pairs with score > threshold
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """
     Extract the (head, tail) indices of entity pairs for which adj > threshold.
-
+    
+    Note: This checks ALL directed pairs (i,j) where i≠j, not just upper triangle,
+    since relation direction matters in relation extraction.
+    
     Returns
     -------
     pair_idx  : (B, N, 2)  int64   – padded with -1
@@ -76,33 +79,45 @@ def build_entity_pairs(
     tail_rep  : (B, N, D)          – embeddings of tails
     """
     B, E, _ = adj.shape
-    device   = adj.device
-    rows, cols = torch.triu_indices(E, E, offset=1, device=device)  # ignore (i,i) and duplicates
+    device = adj.device
+    D = span_rep.shape[-1]
+    
+    all_rows = []
+    all_cols = []
+    for i in range(E):
+        for j in range(E):
+            if i != j:
+                all_rows.append(i)
+                all_cols.append(j)
+    
+    rows = torch.tensor(all_rows, device=device, dtype=torch.long)
+    cols = torch.tensor(all_cols, device=device, dtype=torch.long)
 
     batch_pair_lists: list[torch.Tensor] = []
+    
     for b in range(B):
-        sel = adj[b, rows, cols] > threshold          # (E*(E-1)/2,)
+        sel = adj[b, rows, cols] > threshold          # (E*(E-1),)
         pairs = torch.stack([rows[sel], cols[sel]], dim=-1)  # (M_b, 2)
         batch_pair_lists.append(pairs)
-
+    
     N = max(p.shape[0] for p in batch_pair_lists) if batch_pair_lists else 0
-    if N == 0:                                         # nothing selected anywhere
-        pair_idx  = torch.full((B, 1, 2), -1, dtype=torch.long, device=device)
+    
+    if N == 0:
+        pair_idx = torch.full((B, 1, 2), -1, dtype=torch.long, device=device)
         pair_mask = torch.zeros((B, 1), dtype=torch.bool, device=device)
-        D         = span_rep.shape[-1]
-        head_rep  = tail_rep = torch.zeros((B, 1, D), dtype=span_rep.dtype, device=device)
+        head_rep = tail_rep = torch.zeros((B, 1, D), dtype=span_rep.dtype, device=device)
         return pair_idx, pair_mask, head_rep, tail_rep
-
-    pair_idx  = torch.full((B, N, 2), -1, dtype=torch.long,  device=device)
-    pair_mask = torch.zeros((B, N),    dtype=torch.bool,     device=device)
-
+    
+    pair_idx = torch.full((B, N, 2), -1, dtype=torch.long, device=device)
+    pair_mask = torch.zeros((B, N), dtype=torch.bool, device=device)
+    
     for b, pairs in enumerate(batch_pair_lists):
         m = pairs.shape[0]
-        pair_idx[b, :m]  = pairs
+        pair_idx[b, :m] = pairs
         pair_mask[b, :m] = True
-
-    batch_idx = torch.arange(B, device=device).unsqueeze(1)                    # (B,1)
-    head_rep  = span_rep[batch_idx, pair_idx[..., 0].clamp_min(0)]             # (B,N,D)
-    tail_rep  = span_rep[batch_idx, pair_idx[..., 1].clamp_min(0)]             # (B,N,D)
-
+    
+    batch_idx = torch.arange(B, device=device).unsqueeze(1)  # (B,1)
+    head_rep = span_rep[batch_idx, pair_idx[..., 0].clamp_min(0)]  # (B,N,D)
+    tail_rep = span_rep[batch_idx, pair_idx[..., 1].clamp_min(0)]  # (B,N,D)
+    
     return pair_idx, pair_mask, head_rep, tail_rep
