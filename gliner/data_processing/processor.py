@@ -855,49 +855,66 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         batch_ents = torch.sum(entity_label > 0, dim=-1)
         max_En = torch.max(batch_ents).item()
         
-        # Get the actual relation class count
         rel_class_to_ids = batch['rel_class_to_ids']
         if isinstance(rel_class_to_ids, list):
             C = max(len(r) for r in rel_class_to_ids)
         else:
             C = len(rel_class_to_ids)
         
-        # Count max relations in batch
-        max_Rn = max(batch['rel_label'][i].shape[0] for i in range(B))
-        
         adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
-        rel_matrix = torch.zeros(B, max_Rn, C, dtype=torch.float)
-
+        
+        # Collect all unique pairs and their relations first
+        all_pairs_relations = []
+        max_unique_pairs = 0
+        
         for i in range(B):            
             N = batch_ents[i]
-
-            adj = torch.zeros(N, N)
-            pos_pairs = []
-
             rel_idx_i = batch['rel_idx'][i]
             rel_label_i = batch['rel_label'][i]
-
+            
+            # Dictionary to group relations by entity pair
+            pair_to_relations = {}
+            
             for k in range(rel_label_i.shape[0]):
                 if rel_label_i[k] > 0:
                     e1 = rel_idx_i[k, 0].item()
                     e2 = rel_idx_i[k, 1].item()
                     
                     if e1 < N and e2 < N:
-                        adj[e1, e2] = 1.0
+                        pair_key = (e1, e2)
+                        if pair_key not in pair_to_relations:
+                            pair_to_relations[pair_key] = []
                         class_id = rel_label_i[k].item()
-                        pos_pairs.append(class_id)
-
+                        pair_to_relations[pair_key].append(class_id)
+            
+            # Sort pairs to maintain consistent ordering
+            sorted_pairs = sorted(pair_to_relations.keys())
+            all_pairs_relations.append((sorted_pairs, pair_to_relations))
+            max_unique_pairs = max(max_unique_pairs, len(sorted_pairs))
+        
+        # Create relation matrix with one row per unique pair
+        rel_matrix = torch.zeros(B, max_unique_pairs, C, dtype=torch.float)
+        
+        for i in range(B):
+            N = batch_ents[i]
+            sorted_pairs, pair_to_relations = all_pairs_relations[i]
+            
+            adj = torch.zeros(N, N)
+            
+            for pair_idx, (e1, e2) in enumerate(sorted_pairs):
+                # Set adjacency
+                adj[e1, e2] = 1.0
+                
+                # Create multi-hot vector for this pair
+                relation_classes = pair_to_relations[(e1, e2)]
+                for class_id in relation_classes:
+                    # Convert 1-based class_id to 0-based index
+                    rel_matrix[i, pair_idx, class_id - 1] = 1.0
+            
             adj_matrix[i, :N, :N] = adj
 
-            if pos_pairs:
-                one_hots = torch.zeros(len(pos_pairs), C)
-                for k, class_id in enumerate(pos_pairs):
-                    # Convert 1-based class_id to 0-based index
-                    one_hots[k, class_id - 1] = 1.0
-                rel_matrix[i, :len(pos_pairs), :] = one_hots
-
         return adj_matrix, rel_matrix
-
+    
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],

@@ -224,6 +224,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         )
         return output
 
+
     def loss(self, scores, labels, prompts_embedding_mask, mask_label,
              alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, 
              label_smoothing: float = 0.0, reduction: str = 'sum', negatives=1.0, 
@@ -1129,7 +1130,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                     class_mask,            # (B, N, C_rel)
                     **kwargs
                 )
-
+                
                 loss = loss + adj_loss + rel_loss
 
         output = GLiNERRelexOutput(
@@ -1145,16 +1146,16 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         )
         return output
     
-    def adj_loss(self, logits, labels, adj_mask,
-                 alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
-                 reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
+    def adj_loss(self, logits, labels, adj_mask, alpha: float = -1., gamma: float = 0.0, 
+                 prob_margin: float = 0.0, label_smoothing: float = 0.0,
+                 reduction: str = 'sum', masking="span", negatives=1.0, **kwargs):
         B, E, E = logits.shape
 
-        logits = logits.unsqueeze(-1)  # (B, E, E, 1)
-        labels = labels.unsqueeze(-1)  # (B, E, E, 1)
+        logits = logits.unsqueeze(-1).view(B, -1, 1)
+        labels = labels.unsqueeze(-1).view(B, -1, 1)
 
-        all_losses = self._loss(logits.view(B, -1, 1), labels.view(B, -1, 1),
-                                alpha, gamma, label_smoothing, negatives, masking)
+        all_losses = self._loss(logits, labels, alpha, gamma, prob_margin, label_smoothing, 
+                                                    negatives=negatives, masking=masking)
 
         masked_loss = all_losses * adj_mask.unsqueeze(-1).view(B, -1, 1)
 
@@ -1171,7 +1172,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         return loss
 
     def rel_loss(self, logits, labels, pair_mask, class_mask,
-                alpha: float = -1., gamma: float = 0.0, label_smoothing: float = 0.0,
+                alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, label_smoothing: float = 0.0,
                 reduction: str = 'sum', negatives=1.0, masking="span", **kwargs):
         """
         Compute relation classification loss for selected pairs.
@@ -1190,11 +1191,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         B, N, C = logits.shape
         
         # Compute loss
-        all_losses = self._loss(
-            logits.view(B, -1, C), 
-            labels.view(B, -1, C),
-            alpha, gamma, label_smoothing, negatives, masking
-        )  # (B, N, C)
+        all_losses = self._loss(logits, labels, alpha, gamma, prob_margin, label_smoothing, 
+                                                    negatives=negatives, masking=masking)
         
         # Apply both pair mask and class mask
         combined_mask = pair_mask * class_mask  # (B, N, C)
