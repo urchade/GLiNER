@@ -2,6 +2,7 @@ import json
 import os
 import re
 import warnings
+import pandas as pd
 from tqdm import tqdm
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -652,10 +653,42 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             all_trues.extend(batch["entities"])
         # Evaluate the predictions
         evaluator = Evaluator(all_trues, all_preds)
-        out, f1 = evaluator.evaluate()
+        # out, f1 = evaluator.evaluate()
 
-        return out, f1
+        # return out, f1
+        all_results = evaluator.evaluate()
 
+        return all_results
+    
+    def beautiful_df_print(self, eval_results:Dict):
+        """
+        eval_results : 
+        {
+            
+            "per_class":{"tag1":{"precision":int, "recall":int,"f_score":int},
+                        "tag2":{}...
+                        },
+            "micro":{"precision":int, "recall":int,"f_score":int},
+            "macro":{"precision":int, "recall":int,"f_score":int},
+            }
+        """
+        # add mico and macro metrics 
+        df_metrics = pd.DataFrame()
+        df_metrics["MICRO_AVG"] = eval_results["micro"]
+        df_metrics["MACRO_AVG"] = eval_results["macro"]
+        
+        # add seperator line 
+        df_metrics = df_metrics.transpose()
+        df_metrics.loc["-------"]= {'precision': '---', 'recall': '---', 'f_score': '---'}
+        
+        
+        # add results per class 
+        df_per_class = pd.DataFrame(eval_results["per_class"])
+        df_per_class = df_per_class.transpose().sort_values(by='f_score',ascending=False)
+
+        df = pd.concat([df_metrics,df_per_class])
+        
+        return df 
     def encode_labels(self, labels: List[str], batch_size: int = 8) -> torch.FloatTensor:
         """
         Embedding of labels.
