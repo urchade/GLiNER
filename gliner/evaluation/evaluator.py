@@ -1,7 +1,7 @@
 import warnings
 from collections import defaultdict
 from typing import Union, List, Literal
-
+import pandas as pd 
 import numpy as np
 import torch
 
@@ -24,7 +24,7 @@ def _prf_divide(
         result = np.true_divide(numerator, denominator)
         result[denominator == 0] = 0.0 if zero_division in ["warn", 0] else 1.0
 
-    if denominator == 0 and zero_division == "warn" and metric in warn_for:
+    if np.any(denominator == 0) and zero_division == "warn" and metric in warn_for:
         msg_start = f"{metric.title()}"
         if "f-score" in warn_for:
             msg_start += " and F-score" if metric in warn_for else "F-score"
@@ -36,7 +36,7 @@ def _prf_divide(
             result_size=len(result),
         )
 
-    return result
+    return np.round(result,decimals=2)
 
 
 def _warn_prf(average: str, modifier: str, msg_start: str, result_size: int):
@@ -84,19 +84,44 @@ def flatten_for_eval(y_true, y_pred):
     return all_true, all_pred
 
 
-def compute_prf(y_true, y_pred, average="micro"):
+def compute_prf(y_true:List,
+                y_pred:List, 
+                ): 
+    all_metrics = {}
     y_true, y_pred = flatten_for_eval(y_true, y_pred)
 
     pred_sum, tp_sum, true_sum, target_names = extract_tp_actual_correct(y_true, y_pred)
 
-    if average == "micro":
-        tp_sum = np.array([tp_sum.sum()])
-        pred_sum = np.array([pred_sum.sum()])
-        true_sum = np.array([true_sum.sum()])
+    # Calculate macro metric (divide by classes number)
+    per_class_dico,metrics_macro = _calculate_metrics(tp_sum,pred_sum,true_sum,"macro")
+    all_metrics["macro"] = metrics_macro
 
+    # # Calculate performance per class 
+    all_metrics["per_class"] = {target_names[i]:{"precision":per_class_dico["precision"][i],  
+                                                 "recall":per_class_dico["recall"][i],
+                                                 "f_score":per_class_dico["f_score"][i]}
+                                 for i in range(len(target_names))
+                                }
+    
+
+    # Calculate micro metric (divide by all sum-up values of all classes )
+    tp_sum_micro = np.array([tp_sum.sum()])
+    pred_sum_micro = np.array([pred_sum.sum()])
+    true_sum_micro = np.array([true_sum.sum()])
+
+    metrics_micro = _calculate_metrics(tp_sum_micro,pred_sum_micro,true_sum_micro,"micro")
+    all_metrics["micro"] = metrics_micro
+
+    return all_metrics
+
+def _calculate_metrics(tp,
+                    pred,
+                    true,
+                    average : Literal["micro","macro"],
+                    ):
     precision = _prf_divide(
-        numerator=tp_sum,
-        denominator=pred_sum,
+        numerator=tp,
+        denominator=pred,
         metric="precision",
         modifier="predicted",
         average=average,
@@ -105,8 +130,8 @@ def compute_prf(y_true, y_pred, average="micro"):
     )
 
     recall = _prf_divide(
-        numerator=tp_sum,
-        denominator=true_sum,
+        numerator=tp, # TODO check 
+        denominator=true,
         metric="recall",
         modifier="true",
         average=average,
@@ -114,11 +139,21 @@ def compute_prf(y_true, y_pred, average="micro"):
         zero_division="warn",
     )
 
-    denominator = precision + recall
-    denominator[denominator == 0.0] = 1
-    f_score = 2 * (precision * recall) / denominator
+    denominator_fscore = precision + recall
+    denominator_fscore[denominator_fscore== 0.0] = 1
+    f_score = np.round(2 * (precision* recall) / denominator_fscore, decimals=2)
+    
+    if average == "micro" : 
+       
+        return {"precision": precision[0], "recall": recall[0], "f_score": f_score[0]}
+    
+    else : 
+        per_class_array = {"precision": precision, "recall": recall, "f_score": f_score}
+        macro_precision = np.round(precision.sum()/len(precision),decimals=2)
+        macro_recall = np.round(recall.sum()/len(recall),decimals=2)
+        macro_f_score = np.round(f_score.sum()/ len(f_score), decimals=2)
+        return per_class_array,{"precision": macro_precision, "recall": macro_recall, "f_score": macro_f_score}
 
-    return {"precision": precision[0], "recall": recall[0], "f_score": f_score[0]}
 
 
 class Evaluator:
@@ -150,10 +185,20 @@ class Evaluator:
 
     @torch.no_grad()
     def evaluate(self):
+        """ 
+        output : {
+        
+        "per_class":{"tag1":{"precision":int, "recall":int,"f_score":int},
+                    "tag2":{}...
+                    },
+        "micro":{"precision":int, "recall":int,"f_score":int},
+        "macro":{"precision":int, "recall":int,"f_score":int},
+        }
+        """
         all_true_typed, all_outs_typed = self.transform_data()
-        precision, recall, f1 = compute_prf(all_true_typed, all_outs_typed).values()
-        output_str = f"P: {precision:.2%}\tR: {recall:.2%}\tF1: {f1:.2%}\n"
-        return output_str, f1
+        results_all = compute_prf(all_true_typed, all_outs_typed)
+        # output_str = f"P: {precision:.2%}\tR: {recall:.2%}\tF1: {f1:.2%}\n"
+        return results_all
 
 
 def is_nested(idx1, idx2):
