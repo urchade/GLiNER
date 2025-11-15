@@ -80,7 +80,7 @@ class UniEncoderSpanConfig(UniEncoderConfig):
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanConfig requires span_mode != 'token-level'")
 
-        self.model_type = "uni-encoder-span"
+        self.model_type = "gliner_uni_encoder_span"
 
 
 class UniEncoderTokenConfig(UniEncoderConfig):
@@ -89,7 +89,7 @@ class UniEncoderTokenConfig(UniEncoderConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = 'token-level'
-        self.model_type = "uni-encoder-token"
+        self.model_type = "gliner_uni_encoder_token"
 
 
 class UniEncoderSpanDecoderConfig(UniEncoderConfig):
@@ -118,7 +118,7 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.full_decoder_context = full_decoder_context
         self.decoder_loss_coef = decoder_loss_coef
         self.span_loss_coef = span_loss_coef
-        self.model_type = "encoder-decoder"
+        self.model_type = "gliner_uni_encoder_span_decoder"
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token-level'")
 
@@ -140,7 +140,7 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         self.embed_rel_token = embed_rel_token
         self.rel_token_index = rel_token_index
         self.rel_token = rel_token
-        self.model_type = "uni-encoder-span-relex"
+        self.model_type = "gliner_uni_encoder_span_relex"
         if self.span_mode == 'token-level':
             raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token-level'")
 
@@ -170,7 +170,7 @@ class BiEncoderSpanConfig(BiEncoderConfig):
         super().__init__(**kwargs)
         if self.span_mode == 'token-level':
             raise ValueError("BiEncoderSpanConfig requires span_mode != 'token-level'")
-        self.model_type = "bi-encoder-span"
+        self.model_type = "gliner_bi_encoder_span"
 
 class BiEncoderTokenConfig(BiEncoderConfig):
     """Configuration for bi-encoder token-based GLiNER model."""
@@ -178,69 +178,37 @@ class BiEncoderTokenConfig(BiEncoderConfig):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = 'token-level'
-        self.model_type = "bi-encoder-token"
+        self.model_type = "gliner_bi_encoder_token"
 
-# Legacy GLiNERConfig for backward compatibility
 class GLiNERConfig(BaseGLiNERConfig):
     """Legacy configuration class that auto-detects model type."""
     
     def __init__(self, 
                  labels_encoder: str = None,
                  labels_decoder: str = None,
-                 decoder_mode: str = None,
-                 full_decoder_context: bool = True,
-                 labels_encoder_config: Optional[dict] = None,
-                 labels_decoder_config: Optional[dict] = None,
                  relations_layer: str = None,
-                 triples_layer: str = None,
-                 embed_rel_token: bool = True,
-                 rel_token_index: int = -1,
-                 rel_token: str = "<<REL>>",
                  **kwargs):
         super().__init__(**kwargs)
         
-        # Labels encoder config
-        if isinstance(labels_encoder_config, dict):
-            labels_encoder_config["model_type"] = (labels_encoder_config["model_type"] 
-                                                   if "model_type" in labels_encoder_config 
-                                                   else "deberta-v2")
-            labels_encoder_config = CONFIG_MAPPING[labels_encoder_config["model_type"]](**labels_encoder_config)
-        self.labels_encoder_config = labels_encoder_config
-        
-        # Labels decoder config
-        if isinstance(labels_decoder_config, dict):
-            labels_decoder_config["model_type"] = (labels_decoder_config["model_type"] 
-                                                   if "model_type" in labels_decoder_config 
-                                                   else "gpt2")
-            labels_decoder_config = CONFIG_MAPPING[labels_decoder_config["model_type"]](**labels_decoder_config)
-        self.labels_decoder_config = labels_decoder_config
-        
         self.labels_encoder = labels_encoder
         self.labels_decoder = labels_decoder
-        self.decoder_mode = decoder_mode
-        self.full_decoder_context = full_decoder_context
-        
-        # Relation extraction config
         self.relations_layer = relations_layer
-        self.triples_layer = triples_layer
-        self.embed_rel_token = embed_rel_token
-        self.rel_token_index = rel_token_index
-        self.rel_token = rel_token
     
+    @property
     def model_type(self):
         """Auto-detect model type based on configuration."""
         span_mode_normalized = self.span_mode.replace('_', '-') if self.span_mode else None
         
         if self.labels_decoder:
-            return "encoder-decoder"
+            return "gliner_uni_encoder_span_decoder"
         elif self.labels_encoder:
-            return 'bi-encoder'
+            return "gliner_bi_encoder_span" if span_mode_normalized != 'token-level' else "gliner_bi_encoder_token"
         elif self.relations_layer is not None:
-            return 'uni-encoder-span-relex'
+            return "gliner_uni_encoder_span_relex"
         elif span_mode_normalized == 'token-level':
-            return 'uni-encoder-token'
+            return "gliner_uni_encoder_token"
         else:
-            return 'uni-encoder-span'
+            return "gliner_uni_encoder_span"
 
 
 # Register all configurations
