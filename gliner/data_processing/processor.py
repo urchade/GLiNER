@@ -848,7 +848,22 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             "rel_id_to_classes": rel_id_to_classes
         }
 
-    def create_relation_labels(self, batch):
+    def create_relation_labels(self, batch, 
+                            add_reversed_negatives=True,
+                            add_random_negatives=True, 
+                            negative_ratio=1.0):
+        """
+        Create relation labels with negative pair sampling.
+        
+        Parameters
+        ----------
+        add_reversed_negatives : bool
+            Add reversed direction pairs as negatives (h,t) -> (t,h)
+        add_random_negatives : bool
+            Add random entity pairs as negatives
+        negative_ratio : float
+            Ratio of negatives to positives (1.0 = equal, 2.0 = twice as many)
+        """
         B = len(batch['tokens'])
         entity_label = batch['span_label']
         
@@ -863,18 +878,20 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         
         adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
         
-        # Collect all unique pairs and their relations first
-        all_pairs_relations = []
-        max_unique_pairs = 0
+        # Collect all pairs (positive + negative) and their relations
+        all_pairs_info = []
+        max_total_pairs = 0
         
         for i in range(B):            
-            N = batch_ents[i]
+            N = batch_ents[i].item()
             rel_idx_i = batch['rel_idx'][i]
             rel_label_i = batch['rel_label'][i]
             
             # Dictionary to group relations by entity pair
             pair_to_relations = {}
+            positive_pairs = set()
             
+            # Collect positive pairs
             for k in range(rel_label_i.shape[0]):
                 if rel_label_i[k] > 0:
                     e1 = rel_idx_i[k, 0].item()
@@ -882,34 +899,100 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                     
                     if e1 < N and e2 < N:
                         pair_key = (e1, e2)
+                        positive_pairs.add(pair_key)
                         if pair_key not in pair_to_relations:
                             pair_to_relations[pair_key] = []
                         class_id = rel_label_i[k].item()
                         pair_to_relations[pair_key].append(class_id)
             
-            # Sort pairs to maintain consistent ordering
-            sorted_pairs = sorted(pair_to_relations.keys())
-            all_pairs_relations.append((sorted_pairs, pair_to_relations))
-            max_unique_pairs = max(max_unique_pairs, len(sorted_pairs))
+            # Generate negative pairs
+            negative_pairs = set()
+            num_positives = len(positive_pairs)
+            target_negatives = int(num_positives * negative_ratio)
+            
+            # 1. Add reversed pairs as negatives (most important!)
+            if add_reversed_negatives:
+                for (e1, e2) in positive_pairs:
+                    reversed_pair = (e2, e1)
+                    # Only add if reversed pair is NOT also a positive relation
+                    if reversed_pair not in positive_pairs:
+                        negative_pairs.add(reversed_pair)
+            
+            # 2. Add random negative pairs if needed
+            if add_random_negatives and len(negative_pairs) < target_negatives:
+                # Get entity span positions for proximity-based sampling
+                entities = batch['entities'][i]
+                entity_positions = [(ent[0], ent[1]) for ent in entities] if entities else []
+                
+                attempts = 0
+                max_attempts = target_negatives * 10  # Avoid infinite loop
+                
+                while len(negative_pairs) < target_negatives and attempts < max_attempts:
+                    attempts += 1
+                    
+                    # Sample two different entities
+                    e1 = random.randint(0, N - 1)
+                    e2 = random.randint(0, N - 1)
+                    
+                    if e1 == e2:
+                        continue
+                    
+                    pair = (e1, e2)
+                    
+                    # Skip if already positive or already in negatives
+                    if pair in positive_pairs or pair in negative_pairs:
+                        continue
+                    
+                    # Optional: bias towards nearby entities (hard negatives)
+                    if entity_positions and len(entity_positions) > e1 and len(entity_positions) > e2:
+                        pos1 = entity_positions[e1]
+                        pos2 = entity_positions[e2]
+                        distance = abs(pos1[0] - pos2[1])  # Distance between entities
+                        
+                        # Sample with probability inversely proportional to distance
+                        # (closer entities are harder negatives)
+                        if distance > 10 and random.random() < 0.5:
+                            continue  # Skip some far pairs
+                    
+                    negative_pairs.add(pair)
+            
+            # Combine all pairs (positives + negatives) and sort
+            all_pairs = sorted(list(positive_pairs) + list(negative_pairs))
+            
+            # Store pair info: pair, is_positive, relations
+            pair_info = []
+            for pair in all_pairs:
+                is_positive = pair in positive_pairs
+                relations = pair_to_relations.get(pair, [])
+                pair_info.append((pair, is_positive, relations))
+            
+            all_pairs_info.append(pair_info)
+            max_total_pairs = max(max_total_pairs, len(all_pairs))
         
-        # Create relation matrix with one row per unique pair
-        rel_matrix = torch.zeros(B, max_unique_pairs, C, dtype=torch.float)
+        # Create matrices
+        rel_matrix = torch.zeros(B, max_total_pairs, C, dtype=torch.float)
+        pair_type_mask = torch.zeros(B, max_total_pairs, dtype=torch.long)  # 1=positive, 0=negative
         
         for i in range(B):
-            N = batch_ents[i]
-            sorted_pairs, pair_to_relations = all_pairs_relations[i]
+            N = batch_ents[i].item()
+            pair_info = all_pairs_info[i]
             
             adj = torch.zeros(N, N)
             
-            for pair_idx, (e1, e2) in enumerate(sorted_pairs):
-                # Set adjacency
+            for pair_idx, (pair, is_positive, relations) in enumerate(pair_info):
+                e1, e2 = pair
+                
+                # Set adjacency (1.0 for both positive and negative pairs)
                 adj[e1, e2] = 1.0
                 
-                # Create multi-hot vector for this pair
-                relation_classes = pair_to_relations[(e1, e2)]
-                for class_id in relation_classes:
-                    # Convert 1-based class_id to 0-based index
-                    rel_matrix[i, pair_idx, class_id - 1] = 1.0
+                # Mark pair type
+                pair_type_mask[i, pair_idx] = 1 if is_positive else 0
+                
+                if is_positive:
+                    # Create multi-hot vector for positive pairs
+                    for class_id in relations:
+                        rel_matrix[i, pair_idx, class_id - 1] = 1.0
+                # Negative pairs already have all-zeros (no relations)
             
             adj_matrix[i, :N, :N] = adj
 

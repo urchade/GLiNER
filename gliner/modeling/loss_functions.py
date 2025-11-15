@@ -10,6 +10,7 @@ def focal_loss_with_logits(
         prob_margin: float = 0.,
         reduction: str = "none",
         label_smoothing: float = 0.0,
+        normalize_prob: bool = True,
         ignore_index: int = -100,  # default value for ignored index
         eps: float = 1e-6
 ) -> torch.Tensor:
@@ -46,8 +47,10 @@ def focal_loss_with_logits(
             targets = targets * (1 - label_smoothing) + 0.5 * label_smoothing
 
     # Apply sigmoid activation to inputs
-    p = torch.sigmoid(inputs)
-
+    if normalize_prob:
+        p = torch.sigmoid(inputs)
+    else:
+        p = inputs
     pm =  torch.clamp(p-prob_margin, max=1.0)
 
     # Compute the binary cross-entropy loss without reduction

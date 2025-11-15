@@ -12,9 +12,12 @@ def _apply_pair_mask(A: torch.Tensor, mask: torch.Tensor | None):
     m = mask.float()                              # (B, E)
     return A * m.unsqueeze(2) * m.unsqueeze(1)    # (B, E, E)
 
-def cosine_adjacency(X: torch.Tensor, mask: torch.Tensor | None = None):
+def dot_product_adjacency(X: torch.Tensor, mask: torch.Tensor | None = None, normalize: bool = False):
     # X : (B, E, D)
-    Xn = F.normalize(X, p=2, dim=-1)
+    if normalize:
+        Xn = F.normalize(X, p=2, dim=-1)
+    else:
+        Xn = X
     A  = torch.bmm(Xn, Xn.transpose(1, 2))        # cos-sim
     A  = torch.sigmoid(A)
     return _apply_pair_mask(A, mask)
@@ -89,7 +92,7 @@ class GCNDecoder(nn.Module):
         self.proj = nn.Linear(hidden_dim, hidden_dim)
 
     def forward(self, X, mask: torch.Tensor | None = None):
-        A0 = cosine_adjacency(X, mask)            # already masked
+        A0 = dot_product_adjacency(X, mask)            # already masked
         H  = self.gcn(X, A0, mask)
         A  = torch.sigmoid(torch.bmm(self.proj(H), self.proj(H).transpose(1, 2)))
         return _apply_pair_mask(A, mask)
@@ -122,11 +125,11 @@ class RelationsRepLayer(nn.Module):
         super().__init__()
         m = relation_mode.lower()
 
-        if m == 'cosine':
-            class _Cos(nn.Module):
+        if m == 'dot':
+            class _Dot(nn.Module):
                 def forward(_, X, mask=None):       # tiny wrapper for mask
-                    return cosine_adjacency(X, mask)
-            self.relation_rep_layer = _Cos()
+                    return dot_product_adjacency(X, mask)
+            self.relation_rep_layer = _Dot()
 
         elif m == 'mlp':
             self.relation_rep_layer = MLPDecoder(in_dim, kwargs.get('hidden_dim', in_dim))

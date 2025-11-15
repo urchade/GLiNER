@@ -67,14 +67,15 @@ class BaseModel(ABC, nn.Module):
 
     def _loss(self, logits: torch.Tensor, labels: torch.Tensor,
               alpha: float = -1., gamma: float = 0.0, prob_margin: float = 0.0, 
-                    label_smoothing: float = 0.0, negatives=1., masking="none"):
+                    label_smoothing: float = 0.0, negatives=1., masking="none", normalize_prob=True):
 
         # Compute the loss per element using the focal loss function
         all_losses = focal_loss_with_logits(logits, labels,
                                             alpha=alpha,
                                             gamma=gamma,
                                             prob_margin=prob_margin,
-                                            label_smoothing=label_smoothing)
+                                            label_smoothing=label_smoothing,
+                                            normalize_prob=normalize_prob)
 
         # Create a mask of the same shape as labels:
         # For elements where labels==0, sample a Bernoulli random variable that is 1 with probability `negatives`
@@ -1108,7 +1109,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 
                 triple_scores_flat = self.triples_score_layer(h_flat, r_flat, t_flat)
                 pair_scores = triple_scores_flat.view(B, N, C_rel)  # (B, N, C_rel)
-
+                
+                # print(pair_scores)
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
@@ -1155,7 +1157,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         labels = labels.unsqueeze(-1).view(B, -1, 1)
 
         all_losses = self._loss(logits, labels, alpha, gamma, prob_margin, label_smoothing, 
-                                                    negatives=negatives, masking=masking)
+                                        negatives=negatives, masking=masking, normalize_prob=False)
 
         masked_loss = all_losses * adj_mask.unsqueeze(-1).view(B, -1, 1)
 
