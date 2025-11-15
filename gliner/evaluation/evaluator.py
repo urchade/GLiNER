@@ -59,13 +59,13 @@ class BaseEvaluator(ABC):
     
 
 class BaseNEREvaluator(BaseEvaluator):
-    def get_entities_fr(self, ents):
+    def get_ground_truth(self, ents):
         all_ents = []
         for s, e, lab in ents:
             all_ents.append([lab, (s, e)])
         return all_ents
 
-    def get_entities_pr(self, ents):
+    def get_predictions(self, ents):
         all_ents = []
         for ent in ents:
             all_ents.append([ent[2], (ent[0], ent[1])])
@@ -75,8 +75,39 @@ class BaseNEREvaluator(BaseEvaluator):
         all_true_ent = []
         all_outs_ent = []
         for i, j in zip(self.all_true, self.all_outs):
-            e = self.get_entities_fr(i)
+            e = self.get_ground_truth(i)
             all_true_ent.append(e)
-            e = self.get_entities_pr(j)
+            e = self.get_predictions(j)
             all_outs_ent.append(e)
         return all_true_ent, all_outs_ent
+    
+
+class BaseRelexEvaluator(BaseEvaluator):
+    def get_ground_truth(self, ents, rels):
+        all_rels = []
+        for h, t, lab in rels:
+            h_ent = ents[h]
+            t_ent = ents[t]
+            all_rels.append([lab, (h_ent[0], h_ent[1], t_ent[0], t_ent[1])])
+        return all_rels
+
+    def get_predictions(self, ents, rels):
+        all_rels = []
+        for rel in rels:
+            h = rel[0]
+            lab = rel[1]
+            t = rel[2]
+            h_ent = ents[h]
+            t_ent = ents[t]
+            all_rels.append([lab, (h_ent[0], h_ent[1], t_ent[0], t_ent[1])])
+        return all_rels
+
+    def transform_data(self):
+        all_true_rel = []
+        all_outs_rel = []
+        for i, j in zip(self.all_true, self.all_outs):
+            e = self.get_ground_truth(i)
+            all_true_rel.append(e)
+            e = self.get_predictions(j)
+            all_outs_rel.append(e)
+        return all_true_rel, all_outs_rel
