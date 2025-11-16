@@ -1,12 +1,13 @@
 from typing import List, Optional
 
+
 class Node:
-    __slots__ = ("_key", "_permanent", "_children")
+    __slots__ = ("_children", "_key", "_permanent")
 
     def __init__(self, key: int, permanent: bool):
         self._key = key
         self._permanent = permanent
-        self._children: dict[int, "Node"] = {}
+        self._children: dict[int, Node] = {}
 
     def get_key(self) -> int:
         return self._key
@@ -86,10 +87,11 @@ class Trie:
                 break
             parent.delete_child(child.get_key())
 
+
 class LabelsTrie:
-    def __init__(self, entities: List[List[int]] = None):
+    def __init__(self, entities: Optional[List[List[int]]] = None):
         """Initialize the trie.
-        
+
         Args:
             entities: Optional initial list of token sequences to add to the trie.
                      If None or empty, creates an empty trie.
@@ -101,7 +103,7 @@ class LabelsTrie:
 
     def add_batch(self, entities: List[List[int]]):
         """Add multiple token sequences to the trie.
-        
+
         Args:
             entities: List of token sequences to add.
         """
@@ -109,7 +111,7 @@ class LabelsTrie:
 
     def add(self, tokens: List[int]):
         """Add a single token sequence to the trie.
-        
+
         Args:
             tokens: Token sequence to add.
         """
@@ -117,10 +119,10 @@ class LabelsTrie:
 
     def get(self, prefix: List[int]) -> List[int]:
         """Get possible next tokens after a given prefix.
-        
+
         Args:
             prefix: The token sequence to search for.
-            
+
         Returns:
             List of possible next token IDs.
         """
@@ -128,7 +130,7 @@ class LabelsTrie:
 
     def remove_batch(self, entities: List[List[int]]):
         """Remove multiple token sequences from the trie.
-        
+
         Args:
             entities: List of token sequences to remove.
         """
@@ -136,7 +138,7 @@ class LabelsTrie:
 
     def remove_entity(self, tokens: List[int]):
         """Remove a single token sequence from the trie.
-        
+
         Args:
             tokens: Token sequence to remove.
         """

@@ -17,6 +17,11 @@ from huggingface_hub import PyTorchModelHubMixin, snapshot_download
 from torch.utils.data import DataLoader
 from safetensors.torch import save_file
 
+try:
+    from onnxruntime.quantization import QuantType, quantize_dynamic
+except Exception:
+    quantize_dynamic, QuantType = None, None
+
 from .utils import is_module_available
 from .config import (
     GLiNERConfig,
@@ -659,14 +664,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if not hasattr(self, "data_processor") or not hasattr(self, "data_collator_class"):
             raise RuntimeError("Model is not fully initialized (missing data_processor or data_collator).")
 
-    def _maybe_import_quantization(self):
-        try:
-            from onnxruntime.quantization import QuantType, quantize_dynamic
-
-            return quantize_dynamic, QuantType
-        except Exception:
-            return None, None
-
     def _build_dummy_batch(
         self,
         labels: Optional[list[str]] = None,
@@ -743,7 +740,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if not quantize:
             return None
 
-        quantize_dynamic, QuantType = self._maybe_import_quantization()
         if quantize_dynamic is None:
             warnings.warn("onnxruntime.quantization is not available; skipping quantization.", stacklevel=2)
             return None
@@ -940,7 +936,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         components = self._get_freezable_components()
         if component_name in components:
             components[component_name].requires_grad_(False)
-            logger.info(f"Frozen: {component_name}")
+            logger.info("Frozen: %s", component_name)
         else:
             available = ", ".join(components.keys())
             warnings.warn(f"Component '{component_name}' not found. Available components: {available}", stacklevel=2)
@@ -955,7 +951,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         components = self._get_freezable_components()
         if component_name in components:
             components[component_name].requires_grad_(True)
-            logger.info(f"Unfrozen: {component_name}")
+            logger.info("Unfrozen: %s", component_name)
         else:
             available = ", ".join(components.keys())
             warnings.warn(f"Component '{component_name}' not found. Available components: {available}", stacklevel=2)
@@ -1178,7 +1174,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         return input_x
 
     def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, **external_inputs):
-        """Shared batch processing logic"""
+        """Shared batch processing logic."""
         outputs = []
         is_onnx = self.onnx_model
         device = self.device
@@ -1644,7 +1640,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             output_spec = self._get_output_spec()
 
             spec = {
-                "input_names": base_names + [embed_name],
+                "input_names": [*base_names, embed_name],
                 "output_names": ["logits"],
                 "dynamic_axes": {**base_axes, **embed_axes, **output_spec},
             }
@@ -1863,8 +1859,8 @@ class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
 
 
 class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
-    """
-    GLiNER model with span-based encoding and label decoding capabilities.
+    """GLiNER model with span-based encoding and label decoding capabilities.
+
     Supports generating textual labels for entities.
     """
 
@@ -2124,8 +2120,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         return self.data_processor
 
     def _get_special_tokens(self):
-        """
-        Get special tokens to add to tokenizer.
+        """Get special tokens to add to tokenizer.
+
         Can be overridden by child classes.
 
         Returns:
@@ -2352,8 +2348,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                     continue
 
                 # Get head and tail entities (token-level)
-                head_start_tok, head_end_tok, head_type, head_score = entities_list[head_idx]
-                tail_start_tok, tail_end_tok, tail_type, tail_score = entities_list[tail_idx]
+                head_start_tok, head_end_tok, head_type, _ = entities_list[head_idx]
+                tail_start_tok, tail_end_tok, tail_type, _ = entities_list[tail_idx]
 
                 # Convert token indices to text indices
                 head_start_text = start_token_idx_to_text_idx[head_start_tok]
@@ -2668,7 +2664,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # Determine the appropriate class
         gliner_class = cls._get_gliner_class(config)
 
-        logger.info(f"Loading the following GLiNER type: {gliner_class}...")
+        logger.info("Loading the following GLiNER type: %s...", gliner_class)
         # Delegate to the specific class's from_pretrained method
         return gliner_class.from_pretrained(
             model_id=model_id,

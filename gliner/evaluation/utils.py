@@ -1,10 +1,13 @@
 import warnings
-import numpy as np
-from typing import Union, List, Literal
+from typing import List, Union, Literal
 from collections import defaultdict
+
+import numpy as np
+
 
 class UndefinedMetricWarning(UserWarning):
     pass
+
 
 def extract_tp_actual_correct(y_true, y_pred):
     elements_true = defaultdict(set)
@@ -28,6 +31,7 @@ def extract_tp_actual_correct(y_true, y_pred):
         true_sum = np.append(true_sum, len(elements_true_type))
 
     return pred_sum, tp_sum, true_sum, target_names
+
 
 def _prf_divide(
     numerator: np.ndarray,
@@ -57,12 +61,13 @@ def _prf_divide(
 
     return result
 
+
 def _warn_prf(average: str, modifier: str, msg_start: str, result_size: int):
     axis0, axis1 = ("label", "sample") if average == "samples" else ("sample", "label")
     if result_size == 1:
-        msg = f"{msg_start} ill-defined and being set to 0.0 due to no {modifier} {axis0}."  # noqa: E501
+        msg = f"{msg_start} ill-defined and being set to 0.0 due to no {modifier} {axis0}."
     else:
-        msg = f"{msg_start} ill-defined and being set to 0.0 in {axis1}s with no {modifier} {axis0}s."  # noqa: E501
+        msg = f"{msg_start} ill-defined and being set to 0.0 in {axis1}s with no {modifier} {axis0}s."
     msg += " Use `zero_division` parameter to control this behavior."
     warnings.warn(msg, UndefinedMetricWarning, stacklevel=3)
 
@@ -72,7 +77,7 @@ def flatten_for_eval(y_true, y_pred):
     all_pred = []
 
     for i, (true, pred) in enumerate(zip(y_true, y_pred)):
-        all_true.extend([t + [i] for t in true])
-        all_pred.extend([p + [i] for p in pred])
+        all_true.extend([[*t, i] for t in true])
+        all_pred.extend([[*p, i] for p in pred])
 
     return all_true, all_pred

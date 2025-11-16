@@ -851,7 +851,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
     def create_relation_labels(self, batch, 
                             add_reversed_negatives=True,
                             add_random_negatives=True, 
-                            negative_ratio=1.0):
+                            negative_ratio=2.0):
         """
         Create relation labels with negative pair sampling.
         

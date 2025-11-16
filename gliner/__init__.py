@@ -14,6 +14,7 @@ from .config import GLiNERConfig
 
 __all__ = [
     "GLiNER",
+    "GLiNERConfig",
     "InferencePackingConfig",
     "PackedBatch",
     "pack_requests",

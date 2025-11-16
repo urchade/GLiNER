@@ -1,11 +1,14 @@
-from typing import Optional, List, Union
 import os
+from typing import List, Union, Optional
+
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-import torch
-from datasets import load_dataset, Dataset
+
+from datasets import Dataset
+
 from gliner import GLiNER
 
 from .base import GLiNERBasePipeline
+
 
 class GLiNERSummarizer(GLiNERBasePipeline):
     """
@@ -29,7 +32,13 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
     prompt = "Summarize the following text highlighting the most important information:"
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', prompt: Optional[str] = None):
+    def __init__(
+        self,
+        model_id: Optional[str] = None,
+        model: Optional[GLiNER] = None,
+        device: str = "cuda:0",
+        prompt: Optional[str] = None,
+    ):
         """
         Initializes the GLiNERSummarizer.
 
@@ -43,13 +52,13 @@ class GLiNERSummarizer(GLiNERBasePipeline):
         prompt = prompt if prompt is not None else self.prompt
         super().__init__(model_id=model_id, model=model, prompt=prompt, device=device)
 
-
     def process_predictions(self, predictions, **kwargs):
         """
         Processes predictions to extract the highest-scoring text chunk(s).
 
         Args:
             predictions (list): List of predictions with scores.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             list: List of predicted labels for each input.
@@ -60,8 +69,8 @@ class GLiNERSummarizer(GLiNERBasePipeline):
             # Sort predictions by score in descending order
             sorted_predictions = sorted(prediction, key=lambda entity: entity["start"], reverse=False)
 
-            extracted_text = [pred['text'] for pred in sorted_predictions]
-            batch_predicted_labels.append(' '.join(extracted_text))
+            extracted_text = [pred["text"] for pred in sorted_predictions]
+            batch_predicted_labels.append(" ".join(extracted_text))
 
         return batch_predicted_labels
 
@@ -71,23 +80,36 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
         Args:
             texts (list): List of input texts.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             list: List of formatted prompts.
         """
         prompts = []
 
-        for id, text in enumerate(texts):
+        for text in texts:
             prompt = f"{self.prompt} \n {text}"
             prompts.append(prompt)
         return prompts
 
-    def __call__(self, texts: Union[str, List[str]], labels: List[str] = ['summary'], 
-                                    threshold: float = 0.25, batch_size: int = 8, **kwargs):
+    def __call__(
+        self,
+        texts: Union[str, List[str]],
+        labels: List[str] = ["summary"],
+        threshold: float = 0.25,
+        batch_size: int = 8,
+        **kwargs,
+    ):
         return super().__call__(texts, labels, threshold, batch_size)
-    
-    def evaluate(self, dataset_id: Optional[str] = None, dataset: Optional[Dataset] = None, 
-                    labels: Optional[List[str]]=None, threshold: float =0.5, max_examples: float =-1):
+
+    def evaluate(
+        self,
+        dataset_id: Optional[str] = None,
+        dataset: Optional[Dataset] = None,
+        labels: Optional[List[str]] = None,
+        threshold: float = 0.5,
+        max_examples: float = -1,
+    ):
         """
         Evaluates the model on a specified dataset and computes evaluation metrics.
 
@@ -100,7 +122,7 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
         Returns:
             dict: A dictionary containing evaluation metrics.
-        
+
         Raises:
             ValueError: If neither `dataset_id` nor `dataset` is provided.
         """

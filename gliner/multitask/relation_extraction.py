@@ -1,11 +1,14 @@
-from typing import Optional, List, Union
 import os
+from typing import List, Union, Optional
+
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
-import torch
-from datasets import load_dataset, Dataset
+
+from datasets import Dataset, load_dataset
+
 from gliner import GLiNER
 
 from .base import GLiNERBasePipeline
+
 
 class GLiNERRelationExtractor(GLiNERBasePipeline):
     """
@@ -29,7 +32,16 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     prompt = "Extract relationships between entities from the text: "
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, device: str = 'cuda:0', ner_threshold: float = 0.5, rel_threshold: float = 0.5, return_index: bool = False, prompt: Optional[str] = None):
+    def __init__(
+        self,
+        model_id: Optional[str] = None,
+        model: Optional[GLiNER] = None,
+        device: str = "cuda:0",
+        ner_threshold: float = 0.5,
+        rel_threshold: float = 0.5,
+        return_index: bool = False,
+        prompt: Optional[str] = None,
+    ):
         """
         Initializes the GLiNERRelationExtractor.
 
@@ -39,11 +51,14 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
             device (str, optional): Device to run the model on ('cpu' or 'cuda:X'). Defaults to 'cuda:0'.
             ner_threshold (float, optional): Named Entity Recognition threshold to use. Defaults to 0.5.
             rel_threshold (float, optional): Relation Extraction threshold to use. Defaults to 0.5.
+            return_index (bool): Whether return indices or not.
             prompt (str, optional): Template prompt for question-answering.
         """
         # Use the provided prompt or default to the class-level prompt
         prompt = prompt if prompt is not None else self.prompt
         self.return_index = return_index
+        self.ner_threshold = ner_threshold
+        self.rel_threshold = rel_threshold
         super().__init__(model_id=model_id, model=model, prompt=prompt, device=device)
 
     def prepare_texts(self, texts: List[str], **kwargs):
@@ -52,13 +67,14 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
         Args:
             texts (list): List of input texts.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             list: List of formatted prompts.
         """
         prompts = []
 
-        for id, text in enumerate(texts):
+        for text in texts:
             prompt = f"{self.prompt} \n {text}"
             prompts.append(prompt)
         return prompts
@@ -67,7 +83,7 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         relation_labels = []
         for prediction in ner_predictions:
             curr_labels = []
-            unique_entities = {ent['text'] for ent in prediction}
+            unique_entities = {ent["text"] for ent in prediction}
             for relation in relations:
                 for ent in unique_entities:
                     curr_labels.append(f"{ent} <> {relation}")
@@ -75,9 +91,9 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         return relation_labels
 
     def process_predictions(self, predictions, **kwargs):
-        """
-        Processes predictions to extract relations, and if return_index=True,
-        shifts any start/end by the exact number of characters prepended
+        r"""Processes predictions to extract relations.
+
+        If return_index=True, shifts any start/end by the exact number of characters prepended
         (prompt + " \\n ") so they align against the bare `text`.
         """
         batch_predicted_relations = []
@@ -87,22 +103,22 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         for prediction in predictions:
             curr_relations = []
             for target in prediction:
-                source, rel_label = target['label'].split('<>')
+                source, rel_label = target["label"].split("<>")
                 rel = {
-                    "source":   source.strip(),
+                    "source": source.strip(),
                     "relation": rel_label.strip(),
-                    "target":   target['text'].strip(),
-                    "score":    target['score']
+                    "target": target["text"].strip(),
+                    "score": target["score"],
                 }
 
                 if self.return_index:
-                    raw_start = target.get('start')
-                    raw_end   = target.get('end')
+                    raw_start = target.get("start")
+                    raw_end = target.get("end")
                     # subtract the exact prefix length
                     if raw_start is not None:
-                        rel['start'] = raw_start - shift
+                        rel["start"] = raw_start - shift
                     if raw_end is not None:
-                        rel['end']   = raw_end   - shift
+                        rel["end"] = raw_end - shift
 
                 curr_relations.append(rel)
 
@@ -110,21 +126,26 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
         return batch_predicted_relations
 
-    def __call__(self, texts: Union[str, List[str]], relations: List[str]=None, 
-                                entities: List[str] = ['named entity'], 
-                                relation_labels: Optional[List[List[str]]]=None, 
-                                ner_threshold: float = 0.5,
-                                rel_threshold: float = 0.5, 
-                                batch_size: int = 8, **kwargs):
+    def __call__(
+        self,
+        texts: Union[str, List[str]],
+        relations: Optional[List[str]] = None,
+        entities: List[str] = ["named entity"],
+        relation_labels: Optional[List[List[str]]] = None,
+        ner_threshold: float = 0.5,
+        rel_threshold: float = 0.5,
+        batch_size: int = 8,
+        **kwargs,
+    ):
         if isinstance(texts, str):
             texts = [texts]
-        
+
         prompts = self.prepare_texts(texts, **kwargs)
 
         if relation_labels is None:
             # ner
             ner_predictions = self.model.run(texts, entities, threshold=ner_threshold, batch_size=batch_size)
-            #rex
+            # rex
             relation_labels = self.prepare_source_relation(ner_predictions, relations)
 
         predictions = self.model.run(prompts, relation_labels, threshold=rel_threshold, batch_size=batch_size)
@@ -132,26 +153,33 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
         results = self.process_predictions(predictions, **kwargs)
 
         return results
-    
-    def evaluate(self, dataset_id: Optional[str] = None, dataset: Optional[Dataset] = None, 
-                    labels: Optional[List[str]]=None, threshold: float =0.5, max_examples: float =-1):
+
+    def evaluate(
+        self,
+        dataset_id: Optional[str] = None,
+        dataset: Optional[Dataset] = None,
+        labels: Optional[List[str]] = None,
+        threshold: float = 0.5,
+        max_examples: float = -1,
+    ):
         """
         Evaluates the model on a specified dataset and computes evaluation metrics.
 
         Args:
             dataset_id (str, optional): Identifier for the dataset to load (e.g., from Hugging Face datasets).
             dataset (Dataset, optional): A pre-loaded dataset to evaluate. If provided, `dataset_id` is ignored.
-            labels (list, optional): List of target labels to consider for relation extraction. Defaults to None (use all).
+            labels (list, optional): List of target labels to consider for relation extraction. Defaults to None.
             threshold (float): Confidence threshold for predictions. Defaults to 0.5.
             max_examples (int): Maximum number of examples to evaluate. Defaults to -1 (use all available examples).
 
         Returns:
             dict: A dictionary containing evaluation metrics such as F1 scores.
-        
+
         Raises:
             ValueError: If neither `dataset_id` nor `dataset` is provided.
         """
         raise NotImplementedError("Currently `evaluate` method is not implemented.")
+
 
 class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
     """
@@ -161,7 +189,7 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
     and evaluating the model's performance on document-level relation extraction tasks such as DocRED.
     """
 
-    def prepare_dataset(self, raw_data: Dataset, text_column='sents', rel_column='labels', *args, **kwargs):
+    def prepare_dataset(self, raw_data: Dataset, text_column="sents", rel_column="labels", *args, **kwargs):
         """
         Prepares the dataset for evaluation by extracting labeled relations and corresponding text.
 
@@ -170,6 +198,8 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
                             entity mentions, and relation annotations.
             text_column (str, optional): Column name in the dataset containing sentences. Defaults to 'sents'.
             rel_column (str, optional): Column name in the dataset containing relation labels. Defaults to 'labels'.
+            *args: Additional positional arguments.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             tuple: A tuple containing:
@@ -182,38 +212,37 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
         texts_by_line = []
 
         for item in raw_data:
-
-            vertex_set = item.get('vertexSet')
+            vertex_set = item.get("vertexSet")
             sents = item.get(text_column, [])
             labels = item.get(rel_column, [])
 
-            current_labels=[]
+            current_labels = []
 
-            for head_id, tail_id, relation in zip(labels['head'], labels['tail'], labels['relation_text']):
+            for head_id, tail_id, relation in zip(labels["head"], labels["tail"], labels["relation_text"]):
                 current_index = 0
                 head_data = None
                 tail_data = None
 
                 for sublist in vertex_set:
-                      if current_index == head_id:
-                          head_data = sublist
-                      current_index += 1
+                    if current_index == head_id:
+                        head_data = sublist
+                    current_index += 1
 
                 current_index = 0
 
                 for sublist in vertex_set:
-                      if current_index == tail_id:
-                          tail_data = sublist
-                      current_index += 1
+                    if current_index == tail_id:
+                        tail_data = sublist
+                    current_index += 1
 
-                head_name = head_data[0]['name'] if head_data else None
-                tail_name = tail_data[0]['name'] if tail_data else None
+                head_name = head_data[0]["name"] if head_data else None
+                tail_name = tail_data[0]["name"] if tail_data else None
 
-                true_labels.append(f'{head_name} <> {relation} <> {tail_name}')
-                current_labels.append(f'{head_name} <> {relation}')
+                true_labels.append(f"{head_name} <> {relation} <> {tail_name}")
+                current_labels.append(f"{head_name} <> {relation}")
 
             grouped_labels.append(current_labels)
-            result = " ".join(string for sublist in  sents for string in sublist)
+            result = " ".join(string for sublist in sents for string in sublist)
             texts_by_line.append(result)
 
         return texts_by_line, grouped_labels, true_labels
@@ -231,7 +260,6 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
         preds = []
         preds = []
         for predict in predictions:
-            print(predict)
             for pred_ in predict:
                 result = f"{pred_['source']} <> {pred_['relation']} <> {pred_['target']}"
                 preds.append(result)
@@ -265,12 +293,23 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
         recall = tp / (tp + fn) if tp + fn > 0 else 0
         f1 = 2 * (precision * recall) / (precision + recall) if precision + recall > 0 else 0
 
-        return {'precision': precision, 'recall': recall, 'f1': f1, 
-                    'true positives': tp, 'false positives': fp,  'false negatives': fn}
+        return {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "true positives": tp,
+            "false positives": fp,
+            "false negatives": fn,
+        }
 
-    def evaluate(self, dataset_id: str = 'thunlp/docred', dataset: Optional[Dataset] = None, 
-                    labels: Optional[List[str]] = None, threshold: float = 0.5, max_examples: int = -1):
-
+    def evaluate(
+        self,
+        dataset_id: str = "thunlp/docred",
+        dataset: Optional[Dataset] = None,
+        labels: Optional[List[str]] = None,
+        threshold: float = 0.5,
+        max_examples: int = -1,
+    ):
         """
         Evaluates the model on a specified dataset and computes evaluation metrics.
 
@@ -288,7 +327,6 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
         Raises:
             ValueError: If neither `dataset_id` nor `dataset` is provided.
         """
-
         if not dataset and not dataset_id:
             raise ValueError("Either `dataset` or `dataset_id` must be provided.")
 
@@ -297,7 +335,7 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
             dataset = load_dataset(dataset_id, split="validation")
 
         if not isinstance(dataset, Dataset):
-            dataset = dataset['validation']
+            dataset = dataset["validation"]
 
         if max_examples > 0:
             dataset = dataset.shuffle().select(range(min(len(dataset), max_examples)))
