@@ -1,15 +1,19 @@
-from .processor import (BaseProcessor,
-                        UniEncoderSpanProcessor, 
-                        UniEncoderTokenProcessor, 
-                        BaseBiEncoderProcessor,
-                        BiEncoderSpanProcessor, 
-                        BiEncoderTokenProcessor, 
-                        UniEncoderSpanDecoderProcessor, 
-                        RelationExtractionSpanProcessor)
-from .collator import (UniEncoderSpanDataCollator,
-                        BiEncoderSpanDataCollator,
-                        UniEncoderSpanDecoderDataCollator,
-                        RelationExtractionSpanDataCollator,
-                        UniEncoderTokenDataCollator,
-                        BiEncoderTokenDataCollator)
+from .collator import (
+    BiEncoderSpanDataCollator,
+    BiEncoderTokenDataCollator,
+    UniEncoderSpanDataCollator,
+    UniEncoderTokenDataCollator,
+    UniEncoderSpanDecoderDataCollator,
+    RelationExtractionSpanDataCollator,
+)
+from .processor import (
+    BaseProcessor,
+    BaseBiEncoderProcessor,
+    BiEncoderSpanProcessor,
+    BiEncoderTokenProcessor,
+    UniEncoderSpanProcessor,
+    UniEncoderTokenProcessor,
+    UniEncoderSpanDecoderProcessor,
+    RelationExtractionSpanProcessor,
+)
 from .tokenizer import WordsSplitter
