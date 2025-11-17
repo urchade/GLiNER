@@ -1022,6 +1022,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 adj_matrix: Optional[torch.FloatTensor] = None,
                 rel_matrix: Optional[torch.FloatTensor] = None,
                 threshold: Optional[float] = 0.5,
+                adjacency_threshold: Optional[float] = 0.5,
                 **kwargs
                 ):
 
@@ -1084,7 +1085,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             
             # Build entity pairs based on adjacency matrix
             pair_idx, pair_mask, head_rep_selected, tail_rep_selected = build_entity_pairs(
-                adj_for_selection, target_span_rep, threshold=threshold
+                adj_for_selection, target_span_rep, threshold=adjacency_threshold
             )
             
             N = head_rep_selected.size(1)  # Number of selected pairs
@@ -1133,7 +1134,9 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                     **kwargs
                 )
                 
-                loss = loss + adj_loss + rel_loss
+                loss = (loss*self.config.span_loss_coef + 
+                        adj_loss*self.config.adjacency_loss_coef + 
+                        rel_loss*self.config.relation_loss_coef)
 
         output = GLiNERRelexOutput(
             logits=scores,
@@ -1151,7 +1154,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
     def adj_loss(self, logits, labels, adj_mask, alpha: float = -1., gamma: float = 0.0, 
                  prob_margin: float = 0.0, label_smoothing: float = 0.0,
                  reduction: str = 'sum', masking="span", negatives=1.0, **kwargs):
-        B, E, E = logits.shape
+        B = logits.size(0)
 
         logits = logits.unsqueeze(-1).view(B, -1, 1)
         labels = labels.unsqueeze(-1).view(B, -1, 1)

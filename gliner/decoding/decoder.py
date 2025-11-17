@@ -727,6 +727,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         rel_mask: Optional[torch.Tensor] = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
+        relation_threshold: float = 0.5,
         multi_label: bool = False,
         rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
         **kwargs,
@@ -757,7 +758,9 @@ class SpanRelexDecoder(BaseSpanDecoder):
                 indicating valid relations. If None, all relations are considered valid.
             flat_ner: If True, applies greedy filtering to ensure non-overlapping
                 entity spans. If False, allows overlapping entities. Defaults to False.
-            threshold: Minimum confidence score (0-1) for both entity and relation
+            threshold: Minimum confidence score (0-1) for both entity
+                predictions to be included in the output. Defaults to 0.5.
+            relation_threshold: Minimum confidence score (0-1) for both relation
                 predictions to be included in the output. Defaults to 0.5.
             multi_label: If True, allows multiple entity types per span. If False,
                 only the highest-scoring entity type per span is kept. Defaults to False.
@@ -812,7 +815,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
                 rel_mask=rel_mask,
                 spans=spans,
                 rel_id_to_classes=rel_id_to_classes,
-                threshold=threshold,
+                threshold=relation_threshold,
                 batch_size=len(tokens),
             )
 

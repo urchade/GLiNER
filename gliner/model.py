@@ -2144,6 +2144,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         relations: List[str],
         flat_ner: bool = True,
         threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
         multi_label: bool = False,
         batch_size: int = 8,
@@ -2158,6 +2159,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             relations: Relation type labels (List[str]).
             flat_ner: Whether to use flat NER (no nested entities).
             threshold: Confidence threshold for entities.
+            adjacency_threshold: Confidence threshold for adjacency matrix reconstruction (defaults to threshold).
             relation_threshold: Confidence threshold for relations (defaults to threshold).
             multi_label: Allow multiple labels per span.
             batch_size: Batch size for processing.
@@ -2174,6 +2176,9 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         if relation_threshold is None:
             relation_threshold = threshold
+
+        if adjacency_threshold is None:
+            adjacency_threshold = threshold
 
         # Prepare entity and relation types
         entity_types = list(dict.fromkeys(labels))
@@ -2214,7 +2219,9 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             batch_rel_id_to_classes = batch.get("rel_id_to_classes", [])
 
             model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
-            model_output = self.model(**model_inputs, threshold=threshold)
+            model_output = self.model(**model_inputs, threshold=threshold, 
+                                        adjacency_threshold=adjacency_threshold
+            )
 
             # Decode entities
             model_logits = model_output.logits
@@ -2242,6 +2249,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 rel_mask=rel_mask,
                 flat_ner=flat_ner,
                 threshold=threshold,
+                relation_threshold=relation_threshold,
                 multi_label=multi_label,
                 rel_id_to_classes=batch["rel_id_to_classes"],
             )
@@ -2295,7 +2303,6 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 all_start_token_idx_to_text_idx,
                 all_end_token_idx_to_text_idx,
                 texts,
-                relation_threshold,
             )
             return all_entities, all_relations
 
@@ -2308,7 +2315,6 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         all_start_token_idx_to_text_idx,
         all_end_token_idx_to_text_idx,
         texts,
-        threshold=0.5,
     ):
         """
         Process relation predictions into readable format.
@@ -2320,7 +2326,6 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             all_start_token_idx_to_text_idx: Token to text index mappings (start)
             all_end_token_idx_to_text_idx: Token to text index mappings (end)
             texts: Original input texts
-            threshold: Confidence threshold for relations
 
         Returns:
             List of relation lists, one per example
@@ -2339,10 +2344,6 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
             # Process each relation tuple from decoder
             for head_idx, relation_label, tail_idx, score in rel_tuples:
-                # Check threshold (redundant but safe)
-                if score < threshold:
-                    continue
-
                 # Validate entity indices
                 if head_idx >= len(entities_list) or tail_idx >= len(entities_list):
                     continue

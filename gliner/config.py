@@ -182,6 +182,9 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         embed_rel_token: bool = True,
         rel_token_index: int = -1,
         rel_token: str = "<<REL>>",
+        span_loss_coef=1.0,
+        adjacency_loss_coef=1.0,
+        relation_loss_coef=1.0,
         **kwargs,
     ):
         """Initialize UniEncoderSpanRelexConfig.
@@ -194,6 +197,9 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
             embed_rel_token (bool, optional): Whether to embed relation tokens. Defaults to True.
             rel_token_index (int, optional): Index of relation token. Defaults to -1.
             rel_token (str, optional): Relation marker token. Defaults to "<<REL>>".
+            span_loss_coef (float, optional): Span representaton loss coefficient. Defaults to 1.0.
+            adjacency_loss_coef (float, optional): Adjacency modeling loss coefficient. Defaults to 1.0.
+            relation_loss_coef (float, optional): Relation representaton loss coefficient. Defaults to 1.0.
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 
         Raises:
@@ -206,6 +212,9 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         self.embed_rel_token = embed_rel_token
         self.rel_token_index = rel_token_index
         self.rel_token = rel_token
+        self.span_loss_coef = span_loss_coef
+        self.adjacency_loss_coef = adjacency_loss_coef
+        self.relation_loss_coef = relation_loss_coef
         self.model_type = "gliner_uni_encoder_span_relex"
         if self.span_mode == "token-level":
             raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token-level'")
