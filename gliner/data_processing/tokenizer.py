@@ -523,7 +523,7 @@ class WordsSplitter(TokenSplitterBase):
     tokenization strategies.
     """
 
-    def __init__(self, splitter_type="universal"):
+    def __init__(self, splitter_type="whitespace"):
         """Initialize the words splitter with the specified backend.
 
         Args:
@@ -538,7 +538,7 @@ class WordsSplitter(TokenSplitterBase):
                 - 'camel': CAMeL Tools for Arabic
                 - 'hindi': Indic NLP for Hindi
                 - 'stanza': Stanza multi-language tokenization
-                Default is 'universal'.
+                Default is 'whitespace'.
 
         Raises:
             ValueError: If the specified splitter_type is not implemented.

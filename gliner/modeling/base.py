@@ -232,8 +232,8 @@ class BaseUniEncoderModel(BaseModel):
         super().__init__(config, from_pretrained, cache_dir)
         self.token_rep_layer = Encoder(config, from_pretrained, cache_dir=cache_dir)
 
-        if self.config.has_rnn:
-            self.rnn = LstmSeq2SeqEncoder(config)
+        if self.config.num_rnn_layers>0:
+            self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
 
         if config.post_fusion_schema:
             self.cross_fuser = CrossFuser(
@@ -312,7 +312,7 @@ class BaseUniEncoderModel(BaseModel):
             )
         )
 
-        if self.config.has_rnn:
+        if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
 
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
@@ -493,7 +493,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
 class UniEncoderTokenModel(BaseUniEncoderModel):
     """Token-based NER model using uni-encoder architecture.
 
-    This model classifies each token independently as entity type or non-entity.
+    This model classifies each word independently as entity type or non-entity.
 
     Attributes:
         scorer (Scorer): Scoring layer for computing token-label compatibility.
@@ -651,8 +651,8 @@ class BaseBiEncoderModel(BaseModel):
         super().__init__(config, from_pretrained, cache_dir)
         self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir=cache_dir)
 
-        if self.config.has_rnn:
-            self.rnn = LstmSeq2SeqEncoder(config)
+        if self.config.num_rnn_layers:
+            self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
 
         if config.post_fusion_schema:
             self.cross_fuser = CrossFuser(
@@ -1740,7 +1740,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             )
         )
 
-        if self.config.has_rnn:
+        if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
 
         target_W = span_idx.size(1) // self.config.max_width

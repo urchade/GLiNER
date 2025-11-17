@@ -27,7 +27,7 @@ class BaseGLiNERConfig(PretrainedConfig):
         max_types: int = 25,
         max_len: int = 384,
         words_splitter_type: str = "whitespace",
-        has_rnn: bool = True,
+        num_rnn_layers: int = 1,
         fuse_layers: bool = False,
         embed_ent_token: bool = True,
         class_token_index: int = -1,
@@ -56,7 +56,7 @@ class BaseGLiNERConfig(PretrainedConfig):
             max_types (int, optional): Maximum number of entity types. Defaults to 25.
             max_len (int, optional): Maximum sequence length. Defaults to 384.
             words_splitter_type (str, optional): Word splitter type. Defaults to "whitespace".
-            has_rnn (bool, optional): Whether model includes RNN (LSTM) layers. Defaults to True.
+            num_rnn_layers (int, optional): Number of LSTM layers, if less then 1, then LSTM is not used.
             fuse_layers (bool, optional): Whether to fuse layers. Defaults to False.
             embed_ent_token (bool, optional): Whether to embed entity tokens. Defaults to True.
             class_token_index (int, optional): Index of class token. Defaults to -1.
@@ -89,7 +89,7 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.max_types = max_types
         self.max_len = max_len
         self.words_splitter_type = words_splitter_type
-        self.has_rnn = has_rnn
+        self.num_rnn_layers = num_rnn_layers
         self.fuse_layers = fuse_layers
         self.class_token_index = class_token_index
         self.embed_ent_token = embed_ent_token

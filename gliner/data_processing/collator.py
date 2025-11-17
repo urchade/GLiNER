@@ -168,7 +168,7 @@ class BaseTokenCollator(BaseDataCollator):
     Base collator for token-based processors.
 
     Provides common logic for handling token-level annotations and entity IDs.
-    Used by all token-level NER models (BIO/BIOES tagging).
+    Used by all token-level NER models.
     """
 
     def _add_token_fields(self, model_input: Dict[str, Any], raw_batch: Dict[str, Any]) -> None:

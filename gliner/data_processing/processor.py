@@ -135,8 +135,7 @@ class BaseProcessor(ABC):
     ) -> Tuple[List[List[str]], List[int]]:
         """Prepare input texts with entity type prompts.
 
-        Prepends entity type tokens to each text sequence to create prompts
-        that guide the model about which entity types to extract.
+        Prepends entity type special tokens that aggregates entity label information.
 
         Args:
             texts: Sequences of token strings, one per example.
@@ -705,8 +704,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
 class BaseBiEncoderProcessor(BaseProcessor):
     """Base processor for bi-encoder architectures.
 
-    Bi-encoder models use separate encoders for text and entity types,
-    enabling more flexible entity type handling and zero-shot capabilities.
+    Bi-encoder models use separate encoders for text and entity types.
     """
 
     def __init__(self, config, tokenizer, words_splitter, labels_tokenizer):
@@ -802,7 +800,7 @@ class BaseBiEncoderProcessor(BaseProcessor):
 class BiEncoderSpanProcessor(UniEncoderSpanProcessor, BaseBiEncoderProcessor):
     """Processor for span-based NER with bi-encoder architecture.
 
-    Combines span enumeration from UniEncoderSpanProcessor with the dual-encoder
+    Combines span enumeration from UniEncoderSpanProcessor with the bi-encoder
     approach from BaseBiEncoderProcessor.
     """
 
@@ -1516,7 +1514,6 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                     # Create multi-hot vector for positive pairs
                     for class_id in relations:
                         rel_matrix[i, pair_idx, class_id - 1] = 1.0
-                # Negative pairs already have all-zeros (no relations)
 
             adj_matrix[i, :N, :N] = adj
 

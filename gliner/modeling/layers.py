@@ -303,10 +303,10 @@ class CrossFuser(nn.Module):
     attention operations to apply.
 
     Schema notation:
-        - 'l2l': Self-attention on query sequence
-        - 't2t': Self-attention on key sequence
-        - 'l2t': Cross-attention from query to key
-        - 't2l': Cross-attention from key to query
+        - 'l2l': Self-attention on label sequence
+        - 't2t': Self-attention on text sequence
+        - 'l2t': Cross-attention from label to text
+        - 't2l': Cross-attention from text to label
 
     Attributes:
         d_model: Model dimension size.

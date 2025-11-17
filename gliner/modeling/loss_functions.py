@@ -93,8 +93,6 @@ def focal_loss_with_logits(
     neg_term = -(1.0 - targets) * torch.log((1.0 - pm).clamp(min=eps))
     loss = pos_term + neg_term
 
-    # F.binary_cross_entropy_with_logits(inputs, targets, reduction="none")
-
     # Apply the valid mask to the loss
     loss = loss * valid_mask
 

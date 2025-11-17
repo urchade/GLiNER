@@ -45,11 +45,6 @@ class Scorer(nn.Module):
     def forward(self, token_rep, label_rep):
         """Compute token-label compatibility scores.
 
-        For each token position and each label class, computes three scores
-        (typically representing start probability, end probability, and overall
-        compatibility). The scoring uses a bilinear-style interaction between
-        projected token and label representations.
-
         Args:
             token_rep (torch.Tensor): Token representations of shape
                 [batch_size, seq_len, hidden_size].

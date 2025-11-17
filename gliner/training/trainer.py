@@ -68,7 +68,7 @@ class TrainingArguments(transformers.TrainingArguments):
             Defaults to 0.
         loss_reduction: Reduction method for loss ('sum', 'mean', or 'none').
             Defaults to 'sum'.
-        negatives: Number or ratio of negative samples to use. Defaults to 1.0.
+        negatives: Ratio of negative samples to use. Defaults to 1.0.
         masking: Masking strategy for training ('global' or other strategies).
             Defaults to 'global'.
     """

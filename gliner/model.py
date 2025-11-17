@@ -410,7 +410,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         add_tokens = instance._get_special_tokens()
         # Resize token embeddings if needed
         if resize_token_embeddings and (config_instance.class_token_index == -1 or config_instance.vocab_size == -1):
-            add_tokens = instance._get_special_tokens()
             if tokenizer is not None:
                 tokenizer.add_tokens(add_tokens, special_tokens=True)
             instance.resize_embeddings()
