@@ -62,5 +62,188 @@ stanza = [
     "langdetect"
 ]
 
+[dependency-groups]
+# version pins are in uv.lock
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff"
+]
+
+[tool.ruff]
+line-length = 120
+indent-width = 4
+output-format = "grouped"
+target-version = "py39"
+
+# Exclude common directories
+exclude = [
+    ".git",
+    ".ruff_cache",
+    ".venv",
+    "__pycache__",
+    "build",
+    "dist",
+    "*.egg-info",
+]
+
+[tool.ruff.format]
+docstring-code-format = true
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    # Pyflakes
+    "F",
+    # pycodestyle
+    "E",
+    "W",
+    # isort
+    "I",
+    # pydocstyle
+    "D",
+    # pyupgrade
+    "UP",
+    # bugbear
+    "B",
+    # simplify
+    "SIM",
+    # future annotations
+    "FA",
+    # unused arguments
+    "ARG",
+    # print statements
+    "T20",
+    # type checking
+    "TC",
+    # import rules
+    "TID",
+    # comprehensions
+    "C4",
+    # errmsg
+    "EM",
+    # logging
+    "G",
+    # Pylint
+    "PL",
+    # Ruff-specific rules
+    "RUF"
+]
+
+ignore = [
+    # Missing docstring in public module
+    "D100",
+    # Missing docstring in public class
+    "D101",
+    # Missing docstring in public method
+    "D102",
+    # Missing docstring in public function
+    "D103",
+    # Missing docstring in public package
+    "D104",
+    # Missing docstring in magic method
+    "D105",
+    # Missing docstring in `__init__`
+    "D107",
+    # One-line docstring should fit on one line
+    "D200",
+    # Multi-line docstring summary should start at the first line
+    "D212",
+    # First line should end with a period
+    "D400",
+    # First line should be in imperative mood
+    "D401",
+    # Mutable class attributes should be annotated with `typing.ClassVar`
+    "RUF012",
+    # Too many arguments
+    "PLR0913",
+    # Too many branches
+    "PLR0912",
+    # Too many statements
+    "PLR0915",
+    # Magic value used in comparison
+    "PLR2004",
+    # Mutable defaults
+    "B006",
+    # Use of `assert` detected
+    "S101",
+    # Use `contextlib.suppress()` instead of try-except-pass
+    "SIM105",
+    # Use ternary operator instead of if-else-block
+    "SIM108",
+    # Deprecated typing imports
+    "UP035",
+    "UP006",
+    # Exceptions message formating
+    "EM101",
+    "EM102",
+    # Prefer absolute imports
+    "TID252",
+    # Unused method arguments
+    "ARG002",
+    # Ambiguos symbols in docstring, we may ned them for scientific notations
+    "RUF002"
+]
+
+unfixable = [
+    # Disable auto fix for unused imports (safer to review manually)
+    "F401",
+    # Disable auto fix for print statements
+    "T201",
+    "T203",
+    # Disable auto fix for unused variables
+    "F841",
+]
+
+# Allow unused variables when underscore-prefixed
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+extend-safe-fixes = [
+    "FA102",  # future annotations
+    "UP",     # pyupgrade fixes
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = [
+    "F401",  # Unused imports in __init__.py are often intentional
+    "F403",  # Star imports in __init__.py
+]
+"tests/**/*.py" = [
+    "D",      # No docstring requirements in tests
+    "ARG",    # Unused arguments are common in test fixtures
+    "PLR2004", # Magic values are fine in tests
+    "S101",   # Assert is expected in tests
+]
+
+[tool.ruff.lint.isort]
+length-sort = true
+length-sort-straight = true
+combine-as-imports = true
+extra-standard-library = ["typing_extensions"]
+known-first-party = ["gliner"]
+section-order = [
+    "future",
+    "standard-library",
+    "third-party",
+    "first-party",
+    "local-folder",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.pylint]
+max-args = 20
+max-branches = 15
+max-returns = 8
+max-statements = 60
+
+[tool.ruff.lint.pyupgrade]
+# Preserve types, even if a file imports `from __future__ import annotations`
+keep-runtime-typing = true
+
 [project.urls]
 Homepage = "https://github.com/urchade/GLiNER"
