@@ -1,9 +1,10 @@
 import os
-from typing import List, Optional, Union
+from typing import List, Union, Optional
 
 import evaluate
-from gliner import GLiNER
 from datasets import Dataset, load_dataset
+
+from gliner import GLiNER
 
 from .base import GLiNERBasePipeline
 

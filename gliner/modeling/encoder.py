@@ -131,7 +131,7 @@ class Transformer(nn.Module):
             if not IS_PEFT:
                 warnings.warn(
                     "Adapter configs were detected, if you want to apply them you need to install peft package.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
             else:
                 adapter_config = LoraConfig.from_pretrained(model_name)
@@ -609,7 +609,10 @@ class Transformer(nn.Module):
 
         for idx, layer_module in enumerate(stack.block):
             if output_hidden_states:
-                all_hidden_states = (*all_hidden_states, hidden_states,)
+                all_hidden_states = (
+                    *all_hidden_states,
+                    hidden_states,
+                )
 
             layer_head_mask = head_mask[idx] if head_mask is not None else None
 
@@ -633,7 +636,10 @@ class Transformer(nn.Module):
             position_bias = layer_outputs[1]
 
             if output_attentions:
-                all_attentions = (*all_attentions, layer_outputs[2],)
+                all_attentions = (
+                    *all_attentions,
+                    layer_outputs[2],
+                )
 
         hidden_states = stack.final_layer_norm(hidden_states)
         hidden_states = stack.dropout(hidden_states)

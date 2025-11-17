@@ -1,11 +1,11 @@
 from .base import (
     BaseModel,
-    BaseUniEncoderModel,
-    UniEncoderSpanModel,
-    UniEncoderTokenModel,
     BaseBiEncoderModel,
     BiEncoderSpanModel,
+    BaseUniEncoderModel,
     BiEncoderTokenModel,
-    UniEncoderSpanDecoderModel,
+    UniEncoderSpanModel,
+    UniEncoderTokenModel,
     UniEncoderSpanRelexModel,
+    UniEncoderSpanDecoderModel,
 )

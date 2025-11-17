@@ -112,7 +112,7 @@ class DecoderTransformer(nn.Module):
             if not IS_PEFT:
                 warnings.warn(
                     "Adapter configs were detected, if you want to apply them you need to install peft package.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
             else:
                 adapter_config = LoraConfig.from_pretrained(model_name)

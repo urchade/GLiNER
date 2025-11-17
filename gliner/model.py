@@ -2219,9 +2219,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             batch_rel_id_to_classes = batch.get("rel_id_to_classes", [])
 
             model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
-            model_output = self.model(**model_inputs, threshold=threshold, 
-                                        adjacency_threshold=adjacency_threshold
-            )
+            model_output = self.model(**model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold)
 
             # Decode entities
             model_logits = model_output.logits

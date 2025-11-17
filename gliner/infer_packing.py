@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional, Sequence
 from dataclasses import dataclass
+
 import numpy as np
 import torch
 
@@ -390,7 +391,7 @@ def unpack_spans(per_token_outputs: Any, packed: PackedBatch) -> List[Any]:
             length = lengths[seg_idx]
             offset = offsets[seg_idx]
             if length == 0:
-                segment = tensor.new_zeros((0,) + tensor.shape[2:])
+                segment = tensor.new_zeros((0, *tensor.shape[2:]))
             else:
                 segment = tensor[stream_idx, offset : offset + length]
             outputs[req_idx].append(segment)
@@ -398,7 +399,7 @@ def unpack_spans(per_token_outputs: Any, packed: PackedBatch) -> List[Any]:
     merged: List[Any] = []
     for parts in outputs:
         if not parts:
-            merged.append(tensor.new_zeros((0,) + tensor.shape[2:]))
+            merged.append(tensor.new_zeros((0, *tensor.shape[2:])))
         elif len(parts) == 1:
             merged.append(parts[0])
         else:
