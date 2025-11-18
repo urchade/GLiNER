@@ -57,6 +57,7 @@ tokenizers = [
     "spacy",
     "stanza"
 ]
+training = ["accelerate"]
 stanza = [
     "stanza",
     "langdetect"
