@@ -7,6 +7,7 @@ GLiNER is a framework for training and deploying Named Entity Recognition (NER) 
         <img alt="Python" src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" />
         <img alt="Version" src="https://img.shields.io/pypi/v/gliner?style=for-the-badge&color=3670A0">
     </a>
+    <a href="https://clickpy.clickhouse.com/dashboard/gliner"><img src="https://static.pepy.tech/badge/gliner" alt="GLiNER Downloads"></a>
 </p>
 
 <p align="center">
