@@ -1,3 +1,6 @@
+
+# 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
+
 <div align="center">
     <div>
         <a href="https://clickpy.clickhouse.com/dashboard/gliner"><img src="https://static.pepy.tech/badge/gliner" alt="GLiNER Downloads"></a>
@@ -12,8 +15,6 @@
     </div>
     <br>
 </div>
-
-# 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
 GLiNER is a framework for training and deploying Named Entity Recognition (NER) models that can identify any entity type using bidirectional transformer encoders (BERT-like). Beyond standard NER, GLiNER supports multiple tasks including joint entity and relation extraction through specialized architectures. It provides a practical alternative to both traditional NER models, which are limited to predefined entity types, and Large Language Models (LLMs), which offer flexibility but require significant computational resources.
 
