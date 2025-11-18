@@ -1,6 +1,6 @@
 # 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
-GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
+GLiNER is a framework for training and deploying Named Entity Recognition (NER) models that can identify any entity type using bidirectional transformer encoders (BERT-like). Beyond standard NER, GLiNER supports multiple tasks including joint entity and relation extraction through specialized architectures. It provides a practical alternative to both traditional NER models, which are limited to predefined entity types, and Large Language Models (LLMs), which offer flexibility but require significant computational resources.
 
 <p align="center">
     <a href="https://pypi.org/project/gliner/" target="_blank">
@@ -99,6 +99,7 @@ European Championship => competitions
 ## 👨‍💻 Model Authors
 The model authors are:
 * [Urchade Zaratiana](https://huggingface.co/urchade)
+* [Ihor Stepanov](https://github.com/Ingvarstep)
 * Nadi Tomeh
 * Pierre Holat
 * Thierry Charnois
@@ -126,6 +127,18 @@ If you find GLiNER useful in your research, please consider citing our paper:
     doi = "10.18653/v1/2024.naacl-long.300",
     pages = "5364--5376",
     abstract = "Named Entity Recognition (NER) is essential in various Natural Language Processing (NLP) applications. Traditional NER models are effective but limited to a set of predefined entity types. In contrast, Large Language Models (LLMs) can extract arbitrary entities through natural language instructions, offering greater flexibility. However, their size and cost, particularly for those accessed via APIs like ChatGPT, make them impractical in resource-limited scenarios. In this paper, we introduce a compact NER model trained to identify any type of entity. Leveraging a bidirectional transformer encoder, our model, GLiNER, facilitates parallel entity extraction, an advantage over the slow sequential token generation of LLMs. Through comprehensive testing, GLiNER demonstrate strong performance, outperforming both ChatGPT and fine-tuned LLMs in zero-shot evaluations on various NER benchmarks.",
+}
+```
+
+```bibtex
+@misc{stepanov2024glinermultitaskgeneralistlightweight,
+      title={GLiNER multi-task: Generalist Lightweight Model for Various Information Extraction Tasks}, 
+      author={Ihor Stepanov and Mykhailo Shtopko},
+      year={2024},
+      eprint={2406.12925},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2406.12925}, 
 }
 ```
 ## Support and funding
