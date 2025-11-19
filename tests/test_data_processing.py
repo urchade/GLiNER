@@ -585,7 +585,7 @@ class TestBaseProcessor:
     def test_prepare_inputs_dict_entities(self, processor):
         """Should handle entity dict with per-example entities."""
         texts = [["text1"], ["text2"]]
-        entities = {0: ["PER"], 1: ["LOC", "ORG"]}
+        entities = [{"PER": 0}, {"PER": 0, "LOC": 1, "ORG": 2}]
         
         input_texts, prompt_lengths = processor.prepare_inputs(texts, entities)
         
@@ -619,21 +619,13 @@ class TestBaseProcessor:
     
     def test_select_entities_from_dict(self, processor):
         """Should select entities from dict by index."""
-        entities = {0: ["PER"], 1: ["LOC"]}
+        entities = [{"PER": 0}, {"LOC": 0}]
         
         result0 = processor._select_entities(0, entities, blank=None)
         result1 = processor._select_entities(1, entities, blank=None)
         
         assert result0 == ["PER"]
         assert result1 == ["LOC"]
-    
-    def test_select_entities_missing_index(self, processor):
-        """Should return empty list for missing dict key."""
-        entities = {0: ["PER"]}
-        
-        result = processor._select_entities(5, entities, blank=None)
-        
-        assert result == []
     
     def test_batch_generate_class_mappings_basic(self, processor, sample_batch_list):
         """Should generate class mappings for batch."""
@@ -1157,13 +1149,13 @@ class TestBiEncoderSpanProcessor:
         assert "MISC" in all_types
 
 
-class TestEncoderDecoderSpanProcessor:
-    """Test suite for EncoderDecoderSpanProcessor."""
+class TestUniEncoderSpanDecoderProcessor:
+    """Test suite for UniEncoderSpanDecoderProcessor."""
     
     @pytest.fixture
     def processor(self, mock_config, mock_tokenizer, mock_words_splitter):
-        """Create EncoderDecoderSpanProcessor instance."""
-        from gliner.data_processing import EncoderDecoderSpanProcessor
+        """Create UniEncoderSpanDecoderProcessor instance."""
+        from gliner.data_processing import UniEncoderSpanDecoderProcessor
         
         decoder_tokenizer = Mock()
         decoder_tokenizer.unk_token = "[UNK]"
@@ -1178,19 +1170,19 @@ class TestEncoderDecoderSpanProcessor:
         
         decoder_tokenizer.side_effect = mock_decode_tokenize
         
-        return EncoderDecoderSpanProcessor(
+        return UniEncoderSpanDecoderProcessor(
             mock_config, mock_tokenizer, mock_words_splitter, decoder_tokenizer
         )
     
     def test_initialization_with_decoder_tokenizer(self, mock_config, mock_tokenizer, mock_words_splitter):
         """Should initialize with decoder tokenizer."""
-        from gliner.data_processing import EncoderDecoderSpanProcessor
+        from gliner.data_processing import UniEncoderSpanDecoderProcessor
         
         decoder_tokenizer = Mock()
         decoder_tokenizer.unk_token = "[UNK]"
         decoder_tokenizer.pad_token = "[PAD]"
         
-        processor = EncoderDecoderSpanProcessor(
+        processor = UniEncoderSpanDecoderProcessor(
             mock_config, mock_tokenizer, mock_words_splitter, decoder_tokenizer
         )
         
@@ -1279,8 +1271,8 @@ class TestRelationExtractionSpanProcessor:
         ner = [(0, 0, "PER"), (3, 3, "ORG")]
         relations = [(0, 1, "WORKS_FOR")]
         classes_to_id = {"PER": 1, "ORG": 2}
-        
-        result = processor.preprocess_example(tokens, ner, classes_to_id, relations)
+        rel_classes_to_id = {"WORKS_FOR": 0}
+        result = processor.preprocess_example(tokens, ner, classes_to_id, relations, rel_classes_to_id)
         
         assert "relations" in result
         assert result["relations"] == relations
@@ -1292,6 +1284,9 @@ class TestRelationExtractionSpanProcessor:
                 "tokens": ["word"],
                 "span_idx": torch.tensor([[0, 0]]),
                 "span_label": torch.tensor([1]),
+                # New required fields for relations
+                "rel_idx": torch.tensor([[0, 0]]),
+                "rel_label": torch.tensor([0]),
                 "seq_length": 1,
                 "entities": [],
                 "relations": [],
@@ -1301,14 +1296,23 @@ class TestRelationExtractionSpanProcessor:
         id_to_classes = [{1: "TYPE"}]
         rel_class_to_ids = [{"REL": 1}]
         rel_id_to_classes = [{1: "REL"}]
-        
+
         result = processor.create_batch_dict(
             batch, class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes
         )
-        
+
+        # Existing checks
         assert "rel_class_to_ids" in result
         assert "rel_id_to_classes" in result
-    
+
+        # Optional extra sanity checks
+        assert result["rel_class_to_ids"] == rel_class_to_ids
+        assert result["rel_id_to_classes"] == rel_id_to_classes
+        assert "rel_idx" in result
+        assert "rel_label" in result
+        assert result["rel_idx"].shape[0] == 1  # batch size
+        assert result["rel_label"].shape[0] == 1
+        
     def test_prepare_inputs_with_relations(self, processor):
         """Should add relation tokens to input."""
         texts = [["word1", "word2"]]
