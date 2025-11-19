@@ -203,7 +203,6 @@ class BaseRelexEvaluator(BaseEvaluator):
         The input format expects entity indices rather than entity spans directly.
         Entity spans are looked up from the entity list using these indices.
     """
-
     def get_ground_truth(self, ents, rels):
         """Extract ground truth relations in evaluation format.
 
@@ -269,9 +268,11 @@ class BaseRelexEvaluator(BaseEvaluator):
         """
         all_true_rel = []
         all_outs_rel = []
-        for i, j in zip(self.all_true, self.all_outs):
-            e = self.get_ground_truth(i)
+        for true_item, pred_item in zip(self.all_true, self.all_outs):
+            true_ent, true_rel = true_item
+            pred_ent, pred_rel = pred_item
+            e = self.get_ground_truth(true_ent, true_rel)
             all_true_rel.append(e)
-            e = self.get_predictions(j)
+            e = self.get_predictions(pred_ent, pred_rel)
             all_outs_rel.append(e)
         return all_true_rel, all_outs_rel

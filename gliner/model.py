@@ -35,7 +35,7 @@ from .config import (
 )
 from .decoding import SpanDecoder, TokenDecoder, SpanRelexDecoder, SpanGenerativeDecoder
 from .training import Trainer, TrainingArguments
-from .evaluation import BaseNEREvaluator
+from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
     BaseORTModel,
     BiEncoderSpanORTModel,
@@ -2379,6 +2379,134 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             all_relations.append(relations)
 
         return all_relations
+
+    def evaluate(
+        self,
+        test_data: List[Dict[str, Any]],
+        flat_ner: bool = False,
+        multi_label: bool = False,
+        threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
+        relation_threshold: Optional[float] = None,
+        batch_size: int = 12,
+    ) -> Tuple[Tuple[Any, float], Tuple[Any, float]]:
+        """Evaluate the model on both NER and relation extraction tasks.
+
+        Args:
+            test_data: The test data containing text, entity, and relation annotations.
+            flat_ner: Whether to use flat NER. Defaults to False.
+            multi_label: Whether to use multi-label classification. Defaults to False.
+            threshold: The threshold for entity predictions. Defaults to 0.5.
+            adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
+            relation_threshold: The threshold for relation predictions. Defaults to threshold.
+            batch_size: The batch size for evaluation. Defaults to 12.
+
+        Returns:
+            Tuple of ((ner_output, ner_f1), (rel_output, rel_f1)) containing:
+            - ner_output: Formatted string with NER P, R, F1
+            - ner_f1: NER F1 score
+            - rel_output: Formatted string with relation extraction P, R, F1
+            - rel_f1: Relation extraction F1 score
+        """
+        self.eval()
+        
+        if relation_threshold is None:
+            relation_threshold = threshold
+        
+        if adjacency_threshold is None:
+            adjacency_threshold = threshold
+        
+        # Create the dataset and data loader
+        dataset = test_data
+        collator = self.data_collator_class(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_relations=True,
+            return_id_to_classes=True,
+            return_rel_id_to_classes=True,
+            prepare_labels=False,
+        )
+        data_loader = torch.utils.data.DataLoader(
+            dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
+        )
+
+        all_entity_preds = []
+        all_relation_preds = []
+        all_true_entities = []
+        all_true_relations = []
+
+        # Iterate over data batches
+        for batch in data_loader:
+            if not self.onnx_model:
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+
+            # Get model predictions
+            model_inputs = batch.copy()
+            model_output = self.model(
+                **model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold
+            )
+
+            # Extract logits and relation outputs
+            model_logits = model_output.logits
+            if not isinstance(model_logits, torch.Tensor):
+                model_logits = torch.from_numpy(model_logits)
+
+            rel_idx = model_output.rel_idx
+            if not isinstance(rel_idx, torch.Tensor):
+                rel_idx = torch.from_numpy(rel_idx)
+
+            rel_logits = model_output.rel_logits
+            if not isinstance(rel_logits, torch.Tensor):
+                rel_logits = torch.from_numpy(rel_logits)
+
+            rel_mask = model_output.rel_mask
+            if not isinstance(rel_mask, torch.Tensor):
+                rel_mask = torch.from_numpy(rel_mask)
+
+            # Decode predictions
+            decoded_results = self.decoder.decode(
+                batch["tokens"],
+                batch["id_to_classes"],
+                model_logits,
+                rel_idx=rel_idx,
+                rel_logits=rel_logits,
+                rel_mask=rel_mask,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                relation_threshold=relation_threshold,
+                multi_label=multi_label,
+                rel_id_to_classes=batch["rel_id_to_classes"],
+            )
+
+            # Unpack results
+            if len(decoded_results) == 2:
+                decoded_entities, decoded_relations = decoded_results
+            else:
+                decoded_entities = decoded_results
+                decoded_relations = [[] for _ in range(len(decoded_entities))]
+
+            all_entity_preds.extend(decoded_entities)
+            all_relation_preds.extend(decoded_relations)
+
+            # Extract ground truth
+            all_true_entities.extend(batch["entities"])
+            all_true_relations.extend(batch.get("relations", [[] for _ in range(len(batch["entities"]))]))
+
+        # Evaluate NER
+        ner_evaluator = BaseNEREvaluator(all_true_entities, all_entity_preds)
+        ner_output, ner_f1 = ner_evaluator.evaluate()
+
+        # Evaluate Relations
+        # Format data for relation evaluator: list of (entities, relations) tuples
+        all_true_rel_data = list(zip(all_true_entities, all_true_relations))
+        all_pred_rel_data = list(zip(all_entity_preds, all_relation_preds))
+        
+        rel_evaluator = BaseRelexEvaluator(all_true_rel_data, all_pred_rel_data)
+        rel_output, rel_f1 = rel_evaluator.evaluate()
+
+        return (ner_output, ner_f1), (rel_output, rel_f1)
 
     def _get_onnx_input_spec(self) -> dict[str, Any]:
         """Define ONNX input specification for UniEncoderSpanRelex model."""

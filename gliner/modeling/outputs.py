@@ -17,7 +17,7 @@ class GLiNERBaseOutput(ModelOutput):
         loss (Optional[torch.FloatTensor]): The total loss for training.
             Shape: scalar tensor.
         logits (Optional[torch.FloatTensor]): The prediction scores for
-            entity spans. Shape varies depending on the model configuration,
+            entity spans or other outputs. Shape varies depending on the model configuration,
             typically [batch_size, num_spans, num_classes] or similar.
         prompts_embedding (Optional[torch.FloatTensor]): Embeddings for the
             entity type prompts/labels. Shape: [batch_size, num_classes, hidden_size].

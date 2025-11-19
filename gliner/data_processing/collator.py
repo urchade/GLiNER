@@ -350,6 +350,7 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
         return_id_to_classes: bool = False,
         return_entities: bool = False,
         return_rel_id_to_classes: bool = False,
+        return_relations: bool = False,
         prepare_labels: bool = True,
     ):
         """
@@ -362,10 +363,12 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
             return_id_to_classes: Whether to return entity class mappings.
             return_entities: Whether to return entity annotations.
             return_rel_id_to_classes: Whether to return relation class mappings.
+            return_relations: Whether to return relation annotations.
             prepare_labels: Whether to prepare training labels.
         """
         super().__init__(config, data_processor, return_tokens, return_id_to_classes, return_entities, prepare_labels)
         self.return_rel_id_to_classes = return_rel_id_to_classes
+        self.return_relations = return_relations
 
     def collate_batch(
         self,
@@ -455,6 +458,8 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
         if "rel_class_to_ids" in raw_batch:
             model_input["rel_class_to_ids"] = raw_batch["rel_class_to_ids"]
 
+        if self.return_relations:
+            model_input["relations"] = raw_batch.get("relations")
         return self._filter_none_values(model_input)
 
     def _filter_none_values(self, batch_dict: Dict[str, Any]) -> Dict[str, Any]:

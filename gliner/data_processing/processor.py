@@ -131,6 +131,7 @@ class BaseProcessor(ABC):
         texts: Sequence[Sequence[str]],
         entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
         blank: Optional[str] = None,
+        add_entities: Optional[bool] = True,
         **kwargs,
     ) -> Tuple[List[List[str]], List[int]]:
         """Prepare input texts with entity type prompts.
@@ -144,6 +145,7 @@ class BaseProcessor(ABC):
                 - Dictionary (shared entity types)
                 - List of strings (same types for all examples)
             blank: Optional blank entity token for zero-shot scenarios.
+            add_entities: Whether to add entity text string to the prompt.
             **kwargs: Additional keyword arguments.
 
         Returns:
@@ -160,7 +162,9 @@ class BaseProcessor(ABC):
             ents = self._maybe_remap_entities(ents)
             prompt: List[str] = []
             for ent in ents:
-                prompt += [self.ent_token, str(ent)]
+                prompt.append(self.ent_token)
+                if add_entities:
+                    prompt.append(str(ent))
 
             prompt += self._extra_prompt_tokens(i, text, ents)
 
@@ -907,7 +911,11 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
         Returns:
             Dictionary containing encoder and decoder tokenized inputs.
         """
-        input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank)
+        add_entities = True
+        if self.config.decoder_mode == 'prompt':
+            add_entities = False
+
+        input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank, add_entities=add_entities)
 
         tokenized_inputs = self.transformer_tokenizer(
             input_texts,
@@ -991,28 +999,30 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             labels_one_hot[valid_span_mask, :] = 0.0
             labels_one_hot = labels_one_hot[:, 1:]
             labels_batch.append(labels_one_hot)
-
-            # Collect decoder label strings in order
-            sorted_idxs = sorted(span_labels_dict.keys())
-            for idx in sorted_idxs:
-                decoder_label_strings.append(span_labels_dict[idx])
-
+            
+            if self.config.decoder_mode == 'span':
+                # Collect decoder label strings in order
+                sorted_idxs = sorted(span_labels_dict.keys())
+                for idx in sorted_idxs:
+                    decoder_label_strings.append(span_labels_dict[idx])
+            elif self.config.decoder_mode == 'prompt':
+                decoder_label_strings.extend(list(classes_to_id))
+                
         labels_batch = pad_2d_tensor(labels_batch) if len(labels_batch) > 1 else labels_batch[0].unsqueeze(0)
 
         decoder_tokenized_input = None
-        if self.config.decoder_mode == "span":
-            if not decoder_label_strings:
-                decoder_label_strings = ["other"]
 
-            decoder_tokenized_input = self.decoder_tokenizer(
-                decoder_label_strings, return_tensors="pt", truncation=True, padding="longest", add_special_tokens=True
-            )
-            decoder_input_ids = decoder_tokenized_input["input_ids"]
-            decoder_attention_mask = decoder_tokenized_input["attention_mask"]
-            decoder_labels = decoder_input_ids.clone()
-            decoder_labels.masked_fill(~decoder_attention_mask.bool(), -100)
-            decoder_tokenized_input["labels"] = decoder_labels
+        if not decoder_label_strings:
+            decoder_label_strings = ["other"]
 
+        decoder_tokenized_input = self.decoder_tokenizer(
+            decoder_label_strings, return_tensors="pt", truncation=True, padding="longest", add_special_tokens=True
+        )
+        decoder_input_ids = decoder_tokenized_input["input_ids"]
+        decoder_attention_mask = decoder_tokenized_input["attention_mask"]
+        decoder_labels = decoder_input_ids.clone()
+        decoder_labels.masked_fill(~decoder_attention_mask.bool(), -100)
+        decoder_tokenized_input["labels"] = decoder_labels
         return labels_batch, decoder_tokenized_input
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
