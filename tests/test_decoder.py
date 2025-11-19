@@ -435,19 +435,19 @@ class TestSpanRelexDecoder:
         logits[0, 2, 0, 1] = 4.0  # Entity 2
         logits[1, 0, 0, 0] = 3.0  # Entity 3
         
-        # Mock model output with relation info
-        model_output = Mock()
-        model_output.logits = logits
-        model_output.rel_idx = torch.tensor([
+        # Attach relation attributes directly to the tensor
+        logits.rel_idx = torch.tensor([
             [[0, 1], [1, 0], [-1, -1], [-1, -1]],  # Batch 0: 2 pairs
             [[0, 0], [-1, -1], [-1, -1], [-1, -1]]  # Batch 1: 1 pair
         ])
-        model_output.rel_logits = torch.randn(batch_size, max_pairs, num_relations)
-        model_output.rel_logits[0, 0, 0] = 5.0  # High confidence relation
-        model_output.rel_mask = torch.tensor([
+        logits.rel_logits = torch.randn(batch_size, max_pairs, num_relations)
+        logits.rel_logits[0, 0, 0] = 5.0  # High confidence relation
+        logits.rel_mask = torch.tensor([
             [True, True, False, False],
             [True, False, False, False]
         ])
+        
+        model_output = logits
         
         tokens = [
             ['The', 'quick', 'brown', 'fox', 'jumps'],
@@ -459,6 +459,7 @@ class TestSpanRelexDecoder:
         
         return {
             'model_output': model_output,
+            'logits': logits,
             'tokens': tokens,
             'id_to_classes': id_to_classes,
             'rel_id_to_classes': rel_id_to_classes,
@@ -660,7 +661,7 @@ class TestTokenDecoder:
         assert all(isinstance(spans, list) for spans in result)
     
     def test_span_tuple_format(self, token_config, token_inputs):
-        """Should return spans in format (start, end, entity_type, None, score)."""
+        """Should return spans in format (start, end, entity_type, score)."""
         decoder = TokenDecoder(token_config)
         
         result = decoder.decode(
@@ -672,12 +673,11 @@ class TestTokenDecoder:
         
         for batch_spans in result:
             for span in batch_spans:
-                assert len(span) == 5
-                start, end, entity_type, none_field, score = span
+                assert len(span) == 4
+                start, end, entity_type, score = span
                 assert isinstance(start, int)
                 assert isinstance(end, int)
                 assert isinstance(entity_type, str)
-                assert none_field is None
                 assert isinstance(score, float)
     
     def test_matches_start_end_pairs(self, token_config, token_inputs):
@@ -698,7 +698,7 @@ class TestTokenDecoder:
         # All spans should have end >= start
         for batch_spans in result:
             for span in batch_spans:
-                start, end, _, _, _ = span
+                start, end, _, _ = span
                 assert end >= start
     
     def test_validates_inside_scores(self, token_config):
@@ -761,7 +761,7 @@ class TestTokenDecoder:
         assert len(result[0]) == 1
         
         # Score should be approximately the minimum (sigmoid(2.0) ≈ 0.88)
-        _, _, _, _, score = result[0][0]
+        _, _, _, score = result[0][0]
         assert 0.85 < score < 0.92
     
     def test_handles_empty_predictions(self, token_config):
