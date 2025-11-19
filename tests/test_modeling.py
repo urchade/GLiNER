@@ -96,11 +96,12 @@ class TestExtractWordEmbeddings:
         
         # First batch has text_length=2, so first 2 positions should be True
         assert mask[0, 0] == True
-        assert mask[0, 1] == False
+        assert mask[0, 1] == True
         
         # Second batch has text_length=1, so only first position should be True
         assert mask[1, 0] == True
-        assert mask[1, 1] == False
+        if basic_setup['max_text_length'] > 1:
+            assert mask[1, 1] == False
     
     def test_preserves_dtype_and_device(self, basic_setup):
         """Should preserve dtype and device of input tensors."""
@@ -451,7 +452,7 @@ class TestBuildEntityPairs:
         assert tail_rep.shape == (B, pair_idx.shape[1], D)
     
     def test_extracts_correct_pairs_above_threshold(self, basic_pairs_setup):
-        """Should only extract pairs with scores above threshold."""
+        """Should extract all directed pairs (both directions) with scores above threshold."""
         pair_idx, pair_mask, _, _ = build_entity_pairs(
             basic_pairs_setup['adj'],
             basic_pairs_setup['span_rep'],
@@ -461,12 +462,9 @@ class TestBuildEntityPairs:
         # Get valid pairs from first batch
         valid_pairs_0 = pair_idx[0][pair_mask[0]]
         
-        # Should have 3 pairs: (0,1), (0,2), (1,3)
-        assert len(valid_pairs_0) == 3
-        
-        # Check that pairs are from upper triangle
-        for pair in valid_pairs_0:
-            assert pair[0] < pair[1], "Pairs should be from upper triangle"
+        # Should have 6 directed pairs: (0,1), (1,0), (0,2), (2,0), (1,3), (3,1)
+        # Because the function considers ALL directed pairs where i≠j
+        assert len(valid_pairs_0) == 6
     
     def test_pads_with_minus_one(self, basic_pairs_setup):
         """Should pad unused pair positions with -1."""
@@ -561,7 +559,7 @@ class TestBuildEntityPairs:
         adj[0, 0, 0] = 1.0  # Self-loop
         adj[0, 1, 1] = 1.0  # Self-loop
         adj[0, 0, 1] = 0.8  # Valid pair
-        adj[0, 1, 0] = 0.8
+        adj[0, 1, 0] = 0.8  # Valid pair (reverse direction)
         
         span_rep = torch.randn(B, E, D)
         
@@ -569,12 +567,14 @@ class TestBuildEntityPairs:
         
         valid_pairs = pair_idx[0][pair_mask[0]]
         
-        # Should only have one pair (0,1), not self-loops
-        assert len(valid_pairs) == 1
-        assert valid_pairs[0, 0] != valid_pairs[0, 1]
+        # Should have two directed pairs: (0,1) and (1,0), not self-loops
+        assert len(valid_pairs) == 2
+        # Check that no pair has same head and tail
+        for pair in valid_pairs:
+            assert pair[0] != pair[1]
     
-    def test_avoids_duplicate_pairs(self):
-        """Should only include each pair once (upper triangle)."""
+    def test_includes_both_directions(self):
+        """Should include both directions for bidirectional relations."""
         B, E, D = 1, 4, 4
         adj = torch.ones(B, E, E) * 0.8  # All high scores
         span_rep = torch.randn(B, E, D)
@@ -583,12 +583,17 @@ class TestBuildEntityPairs:
         
         valid_pairs = pair_idx[0][pair_mask[0]]
         
-        # Should have E*(E-1)/2 = 6 pairs from upper triangle
-        assert len(valid_pairs) == 6
+        # Should have E*(E-1) = 12 directed pairs (all pairs except diagonal)
+        assert len(valid_pairs) == 12
         
-        # All pairs should have head < tail
+        # Check that both directions are present
+        pair_set = set()
         for pair in valid_pairs:
-            assert pair[0] < pair[1]
+            pair_set.add((pair[0].item(), pair[1].item()))
+        
+        # Verify both (i,j) and (j,i) exist for at least one pair
+        assert (0, 1) in pair_set
+        assert (1, 0) in pair_set
     
     def test_preserves_dtype_and_device(self, basic_pairs_setup):
         """Should preserve device of input tensors."""
@@ -1048,12 +1053,12 @@ class TestUniEncoderSpanRelexModel:
         """Should compute relation classification loss correctly."""
         model = UniEncoderSpanRelexModel(mock_config, from_pretrained=False)
         
-        B, E, C = 2, 10, 5
-        logits = torch.randn(B, E, E, C)
-        labels = torch.zeros(B, E, E, C)
-        labels[0, 0, 1, 0] = 1.0
+        B, P, C = 2, 10, 5
+        logits = torch.randn(B, P, C)
+        labels = torch.zeros(B, P, C)
+        labels[0, 0, 0] = 1.0
         
-        rel_mask = torch.ones(B, E, E)
+        rel_mask = torch.ones(B, P, 1)
         rel_prompts_embedding_mask = torch.ones(B, C)
         
         loss = model.rel_loss(

@@ -2,21 +2,22 @@ import pytest
 import torch
 from transformers import AutoTokenizer
 from gliner import GLiNERConfig
-from gliner.modeling.base import extract_prompt_features_and_word_embeddings
-from gliner.data_processing import SpanProcessor, WordsSplitter
+from gliner.modeling.utils import extract_prompt_features_and_word_embeddings
+from gliner.data_processing import UniEncoderSpanProcessor, WordsSplitter
+
 
 class TestFeaturesExtractor:
     @pytest.fixture(autouse=True)
     def setup(self):
         self.config = GLiNERConfig()
         self.tokenizer = AutoTokenizer.from_pretrained(self.config.model_name)
-        self.config.class_token_index=len(self.tokenizer)
+        self.config.class_token_index = len(self.tokenizer)
         self.tokenizer.add_tokens([self.config.ent_token, self.config.sep_token])
         self.splitter = WordsSplitter()
         self.base_tokens = [['Hello', 'world', '!']]
         self.tokens_with_missed = [['Hello', '', 'world', '']]
         self.labels = ['world']
-        self.processor = SpanProcessor(self.config, self.tokenizer, self.splitter)
+        self.processor = UniEncoderSpanProcessor(self.config, self.tokenizer, self.splitter)
 
     def test_base_extraction(self):
         input_x = [{"tokenized_text": tk, "ner": None} for tk in self.base_tokens]
@@ -28,12 +29,19 @@ class TestFeaturesExtractor:
         (prompts_embedding,
          prompts_embedding_mask,
          words_embedding,
-         mask) = extract_prompt_features_and_word_embeddings(self.config, token_embeds, **model_input)
+         mask) = extract_prompt_features_and_word_embeddings(
+            class_token_index=self.config.class_token_index,
+            token_embeds=token_embeds,
+            input_ids=model_input['input_ids'],
+            attention_mask=model_input['attention_mask'],
+            text_lengths=model_input['text_lengths'],
+            words_mask=model_input['words_mask']
+        )
         
         assert prompts_embedding_mask.shape == (1, 1)
         assert prompts_embedding.shape == (1, 1, self.config.hidden_size)
         assert words_embedding.shape == (1, len(self.base_tokens[0]), self.config.hidden_size)
-        
+
     def test_extraction_with_missed_tokens(self):
         input_x = [{"tokenized_text": tk, "ner": None} for tk in self.tokens_with_missed]
         raw_batch = self.processor.collate_raw_batch(input_x, self.labels)
@@ -44,9 +52,15 @@ class TestFeaturesExtractor:
         (prompts_embedding,
          prompts_embedding_mask,
          words_embedding,
-         mask) = extract_prompt_features_and_word_embeddings(self.config, token_embeds, **model_input)
+         mask) = extract_prompt_features_and_word_embeddings(
+            class_token_index=self.config.class_token_index,
+            token_embeds=token_embeds,
+            input_ids=model_input['input_ids'],
+            attention_mask=model_input['attention_mask'],
+            text_lengths=model_input['text_lengths'],
+            words_mask=model_input['words_mask']
+        )
         
         assert prompts_embedding_mask.shape == (1, 1)
         assert prompts_embedding.shape == (1, 1, self.config.hidden_size)
         assert words_embedding.shape == (1, len(self.tokens_with_missed[0]), self.config.hidden_size)
-        
