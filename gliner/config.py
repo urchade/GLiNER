@@ -110,8 +110,8 @@ class UniEncoderSpanConfig(UniEncoderConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if self.span_mode == "token-level":
-            raise ValueError("UniEncoderSpanConfig requires span_mode != 'token-level'")
+        if self.span_mode == "token_level":
+            raise ValueError("UniEncoderSpanConfig requires span_mode != 'token_level'")
 
         self.model_type = "gliner_uni_encoder_span"
 
@@ -121,7 +121,7 @@ class UniEncoderTokenConfig(UniEncoderConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.span_mode = "token-level"
+        self.span_mode = "token_level"
         self.model_type = "gliner_uni_encoder_token"
 
 
@@ -168,8 +168,8 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.decoder_loss_coef = decoder_loss_coef
         self.span_loss_coef = span_loss_coef
         self.model_type = "gliner_uni_encoder_span_decoder"
-        if self.span_mode == "token-level":
-            raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token-level'")
+        if self.span_mode == "token_level":
+            raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token_level'")
 
 
 class UniEncoderSpanRelexConfig(UniEncoderConfig):
@@ -203,7 +203,7 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 
         Raises:
-            ValueError: If span_mode is 'token-level', which is incompatible with this config.
+            ValueError: If span_mode is 'token_level', which is incompatible with this config.
         """
         super().__init__(**kwargs)
 
@@ -216,8 +216,8 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         self.adjacency_loss_coef = adjacency_loss_coef
         self.relation_loss_coef = relation_loss_coef
         self.model_type = "gliner_uni_encoder_span_relex"
-        if self.span_mode == "token-level":
-            raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token-level'")
+        if self.span_mode == "token_level":
+            raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token_level'")
 
 
 class BiEncoderConfig(BaseGLiNERConfig):
@@ -247,8 +247,8 @@ class BiEncoderSpanConfig(BiEncoderConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        if self.span_mode == "token-level":
-            raise ValueError("BiEncoderSpanConfig requires span_mode != 'token-level'")
+        if self.span_mode == "token_level":
+            raise ValueError("BiEncoderSpanConfig requires span_mode != 'token_level'")
         self.model_type = "gliner_bi_encoder_span"
 
 
@@ -257,7 +257,7 @@ class BiEncoderTokenConfig(BiEncoderConfig):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.span_mode = "token-level"
+        self.span_mode = "token_level"
         self.model_type = "gliner_bi_encoder_token"
 
 
@@ -297,15 +297,13 @@ class GLiNERConfig(BaseGLiNERConfig):
     @property
     def model_type(self):
         """Auto-detect model type based on configuration."""
-        span_mode_normalized = self.span_mode.replace("_", "-") if self.span_mode else None
-
         if self.labels_decoder:
             return "gliner_uni_encoder_span_decoder"
         elif self.labels_encoder:
-            return "gliner_bi_encoder_span" if span_mode_normalized != "token-level" else "gliner_bi_encoder_token"
+            return "gliner_bi_encoder_span" if self.span_mode != "token-level" else "gliner_bi_encoder_token"
         elif self.relations_layer is not None:
             return "gliner_uni_encoder_span_relex"
-        elif span_mode_normalized == "token-level":
+        elif self.span_mode == "token-level":
             return "gliner_uni_encoder_token"
         else:
             return "gliner_uni_encoder_span"

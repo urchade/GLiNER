@@ -323,11 +323,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         return config
 
     @classmethod
-    def _load_tokenizer(cls, model_dir: Path, cache_dir: Optional[Path] = None):
+    def _load_tokenizer(cls, config: GLiNERConfig, model_dir: Path, cache_dir: Optional[Path] = None):
         """
         Load tokenizer from directory.
 
         Args:
+            config: GLiNER config instance
             model_dir: Directory containing tokenizer files
             cache_dir: Cache directory for downloads
 
@@ -336,6 +337,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         """
         if os.path.exists(model_dir / "tokenizer_config.json"):
             return AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
+        else:
+            return AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
         return None
 
     @classmethod
@@ -612,7 +615,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         tokenizer = None
         if load_tokenizer:
-            tokenizer = cls._load_tokenizer(model_dir, cache_dir)
+            tokenizer = cls._load_tokenizer(config, model_dir, cache_dir)
 
         if not load_onnx_model:
             # Create model instance
@@ -1126,10 +1129,12 @@ class BaseEncoderGLiNER(BaseGLiNER):
         if set_class_token_index:
             self.set_class_indices()
 
-        if len(self.data_processor.transformer_tokenizer) != self.config.vocab_size and self.config.vocab_size != -1:
+        if len(self.data_processor.transformer_tokenizer) != self.config.vocab_size:
             new_num_tokens = len(self.data_processor.transformer_tokenizer)
             model_embeds = self.model.token_rep_layer.resize_token_embeddings(new_num_tokens, None)
             self.config.vocab_size = model_embeds.num_embeddings
+            if hasattr(self.config, "encoder_config"):
+                self.config.encoder_config.vocab_size = model_embeds.num_embeddings
 
     def prepare_inputs(self, texts: List[str]):
         """Prepare inputs for the model by tokenizing and creating index mappings.
