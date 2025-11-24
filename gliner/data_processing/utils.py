@@ -80,13 +80,13 @@ def get_negatives(batch_list: List[Dict], sampled_neg: int = 5, key="ner") -> Li
     """
     element_types = set()
     for b in batch_list:
-        types = {el[-1] for el in b[key]}
-        element_types.update(types)
+        if b.get(key, False):
+            types = {el[-1] for el in b[key]}
+            element_types.update(types)
 
     element_types = list(element_types)
     selected_elements = random.sample(element_types, k=min(sampled_neg, len(element_types)))
     return selected_elements
-
 
 def prepare_word_mask(
     texts: Sequence[Sequence[str]],
