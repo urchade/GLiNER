@@ -1,37 +1,7 @@
 > [!IMPORTANT]
-> **🚀 NEW: GLiNER2 is Now Available!** Multi-task model supporting NER, Text Classification & Structured Data Extraction. [Try it now →](https://github.com/fastino-ai/GLiNER2)
+> **🚀 GLiNER2 is Now Available from [Fastino](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
 
 # 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
-
----
-## 🎉 GLiNER2 is Here!
-
-<table>
-<tr>
-<td>
-
-**GLiNER2** extends beyond NER to support **Text Classification** and **Structured Data Extraction** in a unified model. Extract entities, classify text, and parse structured data—all in one efficient forward pass.
-
-### ✨ What's New
-- 🎯 **Multi-task capability**: NER, classification, and structured extraction in a single model
-- 📋 **Schema-driven interface**: Define custom schemas with field types, constraints, and descriptions
-- ⚡ **CPU-first design**: Fast inference on standard hardware without GPU requirements
-
-### 📊 Quick Comparison
-| Feature | GLiNER | GLiNER2 |
-|---------|--------|---------|
-| Named Entity Recognition | ✅ | ✅ |
-| Text Classification | ❌ | ✅ |
-| Structured Data Extraction | ❌ | ✅ |
-
-### 🔗 Get Started
-**Repository**: https://github.com/fastino-ai/GLiNER2  
-**Install**: `pip install gliner2`  
-**Paper**: https://arxiv.org/abs/2507.18546
-
-</td>
-</tr>
-</table>
 
 ---
 
