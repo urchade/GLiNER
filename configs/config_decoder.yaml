@@ -1,56 +1,64 @@
-# Model Configuration
-model_name: microsoft/deberta-v3-small # Hugging Face model
-labels_encoder: null
-labels_decoder: HuggingFaceTB/SmolLM2-135M-Instruct #"openai-community/gpt2"
-name: "span level gliner"
-max_width: 12
-hidden_size: 512
-dropout: 0.3
-fine_tune: true
-subtoken_pooling: first
-fuse_layers: false
-post_fusion_schema: null
-decoder_mode: "span"
-full_decoder_context: true
-span_mode: markerV1
+model:
+  # Model Configuration
+  model_name: microsoft/deberta-v3-small # Hugging Face model
+  labels_decoder: HuggingFaceTB/SmolLM2-135M-Instruct #"openai-community/gpt2"
+  name: "encoder-decoder gliner"
+  decoder_mode: "span"
+  max_width: 12
+  hidden_size: 768
+  dropout: 0.3
+  fine_tune: true
+  subtoken_pooling: first
+  fuse_layers: false
+  post_fusion_schema: null  # e.g., "l2l-l2t-t2t"
+  full_decoder_context: true
+  span_mode: markerV0  # Options: token_level | markerV0
+  max_types: 100
+  max_len: 512
+  max_neg_type_ratio: 1
+  blank_entity_prob: 0.1
+  decoder_loss_coef: 0.5
+  span_loss_coef: 0.5
+  
+data:
+  # Directory Paths
+  root_dir: gliner_logs
+  train_data: "data.json"
+  val_data_dir: "none"  # Set to validation data path or "none"
 
-# Training Parameters
-num_steps: 300000
-train_batch_size: 4
-eval_every: 300
-warmup_ratio: 0.05
-scheduler_type: "cosine"
-
-# loss function
-loss_alpha: 0.75
-loss_gamma: 0
-label_smoothing: 0
-loss_reduction: "mean"
-
-# Learning Rate and weight decay Configuration
-lr_encoder: 2e-5
-lr_others: 3e-5
-weight_decay_encoder: 0.01
-weight_decay_other: 0.01
-
-max_grad_norm: 10.0
-
-# Directory Paths
-root_dir: gliner_logs
-train_data: "data/nuner_train.json" # see https://github.com/urchade/GLiNER/tree/main/data
-val_data_dir: "none"
-# "NER_datasets": val data from the paper can be obtained from "https://drive.google.com/file/d/1T-5IbocGka35I7X3CE6yKe5N_Xg2lVKT/view"
-
-# Pretrained Model Path
-prev_path: null
-
-save_total_limit: 3 #maximum amount of checkpoints to save
-
-# Advanced Training Settings
-size_sup: -1
-max_types: 30
-shuffle_types: true
-random_drop: true
-max_neg_type_ratio: 1
-max_len: 512
-freeze_token_rep: false
+training:
+  # Pretrained Model Path
+  prev_path: null  # Use null for training from scratch, or path/repo for fine-tuning
+  
+  # Training Parameters
+  num_steps: 15000
+  train_batch_size: 8
+  eval_every: 500
+  warmup_ratio: 0.05
+  scheduler_type: "cosine"  # Options: linear, cosine, constant
+  
+  # Loss Function Configuration
+  loss_alpha: 0.75
+  loss_gamma: 0
+  loss_prob_margin: 0
+  label_smoothing: 0
+  loss_reduction: "sum"
+  negatives: 1.0
+  masking: 'none'
+  
+  # Learning Rate and Weight Decay
+  lr_encoder: 1e-5
+  lr_others: 3e-5
+  weight_decay_encoder: 0.1
+  weight_decay_other: 0.01
+  max_grad_norm: 10.0
+  
+  # Checkpoint Management
+  save_total_limit: 3  # Maximum number of checkpoints to save
+  
+  # Advanced Training Settings
+  size_sup: -1
+  shuffle_types: true
+  random_drop: true
+  
+  freeze_components: null  # Examples: ['text_encoder']

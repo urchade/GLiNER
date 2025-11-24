@@ -1,14 +1,16 @@
+import warnings
 from abc import ABC, abstractmethod
 from typing import List, Union, Optional
+
 import torch
-import warnings
 
 from ..model import GLiNER
 
+
 class GLiNERBasePipeline(ABC):
-    """
-    Base class for GLiNER pipelines. Provides an interface for preparing texts,
-    processing predictions, and evaluating the model.
+    """Base class for GLiNER pipelines.
+
+    Provides an interface for preparing texts, processing predictions, and evaluating the model.
 
     Args:
         model_id (str): Identifier for the model to be loaded.
@@ -21,18 +23,25 @@ class GLiNERBasePipeline(ABC):
         prompt (str): The prompt template for text preparation.
     """
 
-    def __init__(self, model_id: str = None, model: GLiNER = None, prompt=None, device='cuda:0'):
+    def __init__(
+        self,
+        model_id: Optional[str] = None,
+        model: Optional[GLiNER] = None,
+        prompt: Optional[str] = None,
+        device="cuda:0",
+    ):
         """
         Initializes the GLiNERBasePipeline.
 
         Args:
             model_id (str): Identifier for the model to be loaded.
+            model (GLiNER, optional): GLiNER model instance.
             prompt (str, optional): Prompt template for text preparation. Defaults to None.
             device (str, optional): Device to run the model on ('cpu' or 'cuda:X'). Defaults to 'cuda:0'.
         """
-        if 'cuda' in device and not torch.cuda.is_available():
-            warnings.warn(f"{device} is not available, setting device as 'cpu'.")
-            device = 'cpu'
+        if "cuda" in device and not torch.cuda.is_available():
+            warnings.warn(f"{device} is not available, setting device as 'cpu'.", stacklevel=2)
+            device = "cpu"
         self.device = device
 
         if model is not None:
@@ -41,7 +50,7 @@ class GLiNERBasePipeline(ABC):
             self.model = GLiNER.from_pretrained(model_id).to(self.device)
         else:
             raise ValueError("Either 'model_id' or 'model' must be provided to initialize the pipeline.")
-        
+
         self.prompt = prompt
 
     @abstractmethod
@@ -87,8 +96,14 @@ class GLiNERBasePipeline(ABC):
         """
         pass
 
-    def __call__(self, texts: Union[str, List[str]], labels: List[str] = ['match'], 
-                             threshold: float = 0.5, batch_size: int = 8, **kwargs):
+    def __call__(
+        self,
+        texts: Union[str, List[str]],
+        labels: List[str] = ["match"],
+        threshold: float = 0.5,
+        batch_size: int = 8,
+        **kwargs,
+    ):
         """
         Runs the model on the provided texts and returns processed results.
 
@@ -97,13 +112,14 @@ class GLiNERBasePipeline(ABC):
             labels (Optional[List[str]]): List of class labels for text preparation. Defaults to None.
             threshold (float): Threshold for prediction confidence. Defaults to 0.5.
             batch_size (int): Batch size for processing. Defaults to 8.
+            **kwargs: Additional keyword arguments.
 
         Returns:
             Any: Processed results from the model.
         """
         if isinstance(texts, str):
             texts = [texts]
-        
+
         prompts = self.prepare_texts(texts, **kwargs)
 
         predictions = self.model.run(prompts, labels, threshold=threshold, batch_size=batch_size)

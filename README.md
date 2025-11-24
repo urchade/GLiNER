@@ -1,44 +1,23 @@
+
 # 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
-## 🎉 GLiNER2 is Here!
+<div align="center">
+    <div>
+        <a href="https://clickpy.clickhouse.com/dashboard/gliner"><img src="https://static.pepy.tech/badge/gliner" alt="GLiNER Downloads"></a>
+        <a href="https://arxiv.org/abs/2311.08526"><img src="https://img.shields.io/badge/arXiv-2311.08526-b31b1b.svg" alt="GLiNER Paper"></a>
+        <a href="https://discord.gg/Y2yVxpSQnG"><img alt="GLiNER Discord" src="https://img.shields.io/discord/1089800235347353640?logo=discord&logoColor=white&label=Discord&color=blue"></a>
+        <a href="https://github.com/urchade/GLiNER"><img alt="GLiNER GitHub stars" src="https://img.shields.io/github/stars/urchade/GLiNER?style=social"></a>
+        <a href="https://github.com/urchade/GLiNER/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/urchade/GLiNER?color=blue"></a>
+        <br>
+        <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open GLiNER In Colab"></a>
+        <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg" alt="Open GLiNER In HF Spaces"></a>
+        <a href="https://huggingface.co/models?library=gliner&sort=trending"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow" alt="HuggingFace Models"></a>
+    </div>
+    <br>
+</div>
 
-**The wait is over — GLiNER2 is now available!**
+GLiNER is a framework for training and deploying Named Entity Recognition (NER) models that can identify any entity type using bidirectional transformer encoders (BERT-like). Beyond standard NER, GLiNER supports multiple tasks including joint entity and relation extraction through specialized architectures. It provides a practical alternative to both traditional NER models, which are limited to predefined entity types, and Large Language Models (LLMs), which offer flexibility but require significant computational resources.
 
-GLiNER2 extends beyond NER to support **Text Classification** and **Structured Data Extraction** in a unified model. Extract entities, classify text, and parse structured data—all in one efficient forward pass.
-
-**What's new:**
-- **Multi-task capability**: NER, classification, and structured extraction in a single model
-- **Schema-driven interface**: Define custom schemas with field types, constraints, and descriptions
-- **CPU-first design**: Fast inference on standard hardware without GPU requirements
-
-**🔗 Repository**: https://github.com/fastino-ai/GLiNER2  
-**📦 Install**: `pip install gliner2`  
-**📄 Paper**: https://arxiv.org/abs/2507.18546
-
----
-
-GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.
-
-<p align="center">
-    <a href="https://pypi.org/project/gliner/" target="_blank">
-        <img alt="Python" src="https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54" />
-        <img alt="Version" src="https://img.shields.io/pypi/v/gliner?style=for-the-badge&color=3670A0">
-    </a>
-</p>
-
-<p align="center">
-    <a href="https://aclanthology.org/2024.naacl-long.300/">📄 Paper</a>
-    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-    <a href="https://discord.gg/Y2yVxpSQnG">📢 Discord</a>
-    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-    <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1">🤗 Demo</a>
-    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-    <a href="https://huggingface.co/models?library=gliner&sort=trending">🤗 Available models</a>
-    <span>&nbsp;&nbsp;•&nbsp;&nbsp;</span>
-    <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing">
-        <img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />
-    </a>
-</p>
 
 ## Example Notebooks
 
@@ -116,13 +95,14 @@ European Championship => competitions
 ## 👨‍💻 Model Authors
 The model authors are:
 * [Urchade Zaratiana](https://huggingface.co/urchade)
+* [Ihor Stepanov](https://github.com/Ingvarstep)
 * Nadi Tomeh
 * Pierre Holat
 * Thierry Charnois
 
-## 📚 Citation
+## 📚 Citations
 
-If you find GLiNER useful in your research, please consider citing our paper:
+If you find GLiNER useful in your research, please consider citing our papers:
 
 ```bibtex
 @inproceedings{zaratiana-etal-2024-gliner,
@@ -145,6 +125,18 @@ If you find GLiNER useful in your research, please consider citing our paper:
     abstract = "Named Entity Recognition (NER) is essential in various Natural Language Processing (NLP) applications. Traditional NER models are effective but limited to a set of predefined entity types. In contrast, Large Language Models (LLMs) can extract arbitrary entities through natural language instructions, offering greater flexibility. However, their size and cost, particularly for those accessed via APIs like ChatGPT, make them impractical in resource-limited scenarios. In this paper, we introduce a compact NER model trained to identify any type of entity. Leveraging a bidirectional transformer encoder, our model, GLiNER, facilitates parallel entity extraction, an advantage over the slow sequential token generation of LLMs. Through comprehensive testing, GLiNER demonstrate strong performance, outperforming both ChatGPT and fine-tuned LLMs in zero-shot evaluations on various NER benchmarks.",
 }
 ```
+
+```bibtex
+@misc{stepanov2024glinermultitaskgeneralistlightweight,
+      title={GLiNER multi-task: Generalist Lightweight Model for Various Information Extraction Tasks}, 
+      author={Ihor Stepanov and Mykhailo Shtopko},
+      year={2024},
+      eprint={2406.12925},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2406.12925}, 
+}
+```
 ## Support and funding
 
 This project has been supported and funded by **F.initiatives** and **Laboratoire Informatique de Paris Nord**.
@@ -156,5 +148,3 @@ F.initiatives has been an expert in public funding strategies for R&D, Innovatio
 </p>
 
 We also extend our heartfelt gratitude to the open-source community for their invaluable contributions, which have been instrumental in the success of this project.
-
-

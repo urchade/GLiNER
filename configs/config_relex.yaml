@@ -1,0 +1,60 @@
+model:
+  # Model Configuration
+  model_name: microsoft/deberta-v3-small # Hugging Face model
+  name: "span level gliner"
+  max_width: 12
+  hidden_size: 768
+  dropout: 0.3
+  fine_tune: true
+  subtoken_pooling: first
+  fuse_layers: false
+  post_fusion_schema: null  # e.g., "l2l-l2t-t2t"
+  span_mode: markerV0  # Options: token_level | markerV0
+  max_types: 100
+  max_len: 512
+  max_neg_type_ratio: 1
+  relations_layer: null
+  triples_layer: null
+
+data:
+  # Directory Paths
+  root_dir: gliner_logs
+  train_data: "data/gliner_relex.json"
+  val_data_dir: "none"  # Set to validation data path or "none"
+
+training:
+  # Pretrained Model Path
+  prev_path: null  # Use null for training from scratch, or path/repo for fine-tuning
+  
+  # Training Parameters
+  num_steps: 15000
+  train_batch_size: 8
+  eval_every: 500
+  warmup_ratio: 0.05
+  scheduler_type: "cosine"  # Options: linear, cosine, constant
+  
+  # Loss Function Configuration
+  loss_alpha: 0.75
+  loss_gamma: 0
+  loss_prob_margin: 0
+  label_smoothing: 0
+  loss_reduction: "sum"
+  negatives: 1.0
+  masking: 'none'
+  
+  # Learning Rate and Weight Decay
+  lr_encoder: 1e-5
+  lr_others: 3e-5
+  weight_decay_encoder: 0.1
+  weight_decay_other: 0.01
+  max_grad_norm: 10.0
+  
+  # Checkpoint Management
+  save_total_limit: 3  # Maximum number of checkpoints to save
+  
+  # Advanced Training Settings
+  size_sup: -1
+  shuffle_types: true
+  random_drop: true
+  
+  freeze_components: null  # Examples: ['text_encoder']

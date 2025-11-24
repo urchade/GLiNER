@@ -1,5 +1,5 @@
-from .classification import GLiNERClassifier
-from .question_answering import GLiNERQuestionAnswerer, GLiNERSquadEvaluator
-from .open_extraction import GLiNEROpenExtractor
-from .relation_extraction import GLiNERRelationExtractor, GLiNERDocREDEvaluator
 from .summarization import GLiNERSummarizer
+from .classification import GLiNERClassifier
+from .open_extraction import GLiNEROpenExtractor
+from .question_answering import GLiNERSquadEvaluator, GLiNERQuestionAnswerer
+from .relation_extraction import GLiNERDocREDEvaluator, GLiNERRelationExtractor
