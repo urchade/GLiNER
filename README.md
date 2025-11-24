@@ -1,5 +1,5 @@
 > [!IMPORTANT]
-> **🚀 GLiNER2 is Now Available from [Fastino](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
+> **🚀 GLiNER2 is Now Available from [Fastino Labs](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
 
 # 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
