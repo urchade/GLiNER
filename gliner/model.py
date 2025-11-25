@@ -639,7 +639,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             instance.eval()
         else:
-            model_file = Path(onnx_model_file)
+            model_file = model_dir / onnx_model_file
             if not os.path.exists(model_file):
                 raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
             if session_options is None:
