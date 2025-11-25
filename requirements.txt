@@ -1,5 +1,5 @@
 torch>=2.0.0
-transformers>=4.38.2,<=4.45.2
+transformers>=4.57.3
 huggingface_hub>=0.21.4
 onnxruntime-gpu; sys_platform != 'darwin'
 sentencepiece
