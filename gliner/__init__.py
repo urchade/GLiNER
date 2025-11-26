@@ -1,4 +1,4 @@
-__version__ = "0.2.23b"
+__version__ = "0.2.24"
 
 from .model import GLiNER
 from .config import GLiNERConfig
