@@ -356,7 +356,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if model_file.suffix == ".safetensors" or str(model_file).endswith(".safetensors"):
             state_dict = {}
             with safe_open(model_file, framework="pt", device=map_location) as f:
-                for key in f:
+                for key in f.keys():
                     state_dict[key] = f.get_tensor(key)
         else:
             state_dict = torch.load(model_file, map_location=torch.device(map_location), weights_only=True)
