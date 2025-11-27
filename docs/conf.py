@@ -1,10 +1,15 @@
 import os
 import sys
-sys.path.insert(0, os.path.abspath(".."))
+
+# ----- Paths -----
+DOCS_DIR = os.path.dirname(__file__)
+PROJECT_ROOT = os.path.abspath(os.path.join(DOCS_DIR, ".."))
+
+sys.path.insert(0, PROJECT_ROOT)
 
 project = "Home"
 copyright = "2025, GLiNER community"
-author = "Ihor Stepanov"
+author = "Urchade Zaratiana, Ihor Stepanov"
 release = "0.2.24"
 
 extensions = [
@@ -48,23 +53,23 @@ autoclass_content = "both"
 # Autosummary settings
 autosummary_generate = True  # Enable autosummary
 
+
 def run_apidoc(_):
     from sphinx.ext.apidoc import main
-    import os
 
-    # Path to your module
-    module_path = os.path.abspath('../gliner')
-    # Output path for API docs
-    output_path = os.path.abspath('./api')
-    
-    # Run sphinx-apidoc
+    # Path to your module (package "gliner" in repo root)
+    module_path = os.path.join(PROJECT_ROOT, "gliner")
+    # Output path for API docs (inside docs/)
+    output_path = os.path.join(DOCS_DIR, "api")
+
     main([
-        '--force',
-        '--separate',
-        '--module-first',
-        '-o', output_path,
+        "--force",
+        "--separate",
+        "--module-first",
+        "-o", output_path,
         module_path,
     ])
 
+
 def setup(app):
-    app.connect('builder-inited', run_apidoc)
+    app.connect("builder-inited", run_apidoc)
