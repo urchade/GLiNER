@@ -1,4 +1,4 @@
-# Usage
+# Advanced Usage
 
 ## 🚀 Basic Use Case
 

@@ -1,6 +1,6 @@
 # Quickstart
 
-Welcome to the Gliner Framework Quickstart Guide! This document will help you get started with the basics of using Gliner.
+Welcome to the GLiNER Framework Quickstart Guide! This document will help you get started with the basics of using GLiNER.
 
 
 ## Installation
