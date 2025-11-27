@@ -1,0 +1,7 @@
+gliner.data\_processing.tokenizer module
+========================================
+
+.. automodule:: gliner.data_processing.tokenizer
+   :members:
+   :undoc-members:
+   :show-inheritance:

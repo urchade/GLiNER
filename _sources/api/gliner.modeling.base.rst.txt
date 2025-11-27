@@ -1,0 +1,7 @@
+gliner.modeling.base module
+===========================
+
+.. automodule:: gliner.modeling.base
+   :members:
+   :undoc-members:
+   :show-inheritance:

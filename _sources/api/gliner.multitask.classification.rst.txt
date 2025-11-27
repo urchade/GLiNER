@@ -1,0 +1,7 @@
+gliner.multitask.classification module
+======================================
+
+.. automodule:: gliner.multitask.classification
+   :members:
+   :undoc-members:
+   :show-inheritance:

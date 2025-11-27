@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.modeling.multitask.triples_layers module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.modeling.base module" href="gliner.modeling.base.html" /><link rel="prev" title="gliner.modeling.multitask.relations_layers module" href="gliner.modeling.multitask.relations_layers.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.modeling.multitask.triples_layers module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.UMInteraction"><code class="docutils literal notranslate"><span class="pre">UMInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.UMInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.UMInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SEInteraction"><code class="docutils literal notranslate"><span class="pre">SEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SEInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransEInteraction"><code class="docutils literal notranslate"><span class="pre">TransEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransEInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransHInteraction"><code class="docutils literal notranslate"><span class="pre">TransHInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransHInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransHInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransFInteraction"><code class="docutils literal notranslate"><span class="pre">TransFInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransFInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TransFInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.PairREInteraction"><code class="docutils literal notranslate"><span class="pre">PairREInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.PairREInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.PairREInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction"><code class="docutils literal notranslate"><span class="pre">TripleREInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.DistMultInteraction"><code class="docutils literal notranslate"><span class="pre">DistMultInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.DistMultInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction"><code class="docutils literal notranslate"><span class="pre">SimplEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction"><code class="docutils literal notranslate"><span class="pre">TuckERInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.DistMAInteraction"><code class="docutils literal notranslate"><span class="pre">DistMAInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.DistMAInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction"><code class="docutils literal notranslate"><span class="pre">ComplExInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction"><code class="docutils literal notranslate"><span class="pre">QuatEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.HolEInteraction"><code class="docutils literal notranslate"><span class="pre">HolEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.HolEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction"><code class="docutils literal notranslate"><span class="pre">ERMLPInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction"><code class="docutils literal notranslate"><span class="pre">ConvKBInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction"><code class="docutils literal notranslate"><span class="pre">ConvEInteraction</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer"><code class="docutils literal notranslate"><span class="pre">TriplesScoreLayer</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.DIMENSION_REQUIREMENTS"><code class="docutils literal notranslate">DIMENSION_REQUIREMENTS</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.validate_dimensions"><code class="docutils literal notranslate">validate_dimensions()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_batched_relations"><code class="docutils literal notranslate">forward_batched_relations()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_single_relation"><code class="docutils literal notranslate">forward_single_relation()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.modeling.html"><span itemprop="name">gliner.modeling package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.modeling.multitask.html"><span itemprop="name">gliner.modeling.multitask package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="3" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.modeling.multitask.triples_layers module</strong>
+        <meta itemprop="position" content="4" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.modeling.multitask.triples_layers">
+<span id="gliner-modeling-multitask-triples-layers-module"></span><h1>gliner.modeling.multitask.triples_layers module<a class="headerlink" href="#module-gliner.modeling.multitask.triples_layers" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.NormBasedInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">NormBasedInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clamp_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_scorer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#NormBasedInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> (<em>float</em><em> | </em><em>None</em>) – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> (<em>bool</em>) – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> (<em>float</em>) – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.NormBasedInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">clamp_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_scorer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#NormBasedInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> (<em>float</em><em> | </em><em>None</em>) – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> (<em>bool</em>) – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> (<em>float</em>) – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.UMInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">UMInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#UMInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.UMInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>Unstructured model ‖h - t‖.</p>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.UMInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#UMInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.UMInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.UMInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#UMInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.UMInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">SEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>Structure Embedding (SE).</p>
+<p>Uses head / tail specific diagonal matrices built from relation.
+h’ = diag(r) · h    ,    t’ = diag(r) · t</p>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SEInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SEInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SEInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TransEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>TransE ‖h + r − t‖.</p>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransEInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransEInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransEInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransHInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TransHInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransHInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransHInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>TransH – project entities to a relation-specific hyperplane.</p>
+<dl class="simple">
+<dt>Learn mappings from base relation r to:</dt><dd><p>r_tr = W_tr * r + b_tr  (translation)
+w    = W_w  * r + b_w   (hyperplane normal)</p>
+</dd>
+</dl>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransHInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransHInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransHInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransHInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransHInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransHInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransFInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TransFInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransFInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransFInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>TransF – element-wise relation-specific scaling before translation.</p>
+<dl class="simple">
+<dt>Learn mappings from base relation r to:</dt><dd><p>r_vec = W_r * r + b_r
+alpha = W_alpha * r + b_alpha
+beta  = W_beta * r + b_beta</p>
+</dd>
+</dl>
+<p>Score is ‖(alpha ∘ h) + r_vec − (beta ∘ t)‖_p</p>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransFInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransFInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransFInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TransFInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TransFInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TransFInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.PairREInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">PairREInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#PairREInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.PairREInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>PairRE – per-relation element-wise scaling of h &amp; t.</p>
+<dl class="simple">
+<dt>Learn mappings from base relation r to:</dt><dd><p>alpha = W_alpha * r + b_alpha
+beta  = W_beta * r + b_beta</p>
+</dd>
+</dl>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.PairREInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#PairREInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.PairREInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.PairREInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#PairREInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.PairREInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TripleREInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TripleREInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TripleREInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.multitask.triples_layers.NormBasedInteraction" title="gliner.modeling.multitask.triples_layers.NormBasedInteraction"><code class="xref py py-class docutils literal notranslate"><span class="pre">NormBasedInteraction</span></code></a></p>
+<p>TripleRE – LineaRE + scalar γ per relation.</p>
+<dl class="simple">
+<dt>Learn mappings from base relation r to:</dt><dd><p>alpha = W_alpha * r + b_alpha
+beta  = W_beta * r + b_beta
+delta = W_delta * r + b_delta
+gamma = w_gamma^T * r + b_gamma (scalar)</p>
+</dd>
+</dl>
+<p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TripleREInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TripleREInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Base class for norm-based KGE interactions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – ℓ_p norm (e.g. 1 or 2) used in ‖·‖_p</p></li>
+<li><p><strong>power</strong> (<em>float</em>) – Raise norm to this power before negating</p></li>
+<li><p><strong>clamp_norm</strong> – Optional upper bound for numerical stability</p></li>
+<li><p><strong>use_scorer</strong> – If True, use learned projection instead of norm</p></li>
+<li><p><strong>dropout</strong> – Dropout rate for scorer (if used)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TripleREInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TripleREInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TripleREInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.DistMultInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">DistMultInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#DistMultInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.DistMultInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>DistMult – Σ_d h_d r_d t_d.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.DistMultInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#DistMultInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.DistMultInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SimplEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">SimplEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SimplEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>SimplE – split every embedding into (forward, backward) halves.</p>
+<p>score = ½( ⟨h_f, r_f, t_b⟩ + ⟨t_f, r_b, h_b⟩ )
+Requires even dimension.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SimplEInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SimplEInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.SimplEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#SimplEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.SimplEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TuckERInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TuckERInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TuckERInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>TuckER – global core tensor W (D_r × D_e × D_e).</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TuckERInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d_e</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d_r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TuckERInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TuckERInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TuckERInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TuckERInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.DistMAInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">DistMAInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#DistMAInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.DistMAInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>DistMA – sum of pairwise dot products.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.DistMAInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#DistMAInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.DistMAInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ComplExInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">ComplExInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ComplExInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>ComplEx – Re(⟨h, r, conj(t)⟩) with complex embeddings.</p>
+<p>Requires even dimension.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ComplExInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ComplExInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ComplExInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ComplExInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ComplExInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.QuatEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">QuatEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#QuatEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>QuatE – use Hamilton product (a,b,c,d)⨂(e,f,g,h).</p>
+<p>Requires dimension divisible by 4.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.QuatEInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#QuatEInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.QuatEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#QuatEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.QuatEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.HolEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">HolEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#HolEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.HolEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>HolE – circular correlation ϕ(h, t) · r.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.HolEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#HolEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.HolEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ERMLPInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">ERMLPInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ERMLPInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>ER-MLP: 2-layer perceptron on concatenated [h, r, t].</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ERMLPInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2048</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ERMLPInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ERMLPInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ERMLPInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ERMLPInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Define the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvKBInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">ConvKBInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvKBInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>ConvKB: Convolutional Knowledge Base interaction (Conv1d version).</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvKBInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvKBInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvKBInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvKBInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvKBInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Score triples (h, r, t).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> – Head entities (…, D)</p></li>
+<li><p><strong>r</strong> – Relations (…, D)</p></li>
+<li><p><strong>t</strong> – Tail entities (…, D)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Triple scores (…)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvEInteraction">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">ConvEInteraction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_dim1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feat_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvEInteraction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>ConvE: Convolutional interaction matching reference implementation.</p>
+<p>Stacks head and relation embeddings vertically and applies 2D convolution.</p>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvEInteraction.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">emb_dim1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_filters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feat_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_bias</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvEInteraction.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.ConvEInteraction.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#ConvEInteraction.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.ConvEInteraction.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Score triples (h, r, t).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> – Head entities (…, D)</p></li>
+<li><p><strong>r</strong> – Relations (…, D)</p></li>
+<li><p><strong>t</strong> – Tail entities (…, D)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Triple scores (…)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.multitask.triples_layers.</span></span><span class="sig-name descname"><span class="pre">TriplesScoreLayer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interaction_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Wrapper for knowledge graph triple scoring interactions.</p>
+<p>Optimized for relation extraction in entity recognition models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>interaction_mode</strong> (<em>str</em>) – The type of interaction to use. Available modes:
+- Translational: UM, SE, TransE, TransH, TransF, PairRE, TripleRE
+- Semantic: DistMult, SimplE, ComplEx, QuatE, HolE, DistMA
+- Neural: TuckER, ERMLP, ConvE, ConvKB</p></li>
+<li><p><strong>dim</strong> (<em>int</em>) – Embedding dimension (required for most interactions).</p></li>
+<li><p><strong>**kwargs</strong> – Extra parameters for specific interactions:
+- TuckER: requires d_e, d_r, optional dropout
+- ERMLP: optional hidden (default 2048)
+- ConvE: requires emb_dim1, optional n_filters, kernel_size, input_drop,
+hidden_drop, feat_drop, use_bias
+- ConvKB: optional n_filters, dropout, use_bias
+- Norm-based (TransE, TransH, etc.): optional p, power, clamp_norm,
+use_scorer, dropout</p></li>
+</ul>
+</dd>
+</dl>
+<p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.DIMENSION_REQUIREMENTS">
+<span class="sig-name descname"><span class="pre">DIMENSION_REQUIREMENTS</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'ComplEx':</span> <span class="pre">&lt;function</span> <span class="pre">TriplesScoreLayer.&lt;lambda&gt;&gt;,</span> <span class="pre">'QuatE':</span> <span class="pre">&lt;function</span> <span class="pre">TriplesScoreLayer.&lt;lambda&gt;&gt;,</span> <span class="pre">'SimplE':</span> <span class="pre">&lt;function</span> <span class="pre">TriplesScoreLayer.&lt;lambda&gt;&gt;}</span></em><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.DIMENSION_REQUIREMENTS" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">interaction_mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">768</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize internal Module state, shared by both nn.Module and ScriptModule.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.validate_dimensions">
+<span class="sig-name descname"><span class="pre">validate_dimensions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dim</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer.validate_dimensions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.validate_dimensions" title="Link to this definition">¶</a></dt>
+<dd><p>Validate that the embedding dimension meets requirements for this interaction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dim</strong> (<em>int</em>) – The embedding dimension to validate</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If dimension requirements are not met</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Score triples (h, r, t).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> – Head entities (…, D)</p></li>
+<li><p><strong>r</strong> – Relations (…, D)</p></li>
+<li><p><strong>t</strong> – Tail entities (…, D)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Triple scores (…)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_batched_relations">
+<span class="sig-name descname"><span class="pre">forward_batched_relations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_embeddings</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer.forward_batched_relations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_batched_relations" title="Link to this definition">¶</a></dt>
+<dd><p>Efficiently score entity pairs against all relation types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> – Head entities (B, N, D)</p></li>
+<li><p><strong>t</strong> – Tail entities (B, N, D)</p></li>
+<li><p><strong>rel_embeddings</strong> – Relation type embeddings (B, C, D) or (C, D)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(B, N, C) scores for each pair against each relation type</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_single_relation">
+<span class="sig-name descname"><span class="pre">forward_single_relation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">r</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/multitask/triples_layers.html#TriplesScoreLayer.forward_single_relation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_single_relation" title="Link to this definition">¶</a></dt>
+<dd><p>Score entity pairs with a single relation type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> – Head entities (B, N, D)</p></li>
+<li><p><strong>t</strong> – Tail entities (B, N, D)</p></li>
+<li><p><strong>r</strong> – Single relation embedding (B, D) or (D,)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(B, N) scores for each pair with the given relation</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>scores</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.modeling.multitask.relations_layers.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.modeling.multitask.relations_layers module</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.modeling.base.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.modeling.base module</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

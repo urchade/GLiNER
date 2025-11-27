@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.infer_packing - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../genindex.html" /><link rel="search" title="Search" href="../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.infer_packing"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.infer_packing</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.infer_packing</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Utilities for inference-time sequence packing.</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">This module provides helpers to group many short sequences into a</span>
+</span><span data-line="4"><span class="sd">single (or a few) contiguous token streams in order to reduce the</span>
+</span><span data-line="5"><span class="sd">amount of padding the encoder needs to process.  Packed batches keep a</span>
+</span><span data-line="6"><span class="sd">block-diagonal attention mask so tokens from different original</span>
+</span><span data-line="7"><span class="sd">sequences cannot attend to each other.  After the encoder forward</span>
+</span><span data-line="8"><span class="sd">pass, results can be unpacked back to the original request ordering.</span>
+</span><span data-line="9"><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span>
+</span><span data-line="14"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataclass</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span data-line="17"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="18">
+</span><span data-line="19">
+<div class="viewcode-block" id="InferencePackingConfig">
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.InferencePackingConfig">[docs]</a>
+</span><span data-line="20"><span class="nd">@dataclass</span>
+</span><span data-line="21"><span class="k">class</span><span class="w"> </span><span class="nc">InferencePackingConfig</span><span class="p">:</span>
+</span><span data-line="22"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration describing how sequences should be packed.</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="sd">    Attributes:</span>
+</span><span data-line="25"><span class="sd">        max_length: Maximum number of tokens allowed in a packed stream.</span>
+</span><span data-line="26"><span class="sd">        sep_token_id: Optional separator token ID to insert between sequences.</span>
+</span><span data-line="27"><span class="sd">            Currently not used in the implementation.</span>
+</span><span data-line="28"><span class="sd">        streams_per_batch: Number of streams to create per batch. Must be &gt;= 1.</span>
+</span><span data-line="29"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="30">
+</span><span data-line="31">    <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="32">    <span class="n">sep_token_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="33">    <span class="n">streams_per_batch</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span></div>
+
+</span><span data-line="34">
+</span><span data-line="35">
+<div class="viewcode-block" id="PackedBatch">
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.PackedBatch">[docs]</a>
+</span><span data-line="36"><span class="nd">@dataclass</span>
+</span><span data-line="37"><span class="k">class</span><span class="w"> </span><span class="nc">PackedBatch</span><span class="p">:</span>
+</span><span data-line="38"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Container describing a packed collection of requests.</span>
+</span><span data-line="39">
+</span><span data-line="40"><span class="sd">    Attributes:</span>
+</span><span data-line="41"><span class="sd">        input_ids: Tensor of shape (num_streams, max_len) containing packed token IDs.</span>
+</span><span data-line="42"><span class="sd">        attention_mask: Tensor of shape (num_streams, max_len) with 1s for valid tokens</span>
+</span><span data-line="43"><span class="sd">            and 0s for padding.</span>
+</span><span data-line="44"><span class="sd">        pair_attention_mask: Boolean tensor of shape (num_streams, max_len, max_len)</span>
+</span><span data-line="45"><span class="sd">            representing block-diagonal attention mask.</span>
+</span><span data-line="46"><span class="sd">        segment_ids: Tensor of shape (num_streams, max_len) with unique IDs for each</span>
+</span><span data-line="47"><span class="sd">            packed segment within a stream.</span>
+</span><span data-line="48"><span class="sd">        map_out: List of lists mapping each segment in each stream back to its</span>
+</span><span data-line="49"><span class="sd">            original request index.</span>
+</span><span data-line="50"><span class="sd">        offsets: List of lists containing the starting offset of each segment</span>
+</span><span data-line="51"><span class="sd">            within each stream.</span>
+</span><span data-line="52"><span class="sd">        lengths: List of lists containing the length of each segment within each stream.</span>
+</span><span data-line="53"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="54">
+</span><span data-line="55">    <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span>
+</span><span data-line="56">    <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span>
+</span><span data-line="57">    <span class="n">pair_attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span>
+</span><span data-line="58">    <span class="n">segment_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span>
+</span><span data-line="59">    <span class="n">map_out</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+</span><span data-line="60">    <span class="n">offsets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span>
+</span><span data-line="61">    <span class="n">lengths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span></div>
+
+</span><span data-line="62">
+</span><span data-line="63">
+</span><span data-line="64"><span class="n">Request</span> <span class="o">=</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span>
+</span><span data-line="65">
+</span><span data-line="66">
+</span><span data-line="67"><span class="k">def</span><span class="w"> </span><span class="nf">_ensure_list</span><span class="p">(</span><span class="n">tokens</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+</span><span data-line="68"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert a sequence of tokens to a Python list.</span>
+</span><span data-line="69">
+</span><span data-line="70"><span class="sd">    Args:</span>
+</span><span data-line="71"><span class="sd">        tokens: A sequence of integer tokens (list, tuple, tensor, etc.).</span>
+</span><span data-line="72">
+</span><span data-line="73"><span class="sd">    Returns:</span>
+</span><span data-line="74"><span class="sd">        A Python list containing the same tokens.</span>
+</span><span data-line="75"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="76">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span data-line="77">        <span class="k">return</span> <span class="n">tokens</span>
+</span><span data-line="78">    <span class="k">return</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">]</span>
+</span><span data-line="79">
+</span><span data-line="80">
+<div class="viewcode-block" id="block_diag_mask">
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.block_diag_mask">[docs]</a>
+</span><span data-line="81"><span class="k">def</span><span class="w"> </span><span class="nf">block_diag_mask</span><span class="p">(</span><span class="n">segment_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span><span class="p">:</span>
+</span><span data-line="82"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct a block diagonal mask from per-token segment ids.</span>
+</span><span data-line="83">
+</span><span data-line="84"><span class="sd">    Creates a boolean attention mask where tokens can only attend to other tokens</span>
+</span><span data-line="85"><span class="sd">    with the same segment ID. This prevents cross-contamination between different</span>
+</span><span data-line="86"><span class="sd">    sequences packed into the same stream.</span>
+</span><span data-line="87">
+</span><span data-line="88"><span class="sd">    Args:</span>
+</span><span data-line="89"><span class="sd">        segment_ids: Tensor of shape (batch_size, seq_len) containing segment IDs</span>
+</span><span data-line="90"><span class="sd">            for each token position.</span>
+</span><span data-line="91">
+</span><span data-line="92"><span class="sd">    Returns:</span>
+</span><span data-line="93"><span class="sd">        Boolean tensor of shape (batch_size, seq_len, seq_len) where mask[b, i, j]</span>
+</span><span data-line="94"><span class="sd">        is True if tokens i and j belong to the same segment in batch b.</span>
+</span><span data-line="95"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="96">    <span class="k">return</span> <span class="n">segment_ids</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">segment_ids</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span></div>
+
+</span><span data-line="97">
+</span><span data-line="98">
+</span><span data-line="99"><span class="k">def</span><span class="w"> </span><span class="nf">_pad_2d</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">target</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pad_val</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="100"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Pad the second dimension of a 2D tensor to a target length.</span>
+</span><span data-line="101">
+</span><span data-line="102"><span class="sd">    Args:</span>
+</span><span data-line="103"><span class="sd">        x: Input tensor of shape (batch_size, seq_len).</span>
+</span><span data-line="104"><span class="sd">        target: Target length for the second dimension.</span>
+</span><span data-line="105"><span class="sd">        pad_val: Value to use for padding.</span>
+</span><span data-line="106">
+</span><span data-line="107"><span class="sd">    Returns:</span>
+</span><span data-line="108"><span class="sd">        Tensor of shape (batch_size, target) with padding applied if necessary.</span>
+</span><span data-line="109"><span class="sd">        If seq_len &gt;= target, returns the original tensor unchanged.</span>
+</span><span data-line="110"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="111">    <span class="k">if</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="n">target</span><span class="p">:</span>
+</span><span data-line="112">        <span class="k">return</span> <span class="n">x</span>
+</span><span data-line="113">    <span class="n">out</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">new_full</span><span class="p">((</span><span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">target</span><span class="p">),</span> <span class="n">pad_val</span><span class="p">)</span>
+</span><span data-line="114">    <span class="n">out</span><span class="p">[:,</span> <span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)]</span> <span class="o">=</span> <span class="n">x</span>
+</span><span data-line="115">    <span class="k">return</span> <span class="n">out</span>
+</span><span data-line="116">
+</span><span data-line="117">
+</span><span data-line="118"><span class="k">class</span><span class="w"> </span><span class="nc">_PackedStream</span><span class="p">:</span>
+</span><span data-line="119"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Internal helper class representing a single packed token stream.</span>
+</span><span data-line="120">
+</span><span data-line="121"><span class="sd">    A stream accumulates multiple sequences into a contiguous sequence of tokens,</span>
+</span><span data-line="122"><span class="sd">    tracking the boundaries and origins of each packed segment.</span>
+</span><span data-line="123">
+</span><span data-line="124"><span class="sd">    Attributes:</span>
+</span><span data-line="125"><span class="sd">        tokens: List of all tokens in this stream.</span>
+</span><span data-line="126"><span class="sd">        map_out: List mapping each segment to its original request index.</span>
+</span><span data-line="127"><span class="sd">        offsets: List of starting positions for each segment.</span>
+</span><span data-line="128"><span class="sd">        lengths: List of lengths for each segment.</span>
+</span><span data-line="129"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="130">
+</span><span data-line="131">    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;lengths&quot;</span><span class="p">,</span> <span class="s2">&quot;map_out&quot;</span><span class="p">,</span> <span class="s2">&quot;offsets&quot;</span><span class="p">,</span> <span class="s2">&quot;tokens&quot;</span><span class="p">)</span>
+</span><span data-line="132">
+</span><span data-line="133">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="134"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize an empty packed stream.&quot;&quot;&quot;</span>
+</span><span data-line="135">        <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="136">        <span class="bp">self</span><span class="o">.</span><span class="n">map_out</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="137">        <span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="138">        <span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="139">
+</span><span data-line="140">    <span class="nd">@property</span>
+</span><span data-line="141">    <span class="k">def</span><span class="w"> </span><span class="nf">total_tokens</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="142"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the total number of tokens currently in this stream.</span>
+</span><span data-line="143">
+</span><span data-line="144"><span class="sd">        Returns:</span>
+</span><span data-line="145"><span class="sd">            The length of the tokens list.</span>
+</span><span data-line="146"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="147">        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">)</span>
+</span><span data-line="148">
+</span><span data-line="149">    <span class="k">def</span><span class="w"> </span><span class="nf">append</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">req_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tokens</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="150"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Append a new sequence to this stream.</span>
+</span><span data-line="151">
+</span><span data-line="152"><span class="sd">        Args:</span>
+</span><span data-line="153"><span class="sd">            req_idx: Index of the original request being added.</span>
+</span><span data-line="154"><span class="sd">            tokens: Sequence of token IDs to append to the stream.</span>
+</span><span data-line="155"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="156">        <span class="n">offset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_tokens</span>
+</span><span data-line="157">        <span class="n">segment_tokens</span> <span class="o">=</span> <span class="n">_ensure_list</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span data-line="158">        <span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">segment_tokens</span><span class="p">)</span>
+</span><span data-line="159">        <span class="bp">self</span><span class="o">.</span><span class="n">map_out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req_idx</span><span class="p">)</span>
+</span><span data-line="160">        <span class="bp">self</span><span class="o">.</span><span class="n">offsets</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">offset</span><span class="p">)</span>
+</span><span data-line="161">        <span class="bp">self</span><span class="o">.</span><span class="n">lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segment_tokens</span><span class="p">))</span>
+</span><span data-line="162">
+</span><span data-line="163">
+</span><span data-line="164"><span class="k">def</span><span class="w"> </span><span class="nf">_prepare_streams</span><span class="p">(</span><span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Request</span><span class="p">],</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">InferencePackingConfig</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">_PackedStream</span><span class="p">]:</span>
+</span><span data-line="165"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Prepare packed streams from a list of requests using a first-fit strategy.</span>
+</span><span data-line="166">
+</span><span data-line="167"><span class="sd">    Iterates through requests and packs each into the first stream with enough</span>
+</span><span data-line="168"><span class="sd">    remaining capacity. Creates new streams as needed.</span>
+</span><span data-line="169">
+</span><span data-line="170"><span class="sd">    Args:</span>
+</span><span data-line="171"><span class="sd">        requests: List of request dictionaries, each containing an &#39;input_ids&#39; key.</span>
+</span><span data-line="172"><span class="sd">        cfg: Packing configuration specifying max_length and other parameters.</span>
+</span><span data-line="173">
+</span><span data-line="174"><span class="sd">    Returns:</span>
+</span><span data-line="175"><span class="sd">        List of _PackedStream objects containing the packed sequences.</span>
+</span><span data-line="176">
+</span><span data-line="177"><span class="sd">    Raises:</span>
+</span><span data-line="178"><span class="sd">        ValueError: If streams_per_batch &lt; 1 or max_length &lt;= 0.</span>
+</span><span data-line="179"><span class="sd">        KeyError: If any request is missing the &#39;input_ids&#39; key.</span>
+</span><span data-line="180"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="181">    <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">streams_per_batch</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="182">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;streams_per_batch must be &gt;= 1&quot;</span><span class="p">)</span>
+</span><span data-line="183">
+</span><span data-line="184">    <span class="n">streams</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_PackedStream</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="185">
+</span><span data-line="186">    <span class="k">for</span> <span class="n">req_idx</span><span class="p">,</span> <span class="n">request</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">requests</span><span class="p">):</span>
+</span><span data-line="187">        <span class="n">tokens</span> <span class="o">=</span> <span class="n">request</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_ids&quot;</span><span class="p">)</span>
+</span><span data-line="188">        <span class="k">if</span> <span class="n">tokens</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="189">            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Each request must provide an &#39;input_ids&#39; entry&quot;</span><span class="p">)</span>
+</span><span data-line="190">        <span class="n">token_list</span> <span class="o">=</span> <span class="n">_ensure_list</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span data-line="191">        <span class="k">if</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="192">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_length must be positive&quot;</span><span class="p">)</span>
+</span><span data-line="193">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_length</span><span class="p">:</span>
+</span><span data-line="194">            <span class="n">token_list</span> <span class="o">=</span> <span class="n">token_list</span><span class="p">[:</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_length</span><span class="p">]</span>
+</span><span data-line="195">
+</span><span data-line="196">        <span class="n">placed</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="197">        <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">:</span>
+</span><span data-line="198">            <span class="k">if</span> <span class="n">stream</span><span class="o">.</span><span class="n">total_tokens</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token_list</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_length</span><span class="p">:</span>
+</span><span data-line="199">                <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req_idx</span><span class="p">,</span> <span class="n">token_list</span><span class="p">)</span>
+</span><span data-line="200">                <span class="n">placed</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="201">                <span class="k">break</span>
+</span><span data-line="202">
+</span><span data-line="203">        <span class="k">if</span> <span class="ow">not</span> <span class="n">placed</span><span class="p">:</span>
+</span><span data-line="204">            <span class="n">stream</span> <span class="o">=</span> <span class="n">_PackedStream</span><span class="p">()</span>
+</span><span data-line="205">            <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">req_idx</span><span class="p">,</span> <span class="n">token_list</span><span class="p">)</span>
+</span><span data-line="206">            <span class="n">streams</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">stream</span><span class="p">)</span>
+</span><span data-line="207">
+</span><span data-line="208">    <span class="k">return</span> <span class="n">streams</span>
+</span><span data-line="209">
+</span><span data-line="210">
+</span><span data-line="211"><span class="k">def</span><span class="w"> </span><span class="nf">_build_segment_ids</span><span class="p">(</span><span class="n">streams</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">_PackedStream</span><span class="p">],</span> <span class="n">max_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">:</span>
+</span><span data-line="212"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build segment ID tensors for each stream.</span>
+</span><span data-line="213">
+</span><span data-line="214"><span class="sd">    Assigns a unique segment ID (starting from 1) to each packed sequence within</span>
+</span><span data-line="215"><span class="sd">    each stream. Padding positions receive segment ID 0.</span>
+</span><span data-line="216">
+</span><span data-line="217"><span class="sd">    Args:</span>
+</span><span data-line="218"><span class="sd">        streams: List of packed streams to build segment IDs for.</span>
+</span><span data-line="219"><span class="sd">        max_len: Maximum length to pad each stream to.</span>
+</span><span data-line="220">
+</span><span data-line="221"><span class="sd">    Returns:</span>
+</span><span data-line="222"><span class="sd">        Tensor of shape (num_streams, max_len) containing segment IDs for each</span>
+</span><span data-line="223"><span class="sd">        token position. Returns a (0, max_len) tensor if streams is empty.</span>
+</span><span data-line="224"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="225">    <span class="n">segment_rows</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="226">    <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">:</span>
+</span><span data-line="227">        <span class="n">seg</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">max_len</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="228">        <span class="n">seg_id</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="229">        <span class="k">for</span> <span class="n">offset</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">offsets</span><span class="p">,</span> <span class="n">stream</span><span class="o">.</span><span class="n">lengths</span><span class="p">):</span>
+</span><span data-line="230">            <span class="k">if</span> <span class="n">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="231">                <span class="k">continue</span>
+</span><span data-line="232">            <span class="n">seg</span><span class="p">[</span><span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">]</span> <span class="o">=</span> <span class="n">seg_id</span>
+</span><span data-line="233">            <span class="n">seg_id</span> <span class="o">+=</span> <span class="mi">1</span>
+</span><span data-line="234">        <span class="n">segment_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+</span><span data-line="235">    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">segment_rows</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">if</span> <span class="n">segment_rows</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="236">
+</span><span data-line="237">
+<div class="viewcode-block" id="pack_requests">
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.pack_requests">[docs]</a>
+</span><span data-line="238"><span class="k">def</span><span class="w"> </span><span class="nf">pack_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Request</span><span class="p">],</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">InferencePackingConfig</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PackedBatch</span><span class="p">:</span>
+</span><span data-line="239"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Pack a collection of requests into one or more streams.</span>
+</span><span data-line="240">
+</span><span data-line="241"><span class="sd">    Groups multiple short sequences into contiguous token streams to reduce padding</span>
+</span><span data-line="242"><span class="sd">    overhead. Each request&#39;s tokens are placed into streams using a first-fit</span>
+</span><span data-line="243"><span class="sd">    strategy. A block-diagonal attention mask ensures tokens from different</span>
+</span><span data-line="244"><span class="sd">    requests cannot attend to each other.</span>
+</span><span data-line="245">
+</span><span data-line="246"><span class="sd">    Args:</span>
+</span><span data-line="247"><span class="sd">        requests: List of request dictionaries. Each must contain an &#39;input_ids&#39;</span>
+</span><span data-line="248"><span class="sd">            key with a sequence of token IDs.</span>
+</span><span data-line="249"><span class="sd">        cfg: Configuration specifying packing parameters (max_length, etc.).</span>
+</span><span data-line="250"><span class="sd">        pad_token_id: Token ID to use for padding positions.</span>
+</span><span data-line="251">
+</span><span data-line="252"><span class="sd">    Returns:</span>
+</span><span data-line="253"><span class="sd">        PackedBatch object containing packed tensors and metadata needed to</span>
+</span><span data-line="254"><span class="sd">        unpack results back to original request ordering.</span>
+</span><span data-line="255">
+</span><span data-line="256"><span class="sd">    Raises:</span>
+</span><span data-line="257"><span class="sd">        ValueError: If requests list is empty or configuration is invalid.</span>
+</span><span data-line="258"><span class="sd">        KeyError: If any request is missing required &#39;input_ids&#39; key.</span>
+</span><span data-line="259">
+</span><span data-line="260"><span class="sd">    Example:</span>
+</span><span data-line="261"><span class="sd">        &gt;&gt;&gt; requests = [</span>
+</span><span data-line="262"><span class="sd">        ...     {&quot;input_ids&quot;: [1, 2, 3]},</span>
+</span><span data-line="263"><span class="sd">        ...     {&quot;input_ids&quot;: [4, 5]},</span>
+</span><span data-line="264"><span class="sd">        ... ]</span>
+</span><span data-line="265"><span class="sd">        &gt;&gt;&gt; cfg = InferencePackingConfig(max_length=10)</span>
+</span><span data-line="266"><span class="sd">        &gt;&gt;&gt; batch = pack_requests(requests, cfg, pad_token_id=0)</span>
+</span><span data-line="267"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="268">    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span data-line="269">        <span class="n">requests</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span>
+</span><span data-line="270">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">requests</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="271">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Expected at least one request to pack&quot;</span><span class="p">)</span>
+</span><span data-line="272">
+</span><span data-line="273">    <span class="n">streams</span> <span class="o">=</span> <span class="n">_prepare_streams</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">cfg</span><span class="p">)</span>
+</span><span data-line="274">
+</span><span data-line="275">    <span class="k">if</span> <span class="ow">not</span> <span class="n">streams</span><span class="p">:</span>
+</span><span data-line="276">        <span class="n">max_len</span> <span class="o">=</span> <span class="n">cfg</span><span class="o">.</span><span class="n">max_length</span>
+</span><span data-line="277">        <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">pad_token_id</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="278">        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="279">        <span class="n">segment_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="280">        <span class="n">pair_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+</span><span data-line="281">        <span class="k">return</span> <span class="n">PackedBatch</span><span class="p">(</span>
+</span><span data-line="282">            <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="283">            <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="284">            <span class="n">pair_attention_mask</span><span class="o">=</span><span class="n">pair_mask</span><span class="p">,</span>
+</span><span data-line="285">            <span class="n">segment_ids</span><span class="o">=</span><span class="n">segment_ids</span><span class="p">,</span>
+</span><span data-line="286">            <span class="n">map_out</span><span class="o">=</span><span class="p">[],</span>
+</span><span data-line="287">            <span class="n">offsets</span><span class="o">=</span><span class="p">[],</span>
+</span><span data-line="288">            <span class="n">lengths</span><span class="o">=</span><span class="p">[],</span>
+</span><span data-line="289">        <span class="p">)</span>
+</span><span data-line="290">
+</span><span data-line="291">    <span class="n">max_len</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">total_tokens</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">)</span>
+</span><span data-line="292">    <span class="k">if</span> <span class="n">max_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="293">        <span class="n">max_len</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="294">
+</span><span data-line="295">    <span class="n">input_rows</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="296">    <span class="n">mask_rows</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="297">    <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">:</span>
+</span><span data-line="298">        <span class="n">ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">tokens</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="299">        <span class="n">input_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_pad_2d</span><span class="p">(</span><span class="n">ids</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span><span data-line="300">        <span class="n">mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">tokens</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
+</span><span data-line="301">        <span class="n">mask_rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_pad_2d</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">max_len</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span><span data-line="302">
+</span><span data-line="303">    <span class="n">input_ids</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">input_rows</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="304">    <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">mask_rows</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="305">    <span class="n">segment_ids</span> <span class="o">=</span> <span class="n">_build_segment_ids</span><span class="p">(</span><span class="n">streams</span><span class="p">,</span> <span class="n">max_len</span><span class="p">)</span>
+</span><span data-line="306">
+</span><span data-line="307">    <span class="k">if</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="308">        <span class="n">pair_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">segment_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">max_len</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+</span><span data-line="309">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="310">        <span class="n">pair_mask</span> <span class="o">=</span> <span class="n">block_diag_mask</span><span class="p">(</span><span class="n">segment_ids</span><span class="p">)</span>
+</span><span data-line="311">        <span class="n">attn_b</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+</span><span data-line="312">        <span class="n">pair_mask</span> <span class="o">=</span> <span class="n">pair_mask</span> <span class="o">&amp;</span> <span class="n">attn_b</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">attn_b</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="313">
+</span><span data-line="314">    <span class="n">map_out</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">map_out</span><span class="p">)</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">]</span>
+</span><span data-line="315">    <span class="n">offsets</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">offsets</span><span class="p">)</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">]</span>
+</span><span data-line="316">    <span class="n">lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">stream</span><span class="o">.</span><span class="n">lengths</span><span class="p">)</span> <span class="k">for</span> <span class="n">stream</span> <span class="ow">in</span> <span class="n">streams</span><span class="p">]</span>
+</span><span data-line="317">
+</span><span data-line="318">    <span class="k">return</span> <span class="n">PackedBatch</span><span class="p">(</span>
+</span><span data-line="319">        <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="320">        <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="321">        <span class="n">pair_attention_mask</span><span class="o">=</span><span class="n">pair_mask</span><span class="p">,</span>
+</span><span data-line="322">        <span class="n">segment_ids</span><span class="o">=</span><span class="n">segment_ids</span><span class="p">,</span>
+</span><span data-line="323">        <span class="n">map_out</span><span class="o">=</span><span class="n">map_out</span><span class="p">,</span>
+</span><span data-line="324">        <span class="n">offsets</span><span class="o">=</span><span class="n">offsets</span><span class="p">,</span>
+</span><span data-line="325">        <span class="n">lengths</span><span class="o">=</span><span class="n">lengths</span><span class="p">,</span>
+</span><span data-line="326">    <span class="p">)</span></div>
+
+</span><span data-line="327">
+</span><span data-line="328">
+</span><span data-line="329"><span class="k">def</span><span class="w"> </span><span class="nf">_resolve_backend_tensor</span><span class="p">(</span><span class="n">tensor_like</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="330"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert various tensor-like objects to PyTorch tensors.</span>
+</span><span data-line="331">
+</span><span data-line="332"><span class="sd">    Handles both PyTorch tensors (returned as-is) and NumPy arrays (converted</span>
+</span><span data-line="333"><span class="sd">    to PyTorch tensors).</span>
+</span><span data-line="334">
+</span><span data-line="335"><span class="sd">    Args:</span>
+</span><span data-line="336"><span class="sd">        tensor_like: A PyTorch tensor or NumPy array.</span>
+</span><span data-line="337">
+</span><span data-line="338"><span class="sd">    Returns:</span>
+</span><span data-line="339"><span class="sd">        A PyTorch tensor.</span>
+</span><span data-line="340">
+</span><span data-line="341"><span class="sd">    Raises:</span>
+</span><span data-line="342"><span class="sd">        TypeError: If the input is neither a PyTorch tensor nor a NumPy array,</span>
+</span><span data-line="343"><span class="sd">            or if NumPy is not installed when needed.</span>
+</span><span data-line="344"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="345">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor_like</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+</span><span data-line="346">        <span class="k">return</span> <span class="n">tensor_like</span>
+</span><span data-line="347">
+</span><span data-line="348">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor_like</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+</span><span data-line="349">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">tensor_like</span><span class="p">)</span>
+</span><span data-line="350">
+</span><span data-line="351">    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported tensor type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">tensor_like</span><span class="p">)</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="352">
+</span><span data-line="353">
+<div class="viewcode-block" id="unpack_spans">
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.unpack_spans">[docs]</a>
+</span><span data-line="354"><span class="k">def</span><span class="w"> </span><span class="nf">unpack_spans</span><span class="p">(</span><span class="n">per_token_outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">packed</span><span class="p">:</span> <span class="n">PackedBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="355"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Unpack encoder outputs back to the original request layout.</span>
+</span><span data-line="356">
+</span><span data-line="357"><span class="sd">    Takes per-token outputs from a packed batch and redistributes them back to</span>
+</span><span data-line="358"><span class="sd">    match the original request ordering. Handles requests that were split across</span>
+</span><span data-line="359"><span class="sd">    multiple streams by concatenating their segments.</span>
+</span><span data-line="360">
+</span><span data-line="361"><span class="sd">    Args:</span>
+</span><span data-line="362"><span class="sd">        per_token_outputs: Tensor or array of shape (num_streams, max_len, ...)</span>
+</span><span data-line="363"><span class="sd">            containing per-token outputs from the encoder.</span>
+</span><span data-line="364"><span class="sd">        packed: PackedBatch object containing metadata about how requests were</span>
+</span><span data-line="365"><span class="sd">            packed (from pack_requests).</span>
+</span><span data-line="366">
+</span><span data-line="367"><span class="sd">    Returns:</span>
+</span><span data-line="368"><span class="sd">        List of tensors or arrays (one per original request) containing the</span>
+</span><span data-line="369"><span class="sd">        unpacked outputs. If input was a NumPy array, outputs will be NumPy</span>
+</span><span data-line="370"><span class="sd">        arrays; if PyTorch tensor, outputs will be PyTorch tensors.</span>
+</span><span data-line="371">
+</span><span data-line="372"><span class="sd">    Raises:</span>
+</span><span data-line="373"><span class="sd">        ValueError: If per_token_outputs is not at least 2-dimensional.</span>
+</span><span data-line="374"><span class="sd">        TypeError: If per_token_outputs is neither a PyTorch tensor nor NumPy array.</span>
+</span><span data-line="375"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="376">    <span class="n">tensor</span> <span class="o">=</span> <span class="n">_resolve_backend_tensor</span><span class="p">(</span><span class="n">per_token_outputs</span><span class="p">)</span>
+</span><span data-line="377">    <span class="k">if</span> <span class="n">tensor</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+</span><span data-line="378">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;per_token_outputs must be at least 2-dimensional&quot;</span><span class="p">)</span>
+</span><span data-line="379">
+</span><span data-line="380">    <span class="n">num_requests</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="381">    <span class="k">for</span> <span class="n">stream_map</span> <span class="ow">in</span> <span class="n">packed</span><span class="o">.</span><span class="n">map_out</span><span class="p">:</span>
+</span><span data-line="382">        <span class="k">for</span> <span class="n">req_idx</span> <span class="ow">in</span> <span class="n">stream_map</span><span class="p">:</span>
+</span><span data-line="383">            <span class="n">num_requests</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">num_requests</span><span class="p">,</span> <span class="n">req_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="384">
+</span><span data-line="385">    <span class="n">outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_requests</span><span class="p">)]</span>
+</span><span data-line="386">
+</span><span data-line="387">    <span class="k">for</span> <span class="n">stream_idx</span><span class="p">,</span> <span class="n">req_indices</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">packed</span><span class="o">.</span><span class="n">map_out</span><span class="p">):</span>
+</span><span data-line="388">        <span class="n">offsets</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">offsets</span><span class="p">[</span><span class="n">stream_idx</span><span class="p">]</span>
+</span><span data-line="389">        <span class="n">lengths</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">lengths</span><span class="p">[</span><span class="n">stream_idx</span><span class="p">]</span>
+</span><span data-line="390">        <span class="k">for</span> <span class="n">seg_idx</span><span class="p">,</span> <span class="n">req_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">req_indices</span><span class="p">):</span>
+</span><span data-line="391">            <span class="n">length</span> <span class="o">=</span> <span class="n">lengths</span><span class="p">[</span><span class="n">seg_idx</span><span class="p">]</span>
+</span><span data-line="392">            <span class="n">offset</span> <span class="o">=</span> <span class="n">offsets</span><span class="p">[</span><span class="n">seg_idx</span><span class="p">]</span>
+</span><span data-line="393">            <span class="k">if</span> <span class="n">length</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="394">                <span class="n">segment</span> <span class="o">=</span> <span class="n">tensor</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]))</span>
+</span><span data-line="395">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="396">                <span class="n">segment</span> <span class="o">=</span> <span class="n">tensor</span><span class="p">[</span><span class="n">stream_idx</span><span class="p">,</span> <span class="n">offset</span> <span class="p">:</span> <span class="n">offset</span> <span class="o">+</span> <span class="n">length</span><span class="p">]</span>
+</span><span data-line="397">            <span class="n">outputs</span><span class="p">[</span><span class="n">req_idx</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span>
+</span><span data-line="398">
+</span><span data-line="399">    <span class="n">merged</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="400">    <span class="k">for</span> <span class="n">parts</span> <span class="ow">in</span> <span class="n">outputs</span><span class="p">:</span>
+</span><span data-line="401">        <span class="k">if</span> <span class="ow">not</span> <span class="n">parts</span><span class="p">:</span>
+</span><span data-line="402">            <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="o">*</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:])))</span>
+</span><span data-line="403">        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">parts</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="404">            <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parts</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span data-line="405">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="406">            <span class="n">merged</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">parts</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+</span><span data-line="407">
+</span><span data-line="408">    <span class="c1"># Preserve original type if input was numpy</span>
+</span><span data-line="409">    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">per_token_outputs</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+</span><span data-line="410">        <span class="k">return</span> <span class="n">merged</span>
+</span><span data-line="411">
+</span><span data-line="412">    <span class="n">np_outputs</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="413">    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">merged</span><span class="p">:</span>
+</span><span data-line="414">        <span class="n">np_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+</span><span data-line="415">    <span class="k">return</span> <span class="n">np_outputs</span></div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

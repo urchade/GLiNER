@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.training.trainer module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.modeling package" href="gliner.modeling.html" /><link rel="prev" title="gliner.training package" href="gliner.training.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.training.trainer module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.training.trainer.seed_worker"><code class="docutils literal notranslate"><span class="pre">seed_worker()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments"><code class="docutils literal notranslate"><span class="pre">TrainingArguments</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.cache_dir"><code class="docutils literal notranslate">cache_dir</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.optim"><code class="docutils literal notranslate">optim</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.others_lr"><code class="docutils literal notranslate">others_lr</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.others_weight_decay"><code class="docutils literal notranslate">others_weight_decay</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.focal_loss_alpha"><code class="docutils literal notranslate">focal_loss_alpha</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.focal_loss_gamma"><code class="docutils literal notranslate">focal_loss_gamma</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.focal_loss_prob_margin"><code class="docutils literal notranslate">focal_loss_prob_margin</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.label_smoothing"><code class="docutils literal notranslate">label_smoothing</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.loss_reduction"><code class="docutils literal notranslate">loss_reduction</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.negatives"><code class="docutils literal notranslate">negatives</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.masking"><code class="docutils literal notranslate">masking</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate">cache_dir</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate">optim</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate">others_lr</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate">others_weight_decay</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate">focal_loss_alpha</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate">focal_loss_gamma</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate">focal_loss_prob_margin</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate">label_smoothing</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate">loss_reduction</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate">negatives</span></code></a></li>
+<li><a class="reference internal" href="#id10"><code class="docutils literal notranslate">masking</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.TrainingArguments.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.training_step"><code class="docutils literal notranslate">training_step()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.save_model"><code class="docutils literal notranslate">save_model()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.compute_loss"><code class="docutils literal notranslate">compute_loss()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.create_optimizer"><code class="docutils literal notranslate">create_optimizer()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.prediction_step"><code class="docutils literal notranslate">prediction_step()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.get_train_dataloader"><code class="docutils literal notranslate">get_train_dataloader()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.get_eval_dataloader"><code class="docutils literal notranslate">get_eval_dataloader()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.training.html"><span itemprop="name">gliner.training package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.training.trainer module</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.training.trainer">
+<span id="gliner-training-trainer-module"></span><h1>gliner.training.trainer module<a class="headerlink" href="#module-gliner.training.trainer" title="Link to this heading">¶</a></h1>
+<p>Custom Trainer implementation with enhanced loss functions and optimizer configuration.</p>
+<p>This module extends the Hugging Face Transformers Trainer class to support
+custom loss functions (focal loss, label smoothing), flexible learning rates
+for different parameter groups, and robust error handling during training.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.training.trainer.seed_worker">
+<span class="sig-prename descclassname"><span class="pre">gliner.training.trainer.</span></span><span class="sig-name descname"><span class="pre">seed_worker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">_</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#seed_worker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.seed_worker" title="Link to this definition">¶</a></dt>
+<dd><p>Set worker seed during DataLoader initialization.</p>
+<p>Helper function to ensure reproducibility by seeding each DataLoader worker
+process with a unique but deterministic seed based on PyTorch’s initial seed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>_</strong> – Worker ID (unused, but required by DataLoader worker_init_fn signature).</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.training.trainer.</span></span><span class="sig-name descname"><span class="pre">TrainingArguments</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_output_dir=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_train=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_predict=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_strategy='no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_loss_only=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_train_batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_eval_batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_gpu_train_batch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_gpu_eval_batch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_accumulation_steps=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_accumulation_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_delay=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_empty_cache_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=5e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_beta1=0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_beta2=0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_epsilon=1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_train_epochs=3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_type='linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_kwargs=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_ratio=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level='passive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level_replica='warning'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_on_each_node=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_strategy='steps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_first_step=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_steps=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_nan_inf_filter=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_strategy='steps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_steps=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_total_limit=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_safetensors=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_on_each_node=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_only_model=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restore_callback_states_from_checkpoint=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_cuda=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mps_device=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jit_mode_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_opt_level='O1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_precision_backend='auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16_full_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_full_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf32=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_rank=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_backend=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_num_cores=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_metrics_debug=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug=''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_drop_last=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_num_workers=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_prefetch_factor=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_index=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_tqdm=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_unused_columns=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_names=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_best_model_at_end=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_for_best_model=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">greater_is_better=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_data_skip=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_min_num_params=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_transformer_layer_cls_to_wrap=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelism_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deepspeed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing_factor=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim='adamw_torch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim_args=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adafactor=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_by_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_column_name='length'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_to=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project='huggingface'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trackio_space_id='trackio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_find_unused_parameters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_bucket_cap_mb=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_broadcast_buffers=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_pin_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_persistent_workers=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_memory_metrics=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_legacy_prediction_loop=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_from_checkpoint=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_model_id=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_strategy='every_save'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_token=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_private_repo=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_always_push=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_revision=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inputs_for_metrics=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_for_metrics=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_do_concat_batches=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_backend='auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_model_id=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_organization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_token=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mp_parameters=''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_find_batch_size=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_determinism=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torchdynamo=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_scope='last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_timeout=1800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile_backend=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile_mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_tokens_per_second=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_num_input_tokens_seen=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neftune_noise_alpha=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim_target_modules=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_eval_metrics=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_start=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_liger_kernel=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liger_kernel_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_use_gather_object=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average_tokens_across_devices=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_lr=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_weight_decay=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_alpha=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_gamma=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_prob_margin=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_reduction='sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking='global'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#TrainingArguments"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.TrainingArguments" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingArguments</span></code></p>
+<p>Extended training arguments with custom loss and optimization parameters.</p>
+<p>Extends the standard Hugging Face TrainingArguments with additional parameters
+for focal loss, label smoothing, differential learning rates, and custom
+negative sampling strategies.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.cache_dir">
+<span class="sig-name descname"><span class="pre">cache_dir</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.cache_dir" title="Link to this definition">¶</a></dt>
+<dd><p>Directory to cache downloaded models and datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.optim">
+<span class="sig-name descname"><span class="pre">optim</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.optim" title="Link to this definition">¶</a></dt>
+<dd><p>Optimizer to use. Defaults to “adamw_torch”.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.others_lr">
+<span class="sig-name descname"><span class="pre">others_lr</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.others_lr" title="Link to this definition">¶</a></dt>
+<dd><p>Optional separate learning rate for non-encoder parameters
+(e.g., classification heads). If None, uses the main learning rate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.others_weight_decay">
+<span class="sig-name descname"><span class="pre">others_weight_decay</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.others_weight_decay" title="Link to this definition">¶</a></dt>
+<dd><p>Weight decay for non-encoder parameters when
+using others_lr. Defaults to 0.0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.focal_loss_alpha">
+<span class="sig-name descname"><span class="pre">focal_loss_alpha</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.focal_loss_alpha" title="Link to this definition">¶</a></dt>
+<dd><p>Alpha parameter for focal loss. Values &lt; 0 disable
+focal loss weighting. Defaults to -1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.focal_loss_gamma">
+<span class="sig-name descname"><span class="pre">focal_loss_gamma</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.focal_loss_gamma" title="Link to this definition">¶</a></dt>
+<dd><p>Gamma (focusing parameter) for focal loss. Higher values
+increase focus on hard examples. Defaults to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.focal_loss_prob_margin">
+<span class="sig-name descname"><span class="pre">focal_loss_prob_margin</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.focal_loss_prob_margin" title="Link to this definition">¶</a></dt>
+<dd><p>Probability margin for focal loss computation.
+Defaults to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.label_smoothing">
+<span class="sig-name descname"><span class="pre">label_smoothing</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.label_smoothing" title="Link to this definition">¶</a></dt>
+<dd><p>Label smoothing factor. 0.0 means no smoothing.
+Defaults to 0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.loss_reduction">
+<span class="sig-name descname"><span class="pre">loss_reduction</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.loss_reduction" title="Link to this definition">¶</a></dt>
+<dd><p>Reduction method for loss (‘sum’, ‘mean’, or ‘none’).
+Defaults to ‘sum’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.negatives">
+<span class="sig-name descname"><span class="pre">negatives</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.negatives" title="Link to this definition">¶</a></dt>
+<dd><p>Ratio of negative samples to use. Defaults to 1.0.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.masking">
+<span class="sig-name descname"><span class="pre">masking</span></span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.masking" title="Link to this definition">¶</a></dt>
+<dd><p>Masking strategy for training (‘global’ or other strategies).
+Defaults to ‘global’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">cache_dir</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">optim</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'adamw_torch'</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">others_lr</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">others_weight_decay</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.0</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">focal_loss_alpha</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">-1</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">focal_loss_gamma</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">focal_loss_prob_margin</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">label_smoothing</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">loss_reduction</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'sum'</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">negatives</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id10">
+<span class="sig-name descname"><span class="pre">masking</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'global'</span></em><a class="headerlink" href="#id10" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.TrainingArguments.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_output_dir=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_train=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_predict=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_strategy='no'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_loss_only=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_train_batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_eval_batch_size=8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_gpu_train_batch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_gpu_eval_batch_size=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_accumulation_steps=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_accumulation_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_delay=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_empty_cache_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate=5e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_beta1=0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_beta2=0.999</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adam_epsilon=1e-08</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_train_epochs=3.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_type='linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_kwargs=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_ratio=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_steps=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level='passive'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_level_replica='warning'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_on_each_node=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_strategy='steps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_first_step=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_steps=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_nan_inf_filter=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_strategy='steps'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_steps=500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_total_limit=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_safetensors=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_on_each_node=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_only_model=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">restore_callback_states_from_checkpoint=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_cuda=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cpu=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_mps_device=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seed=42</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_seed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">jit_mode_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_opt_level='O1'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">half_precision_backend='auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16_full_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_full_eval=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf32=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_rank=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_backend=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_num_cores=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tpu_metrics_debug=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug=''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_drop_last=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_steps=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_num_workers=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_prefetch_factor=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">past_index=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">run_name=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">disable_tqdm=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remove_unused_columns=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_names=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_best_model_at_end=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metric_for_best_model=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">greater_is_better=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_data_skip=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_min_num_params=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fsdp_transformer_layer_cls_to_wrap=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">parallelism_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deepspeed=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing_factor=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim='adamw_torch'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim_args=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adafactor=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">group_by_length=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_column_name='length'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_to=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">project='huggingface'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">trackio_space_id='trackio'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_find_unused_parameters=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_bucket_cap_mb=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_broadcast_buffers=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_pin_memory=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_persistent_workers=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_memory_metrics=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_legacy_prediction_loop=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_from_checkpoint=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_model_id=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_strategy='every_save'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_token=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_private_repo=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_always_push=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hub_revision=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gradient_checkpointing_kwargs=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_inputs_for_metrics=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_for_metrics=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_do_concat_batches=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fp16_backend='auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_model_id=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_organization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">push_to_hub_token=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mp_parameters=''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">auto_find_batch_size=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_determinism=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torchdynamo=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_scope='last'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ddp_timeout=1800</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile_backend=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">torch_compile_mode=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_tokens_per_second=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_num_input_tokens_seen=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">neftune_noise_alpha=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optim_target_modules=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_eval_metrics=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_on_start=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_liger_kernel=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">liger_kernel_config=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_use_gather_object=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">average_tokens_across_devices=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_lr=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_weight_decay=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_alpha=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_gamma=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_prob_margin=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_reduction='sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking='global'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.training.trainer.TrainingArguments.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.training.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_collator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_cls_and_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_logits_for_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></p>
+<p>Custom Trainer with enhanced loss functions and error handling.</p>
+<p>Extends the Hugging Face Trainer to support:
+- Custom loss functions (focal loss, label smoothing)
+- Differential learning rates for encoder vs. other parameters
+- Robust error handling with automatic recovery from failed batches
+- Custom negative sampling and masking strategies
+- Persistent worker support for data loading</p>
+<p>The trainer automatically handles CUDA out-of-memory errors and other
+exceptions during training by skipping problematic batches and continuing.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.training_step">
+<span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.training_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.training_step" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a training step on a batch of inputs.</p>
+<p>Executes forward pass, loss computation, and backward pass for a single
+training batch. Includes automatic error handling to skip problematic
+batches without crashing the training run.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – The model to train.</p></li>
+<li><p><strong>inputs</strong> – Dictionary of input tensors and targets for the model.
+The dictionary will be unpacked before being fed to the model.
+Most models expect targets under the ‘labels’ key.</p></li>
+<li><p><strong>*args</strong> – Additional positional arguments (unused, for compatibility).</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments (unused, for compatibility).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Training loss tensor for this batch, scaled by gradient accumulation
+steps. Returns a zero tensor with requires_grad=True if an error occurs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If an exception occurs during the training step, the method prints
+the error, zeros gradients, clears CUDA cache, and returns a zero
+loss to allow training to continue.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.save_model">
+<span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_call</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.save_model" title="Link to this definition">¶</a></dt>
+<dd><p>Save the trained model to a directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Directory path where the model should be saved.
+If None, uses the default output directory from training arguments.</p></li>
+<li><p><strong>_internal_call</strong> (<em>bool</em>) – Whether this is an internal call from the Trainer.
+Used for compatibility with the parent class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.compute_loss">
+<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.compute_loss" title="Link to this definition">¶</a></dt>
+<dd><p>Compute loss using custom loss functions.</p>
+<p>Performs forward pass with custom loss parameters including focal loss,
+label smoothing, and negative sampling configurations from training arguments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> – The model to compute loss for.</p></li>
+<li><p><strong>inputs</strong> – Dictionary of input tensors including features and labels.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Computed loss tensor.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The loss function parameters (alpha, gamma, label_smoothing, etc.)
+are passed to the model’s forward method, so the model must support
+these keyword arguments.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.create_optimizer">
+<span class="sig-name descname"><span class="pre">create_optimizer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.create_optimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.create_optimizer" title="Link to this definition">¶</a></dt>
+<dd><p>Create and configure the optimizer with parameter groups.</p>
+<p>Sets up the optimizer with support for:
+- Separate learning rates for encoder and non-encoder parameters
+- Weight decay only for non-bias and non-LayerNorm parameters
+- Custom weight decay values for different parameter groups</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured optimizer instance.</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If self.args.others_lr is set, creates four parameter groups:
+1. Non-encoder parameters with weight decay
+2. Non-encoder parameters without weight decay
+3. Encoder parameters with weight decay
+4. Encoder parameters without weight decay</p>
+<p>Otherwise, creates two standard parameter groups with and without
+weight decay.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.prediction_step">
+<span class="sig-name descname"><span class="pre">prediction_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_loss_only</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.prediction_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.prediction_step" title="Link to this definition">¶</a></dt>
+<dd><p>Perform an evaluation step on the model using inputs.</p>
+<p>Executes a single forward pass for evaluation without computing gradients.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>Module</em>) – The model to evaluate.</p></li>
+<li><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Tensor</em><em> | </em><em>Any</em><em>]</em>) – Dictionary of input tensors and targets for the model.
+The dictionary will be unpacked before being fed to the model.
+Most models expect targets under the ‘labels’ key.</p></li>
+<li><p><strong>prediction_loss_only</strong> (<em>bool</em>) – If True, only returns the loss and ignores
+logits and labels.</p></li>
+<li><p><strong>ignore_keys</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of keys in the model output dictionary
+that should be ignored when gathering predictions. Currently unused.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>loss: Loss tensor if computed, None otherwise</p></li>
+<li><p>logits: Model predictions if prediction_loss_only is False, None otherwise</p></li>
+<li><p>labels: Ground truth labels if prediction_loss_only is False, None otherwise</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A tuple of (loss, logits, labels)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.get_train_dataloader">
+<span class="sig-name descname"><span class="pre">get_train_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.get_train_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.get_train_dataloader" title="Link to this definition">¶</a></dt>
+<dd><p>Create and return the training DataLoader.</p>
+<p>Constructs a DataLoader with appropriate sampler, collation function,
+and worker configuration for the training dataset. Includes seeded
+worker initialization for reproducibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured and accelerator-prepared training DataLoader.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If train_dataset is None.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>DataLoader</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For IterableDataset, sampler and drop_last are not set.
+For regular datasets, uses the sampler from _get_train_sampler()
+and applies worker seeding via seed_worker function.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.get_eval_dataloader">
+<span class="sig-name descname"><span class="pre">get_eval_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.get_eval_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.get_eval_dataloader" title="Link to this definition">¶</a></dt>
+<dd><p>Create and return the evaluation DataLoader.</p>
+<p>Constructs a DataLoader for evaluation with support for persistent workers
+and multiple evaluation datasets. Caches DataLoaders when persistent workers
+are enabled to avoid recreation overhead.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>eval_dataset</strong> (<em>str</em><em> | </em><em>Dataset</em><em> | </em><em>None</em>) – Evaluation dataset to use. Can be:
+- None: Uses self.eval_dataset
+- str: Uses self.eval_dataset[eval_dataset] (for named eval sets)
+- Dataset: Overrides self.eval_dataset directly</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Configured and accelerator-prepared evaluation DataLoader.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If both eval_dataset and self.eval_dataset are None.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>DataLoader</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When persistent_workers is True, DataLoaders are cached in
+self._eval_dataloaders to avoid worker process recreation between
+evaluation calls. The cache key is the dataset name (if string)
+or “eval” for the default dataset.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.training.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.training package</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.modeling.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.modeling package</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

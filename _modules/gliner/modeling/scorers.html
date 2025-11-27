@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.modeling.scorers - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.modeling.scorers"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.modeling.scorers</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.modeling.scorers</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+</span><span data-line="3">
+</span><span data-line="4">
+<div class="viewcode-block" id="Scorer">
+<a class="viewcode-back" href="../../../api/gliner.modeling.scorers.html#gliner.modeling.scorers.Scorer">[docs]</a>
+</span><span data-line="5"><span class="k">class</span><span class="w"> </span><span class="nc">Scorer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="6"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Scorer for computing token-label compatibility scores.</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="sd">    This scorer is designed for token-level models and computes pairwise</span>
+</span><span data-line="9"><span class="sd">    interactions between token representations and label embeddings. For each</span>
+</span><span data-line="10"><span class="sd">    token-label pair, it produces three scores (typically for start, end, and</span>
+</span><span data-line="11"><span class="sd">    overall compatibility).</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="sd">    The scoring mechanism uses:</span>
+</span><span data-line="14"><span class="sd">        1. Separate projections for tokens and labels</span>
+</span><span data-line="15"><span class="sd">        2. Bilinear-style interaction between projected representations</span>
+</span><span data-line="16"><span class="sd">        3. An MLP to produce final scores</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="sd">    Attributes:</span>
+</span><span data-line="19"><span class="sd">        proj_token (nn.Linear): Linear projection for token representations,</span>
+</span><span data-line="20"><span class="sd">            mapping from hidden_size to hidden_size * 2.</span>
+</span><span data-line="21"><span class="sd">        proj_label (nn.Linear): Linear projection for label embeddings,</span>
+</span><span data-line="22"><span class="sd">            mapping from hidden_size to hidden_size * 2.</span>
+</span><span data-line="23"><span class="sd">        out_mlp (nn.Sequential): MLP that produces final scores from</span>
+</span><span data-line="24"><span class="sd">            concatenated features.</span>
+</span><span data-line="25"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="26">
+<div class="viewcode-block" id="Scorer.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.scorers.html#gliner.modeling.scorers.Scorer.__init__">[docs]</a>
+</span><span data-line="27">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.1</span><span class="p">):</span>
+</span><span data-line="28"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Scorer.</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="sd">        Args:</span>
+</span><span data-line="31"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="32"><span class="sd">            dropout (float, optional): Dropout rate for the output MLP.</span>
+</span><span data-line="33"><span class="sd">                Defaults to 0.1.</span>
+</span><span data-line="34"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="35">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="36">        <span class="bp">self</span><span class="o">.</span><span class="n">proj_token</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</span><span data-line="37">        <span class="bp">self</span><span class="o">.</span><span class="n">proj_label</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)</span>
+</span><span data-line="38">        <span class="bp">self</span><span class="o">.</span><span class="n">out_mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span><span data-line="39">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">4</span><span class="p">),</span>
+</span><span data-line="40">            <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">),</span>
+</span><span data-line="41">            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+</span><span data-line="42">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># start, end, score</span>
+</span><span data-line="43">        <span class="p">)</span></div>
+
+</span><span data-line="44">
+<div class="viewcode-block" id="Scorer.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.scorers.html#gliner.modeling.scorers.Scorer.forward">[docs]</a>
+</span><span data-line="45">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_rep</span><span class="p">,</span> <span class="n">label_rep</span><span class="p">):</span>
+</span><span data-line="46"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute token-label compatibility scores.</span>
+</span><span data-line="47">
+</span><span data-line="48"><span class="sd">        Args:</span>
+</span><span data-line="49"><span class="sd">            token_rep (torch.Tensor): Token representations of shape</span>
+</span><span data-line="50"><span class="sd">                [batch_size, seq_len, hidden_size].</span>
+</span><span data-line="51"><span class="sd">            label_rep (torch.Tensor): Label embeddings of shape</span>
+</span><span data-line="52"><span class="sd">                [batch_size, num_classes, hidden_size].</span>
+</span><span data-line="53">
+</span><span data-line="54"><span class="sd">        Returns:</span>
+</span><span data-line="55"><span class="sd">            torch.Tensor: Scores of shape [batch_size, seq_len, num_classes, 3],</span>
+</span><span data-line="56"><span class="sd">                where the last dimension contains three scores per token-label</span>
+</span><span data-line="57"><span class="sd">                pair (typically start, end, and overall compatibility scores).</span>
+</span><span data-line="58"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="59">        <span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">token_rep</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="60">        <span class="n">num_classes</span> <span class="o">=</span> <span class="n">label_rep</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="61">
+</span><span data-line="62">        <span class="c1"># Project and split into two components for bilinear interaction</span>
+</span><span data-line="63">        <span class="c1"># Shape: (batch_size, seq_len, 1, 2, hidden_size)</span>
+</span><span data-line="64">        <span class="n">token_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_token</span><span class="p">(</span><span class="n">token_rep</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+</span><span data-line="65">        <span class="c1"># Shape: (batch_size, 1, num_classes, 2, hidden_size)</span>
+</span><span data-line="66">        <span class="n">label_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj_label</span><span class="p">(</span><span class="n">label_rep</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+</span><span data-line="67">
+</span><span data-line="68">        <span class="c1"># Expand and reorganize for pairwise computation</span>
+</span><span data-line="69">        <span class="c1"># Shape: (2, batch_size, seq_len, num_classes, hidden_size)</span>
+</span><span data-line="70">        <span class="n">token_rep</span> <span class="o">=</span> <span class="n">token_rep</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+</span><span data-line="71">        <span class="n">label_rep</span> <span class="o">=</span> <span class="n">label_rep</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+</span><span data-line="72">
+</span><span data-line="73">        <span class="c1"># Concatenate: [first_token_proj, first_label_proj, element_wise_product]</span>
+</span><span data-line="74">        <span class="c1"># Shape: (batch_size, seq_len, num_classes, hidden_size * 3)</span>
+</span><span data-line="75">        <span class="n">cat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">token_rep</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">label_rep</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">token_rep</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">label_rep</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="76">
+</span><span data-line="77">        <span class="c1"># Compute final scores through MLP</span>
+</span><span data-line="78">        <span class="c1"># Shape: (batch_size, seq_len, num_classes, 3)</span>
+</span><span data-line="79">        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_mlp</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+</span><span data-line="80">
+</span><span data-line="81">        <span class="k">return</span> <span class="n">scores</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

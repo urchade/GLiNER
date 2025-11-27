@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Creating Custom GLiNER Architectures - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Creating Custom GLiNER Architectures"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#overview-overview">Overview {#overview}</a><ul>
+<li><a class="reference internal" href="#component-responsibilities">Component Responsibilities</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#architecture-components-architecture-components">Architecture Components {#architecture-components}</a><ul>
+<li><a class="reference internal" href="#configuration-class">1. Configuration Class</a></li>
+<li><a class="reference internal" href="#model-class">2. Model Class</a></li>
+<li><a class="reference internal" href="#processor-class">3. Processor Class</a></li>
+<li><a class="reference internal" href="#decoder-class">4. Decoder Class</a></li>
+<li><a class="reference internal" href="#high-level-wrapper-class">5. High-Level Wrapper Class</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Creating Custom GLiNER Architectures</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="creating-custom-gliner-architectures">
+<h1>Creating Custom GLiNER Architectures<a class="headerlink" href="#creating-custom-gliner-architectures" title="Link to this heading">¶</a></h1>
+<p>This guide shows you how to extend GLiNER with custom architectures by implementing your own model, processor, decoder, and high-level wrapper classes.</p>
+<section id="overview-overview">
+<h2>Overview {#overview}<a class="headerlink" href="#overview-overview" title="Link to this heading">¶</a></h2>
+<p>A complete GLiNER architecture consists of four main components:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">┌─────────────────────────────────────────────────────────┐
+</span><span data-line="2">│                   High-Level Wrapper                    │
+</span><span data-line="3">│              (e.g., UniEncoderSpanGLiNER)               │
+</span><span data-line="4">│  - User-facing API (predict_entities, train, etc.)      │
+</span><span data-line="5">│  - Model instantiation and management                   │
+</span><span data-line="6">└────────────────┬────────────────────────────────────────┘
+</span><span data-line="7">                 │
+</span><span data-line="8">        ┌────────┴────────┬──────────────┬─────────────┐
+</span><span data-line="9">        │                 │              │             │
+</span><span data-line="10">┌───────▼───────┐  ┌──────▼─────┐  ┌─────▼─────┐  ┌────▼────┐
+</span><span data-line="11">│ Configuration │  │   Model    │  │ Processor │  │ Decoder │
+</span><span data-line="12">│    (Config)   │  │  (Module)  │  │           │  │         │
+</span><span data-line="13">└───────────────┘  └────────────┘  └───────────┘  └─────────┘
+</span><span data-line="14">     │                    │              │              │
+</span><span data-line="15">     │                    │              │              │
+</span><span data-line="16">     └────────────────────┴──────────────┴──────────────┘
+</span><span data-line="17">              All components work together
+</span></pre></div>
+</div>
+<section id="component-responsibilities">
+<h3>Component Responsibilities<a class="headerlink" href="#component-responsibilities" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Component</p></th>
+<th class="head"><p>Purpose</p></th>
+<th class="head"><p>Base Class</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>Configuration</strong></p></td>
+<td><p>Store model hyperparameters and settings</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Model</strong></p></td>
+<td><p>Neural network architecture (forward pass, loss)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BaseModel</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>Processor</strong></p></td>
+<td><p>Data preprocessing and tokenization</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BaseProcessor</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>Decoder</strong></p></td>
+<td><p>Convert model outputs to entity predictions</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BaseDecoder</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><strong>High-Level Wrapper</strong></p></td>
+<td><p>User-facing API and orchestration</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BaseGLiNER</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+</section>
+<section id="architecture-components-architecture-components">
+<h2>Architecture Components {#architecture-components}<a class="headerlink" href="#architecture-components-architecture-components" title="Link to this heading">¶</a></h2>
+<section id="configuration-class">
+<h3>1. Configuration Class<a class="headerlink" href="#configuration-class" title="Link to this heading">¶</a></h3>
+<p>The configuration class stores all hyperparameters and settings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseGLiNERConfig</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for custom GLiNER architecture.&quot;&quot;&quot;</span>
+</span><span data-line="5">    
+</span><span data-line="6">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="7">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="8">        <span class="c1"># Custom parameters</span>
+</span><span data-line="9">        <span class="n">pooling_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+</span><span data-line="10">        <span class="n">use_cnn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="11">        <span class="n">cnn_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
+</span><span data-line="12">        <span class="c1"># Inherit base parameters</span>
+</span><span data-line="13">        <span class="o">**</span><span class="n">kwargs</span>
+</span><span data-line="14">    <span class="p">):</span>
+</span><span data-line="15">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="16">        
+</span><span data-line="17">        <span class="c1"># Add custom parameters</span>
+</span><span data-line="18">        <span class="bp">self</span><span class="o">.</span><span class="n">pooling_strategy</span> <span class="o">=</span> <span class="n">pooling_strategy</span>
+</span><span data-line="19">        <span class="bp">self</span><span class="o">.</span><span class="n">use_cnn</span> <span class="o">=</span> <span class="n">use_cnn</span>
+</span><span data-line="20">        <span class="bp">self</span><span class="o">.</span><span class="n">cnn_filters</span> <span class="o">=</span> <span class="n">cnn_filters</span>
+</span><span data-line="21">        
+</span><span data-line="22">        <span class="c1"># Set model type for identification</span>
+</span><span data-line="23">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;custom_gliner&quot;</span>
+</span></pre></div>
+</div>
+</section>
+<section id="model-class">
+<h3>2. Model Class<a class="headerlink" href="#model-class" title="Link to this heading">¶</a></h3>
+<p>The model implements the neural network architecture:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.modeling.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.modeling.outputs</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERBaseOutput</span>
+</span><span data-line="3"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span data-line="7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom GLiNER model architecture.&quot;&quot;&quot;</span>
+</span><span data-line="8">    
+</span><span data-line="9">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span data-line="10">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="11">        
+</span><span data-line="12">        <span class="c1"># Initialize your custom layers</span>
+</span><span data-line="13">        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Your encoder</span>
+</span><span data-line="14">        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Your classifier</span>
+</span><span data-line="15">        
+</span><span data-line="16">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="17"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the model.&quot;&quot;&quot;</span>
+</span><span data-line="18">        <span class="c1"># 1. Encode inputs</span>
+</span><span data-line="19">        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
+</span><span data-line="20">        
+</span><span data-line="21">        <span class="c1"># 2. Compute logits</span>
+</span><span data-line="22">        <span class="n">logits</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">embeddings</span><span class="p">)</span>
+</span><span data-line="23">        
+</span><span data-line="24">        <span class="c1"># 3. Compute loss if labels provided</span>
+</span><span data-line="25">        <span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="26">        <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+</span><span data-line="27">            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="28">        
+</span><span data-line="29">        <span class="c1"># 4. Return structured output</span>
+</span><span data-line="30">        <span class="k">return</span> <span class="n">GLiNERBaseOutput</span><span class="p">(</span>
+</span><span data-line="31">            <span class="n">logits</span><span class="o">=</span><span class="n">logits</span><span class="p">,</span>
+</span><span data-line="32">            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+</span><span data-line="33">            <span class="c1"># Add other outputs as needed</span>
+</span><span data-line="34">        <span class="p">)</span>
+</span><span data-line="35">    
+</span><span data-line="36">    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="37"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute training loss.&quot;&quot;&quot;</span>
+</span><span data-line="38">        <span class="c1"># Implement your loss function</span>
+</span><span data-line="39">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span>
+</span><span data-line="40">            <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span>
+</span><span data-line="41">        <span class="p">)</span>
+</span><span data-line="42">    
+</span><span data-line="43">    <span class="k">def</span><span class="w"> </span><span class="nf">get_representations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="44"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract intermediate representations.&quot;&quot;&quot;</span>
+</span><span data-line="45">        <span class="c1"># Return embeddings for analysis/debugging</span>
+</span><span data-line="46">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="processor-class">
+<h3>3. Processor Class<a class="headerlink" href="#processor-class" title="Link to this heading">¶</a></h3>
+<p>The processor handles data preprocessing:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.data_processing</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseProcessor</span>
+</span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomProcessor</span><span class="p">(</span><span class="n">BaseProcessor</span><span class="p">):</span>
+</span><span data-line="5"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom data processor.&quot;&quot;&quot;</span>
+</span><span data-line="6">    
+</span><span data-line="7">    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">):</span>
+</span><span data-line="8"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess a single training example.&quot;&quot;&quot;</span>
+</span><span data-line="9">        <span class="c1"># Convert tokens and entities to model inputs</span>
+</span><span data-line="10">        <span class="c1"># Return dict with required keys</span>
+</span><span data-line="11">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="12">            <span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="13">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_labels</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">),</span>
+</span><span data-line="14">            <span class="c1"># Add other fields as needed</span>
+</span><span data-line="15">        <span class="p">}</span>
+</span><span data-line="16">    
+</span><span data-line="17">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">):</span>
+</span><span data-line="18"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create label tensor from entity annotations.&quot;&quot;&quot;</span>
+</span><span data-line="19">        <span class="c1"># Implement label creation logic</span>
+</span><span data-line="20">        <span class="k">pass</span>
+</span><span data-line="21">    
+</span><span data-line="22">    <span class="k">def</span><span class="w"> </span><span class="nf">create_batch_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">class_to_ids</span><span class="p">,</span> <span class="n">id_to_classes</span><span class="p">):</span>
+</span><span data-line="23"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Collate preprocessed examples into a batch.&quot;&quot;&quot;</span>
+</span><span data-line="24">        <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="25">            <span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ex</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">],</span>
+</span><span data-line="26">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ex</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span>
+</span><span data-line="27">            <span class="s2">&quot;classes_to_id&quot;</span><span class="p">:</span> <span class="n">class_to_ids</span><span class="p">,</span>
+</span><span data-line="28">            <span class="s2">&quot;id_to_classes&quot;</span><span class="p">:</span> <span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="29">        <span class="p">}</span>
+</span><span data-line="30">    
+</span><span data-line="31">    <span class="k">def</span><span class="w"> </span><span class="nf">tokenize_and_prepare_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">prepare_labels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="32"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Tokenize inputs and prepare labels for the model.&quot;&quot;&quot;</span>
+</span><span data-line="33">        <span class="c1"># Tokenize</span>
+</span><span data-line="34">        <span class="n">tokenized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenize_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;classes_to_id&quot;</span><span class="p">])</span>
+</span><span data-line="35">        
+</span><span data-line="36">        <span class="c1"># Add labels if needed</span>
+</span><span data-line="37">        <span class="k">if</span> <span class="n">prepare_labels</span><span class="p">:</span>
+</span><span data-line="38">            <span class="n">tokenized</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_labels</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+</span><span data-line="39">        
+</span><span data-line="40">        <span class="k">return</span> <span class="n">tokenized</span>
+</span><span data-line="41">    
+</span><span data-line="42">    <span class="k">def</span><span class="w"> </span><span class="nf">create_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
+</span><span data-line="43"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create labels tensor from batch.&quot;&quot;&quot;</span>
+</span><span data-line="44">        <span class="c1"># Implement label creation from batch</span>
+</span><span data-line="45">        <span class="k">pass</span>
+</span></pre></div>
+</div>
+</section>
+<section id="decoder-class">
+<h3>4. Decoder Class<a class="headerlink" href="#decoder-class" title="Link to this heading">¶</a></h3>
+<p>The decoder converts model outputs to predictions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.decoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDecoder</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomDecoder</span><span class="p">(</span><span class="n">BaseDecoder</span><span class="p">):</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom decoder for model outputs.&quot;&quot;&quot;</span>
+</span><span data-line="5">    
+</span><span data-line="6">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
+</span><span data-line="7">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="8">        <span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="9">        <span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="10">        <span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="11">        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="12">        <span class="o">**</span><span class="n">kwargs</span>
+</span><span data-line="13">    <span class="p">):</span>
+</span><span data-line="14"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode model output into entity predictions.&quot;&quot;&quot;</span>
+</span><span data-line="15">        <span class="c1"># 1. Apply sigmoid/softmax to logits</span>
+</span><span data-line="16">        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">model_output</span><span class="p">)</span>
+</span><span data-line="17">        
+</span><span data-line="18">        <span class="c1"># 2. Find predictions above threshold</span>
+</span><span data-line="19">        <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="20">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">sample_probs</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">probs</span><span class="p">):</span>
+</span><span data-line="21">            <span class="n">sample_preds</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="22">            <span class="c1"># Extract entities from probabilities</span>
+</span><span data-line="23">            <span class="c1"># Convert to standard format: (start, end, label, score)</span>
+</span><span data-line="24">            <span class="n">sample_preds</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">start</span><span class="p">,</span> <span class="n">end</span><span class="p">,</span> <span class="n">label</span><span class="p">,</span> <span class="n">score</span><span class="p">))</span>
+</span><span data-line="25">            <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sample_preds</span><span class="p">)</span>
+</span><span data-line="26">        
+</span><span data-line="27">        <span class="k">return</span> <span class="n">predictions</span>
+</span></pre></div>
+</div>
+</section>
+<section id="high-level-wrapper-class">
+<h3>5. High-Level Wrapper Class<a class="headerlink" href="#high-level-wrapper-class" title="Link to this heading">¶</a></h3>
+<p>The wrapper ties everything together:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseGLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomGLiNER</span><span class="p">(</span><span class="n">BaseGLiNER</span><span class="p">):</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level wrapper for custom GLiNER architecture.&quot;&quot;&quot;</span>
+</span><span data-line="5">    
+</span><span data-line="6">    <span class="c1"># Register component classes</span>
+</span><span data-line="7">    <span class="n">config_class</span> <span class="o">=</span> <span class="n">MyCustomConfig</span>
+</span><span data-line="8">    <span class="n">model_class</span> <span class="o">=</span> <span class="n">MyCustomModel</span>
+</span><span data-line="9">    <span class="n">data_processor_class</span> <span class="o">=</span> <span class="n">MyCustomProcessor</span>
+</span><span data-line="10">    <span class="n">decoder_class</span> <span class="o">=</span> <span class="n">MyCustomDecoder</span>
+</span><span data-line="11">    <span class="n">data_collator_class</span> <span class="o">=</span> <span class="n">MyCustomDataCollator</span>  <span class="c1"># If needed</span>
+</span><span data-line="12">    
+</span><span data-line="13">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">backbone_from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="14"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create model instance.&quot;&quot;&quot;</span>
+</span><span data-line="15">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_class</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">backbone_from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="16">    
+</span><span data-line="17">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_data_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="18"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create data processor instance.&quot;&quot;&quot;</span>
+</span><span data-line="19">        <span class="k">if</span> <span class="n">tokenizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="20">            <span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoTokenizer</span>
+</span><span data-line="21">            <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="22">        
+</span><span data-line="23">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor_class</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="24">    
+</span><span data-line="25">    <span class="k">def</span><span class="w"> </span><span class="nf">resize_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="26"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize token embeddings if needed.&quot;&quot;&quot;</span>
+</span><span data-line="27">        <span class="c1"># Implement if you add special tokens</span>
+</span><span data-line="28">        <span class="k">pass</span>
+</span><span data-line="29">    
+</span><span data-line="30">    <span class="k">def</span><span class="w"> </span><span class="nf">inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="31"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run inference on texts.&quot;&quot;&quot;</span>
+</span><span data-line="32">        <span class="c1"># Use parent implementation or customize</span>
+</span><span data-line="33">        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="34">    
+</span><span data-line="35">    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="36"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate on test data.&quot;&quot;&quot;</span>
+</span><span data-line="37">        <span class="c1"># Use parent implementation or customize</span>
+</span><span data-line="38">        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

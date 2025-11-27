@@ -1,0 +1,15 @@
+gliner.training package
+=======================
+
+.. automodule:: gliner.training
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.training.trainer

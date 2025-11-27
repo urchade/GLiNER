@@ -1,0 +1,7 @@
+gliner.multitask.open\_extraction module
+========================================
+
+.. automodule:: gliner.multitask.open_extraction
+   :members:
+   :undoc-members:
+   :show-inheritance:

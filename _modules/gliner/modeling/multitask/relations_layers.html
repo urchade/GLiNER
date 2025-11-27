@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.modeling.multitask.relations_layers - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.modeling.multitask.relations_layers"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.modeling.multitask.relations_layers</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.modeling.multitask.relations_layers</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Optional</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="4"><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+</span><span data-line="5"><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+</span><span data-line="6">
+</span><span data-line="7">
+<div class="viewcode-block" id="compute_degree">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.compute_degree">[docs]</a>
+</span><span data-line="8"><span class="k">def</span><span class="w"> </span><span class="nf">compute_degree</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute the degree matrix from an adjacency matrix.</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="sd">    The degree of node i is defined as D_ii = Σ_j A_ij, representing the sum</span>
+</span><span data-line="12"><span class="sd">    of edge weights connected to that node.</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="sd">    Args:</span>
+</span><span data-line="15"><span class="sd">        A: Adjacency matrix of shape (B, E, E) where B is batch size and E is</span>
+</span><span data-line="16"><span class="sd">            the number of entities/nodes.</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="sd">    Returns:</span>
+</span><span data-line="19"><span class="sd">        Degree vector of shape (B, E) containing the degree for each node.</span>
+</span><span data-line="20"><span class="sd">        Values are clamped to a minimum of 1e-6 to avoid division by zero.</span>
+</span><span data-line="21"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="22">    <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span></div>
+
+</span><span data-line="23">
+</span><span data-line="24">
+</span><span data-line="25"><span class="k">def</span><span class="w"> </span><span class="nf">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="26"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Zero out adjacency entries where at least one endpoint is masked.</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="sd">    This ensures that edges to/from padded entities are properly masked out.</span>
+</span><span data-line="29"><span class="sd">    An edge (i, j) is kept only if both mask[i] and mask[j] are non-zero.</span>
+</span><span data-line="30">
+</span><span data-line="31"><span class="sd">    Args:</span>
+</span><span data-line="32"><span class="sd">        A: Adjacency matrix of shape (B, E, E).</span>
+</span><span data-line="33"><span class="sd">        mask: Optional boolean/float mask of shape (B, E) where 1 indicates</span>
+</span><span data-line="34"><span class="sd">            valid entities and 0 indicates padding. If None, returns A unchanged.</span>
+</span><span data-line="35">
+</span><span data-line="36"><span class="sd">    Returns:</span>
+</span><span data-line="37"><span class="sd">        Masked adjacency matrix of shape (B, E, E).</span>
+</span><span data-line="38"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="39">    <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="40">        <span class="k">return</span> <span class="n">A</span>
+</span><span data-line="41">    <span class="n">m</span> <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>  <span class="c1"># (B, E)</span>
+</span><span data-line="42">    <span class="k">return</span> <span class="n">A</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">m</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, E, E)</span>
+</span><span data-line="43">
+</span><span data-line="44">
+<div class="viewcode-block" id="dot_product_adjacency">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.dot_product_adjacency">[docs]</a>
+</span><span data-line="45"><span class="k">def</span><span class="w"> </span><span class="nf">dot_product_adjacency</span><span class="p">(</span>
+</span><span data-line="46">    <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">normalize</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="47"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="48"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix using dot-product (cosine) similarity.</span>
+</span><span data-line="49">
+</span><span data-line="50"><span class="sd">    Computes pairwise similarities between entity embeddings using either</span>
+</span><span data-line="51"><span class="sd">    normalized (cosine similarity) or unnormalized dot products, followed</span>
+</span><span data-line="52"><span class="sd">    by sigmoid activation.</span>
+</span><span data-line="53">
+</span><span data-line="54"><span class="sd">    Args:</span>
+</span><span data-line="55"><span class="sd">        X: Entity embeddings of shape (B, E, D) where B is batch size,</span>
+</span><span data-line="56"><span class="sd">            E is number of entities, and D is embedding dimension.</span>
+</span><span data-line="57"><span class="sd">        mask: Optional mask of shape (B, E) indicating valid entities.</span>
+</span><span data-line="58"><span class="sd">        normalize: If True, L2-normalize embeddings before computing similarity</span>
+</span><span data-line="59"><span class="sd">            (results in cosine similarity). Defaults to False.</span>
+</span><span data-line="60">
+</span><span data-line="61"><span class="sd">    Returns:</span>
+</span><span data-line="62"><span class="sd">        Adjacency matrix of shape (B, E, E) with values in (0, 1).</span>
+</span><span data-line="63"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="64">    <span class="k">if</span> <span class="n">normalize</span><span class="p">:</span>
+</span><span data-line="65">        <span class="n">Xn</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">normalize</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">p</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="66">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="67">        <span class="n">Xn</span> <span class="o">=</span> <span class="n">X</span>
+</span><span data-line="68">    <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">Xn</span><span class="p">,</span> <span class="n">Xn</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>  <span class="c1"># (B, E, E)</span>
+</span><span data-line="69">    <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+</span><span data-line="70">    <span class="k">return</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+
+</span><span data-line="71">
+</span><span data-line="72">
+<div class="viewcode-block" id="MLPDecoder">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.MLPDecoder">[docs]</a>
+</span><span data-line="73"><span class="k">class</span><span class="w"> </span><span class="nc">MLPDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="74"><span class="w">    </span><span class="sd">&quot;&quot;&quot;MLP-based adjacency decoder using concatenated node pairs.</span>
+</span><span data-line="75">
+</span><span data-line="76"><span class="sd">    This decoder concatenates embeddings of node pairs and passes them through</span>
+</span><span data-line="77"><span class="sd">    an MLP to predict edge existence. It models pairwise interactions explicitly.</span>
+</span><span data-line="78">
+</span><span data-line="79"><span class="sd">    Args:</span>
+</span><span data-line="80"><span class="sd">        in_dim: Input embedding dimension.</span>
+</span><span data-line="81"><span class="sd">        hidden_dim: Hidden layer dimension for the MLP.</span>
+</span><span data-line="82"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="83">
+<div class="viewcode-block" id="MLPDecoder.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.MLPDecoder.__init__">[docs]</a>
+</span><span data-line="84">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="85"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the MLP decoder.</span>
+</span><span data-line="86">
+</span><span data-line="87"><span class="sd">        Args:</span>
+</span><span data-line="88"><span class="sd">            in_dim: Input embedding dimension.</span>
+</span><span data-line="89"><span class="sd">            hidden_dim: Hidden layer dimension.</span>
+</span><span data-line="90"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="91">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="92">        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">in_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+</span><span data-line="93">
+<div class="viewcode-block" id="MLPDecoder.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.MLPDecoder.forward">[docs]</a>
+</span><span data-line="94">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="95"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix using MLP on concatenated node pairs.</span>
+</span><span data-line="96">
+</span><span data-line="97"><span class="sd">        Args:</span>
+</span><span data-line="98"><span class="sd">            X: Entity embeddings of shape (B, E, D).</span>
+</span><span data-line="99"><span class="sd">            mask: Optional mask of shape (B, E) indicating valid entities.</span>
+</span><span data-line="100">
+</span><span data-line="101"><span class="sd">        Returns:</span>
+</span><span data-line="102"><span class="sd">            Adjacency matrix of shape (B, E, E) with values in (0, 1).</span>
+</span><span data-line="103"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="104">        <span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="105">        <span class="n">Xi</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="106">        <span class="n">Xj</span> <span class="o">=</span> <span class="n">X</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="107">        <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">Xi</span><span class="p">,</span> <span class="n">Xj</span><span class="p">],</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="108">        <span class="k">return</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="109">
+</span><span data-line="110">
+<div class="viewcode-block" id="AttentionAdjacency">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.AttentionAdjacency">[docs]</a>
+</span><span data-line="111"><span class="k">class</span><span class="w"> </span><span class="nc">AttentionAdjacency</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="112"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Adjacency matrix derived from multi-head attention weights.</span>
+</span><span data-line="113">
+</span><span data-line="114"><span class="sd">    Uses PyTorch&#39;s multi-head attention mechanism to compute pairwise attention</span>
+</span><span data-line="115"><span class="sd">    scores, which are averaged across heads to form the adjacency matrix.</span>
+</span><span data-line="116">
+</span><span data-line="117"><span class="sd">    Args:</span>
+</span><span data-line="118"><span class="sd">        d_model: Model dimension (embedding size).</span>
+</span><span data-line="119"><span class="sd">        nhead: Number of attention heads.</span>
+</span><span data-line="120"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="121">
+<div class="viewcode-block" id="AttentionAdjacency.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.AttentionAdjacency.__init__">[docs]</a>
+</span><span data-line="122">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nhead</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="123"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the attention-based adjacency module.</span>
+</span><span data-line="124">
+</span><span data-line="125"><span class="sd">        Args:</span>
+</span><span data-line="126"><span class="sd">            d_model: Model dimension for attention.</span>
+</span><span data-line="127"><span class="sd">            nhead: Number of attention heads.</span>
+</span><span data-line="128"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="129">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="130">        <span class="bp">self</span><span class="o">.</span><span class="n">attn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MultiheadAttention</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">nhead</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</span><span data-line="131">
+<div class="viewcode-block" id="AttentionAdjacency.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.AttentionAdjacency.forward">[docs]</a>
+</span><span data-line="132">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="133"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix from attention weights.</span>
+</span><span data-line="134">
+</span><span data-line="135"><span class="sd">        Args:</span>
+</span><span data-line="136"><span class="sd">            X: Entity embeddings of shape (B, E, D).</span>
+</span><span data-line="137"><span class="sd">            mask: Optional mask of shape (B, E) where 1 indicates valid entities.</span>
+</span><span data-line="138">
+</span><span data-line="139"><span class="sd">        Returns:</span>
+</span><span data-line="140"><span class="sd">            Adjacency matrix of shape (B, E, E) computed from averaged attention weights.</span>
+</span><span data-line="141"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="142">        <span class="n">key_padding</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="o">.</span><span class="n">bool</span><span class="p">())</span> <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="143">        <span class="n">_</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">key_padding_mask</span><span class="o">=</span><span class="n">key_padding</span><span class="p">,</span> <span class="n">need_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="144">        <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>  <span class="c1"># (B, h, E, E) - average across heads</span>
+</span><span data-line="145">            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="146">        <span class="n">w</span> <span class="o">=</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">w</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+</span><span data-line="147">        <span class="k">return</span> <span class="n">w</span></div>
+</div>
+
+</span><span data-line="148">
+</span><span data-line="149">
+<div class="viewcode-block" id="BilinearDecoder">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.BilinearDecoder">[docs]</a>
+</span><span data-line="150"><span class="k">class</span><span class="w"> </span><span class="nc">BilinearDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="151"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bilinear decoder for adjacency prediction.</span>
+</span><span data-line="152">
+</span><span data-line="153"><span class="sd">    Projects embeddings to a latent space and computes adjacency as the</span>
+</span><span data-line="154"><span class="sd">    sigmoid of the bilinear product Z @ Z^T.</span>
+</span><span data-line="155">
+</span><span data-line="156"><span class="sd">    Args:</span>
+</span><span data-line="157"><span class="sd">        in_dim: Input embedding dimension.</span>
+</span><span data-line="158"><span class="sd">        latent_dim: Latent projection dimension.</span>
+</span><span data-line="159"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="160">
+<div class="viewcode-block" id="BilinearDecoder.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.BilinearDecoder.__init__">[docs]</a>
+</span><span data-line="161">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">latent_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="162"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the bilinear decoder.</span>
+</span><span data-line="163">
+</span><span data-line="164"><span class="sd">        Args:</span>
+</span><span data-line="165"><span class="sd">            in_dim: Input embedding dimension.</span>
+</span><span data-line="166"><span class="sd">            latent_dim: Dimension of the latent projection space.</span>
+</span><span data-line="167"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="168">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="169">        <span class="bp">self</span><span class="o">.</span><span class="n">proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">latent_dim</span><span class="p">)</span></div>
+
+</span><span data-line="170">
+<div class="viewcode-block" id="BilinearDecoder.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.BilinearDecoder.forward">[docs]</a>
+</span><span data-line="171">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="172"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency using bilinear projection.</span>
+</span><span data-line="173">
+</span><span data-line="174"><span class="sd">        Args:</span>
+</span><span data-line="175"><span class="sd">            X: Entity embeddings of shape (B, E, D).</span>
+</span><span data-line="176"><span class="sd">            mask: Optional mask of shape (B, E) indicating valid entities.</span>
+</span><span data-line="177">
+</span><span data-line="178"><span class="sd">        Returns:</span>
+</span><span data-line="179"><span class="sd">            Adjacency matrix of shape (B, E, E) with values in (0, 1).</span>
+</span><span data-line="180"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="181">        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+</span><span data-line="182">        <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+</span><span data-line="183">        <span class="k">return</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="184">
+</span><span data-line="185">
+<div class="viewcode-block" id="SimpleGCNLayer">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.SimpleGCNLayer">[docs]</a>
+</span><span data-line="186"><span class="k">class</span><span class="w"> </span><span class="nc">SimpleGCNLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="187"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Simple Graph Convolutional Network layer with symmetric normalization.</span>
+</span><span data-line="188">
+</span><span data-line="189"><span class="sd">    Implements the GCN propagation rule: H = ReLU(D^(-1/2) A D^(-1/2) X W)</span>
+</span><span data-line="190"><span class="sd">    where D is the degree matrix, A is the adjacency with self-loops, and W</span>
+</span><span data-line="191"><span class="sd">    is a learnable weight matrix.</span>
+</span><span data-line="192">
+</span><span data-line="193"><span class="sd">    Args:</span>
+</span><span data-line="194"><span class="sd">        in_dim: Input feature dimension.</span>
+</span><span data-line="195"><span class="sd">        out_dim: Output feature dimension.</span>
+</span><span data-line="196"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="197">
+<div class="viewcode-block" id="SimpleGCNLayer.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.SimpleGCNLayer.__init__">[docs]</a>
+</span><span data-line="198">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="199"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GCN layer.</span>
+</span><span data-line="200">
+</span><span data-line="201"><span class="sd">        Args:</span>
+</span><span data-line="202"><span class="sd">            in_dim: Input feature dimension.</span>
+</span><span data-line="203"><span class="sd">            out_dim: Output feature dimension.</span>
+</span><span data-line="204"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="205">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="206">        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">out_dim</span><span class="p">)</span></div>
+
+</span><span data-line="207">
+<div class="viewcode-block" id="SimpleGCNLayer.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.SimpleGCNLayer.forward">[docs]</a>
+</span><span data-line="208">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="209"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply graph convolution with symmetric normalization.</span>
+</span><span data-line="210">
+</span><span data-line="211"><span class="sd">        Args:</span>
+</span><span data-line="212"><span class="sd">            X: Node features of shape (B, E, D).</span>
+</span><span data-line="213"><span class="sd">            A: Adjacency matrix of shape (B, E, E).</span>
+</span><span data-line="214"><span class="sd">            mask: Optional mask of shape (B, E). Self-loops are added only</span>
+</span><span data-line="215"><span class="sd">                to valid (non-masked) nodes.</span>
+</span><span data-line="216">
+</span><span data-line="217"><span class="sd">        Returns:</span>
+</span><span data-line="218"><span class="sd">            Updated node features of shape (B, E, out_dim).</span>
+</span><span data-line="219"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="220">        <span class="c1"># Keep only valid⇆valid edges &amp; add self-loops on valid nodes</span>
+</span><span data-line="221">        <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="222">            <span class="n">A</span> <span class="o">=</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+</span><span data-line="223">            <span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">diag_embed</span><span class="p">(</span><span class="n">mask</span><span class="o">.</span><span class="n">float</span><span class="p">())</span>  <span class="c1"># self-loops only where mask == 1</span>
+</span><span data-line="224">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="225">            <span class="n">A</span> <span class="o">=</span> <span class="n">A</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">A</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="226">
+</span><span data-line="227">        <span class="n">D_inv_sqrt</span> <span class="o">=</span> <span class="n">compute_degree</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="o">-</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="228">        <span class="n">A_norm</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">diag_embed</span><span class="p">(</span><span class="n">D_inv_sqrt</span><span class="p">)</span> <span class="o">@</span> <span class="n">A</span> <span class="o">@</span> <span class="n">torch</span><span class="o">.</span><span class="n">diag_embed</span><span class="p">(</span><span class="n">D_inv_sqrt</span><span class="p">)</span>
+</span><span data-line="229">        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">A_norm</span><span class="p">,</span> <span class="n">X</span><span class="p">)</span>
+</span><span data-line="230">        <span class="k">return</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">out</span><span class="p">))</span></div>
+</div>
+
+</span><span data-line="231">
+</span><span data-line="232">
+<div class="viewcode-block" id="GCNDecoder">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GCNDecoder">[docs]</a>
+</span><span data-line="233"><span class="k">class</span><span class="w"> </span><span class="nc">GCNDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="234"><span class="w">    </span><span class="sd">&quot;&quot;&quot;GCN-based adjacency decoder.</span>
+</span><span data-line="235">
+</span><span data-line="236"><span class="sd">    First computes an initial adjacency using dot-product similarity, applies</span>
+</span><span data-line="237"><span class="sd">    a GCN layer to update node representations, then predicts the final adjacency</span>
+</span><span data-line="238"><span class="sd">    from the updated representations.</span>
+</span><span data-line="239">
+</span><span data-line="240"><span class="sd">    Args:</span>
+</span><span data-line="241"><span class="sd">        in_dim: Input embedding dimension.</span>
+</span><span data-line="242"><span class="sd">        hidden_dim: Hidden dimension for GCN and projection layers.</span>
+</span><span data-line="243"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="244">
+<div class="viewcode-block" id="GCNDecoder.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GCNDecoder.__init__">[docs]</a>
+</span><span data-line="245">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="246"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GCN decoder.</span>
+</span><span data-line="247">
+</span><span data-line="248"><span class="sd">        Args:</span>
+</span><span data-line="249"><span class="sd">            in_dim: Input embedding dimension.</span>
+</span><span data-line="250"><span class="sd">            hidden_dim: Hidden dimension for the GCN layer and projection.</span>
+</span><span data-line="251"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="252">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="253">        <span class="bp">self</span><span class="o">.</span><span class="n">gcn</span> <span class="o">=</span> <span class="n">SimpleGCNLayer</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">)</span>
+</span><span data-line="254">        <span class="bp">self</span><span class="o">.</span><span class="n">proj</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_dim</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">)</span></div>
+
+</span><span data-line="255">
+<div class="viewcode-block" id="GCNDecoder.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GCNDecoder.forward">[docs]</a>
+</span><span data-line="256">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="257"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency using GCN refinement.</span>
+</span><span data-line="258">
+</span><span data-line="259"><span class="sd">        Args:</span>
+</span><span data-line="260"><span class="sd">            X: Entity embeddings of shape (B, E, D).</span>
+</span><span data-line="261"><span class="sd">            mask: Optional mask of shape (B, E) indicating valid entities.</span>
+</span><span data-line="262">
+</span><span data-line="263"><span class="sd">        Returns:</span>
+</span><span data-line="264"><span class="sd">            Adjacency matrix of shape (B, E, E) with values in (0, 1).</span>
+</span><span data-line="265"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="266">        <span class="n">A0</span> <span class="o">=</span> <span class="n">dot_product_adjacency</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># Initial adjacency (already masked)</span>
+</span><span data-line="267">        <span class="n">H</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gcn</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">A0</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>  <span class="c1"># Updated node features</span>
+</span><span data-line="268">        <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">H</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">proj</span><span class="p">(</span><span class="n">H</span><span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+</span><span data-line="269">        <span class="k">return</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="270">
+</span><span data-line="271">
+<div class="viewcode-block" id="GATDecoder">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GATDecoder">[docs]</a>
+</span><span data-line="272"><span class="k">class</span><span class="w"> </span><span class="nc">GATDecoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="273"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Graph Attention Network (GAT) based adjacency decoder.</span>
+</span><span data-line="274">
+</span><span data-line="275"><span class="sd">    Uses multi-head attention to update node representations, then predicts</span>
+</span><span data-line="276"><span class="sd">    adjacency from the transformed features.</span>
+</span><span data-line="277">
+</span><span data-line="278"><span class="sd">    Args:</span>
+</span><span data-line="279"><span class="sd">        d_model: Model dimension for attention.</span>
+</span><span data-line="280"><span class="sd">        nhead: Number of attention heads.</span>
+</span><span data-line="281"><span class="sd">        hidden_dim: Hidden dimension for the final projection.</span>
+</span><span data-line="282"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="283">
+<div class="viewcode-block" id="GATDecoder.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GATDecoder.__init__">[docs]</a>
+</span><span data-line="284">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">d_model</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">nhead</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="285"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GAT decoder.</span>
+</span><span data-line="286">
+</span><span data-line="287"><span class="sd">        Args:</span>
+</span><span data-line="288"><span class="sd">            d_model: Model dimension for attention mechanism.</span>
+</span><span data-line="289"><span class="sd">            nhead: Number of attention heads.</span>
+</span><span data-line="290"><span class="sd">            hidden_dim: Hidden dimension for the output projection.</span>
+</span><span data-line="291"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="292">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="293">        <span class="bp">self</span><span class="o">.</span><span class="n">attn</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MultiheadAttention</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">nhead</span><span class="p">,</span> <span class="n">batch_first</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="294">        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">d_model</span><span class="p">,</span> <span class="n">hidden_dim</span><span class="p">)</span></div>
+
+</span><span data-line="295">
+<div class="viewcode-block" id="GATDecoder.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.GATDecoder.forward">[docs]</a>
+</span><span data-line="296">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="297"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency using GAT refinement.</span>
+</span><span data-line="298">
+</span><span data-line="299"><span class="sd">        Args:</span>
+</span><span data-line="300"><span class="sd">            X: Entity embeddings of shape (B, E, D).</span>
+</span><span data-line="301"><span class="sd">            mask: Optional mask of shape (B, E) indicating valid entities.</span>
+</span><span data-line="302">
+</span><span data-line="303"><span class="sd">        Returns:</span>
+</span><span data-line="304"><span class="sd">            Adjacency matrix of shape (B, E, E) with values in (0, 1).</span>
+</span><span data-line="305"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="306">        <span class="n">key_padding</span> <span class="o">=</span> <span class="p">(</span><span class="o">~</span><span class="n">mask</span><span class="o">.</span><span class="n">bool</span><span class="p">())</span> <span class="k">if</span> <span class="n">mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="307">        <span class="n">H</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attn</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">key_padding_mask</span><span class="o">=</span><span class="n">key_padding</span><span class="p">,</span> <span class="n">need_weights</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="308">        <span class="k">if</span> <span class="n">w</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+</span><span data-line="309">            <span class="n">w</span> <span class="o">=</span> <span class="n">w</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (B, E, E) - average across heads</span>
+</span><span data-line="310">        <span class="n">Z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">H</span><span class="p">)</span>
+</span><span data-line="311">        <span class="n">A</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bmm</span><span class="p">(</span><span class="n">Z</span><span class="p">,</span> <span class="n">Z</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+</span><span data-line="312">        <span class="k">return</span> <span class="n">_apply_pair_mask</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="313">
+</span><span data-line="314">
+<div class="viewcode-block" id="RelationsRepLayer">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.RelationsRepLayer">[docs]</a>
+</span><span data-line="315"><span class="k">class</span><span class="w"> </span><span class="nc">RelationsRepLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="316"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Unified wrapper for different adjacency computation methods.</span>
+</span><span data-line="317">
+</span><span data-line="318"><span class="sd">    This layer provides a common interface for various approaches to computing</span>
+</span><span data-line="319"><span class="sd">    adjacency matrices from entity embeddings, including:</span>
+</span><span data-line="320"><span class="sd">    - &#39;dot&#39;: Dot-product/cosine similarity</span>
+</span><span data-line="321"><span class="sd">    - &#39;mlp&#39;: MLP-based pairwise decoder</span>
+</span><span data-line="322"><span class="sd">    - &#39;attention&#39;/&#39;attn&#39;: Multi-head attention weights</span>
+</span><span data-line="323"><span class="sd">    - &#39;bilinear&#39;: Bilinear projection</span>
+</span><span data-line="324"><span class="sd">    - &#39;gcn&#39;: Graph convolutional refinement</span>
+</span><span data-line="325"><span class="sd">    - &#39;gat&#39;: Graph attention network</span>
+</span><span data-line="326">
+</span><span data-line="327"><span class="sd">    All methods support masked inputs for handling variable-length sequences.</span>
+</span><span data-line="328">
+</span><span data-line="329"><span class="sd">    Args:</span>
+</span><span data-line="330"><span class="sd">        in_dim: Input embedding dimension.</span>
+</span><span data-line="331"><span class="sd">        relation_mode: String specifying the adjacency computation method.</span>
+</span><span data-line="332"><span class="sd">            One of: &#39;dot&#39;, &#39;mlp&#39;, &#39;attention&#39;, &#39;attn&#39;, &#39;bilinear&#39;, &#39;gcn&#39;, &#39;gat&#39;.</span>
+</span><span data-line="333"><span class="sd">        **kwargs: Additional arguments passed to specific decoders:</span>
+</span><span data-line="334"><span class="sd">            - hidden_dim (int): For &#39;mlp&#39;, &#39;gcn&#39;, &#39;gat&#39;. Defaults to in_dim.</span>
+</span><span data-line="335"><span class="sd">            - nhead (int): For &#39;attention&#39;/&#39;attn&#39; and &#39;gat&#39;. Defaults to 8.</span>
+</span><span data-line="336"><span class="sd">            - latent_dim (int): For &#39;bilinear&#39;. Defaults to in_dim.</span>
+</span><span data-line="337">
+</span><span data-line="338"><span class="sd">    Raises:</span>
+</span><span data-line="339"><span class="sd">        ValueError: If relation_mode is not one of the supported methods.</span>
+</span><span data-line="340">
+</span><span data-line="341"><span class="sd">    Example:</span>
+</span><span data-line="342"><span class="sd">        &gt;&gt;&gt; layer = RelationsRepLayer(in_dim=128, relation_mode=&quot;gcn&quot;, hidden_dim=64)</span>
+</span><span data-line="343"><span class="sd">        &gt;&gt;&gt; X = torch.randn(4, 10, 128)  # (batch=4, entities=10, dim=128)</span>
+</span><span data-line="344"><span class="sd">        &gt;&gt;&gt; mask = torch.ones(4, 10)  # All entities valid</span>
+</span><span data-line="345"><span class="sd">        &gt;&gt;&gt; A = layer(X, mask)  # (4, 10, 10) adjacency matrix</span>
+</span><span data-line="346"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="347">
+<div class="viewcode-block" id="RelationsRepLayer.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.RelationsRepLayer.__init__">[docs]</a>
+</span><span data-line="348">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">relation_mode</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+</span><span data-line="349"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the relations representation layer.</span>
+</span><span data-line="350">
+</span><span data-line="351"><span class="sd">        Args:</span>
+</span><span data-line="352"><span class="sd">            in_dim: Input embedding dimension.</span>
+</span><span data-line="353"><span class="sd">            relation_mode: Adjacency computation method. One of: &#39;dot&#39;, &#39;mlp&#39;,</span>
+</span><span data-line="354"><span class="sd">                &#39;attention&#39;, &#39;attn&#39;, &#39;bilinear&#39;, &#39;gcn&#39;, &#39;gat&#39;.</span>
+</span><span data-line="355"><span class="sd">            **kwargs: Method-specific arguments (hidden_dim, nhead, latent_dim).</span>
+</span><span data-line="356">
+</span><span data-line="357"><span class="sd">        Raises:</span>
+</span><span data-line="358"><span class="sd">            ValueError: If relation_mode is not recognized.</span>
+</span><span data-line="359"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="360">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="361">        <span class="n">m</span> <span class="o">=</span> <span class="n">relation_mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span data-line="362">
+</span><span data-line="363">        <span class="k">if</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;dot&quot;</span><span class="p">:</span>
+</span><span data-line="364">
+</span><span data-line="365">            <span class="k">class</span><span class="w"> </span><span class="nc">_Dot</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="366"><span class="w">                </span><span class="sd">&quot;&quot;&quot;Simple wrapper for dot-product adjacency with mask support.&quot;&quot;&quot;</span>
+</span><span data-line="367">
+</span><span data-line="368">                <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="369">                    <span class="k">return</span> <span class="n">dot_product_adjacency</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
+</span><span data-line="370">
+</span><span data-line="371">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">_Dot</span><span class="p">()</span>
+</span><span data-line="372">
+</span><span data-line="373">        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;mlp&quot;</span><span class="p">:</span>
+</span><span data-line="374">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">MLPDecoder</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hidden_dim&quot;</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">))</span>
+</span><span data-line="375">
+</span><span data-line="376">        <span class="k">elif</span> <span class="n">m</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;attention&quot;</span><span class="p">,</span> <span class="s2">&quot;attn&quot;</span><span class="p">}:</span>
+</span><span data-line="377">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">AttentionAdjacency</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nhead&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+</span><span data-line="378">
+</span><span data-line="379">        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">:</span>
+</span><span data-line="380">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">BilinearDecoder</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;latent_dim&quot;</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">))</span>
+</span><span data-line="381">
+</span><span data-line="382">        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;gcn&quot;</span><span class="p">:</span>
+</span><span data-line="383">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">GCNDecoder</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hidden_dim&quot;</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">))</span>
+</span><span data-line="384">
+</span><span data-line="385">        <span class="k">elif</span> <span class="n">m</span> <span class="o">==</span> <span class="s2">&quot;gat&quot;</span><span class="p">:</span>
+</span><span data-line="386">            <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span> <span class="o">=</span> <span class="n">GATDecoder</span><span class="p">(</span><span class="n">in_dim</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;nhead&quot;</span><span class="p">,</span> <span class="mi">8</span><span class="p">),</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hidden_dim&quot;</span><span class="p">,</span> <span class="n">in_dim</span><span class="p">))</span>
+</span><span data-line="387">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="388">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown relation mode: </span><span class="si">{</span><span class="n">relation_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</span><span data-line="389">
+<div class="viewcode-block" id="RelationsRepLayer.forward">
+<a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.RelationsRepLayer.forward">[docs]</a>
+</span><span data-line="390">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="391"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix from entity embeddings.</span>
+</span><span data-line="392">
+</span><span data-line="393"><span class="sd">        Args:</span>
+</span><span data-line="394"><span class="sd">            X: Entity/mention embeddings of shape (B, E, D) where B is batch size,</span>
+</span><span data-line="395"><span class="sd">                E is number of entities, and D is embedding dimension.</span>
+</span><span data-line="396"><span class="sd">            mask: Optional mask of shape (B, E) where 1 indicates valid entities</span>
+</span><span data-line="397"><span class="sd">                and 0 indicates padding.</span>
+</span><span data-line="398"><span class="sd">            *args: Additional positional arguments (unused, for compatibility).</span>
+</span><span data-line="399"><span class="sd">            **kwargs: Additional keyword arguments (unused, for compatibility).</span>
+</span><span data-line="400">
+</span><span data-line="401"><span class="sd">        Returns:</span>
+</span><span data-line="402"><span class="sd">            Adjacency matrix of shape (B, E, E) with values in [0, 1].</span>
+</span><span data-line="403"><span class="sd">            Entries A[b, i, j] represent the predicted edge weight from</span>
+</span><span data-line="404"><span class="sd">            entity i to entity j in batch b.</span>
+</span><span data-line="405"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="406">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">relation_rep_layer</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

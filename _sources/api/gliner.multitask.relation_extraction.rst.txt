@@ -1,0 +1,7 @@
+gliner.multitask.relation\_extraction module
+============================================
+
+.. automodule:: gliner.multitask.relation_extraction
+   :members:
+   :undoc-members:
+   :show-inheritance:

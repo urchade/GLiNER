@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.modeling.span_rep - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.modeling.span_rep"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.modeling.span_rep</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.modeling.span_rep</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="kn">from</span><span class="w"> </span><span class="nn">.layers</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_projection_layer</span>
+</span><span data-line="6">
+</span><span data-line="7">
+<div class="viewcode-block" id="SpanQuery">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanQuery">[docs]</a>
+</span><span data-line="8"><span class="k">class</span><span class="w"> </span><span class="nc">SpanQuery</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using learned query vectors.</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="sd">    This layer learns a set of query vectors, one for each span width, and</span>
+</span><span data-line="12"><span class="sd">    projects token representations onto these queries to produce span</span>
+</span><span data-line="13"><span class="sd">    representations.</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="sd">    Attributes:</span>
+</span><span data-line="16"><span class="sd">        query_seg (nn.Parameter): Learnable query matrix of shape [hidden_size, max_width].</span>
+</span><span data-line="17"><span class="sd">        project (nn.Sequential): MLP projection layer with ReLU activation.</span>
+</span><span data-line="18"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="19">
+<div class="viewcode-block" id="SpanQuery.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanQuery.__init__">[docs]</a>
+</span><span data-line="20">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="21"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanQuery layer.</span>
+</span><span data-line="22">
+</span><span data-line="23"><span class="sd">        Args:</span>
+</span><span data-line="24"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="25"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="26"><span class="sd">            trainable (bool, optional): Whether query parameters are trainable.</span>
+</span><span data-line="27"><span class="sd">                Defaults to True.</span>
+</span><span data-line="28"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="29">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="30">
+</span><span data-line="31">        <span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">))</span>
+</span><span data-line="32">
+</span><span data-line="33">        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span><span class="p">,</span> <span class="n">a</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="34">
+</span><span data-line="35">        <span class="k">if</span> <span class="ow">not</span> <span class="n">trainable</span><span class="p">:</span>
+</span><span data-line="36">            <span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="37">
+</span><span data-line="38">        <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">())</span></div>
+
+</span><span data-line="39">
+<div class="viewcode-block" id="SpanQuery.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanQuery.forward">[docs]</a>
+</span><span data-line="40">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="41"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using query projection.</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="sd">        Args:</span>
+</span><span data-line="44"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="45"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="46">
+</span><span data-line="47"><span class="sd">        Returns:</span>
+</span><span data-line="48"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="49"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="50">        <span class="c1"># h of shape [B, L, D]</span>
+</span><span data-line="51">        <span class="c1"># query_seg of shape [D, max_width]</span>
+</span><span data-line="52">
+</span><span data-line="53">        <span class="n">span_rep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bld, ds-&gt;blsd&quot;</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span><span class="p">)</span>
+</span><span data-line="54">
+</span><span data-line="55">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">span_rep</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="56">
+</span><span data-line="57">
+<div class="viewcode-block" id="SpanMLP">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMLP">[docs]</a>
+</span><span data-line="58"><span class="k">class</span><span class="w"> </span><span class="nc">SpanMLP</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="59"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using a simple MLP.</span>
+</span><span data-line="60">
+</span><span data-line="61"><span class="sd">    This layer applies a linear transformation to produce multiple span</span>
+</span><span data-line="62"><span class="sd">    representations per position.</span>
+</span><span data-line="63">
+</span><span data-line="64"><span class="sd">    Attributes:</span>
+</span><span data-line="65"><span class="sd">        mlp (nn.Linear): Linear layer that expands hidden_size to</span>
+</span><span data-line="66"><span class="sd">            hidden_size * max_width.</span>
+</span><span data-line="67"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="68">
+<div class="viewcode-block" id="SpanMLP.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMLP.__init__">[docs]</a>
+</span><span data-line="69">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="70"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanMLP layer.</span>
+</span><span data-line="71">
+</span><span data-line="72"><span class="sd">        Args:</span>
+</span><span data-line="73"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="74"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="75"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="76">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="77">
+</span><span data-line="78">        <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="n">max_width</span><span class="p">)</span></div>
+
+</span><span data-line="79">
+<div class="viewcode-block" id="SpanMLP.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMLP.forward">[docs]</a>
+</span><span data-line="80">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="81"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using MLP projection.</span>
+</span><span data-line="82">
+</span><span data-line="83"><span class="sd">        Args:</span>
+</span><span data-line="84"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="85"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="86">
+</span><span data-line="87"><span class="sd">        Returns:</span>
+</span><span data-line="88"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D]</span>
+</span><span data-line="89"><span class="sd">                with ReLU activation applied.</span>
+</span><span data-line="90"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="91">        <span class="c1"># h of shape [B, L, D]</span>
+</span><span data-line="92">        <span class="c1"># query_seg of shape [D, max_width]</span>
+</span><span data-line="93">
+</span><span data-line="94">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="95">
+</span><span data-line="96">        <span class="n">span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mlp</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="97">
+</span><span data-line="98">        <span class="n">span_rep</span> <span class="o">=</span> <span class="n">span_rep</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="99">
+</span><span data-line="100">        <span class="k">return</span> <span class="n">span_rep</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span></div>
+</div>
+
+</span><span data-line="101">
+</span><span data-line="102">
+<div class="viewcode-block" id="SpanCAT">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanCAT">[docs]</a>
+</span><span data-line="103"><span class="k">class</span><span class="w"> </span><span class="nc">SpanCAT</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="104"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using concatenation with learned queries.</span>
+</span><span data-line="105">
+</span><span data-line="106"><span class="sd">    This layer concatenates token representations with learnable query vectors</span>
+</span><span data-line="107"><span class="sd">    and projects them to produce span representations.</span>
+</span><span data-line="108">
+</span><span data-line="109"><span class="sd">    Attributes:</span>
+</span><span data-line="110"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="111"><span class="sd">        query_seg (nn.Parameter): Learnable query matrix of shape [128, max_width].</span>
+</span><span data-line="112"><span class="sd">        project (nn.Sequential): MLP projection layer with ReLU activation.</span>
+</span><span data-line="113"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="114">
+<div class="viewcode-block" id="SpanCAT.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanCAT.__init__">[docs]</a>
+</span><span data-line="115">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="116"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanCAT layer.</span>
+</span><span data-line="117">
+</span><span data-line="118"><span class="sd">        Args:</span>
+</span><span data-line="119"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="120"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="121"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="122">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="123">
+</span><span data-line="124">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="125">
+</span><span data-line="126">        <span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_width</span><span class="p">))</span>
+</span><span data-line="127">
+</span><span data-line="128">        <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">+</span> <span class="mi">128</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">())</span></div>
+
+</span><span data-line="129">
+<div class="viewcode-block" id="SpanCAT.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanCAT.forward">[docs]</a>
+</span><span data-line="130">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="131"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations by concatenating with queries.</span>
+</span><span data-line="132">
+</span><span data-line="133"><span class="sd">        Args:</span>
+</span><span data-line="134"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="135"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="136">
+</span><span data-line="137"><span class="sd">        Returns:</span>
+</span><span data-line="138"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="139"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="140">        <span class="c1"># h of shape [B, L, D]</span>
+</span><span data-line="141">        <span class="c1"># query_seg of shape [D, max_width]</span>
+</span><span data-line="142">
+</span><span data-line="143">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="144">
+</span><span data-line="145">        <span class="n">h</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="146">
+</span><span data-line="147">        <span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">query_seg</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">repeat</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="148">
+</span><span data-line="149">        <span class="n">span_rep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">h</span><span class="p">,</span> <span class="n">q</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="150">
+</span><span data-line="151">        <span class="n">span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">span_rep</span><span class="p">)</span>
+</span><span data-line="152">
+</span><span data-line="153">        <span class="k">return</span> <span class="n">span_rep</span></div>
+</div>
+
+</span><span data-line="154">
+</span><span data-line="155">
+<div class="viewcode-block" id="SpanConvBlock">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConvBlock">[docs]</a>
+</span><span data-line="156"><span class="k">class</span><span class="w"> </span><span class="nc">SpanConvBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="157"><span class="w">    </span><span class="sd">&quot;&quot;&quot;A single convolutional block for span representation.</span>
+</span><span data-line="158">
+</span><span data-line="159"><span class="sd">    This block applies either convolution or pooling operations with a specific</span>
+</span><span data-line="160"><span class="sd">    kernel size to capture span information.</span>
+</span><span data-line="161">
+</span><span data-line="162"><span class="sd">    Attributes:</span>
+</span><span data-line="163"><span class="sd">        conv (nn.Module): Convolution or pooling layer.</span>
+</span><span data-line="164"><span class="sd">        span_mode (str): Type of operation (&#39;conv_conv&#39;, &#39;conv_max&#39;, &#39;conv_mean&#39;, &#39;conv_sum&#39;).</span>
+</span><span data-line="165"><span class="sd">        pad (int): Padding size for the operation.</span>
+</span><span data-line="166"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="167">
+<div class="viewcode-block" id="SpanConvBlock.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConvBlock.__init__">[docs]</a>
+</span><span data-line="168">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_normal&quot;</span><span class="p">):</span>
+</span><span data-line="169"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanConvBlock.</span>
+</span><span data-line="170">
+</span><span data-line="171"><span class="sd">        Args:</span>
+</span><span data-line="172"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="173"><span class="sd">            kernel_size (int): Size of the convolution/pooling kernel.</span>
+</span><span data-line="174"><span class="sd">            span_mode (str, optional): Type of operation to use. Options are:</span>
+</span><span data-line="175"><span class="sd">                &#39;conv_conv&#39;, &#39;conv_max&#39;, &#39;conv_mean&#39;, &#39;conv_sum&#39;.</span>
+</span><span data-line="176"><span class="sd">                Defaults to &#39;conv_normal&#39;.</span>
+</span><span data-line="177"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="178">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="179">
+</span><span data-line="180">        <span class="k">if</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_conv&quot;</span><span class="p">:</span>
+</span><span data-line="181">            <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv1d</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">)</span>
+</span><span data-line="182">
+</span><span data-line="183">            <span class="c1"># initialize the weights</span>
+</span><span data-line="184">            <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">nonlinearity</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+</span><span data-line="185">
+</span><span data-line="186">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_max&quot;</span><span class="p">:</span>
+</span><span data-line="187">            <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">MaxPool1d</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="188">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;conv_mean&quot;</span><span class="p">,</span> <span class="s2">&quot;conv_sum&quot;</span><span class="p">}:</span>
+</span><span data-line="189">            <span class="bp">self</span><span class="o">.</span><span class="n">conv</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">AvgPool1d</span><span class="p">(</span><span class="n">kernel_size</span><span class="o">=</span><span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="190">
+</span><span data-line="191">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="n">span_mode</span>
+</span><span data-line="192">
+</span><span data-line="193">        <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">=</span> <span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span></div>
+
+</span><span data-line="194">
+<div class="viewcode-block" id="SpanConvBlock.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConvBlock.forward">[docs]</a>
+</span><span data-line="195">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span><span data-line="196"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Apply the convolutional block.</span>
+</span><span data-line="197">
+</span><span data-line="198"><span class="sd">        Args:</span>
+</span><span data-line="199"><span class="sd">            x (torch.Tensor): Input tensor of shape [B, L, D].</span>
+</span><span data-line="200">
+</span><span data-line="201"><span class="sd">        Returns:</span>
+</span><span data-line="202"><span class="sd">            torch.Tensor: Output tensor of shape [B, L, D].</span>
+</span><span data-line="203"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="204">        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bld-&gt;bdl&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</span><span data-line="205">
+</span><span data-line="206">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="207">            <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">pad</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="208">
+</span><span data-line="209">        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span data-line="210">
+</span><span data-line="211">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_sum&quot;</span><span class="p">:</span>
+</span><span data-line="212">            <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pad</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="213">
+</span><span data-line="214">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bdl-&gt;bld&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="215">
+</span><span data-line="216">
+<div class="viewcode-block" id="SpanConv">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConv">[docs]</a>
+</span><span data-line="217"><span class="k">class</span><span class="w"> </span><span class="nc">SpanConv</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="218"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using multiple convolutional layers.</span>
+</span><span data-line="219">
+</span><span data-line="220"><span class="sd">    This layer uses convolutions with different kernel sizes to capture</span>
+</span><span data-line="221"><span class="sd">    spans of different widths.</span>
+</span><span data-line="222">
+</span><span data-line="223"><span class="sd">    Attributes:</span>
+</span><span data-line="224"><span class="sd">        convs (nn.ModuleList): List of convolutional blocks with varying kernel sizes.</span>
+</span><span data-line="225"><span class="sd">        project (nn.Sequential): MLP projection layer with ReLU activation.</span>
+</span><span data-line="226"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="227">
+<div class="viewcode-block" id="SpanConv.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConv.__init__">[docs]</a>
+</span><span data-line="228">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="p">):</span>
+</span><span data-line="229"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanConv layer.</span>
+</span><span data-line="230">
+</span><span data-line="231"><span class="sd">        Args:</span>
+</span><span data-line="232"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="233"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="234"><span class="sd">            span_mode (str): Type of convolution operation to use.</span>
+</span><span data-line="235"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="236">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="237">
+</span><span data-line="238">        <span class="n">kernels</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_width</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)]</span>
+</span><span data-line="239">
+</span><span data-line="240">        <span class="bp">self</span><span class="o">.</span><span class="n">convs</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+</span><span data-line="241">
+</span><span data-line="242">        <span class="k">for</span> <span class="n">kernel</span> <span class="ow">in</span> <span class="n">kernels</span><span class="p">:</span>
+</span><span data-line="243">            <span class="bp">self</span><span class="o">.</span><span class="n">convs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SpanConvBlock</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">kernel</span><span class="p">,</span> <span class="n">span_mode</span><span class="p">))</span>
+</span><span data-line="244">
+</span><span data-line="245">        <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">))</span></div>
+
+</span><span data-line="246">
+<div class="viewcode-block" id="SpanConv.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanConv.forward">[docs]</a>
+</span><span data-line="247">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="248"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using multiple convolutions.</span>
+</span><span data-line="249">
+</span><span data-line="250"><span class="sd">        Args:</span>
+</span><span data-line="251"><span class="sd">            x (torch.Tensor): Input tensor of shape [B, L, D].</span>
+</span><span data-line="252"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="253">
+</span><span data-line="254"><span class="sd">        Returns:</span>
+</span><span data-line="255"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="256"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="257">        <span class="n">span_reps</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+</span><span data-line="258">
+</span><span data-line="259">        <span class="k">for</span> <span class="n">conv</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">convs</span><span class="p">:</span>
+</span><span data-line="260">            <span class="n">h</span> <span class="o">=</span> <span class="n">conv</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+</span><span data-line="261">            <span class="n">span_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="262">
+</span><span data-line="263">        <span class="n">span_reps</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">span_reps</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="264">
+</span><span data-line="265">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">span_reps</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="266">
+</span><span data-line="267">
+<div class="viewcode-block" id="SpanEndpointsBlock">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanEndpointsBlock">[docs]</a>
+</span><span data-line="268"><span class="k">class</span><span class="w"> </span><span class="nc">SpanEndpointsBlock</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="269"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract start and end token representations for spans.</span>
+</span><span data-line="270">
+</span><span data-line="271"><span class="sd">    This block extracts the first and last token of each span.</span>
+</span><span data-line="272">
+</span><span data-line="273"><span class="sd">    Attributes:</span>
+</span><span data-line="274"><span class="sd">        kernel_size (int): The span width (kernel size).</span>
+</span><span data-line="275"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="276">
+<div class="viewcode-block" id="SpanEndpointsBlock.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanEndpointsBlock.__init__">[docs]</a>
+</span><span data-line="277">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">):</span>
+</span><span data-line="278"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanEndpointsBlock.</span>
+</span><span data-line="279">
+</span><span data-line="280"><span class="sd">        Args:</span>
+</span><span data-line="281"><span class="sd">            kernel_size (int): The span width to extract endpoints for.</span>
+</span><span data-line="282"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="283">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="284">
+</span><span data-line="285">        <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kernel_size</span></div>
+
+</span><span data-line="286">
+<div class="viewcode-block" id="SpanEndpointsBlock.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanEndpointsBlock.forward">[docs]</a>
+</span><span data-line="287">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+</span><span data-line="288"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract start and end representations for all spans.</span>
+</span><span data-line="289">
+</span><span data-line="290"><span class="sd">        Args:</span>
+</span><span data-line="291"><span class="sd">            x (torch.Tensor): Input tensor of shape [B, L, D].</span>
+</span><span data-line="292">
+</span><span data-line="293"><span class="sd">        Returns:</span>
+</span><span data-line="294"><span class="sd">            torch.Tensor: Start and end representations of shape [B, L, 2, D].</span>
+</span><span data-line="295"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="296">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="297">
+</span><span data-line="298">        <span class="n">span_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">L</span><span class="p">)])</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="299">
+</span><span data-line="300">        <span class="n">x</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kernel_size</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="301">
+</span><span data-line="302">        <span class="c1"># endrep</span>
+</span><span data-line="303">        <span class="n">start_end_rep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">index_select</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="n">span_idx</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="304">
+</span><span data-line="305">        <span class="n">start_end_rep</span> <span class="o">=</span> <span class="n">start_end_rep</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="306">
+</span><span data-line="307">        <span class="k">return</span> <span class="n">start_end_rep</span></div>
+</div>
+
+</span><span data-line="308">
+</span><span data-line="309">
+<div class="viewcode-block" id="ConvShare">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShare">[docs]</a>
+</span><span data-line="310"><span class="k">class</span><span class="w"> </span><span class="nc">ConvShare</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="311"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using shared convolution weights.</span>
+</span><span data-line="312">
+</span><span data-line="313"><span class="sd">    This layer uses a single set of convolution weights shared across</span>
+</span><span data-line="314"><span class="sd">    different span widths.</span>
+</span><span data-line="315">
+</span><span data-line="316"><span class="sd">    Attributes:</span>
+</span><span data-line="317"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="318"><span class="sd">        conv_weigth (nn.Parameter): Shared convolution weights of shape</span>
+</span><span data-line="319"><span class="sd">            [hidden_size, hidden_size, max_width].</span>
+</span><span data-line="320"><span class="sd">        project (nn.Sequential): MLP projection layer with ReLU activation.</span>
+</span><span data-line="321"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="322">
+<div class="viewcode-block" id="ConvShare.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShare.__init__">[docs]</a>
+</span><span data-line="323">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="324"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ConvShare layer.</span>
+</span><span data-line="325">
+</span><span data-line="326"><span class="sd">        Args:</span>
+</span><span data-line="327"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="328"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="329"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="330">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="331">
+</span><span data-line="332">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="333">
+</span><span data-line="334">        <span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">))</span>
+</span><span data-line="335">
+</span><span data-line="336">        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span><span class="p">,</span> <span class="n">nonlinearity</span><span class="o">=</span><span class="s2">&quot;relu&quot;</span><span class="p">)</span>
+</span><span data-line="337">
+</span><span data-line="338">        <span class="bp">self</span><span class="o">.</span><span class="n">project</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">))</span></div>
+
+</span><span data-line="339">
+<div class="viewcode-block" id="ConvShare.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShare.forward">[docs]</a>
+</span><span data-line="340">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="341"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using shared convolutions.</span>
+</span><span data-line="342">
+</span><span data-line="343"><span class="sd">        Args:</span>
+</span><span data-line="344"><span class="sd">            x (torch.Tensor): Input tensor of shape [B, L, D].</span>
+</span><span data-line="345"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="346">
+</span><span data-line="347"><span class="sd">        Returns:</span>
+</span><span data-line="348"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="349"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="350">        <span class="n">span_reps</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="351">
+</span><span data-line="352">        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bld-&gt;bdl&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</span><span data-line="353">
+</span><span data-line="354">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="355">            <span class="n">pad</span> <span class="o">=</span> <span class="n">i</span>
+</span><span data-line="356">            <span class="n">x_i</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pad</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="357">            <span class="n">conv_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+</span><span data-line="358">            <span class="n">out_i</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv1d</span><span class="p">(</span><span class="n">x_i</span><span class="p">,</span> <span class="n">conv_w</span><span class="p">)</span>
+</span><span data-line="359">            <span class="n">span_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_i</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="360">
+</span><span data-line="361">        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">span_reps</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="362">
+</span><span data-line="363">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">project</span><span class="p">(</span><span class="n">out</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="364">
+</span><span data-line="365">
+<div class="viewcode-block" id="extract_elements">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.extract_elements">[docs]</a>
+</span><span data-line="366"><span class="k">def</span><span class="w"> </span><span class="nf">extract_elements</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="n">indices</span><span class="p">):</span>
+</span><span data-line="367"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract elements from a sequence using provided indices.</span>
+</span><span data-line="368">
+</span><span data-line="369"><span class="sd">    Args:</span>
+</span><span data-line="370"><span class="sd">        sequence (torch.Tensor): Input sequence of shape [B, L, D].</span>
+</span><span data-line="371"><span class="sd">        indices (torch.Tensor): Indices to extract, shape [B, K].</span>
+</span><span data-line="372">
+</span><span data-line="373"><span class="sd">    Returns:</span>
+</span><span data-line="374"><span class="sd">        torch.Tensor: Extracted elements of shape [B, K, D].</span>
+</span><span data-line="375"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="376">    <span class="n">D</span> <span class="o">=</span> <span class="n">sequence</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="377">
+</span><span data-line="378">    <span class="c1"># Expand indices to [B, K, D]</span>
+</span><span data-line="379">    <span class="n">expanded_indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="380">
+</span><span data-line="381">    <span class="c1"># Gather the elements</span>
+</span><span data-line="382">    <span class="n">extracted_elements</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="n">sequence</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">expanded_indices</span><span class="p">)</span>
+</span><span data-line="383">
+</span><span data-line="384">    <span class="k">return</span> <span class="n">extracted_elements</span></div>
+
+</span><span data-line="385">
+</span><span data-line="386">
+<div class="viewcode-block" id="SpanMarker">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarker">[docs]</a>
+</span><span data-line="387"><span class="k">class</span><span class="w"> </span><span class="nc">SpanMarker</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="388"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using marker-based approach.</span>
+</span><span data-line="389">
+</span><span data-line="390"><span class="sd">    This layer projects start and end positions separately and combines them</span>
+</span><span data-line="391"><span class="sd">    to form span representations.</span>
+</span><span data-line="392">
+</span><span data-line="393"><span class="sd">    Attributes:</span>
+</span><span data-line="394"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="395"><span class="sd">        project_start (nn.Sequential): MLP for projecting start positions.</span>
+</span><span data-line="396"><span class="sd">        project_end (nn.Sequential): MLP for projecting end positions.</span>
+</span><span data-line="397"><span class="sd">        out_project (nn.Linear): Final projection layer.</span>
+</span><span data-line="398"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="399">
+<div class="viewcode-block" id="SpanMarker.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarker.__init__">[docs]</a>
+</span><span data-line="400">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">dropout</span><span class="o">=</span><span class="mf">0.4</span><span class="p">):</span>
+</span><span data-line="401"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanMarker layer.</span>
+</span><span data-line="402">
+</span><span data-line="403"><span class="sd">        Args:</span>
+</span><span data-line="404"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="405"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="406"><span class="sd">            dropout (float, optional): Dropout rate. Defaults to 0.4.</span>
+</span><span data-line="407"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="408">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="409">
+</span><span data-line="410">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="411">
+</span><span data-line="412">        <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span><span data-line="413">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span data-line="414">            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+</span><span data-line="415">            <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">),</span>
+</span><span data-line="416">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span data-line="417">        <span class="p">)</span>
+</span><span data-line="418">
+</span><span data-line="419">        <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+</span><span data-line="420">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span data-line="421">            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(),</span>
+</span><span data-line="422">            <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">dropout</span><span class="p">),</span>
+</span><span data-line="423">            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+</span><span data-line="424">        <span class="p">)</span>
+</span><span data-line="425">
+</span><span data-line="426">        <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</span><span data-line="427">
+<div class="viewcode-block" id="SpanMarker.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarker.forward">[docs]</a>
+</span><span data-line="428">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">):</span>
+</span><span data-line="429"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using start and end markers.</span>
+</span><span data-line="430">
+</span><span data-line="431"><span class="sd">        Args:</span>
+</span><span data-line="432"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="433"><span class="sd">            span_idx (torch.Tensor): Span indices of shape [B, *, 2] where</span>
+</span><span data-line="434"><span class="sd">                span_idx[..., 0] are start indices and span_idx[..., 1] are</span>
+</span><span data-line="435"><span class="sd">                end indices.</span>
+</span><span data-line="436">
+</span><span data-line="437"><span class="sd">        Returns:</span>
+</span><span data-line="438"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="439"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="440">        <span class="c1"># h of shape [B, L, D]</span>
+</span><span data-line="441">        <span class="c1"># query_seg of shape [D, max_width]</span>
+</span><span data-line="442">
+</span><span data-line="443">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="444">
+</span><span data-line="445">        <span class="c1"># project start and end</span>
+</span><span data-line="446">        <span class="n">start_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="447">        <span class="n">end_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="448">
+</span><span data-line="449">        <span class="n">start_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">start_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
+</span><span data-line="450">        <span class="n">end_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">end_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span data-line="451">
+</span><span data-line="452">        <span class="c1"># concat start and end</span>
+</span><span data-line="453">        <span class="n">cat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">start_span_rep</span><span class="p">,</span> <span class="n">end_span_rep</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span>
+</span><span data-line="454">
+</span><span data-line="455">        <span class="c1"># project</span>
+</span><span data-line="456">        <span class="n">cat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+</span><span data-line="457">
+</span><span data-line="458">        <span class="c1"># reshape</span>
+</span><span data-line="459">        <span class="k">return</span> <span class="n">cat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="460">
+</span><span data-line="461">
+<div class="viewcode-block" id="SpanMarkerV0">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV0">[docs]</a>
+</span><span data-line="462"><span class="k">class</span><span class="w"> </span><span class="nc">SpanMarkerV0</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="463"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Marks and projects span endpoints using an MLP.</span>
+</span><span data-line="464">
+</span><span data-line="465"><span class="sd">    A cleaner version of SpanMarker using the create_projection_layer utility.</span>
+</span><span data-line="466">
+</span><span data-line="467"><span class="sd">    Attributes:</span>
+</span><span data-line="468"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="469"><span class="sd">        project_start (nn.Module): MLP for projecting start positions.</span>
+</span><span data-line="470"><span class="sd">        project_end (nn.Module): MLP for projecting end positions.</span>
+</span><span data-line="471"><span class="sd">        out_project (nn.Module): Final projection layer.</span>
+</span><span data-line="472"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="473">
+<div class="viewcode-block" id="SpanMarkerV0.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV0.__init__">[docs]</a>
+</span><span data-line="474">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">):</span>
+</span><span data-line="475"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanMarkerV0 layer.</span>
+</span><span data-line="476">
+</span><span data-line="477"><span class="sd">        Args:</span>
+</span><span data-line="478"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="479"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="480"><span class="sd">            dropout (float, optional): Dropout rate. Defaults to 0.4.</span>
+</span><span data-line="481"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="482">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="483">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="484">        <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="485">        <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="486">
+</span><span data-line="487">        <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span></div>
+
+</span><span data-line="488">
+<div class="viewcode-block" id="SpanMarkerV0.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV0.forward">[docs]</a>
+</span><span data-line="489">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="490"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using start and end markers.</span>
+</span><span data-line="491">
+</span><span data-line="492"><span class="sd">        Args:</span>
+</span><span data-line="493"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="494"><span class="sd">            span_idx (torch.Tensor): Span indices of shape [B, *, 2].</span>
+</span><span data-line="495">
+</span><span data-line="496"><span class="sd">        Returns:</span>
+</span><span data-line="497"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="498"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="499">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="500">
+</span><span data-line="501">        <span class="n">start_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="502">        <span class="n">end_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="503">
+</span><span data-line="504">        <span class="n">start_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">start_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
+</span><span data-line="505">        <span class="n">end_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">end_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span data-line="506">
+</span><span data-line="507">        <span class="n">cat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">start_span_rep</span><span class="p">,</span> <span class="n">end_span_rep</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span>
+</span><span data-line="508">
+</span><span data-line="509">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="510">
+</span><span data-line="511">
+<div class="viewcode-block" id="SpanMarkerV1">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV1">[docs]</a>
+</span><span data-line="512"><span class="k">class</span><span class="w"> </span><span class="nc">SpanMarkerV1</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="513"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Marks span endpoints and augments them with the first-token embedding.</span>
+</span><span data-line="514">
+</span><span data-line="515"><span class="sd">    For each candidate span we build</span>
+</span><span data-line="516"><span class="sd">        [ start_proj ‖ end_proj ‖ first_token_proj ]  →  MLP  → span_rep</span>
+</span><span data-line="517"><span class="sd">    and finally reshape to [B, L, max_width, D].</span>
+</span><span data-line="518">
+</span><span data-line="519"><span class="sd">    Attributes:</span>
+</span><span data-line="520"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="521"><span class="sd">        project_start (nn.Module): MLP for projecting start positions.</span>
+</span><span data-line="522"><span class="sd">        project_end (nn.Module): MLP for projecting end positions.</span>
+</span><span data-line="523"><span class="sd">        project_first (nn.Module): MLP for projecting the average token.</span>
+</span><span data-line="524"><span class="sd">        out_project (nn.Module): Final projection layer.</span>
+</span><span data-line="525"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="526">
+<div class="viewcode-block" id="SpanMarkerV1.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV1.__init__">[docs]</a>
+</span><span data-line="527">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">max_width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">):</span>
+</span><span data-line="528"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanMarkerV1 layer.</span>
+</span><span data-line="529">
+</span><span data-line="530"><span class="sd">        Args:</span>
+</span><span data-line="531"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="532"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="533"><span class="sd">            dropout (float, optional): Dropout rate. Defaults to 0.4.</span>
+</span><span data-line="534"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="535">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="536">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="537">
+</span><span data-line="538">        <span class="c1"># Independent projections for the three ingredients</span>
+</span><span data-line="539">        <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="540">        <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="541">        <span class="bp">self</span><span class="o">.</span><span class="n">project_first</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="542">
+</span><span data-line="543">        <span class="c1"># 3 x hidden_size (start + end + first)  →  hidden_size</span>
+</span><span data-line="544">        <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">3</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span></div>
+
+</span><span data-line="545">
+<div class="viewcode-block" id="SpanMarkerV1.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanMarkerV1.forward">[docs]</a>
+</span><span data-line="546">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="547"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations with average token augmentation.</span>
+</span><span data-line="548">
+</span><span data-line="549"><span class="sd">        For each span, concatenates start marker, end marker, and average</span>
+</span><span data-line="550"><span class="sd">        token embedding, then projects to produce the final representation.</span>
+</span><span data-line="551">
+</span><span data-line="552"><span class="sd">        Args:</span>
+</span><span data-line="553"><span class="sd">            h (torch.Tensor): Token representations, shape [B, L, D].</span>
+</span><span data-line="554"><span class="sd">            span_idx (torch.Tensor): Indices of candidate spans, shape [B, *, 2]</span>
+</span><span data-line="555"><span class="sd">                (* can be L x max_width or any flattened span dimension).</span>
+</span><span data-line="556">
+</span><span data-line="557"><span class="sd">        Returns:</span>
+</span><span data-line="558"><span class="sd">            torch.Tensor: Span representations, shape [B, L, max_width, D].</span>
+</span><span data-line="559"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="560">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="561">
+</span><span data-line="562">        <span class="c1"># Pre-compute per-token projections</span>
+</span><span data-line="563">        <span class="n">start_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>  <span class="c1"># [B, L, D]</span>
+</span><span data-line="564">        <span class="n">end_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>  <span class="c1"># [B, L, D]</span>
+</span><span data-line="565">
+</span><span data-line="566">        <span class="c1"># Project the first-token embedding once</span>
+</span><span data-line="567">        <span class="n">average_token_proj</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="568">
+</span><span data-line="569">        <span class="c1"># Gather start/end representations for each span</span>
+</span><span data-line="570">        <span class="n">start_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">start_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># [B, S, D]</span>
+</span><span data-line="571">        <span class="n">end_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">end_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>  <span class="c1"># [B, S, D]</span>
+</span><span data-line="572">
+</span><span data-line="573">        <span class="c1"># Broadcast first-token embedding to every span</span>
+</span><span data-line="574">        <span class="n">first_span_rep</span> <span class="o">=</span> <span class="n">average_token_proj</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand_as</span><span class="p">(</span><span class="n">start_span_rep</span><span class="p">)</span>  <span class="c1"># [B, S, D]</span>
+</span><span data-line="575">
+</span><span data-line="576">        <span class="c1"># Concatenate and project</span>
+</span><span data-line="577">        <span class="n">span_feat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">start_span_rep</span><span class="p">,</span> <span class="n">end_span_rep</span><span class="p">,</span> <span class="n">first_span_rep</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span>  <span class="c1"># [B, S, 3D]</span>
+</span><span data-line="578">
+</span><span data-line="579">        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span><span class="p">(</span><span class="n">span_feat</span><span class="p">)</span>  <span class="c1"># [B, S, D]</span>
+</span><span data-line="580">
+</span><span data-line="581">        <span class="c1"># Reshape back to [B, L, max_width, D] (S = L x max_width)</span>
+</span><span data-line="582">        <span class="k">return</span> <span class="n">out</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="583">
+</span><span data-line="584">
+<div class="viewcode-block" id="ConvShareV2">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShareV2">[docs]</a>
+</span><span data-line="585"><span class="k">class</span><span class="w"> </span><span class="nc">ConvShareV2</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="586"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span representation using shared convolution weights (version 2).</span>
+</span><span data-line="587">
+</span><span data-line="588"><span class="sd">    Similar to ConvShare but uses Xavier initialization and no projection layer.</span>
+</span><span data-line="589">
+</span><span data-line="590"><span class="sd">    Attributes:</span>
+</span><span data-line="591"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="592"><span class="sd">        conv_weigth (nn.Parameter): Shared convolution weights of shape</span>
+</span><span data-line="593"><span class="sd">            [hidden_size, hidden_size, max_width].</span>
+</span><span data-line="594"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="595">
+<div class="viewcode-block" id="ConvShareV2.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShareV2.__init__">[docs]</a>
+</span><span data-line="596">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="597"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the ConvShareV2 layer.</span>
+</span><span data-line="598">
+</span><span data-line="599"><span class="sd">        Args:</span>
+</span><span data-line="600"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="601"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="602"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="603">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="604">
+</span><span data-line="605">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="606">
+</span><span data-line="607">        <span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">))</span>
+</span><span data-line="608">
+</span><span data-line="609">        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">xavier_normal_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span><span class="p">)</span></div>
+
+</span><span data-line="610">
+<div class="viewcode-block" id="ConvShareV2.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.ConvShareV2.forward">[docs]</a>
+</span><span data-line="611">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="612"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using shared convolutions.</span>
+</span><span data-line="613">
+</span><span data-line="614"><span class="sd">        Args:</span>
+</span><span data-line="615"><span class="sd">            x (torch.Tensor): Input tensor of shape [B, L, D].</span>
+</span><span data-line="616"><span class="sd">            *args: Additional arguments (unused).</span>
+</span><span data-line="617">
+</span><span data-line="618"><span class="sd">        Returns:</span>
+</span><span data-line="619"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="620"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="621">        <span class="n">span_reps</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="622">
+</span><span data-line="623">        <span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;bld-&gt;bdl&quot;</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+</span><span data-line="624">
+</span><span data-line="625">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_width</span><span class="p">):</span>
+</span><span data-line="626">            <span class="n">pad</span> <span class="o">=</span> <span class="n">i</span>
+</span><span data-line="627">            <span class="n">x_i</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">pad</span><span class="p">),</span> <span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span><span data-line="628">            <span class="n">conv_w</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv_weigth</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+</span><span data-line="629">            <span class="n">out_i</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">conv1d</span><span class="p">(</span><span class="n">x_i</span><span class="p">,</span> <span class="n">conv_w</span><span class="p">)</span>
+</span><span data-line="630">            <span class="n">span_reps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">out_i</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="631">
+</span><span data-line="632">        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="n">span_reps</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="633">
+</span><span data-line="634">        <span class="k">return</span> <span class="n">out</span></div>
+</div>
+
+</span><span data-line="635">
+</span><span data-line="636">
+<div class="viewcode-block" id="SpanRepLayer">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer">[docs]</a>
+</span><span data-line="637"><span class="k">class</span><span class="w"> </span><span class="nc">SpanRepLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="638"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory class for various span representation approaches.</span>
+</span><span data-line="639">
+</span><span data-line="640"><span class="sd">    This class provides a unified interface to instantiate different span</span>
+</span><span data-line="641"><span class="sd">    representation methods based on the specified mode.</span>
+</span><span data-line="642">
+</span><span data-line="643"><span class="sd">    Attributes:</span>
+</span><span data-line="644"><span class="sd">        span_rep_layer (nn.Module): The underlying span representation layer.</span>
+</span><span data-line="645"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="646">
+<div class="viewcode-block" id="SpanRepLayer.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer.__init__">[docs]</a>
+</span><span data-line="647">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="648"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanRepLayer with the specified mode.</span>
+</span><span data-line="649">
+</span><span data-line="650"><span class="sd">        Args:</span>
+</span><span data-line="651"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="652"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="653"><span class="sd">            span_mode (str): Type of span representation to use. Options:</span>
+</span><span data-line="654"><span class="sd">                - &#39;marker&#39;: SpanMarker</span>
+</span><span data-line="655"><span class="sd">                - &#39;markerV0&#39;: SpanMarkerV0</span>
+</span><span data-line="656"><span class="sd">                - &#39;markerV1&#39;: SpanMarkerV1</span>
+</span><span data-line="657"><span class="sd">                - &#39;query&#39;: SpanQuery</span>
+</span><span data-line="658"><span class="sd">                - &#39;mlp&#39;: SpanMLP</span>
+</span><span data-line="659"><span class="sd">                - &#39;cat&#39;: SpanCAT</span>
+</span><span data-line="660"><span class="sd">                - &#39;conv_conv&#39;: SpanConv with convolution</span>
+</span><span data-line="661"><span class="sd">                - &#39;conv_max&#39;: SpanConv with max pooling</span>
+</span><span data-line="662"><span class="sd">                - &#39;conv_mean&#39;: SpanConv with mean pooling</span>
+</span><span data-line="663"><span class="sd">                - &#39;conv_sum&#39;: SpanConv with sum pooling</span>
+</span><span data-line="664"><span class="sd">                - &#39;conv_share&#39;: ConvShare</span>
+</span><span data-line="665"><span class="sd">            **kwargs: Additional arguments passed to the span representation layer.</span>
+</span><span data-line="666">
+</span><span data-line="667"><span class="sd">        Raises:</span>
+</span><span data-line="668"><span class="sd">            ValueError: If an unknown span_mode is provided.</span>
+</span><span data-line="669"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="670">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="671">
+</span><span data-line="672">        <span class="k">if</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span>
+</span><span data-line="673">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarker</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="674">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV0&quot;</span><span class="p">:</span>
+</span><span data-line="675">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV0</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="676">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV1&quot;</span><span class="p">:</span>
+</span><span data-line="677">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV1</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="678">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;query&quot;</span><span class="p">:</span>
+</span><span data-line="679">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanQuery</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="680">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;mlp&quot;</span><span class="p">:</span>
+</span><span data-line="681">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMLP</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="682">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;cat&quot;</span><span class="p">:</span>
+</span><span data-line="683">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanCAT</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="684">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_conv&quot;</span><span class="p">:</span>
+</span><span data-line="685">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_conv&quot;</span><span class="p">)</span>
+</span><span data-line="686">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_max&quot;</span><span class="p">:</span>
+</span><span data-line="687">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_max&quot;</span><span class="p">)</span>
+</span><span data-line="688">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_mean&quot;</span><span class="p">:</span>
+</span><span data-line="689">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_mean&quot;</span><span class="p">)</span>
+</span><span data-line="690">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_sum&quot;</span><span class="p">:</span>
+</span><span data-line="691">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_sum&quot;</span><span class="p">)</span>
+</span><span data-line="692">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_share&quot;</span><span class="p">:</span>
+</span><span data-line="693">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">ConvShare</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="694">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="695">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown span mode </span><span class="si">{</span><span class="n">span_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+</span><span data-line="696">
+<div class="viewcode-block" id="SpanRepLayer.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer.forward">[docs]</a>
+</span><span data-line="697">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="698"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the selected span representation layer.</span>
+</span><span data-line="699">
+</span><span data-line="700"><span class="sd">        Args:</span>
+</span><span data-line="701"><span class="sd">            x (torch.Tensor): Input tensor, typically of shape [B, L, D].</span>
+</span><span data-line="702"><span class="sd">            *args: Additional arguments passed to the underlying layer.</span>
+</span><span data-line="703">
+</span><span data-line="704"><span class="sd">        Returns:</span>
+</span><span data-line="705"><span class="sd">            torch.Tensor: Span representations, typically of shape</span>
+</span><span data-line="706"><span class="sd">                [B, L, max_width, D].</span>
+</span><span data-line="707"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="708">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

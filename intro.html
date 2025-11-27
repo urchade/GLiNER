@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Introduction to 👑 GLiNER - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Installation" href="instalation.html" /><link rel="prev" title="GLiNER Documentation" href="index.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Introduction to 👑 GLiNER"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#models-status">Models Status</a><ul>
+<li><a class="reference internal" href="#updates">&#128226; Updates</a></li>
+<li><a class="reference internal" href="#finetuning-gliner">Finetuning GLiNER</a></li>
+<li><a class="reference internal" href="#demonstating-gliner">Demonstating GLiNER</a></li>
+<li><a class="reference internal" href="#available-models-on-hugging-face">&#127775; Available Models on Hugging Face</a><ul>
+<li><a class="reference internal" href="#for-english">&#127468;&#127463; For English</a><ul>
+<li><a class="reference internal" href="#english-word-level-entity-recognition">&#127468;&#127463; English word-level Entity Recognition</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#for-other-languages">&#127757; For Other Languages</a></li>
+<li><a class="reference internal" href="#domain-specific-models">&#128300; Domain Specific Models</a></li>
+<li><a class="reference internal" href="#multi-task-models">&#128218; Multi-task Models</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#installation-usage">&#128736; Installation &amp; Usage</a></li>
+<li><a class="reference internal" href="#id1">&#128736; Installation &amp; Usage</a><ul>
+<li><a class="reference internal" href="#install-via-pip">Install via Pip</a></li>
+<li><a class="reference internal" href="#install-via-conda">Install via Conda</a></li>
+<li><a class="reference internal" href="#install-from-source">Install from Source</a></li>
+<li><a class="reference internal" href="#basic-use-case">&#128640; Basic Use Case</a><ul>
+<li><a class="reference internal" href="#expected-output">Expected Output</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#areas-of-improvements-research">&#128736; Areas of Improvements / research</a></li>
+<li><a class="reference internal" href="#citation">&#128218; Citation</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Introduction to 👑 GLiNER</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="introduction-to-gliner">
+<h1>Introduction to 👑 GLiNER<a class="headerlink" href="#introduction-to-gliner" title="Link to this heading">¶</a></h1>
+<p>GLiNER is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.</p>
+<ul class="simple">
+<li><p><strong>Paper</strong>: 📄 <a class="reference external" href="https://arxiv.org/abs/2311.08526">GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer</a></p></li>
+<li><p><strong>Getting Started:</strong>   <a class="reference external" href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" /></a></p></li>
+<li><p><strong>Demo:</strong> 🤗 <a class="reference external" href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1">Hugging Face</a></p></li>
+</ul>
+<section id="models-status">
+<h2>Models Status<a class="headerlink" href="#models-status" title="Link to this heading">¶</a></h2>
+<section id="updates">
+<h3>📢 Updates<a class="headerlink" href="#updates" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>🔍 Join the GLiNER <strong>discord</strong> server: <a class="reference external" href="https://discord.gg/Y2yVxpSQnG">https://discord.gg/Y2yVxpSQnG</a></p></li>
+<li><p>Synthetic data generation example is available (examples/synthetic_data_generation.ipynb).</p></li>
+<li><p>🆕 <code class="docutils literal notranslate"><span class="pre">gliner_multi_pii-v1</span></code> is available. This version has been optimized to recognize and classify Personally Identifiable Information (PII) within text. This version has been finetuned on six languages (English, French, German, Spanish, Italian, Portugese).</p></li>
+<li><p>🚀 <code class="docutils literal notranslate"><span class="pre">gliner_multi-v2.1</span></code>, <code class="docutils literal notranslate"><span class="pre">gliner_small-v2.1</span></code>, <code class="docutils literal notranslate"><span class="pre">gliner_medium-v2.1</span></code>, and <code class="docutils literal notranslate"><span class="pre">gliner_large-v2.1</span></code> are available under the Apache 2.0 license.</p></li>
+<li><p>🆕 <a class="reference external" href="https://github.com/theirstory/gliner-spacy">gliner-spacy</a> is available. Install it with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">gliner-spacy</span></code>. See Example of usage <a class="reference external" href="https://github.com/urchade/GLiNER/tree/main#-usage-with-spacy">below</a>.</p></li>
+<li><p>🧬 <code class="docutils literal notranslate"><span class="pre">gliner_large_bio-v0.1</span></code> is a gliner model specialized for biomedical text. It is available under the Apache 2.0 license.</p></li>
+<li><p>📚 Training dataset preprocessing scripts are now available in the <code class="docutils literal notranslate"><span class="pre">data/</span></code> directory, covering both <a class="reference external" href="https://huggingface.co/datasets/Universal-NER/Pile-NER-type">Pile-NER</a> and <a class="reference external" href="https://huggingface.co/datasets/numind/NuNER">NuNER</a> datasets.</p></li>
+</ul>
+</section>
+<section id="finetuning-gliner">
+<h3>Finetuning GLiNER<a class="headerlink" href="#finetuning-gliner" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>📘 See this <a class="reference external" href="https://github.com/urchade/GLiNER/tree/main/examples/finetuning">directory</a></p></li>
+</ul>
+</section>
+<section id="demonstating-gliner">
+<h3>Demonstating GLiNER<a class="headerlink" href="#demonstating-gliner" title="Link to this heading">¶</a></h3>
+<p><img alt="GLiNER Gradio demo" src="assets/demo.jpg" /></p>
+<ul class="simple">
+<li><p>🖥️ You can run an interactive Gradio demo to play with existing or your custom GLiNER models, see the <a class="reference external" href="https://github.com/urchade/GLiNER/tree/main/demo.py">script</a></p></li>
+</ul>
+</section>
+<section id="available-models-on-hugging-face">
+<h3>🌟 Available Models on Hugging Face<a class="headerlink" href="#available-models-on-hugging-face" title="Link to this heading">¶</a></h3>
+<section id="for-english">
+<h4>🇬🇧 For English<a class="headerlink" href="#for-english" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>GLiNER Base</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_base</span></code> <em>(CC BY NC 4.0)</em></p></li>
+<li><p><strong>GLiNER Small</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_small</span></code> <em>(CC BY NC 4.0)</em></p></li>
+<li><p><strong>GLiNER Small v2</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_small-v2</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER Small v2.1</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_small-v2.1</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER Medium</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_medium</span></code> <em>(CC BY NC 4.0)</em></p></li>
+<li><p><strong>GLiNER Medium v2</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_medium-v2</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER Medium v2.1</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_medium-v2.1</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER Large</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_large</span></code> <em>(CC BY NC 4.0)</em></p></li>
+<li><p><strong>GLiNER Large v2</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_large-v2</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER Large v2.1</strong>: <code class="docutils literal notranslate"><span class="pre">urchade/gliner_large-v2.1</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><strong>GLiNER NuNerZero span</strong>: <code class="docutils literal notranslate"><span class="pre">numind/NuNER_Zero-span</span></code>  <em>(MIT)</em> - +4.5% more powerful GLiNER Large v2.1</p></li>
+<li><p><strong>GLiNER News</strong>: <code class="docutils literal notranslate"><span class="pre">EmergentMethods/gliner_medium_news-v2.1</span></code> <em>(Apache 2.0)</em> 9.5% improvement over GLiNER Large v2.1 on 18 benchmark datasets</p></li>
+</ul>
+<section id="english-word-level-entity-recognition">
+<h5>🇬🇧 English word-level Entity Recognition<a class="headerlink" href="#english-word-level-entity-recognition" title="Link to this heading">¶</a></h5>
+<p>Word-level models work <strong>better for finding multi-word entities, highlighting sentences or paragraphs</strong>. They require additional output postprocessing that can be found in the corresponding model card.</p>
+<ul class="simple">
+<li><p><strong>GLiNER NuNerZero</strong>: <code class="docutils literal notranslate"><span class="pre">numind/NuNER_Zero</span></code>  <em>(MIT)</em> - +3% more powerful GLiNER Large v2.1, better suitable to detect multi-word entities</p></li>
+<li><p><strong>GLiNER NuNerZero 4k context</strong>: <code class="docutils literal notranslate"><span class="pre">numind/NuNER_Zero-4k</span></code>  <em>(MIT)</em> - 4k-long-context NuNerZero</p></li>
+</ul>
+</section>
+</section>
+<section id="for-other-languages">
+<h4>🌍 For Other Languages<a class="headerlink" href="#for-other-languages" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Korean</strong>: 🇰🇷 <code class="docutils literal notranslate"><span class="pre">taeminlee/gliner_ko</span></code></p></li>
+<li><p><strong>Italian</strong>: 🇮🇹 <code class="docutils literal notranslate"><span class="pre">DeepMount00/universal_ner_ita</span></code></p></li>
+<li><p><strong>Multilingual</strong>: 🌐</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">urchade/gliner_multi</span></code> <em>(CC BY NC 4.0)</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">urchade/gliner_multi-v2.1</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-x-large-v0.5</span></code>  <em>(Apache 2.0)</em>, see other model sizes in the <a class="reference external" href="https://huggingface.co/collections/knowledgator/gliner-x-684320a3f1220315c651d2f5">collection</a></p></li>
+</ul>
+</li>
+</ul>
+</section>
+<section id="domain-specific-models">
+<h4>🔬 Domain Specific Models<a class="headerlink" href="#domain-specific-models" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>Personally Identifiable Information</strong>: 🔍 <code class="docutils literal notranslate"><span class="pre">urchade/gliner_multi_pii-v1</span></code> <em>(Apache 2.0)</em></p>
+<ul>
+<li><p>This model is capable of recognizing various types of <em>personally identifiable information</em> (PII), including but not limited to these entity types: <code class="docutils literal notranslate"><span class="pre">person</span></code>, <code class="docutils literal notranslate"><span class="pre">organization</span></code>, <code class="docutils literal notranslate"><span class="pre">phone</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">address</span></code>, <code class="docutils literal notranslate"><span class="pre">passport</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">email</span></code>, <code class="docutils literal notranslate"><span class="pre">credit</span> <span class="pre">card</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">social</span> <span class="pre">security</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">health</span> <span class="pre">insurance</span> <span class="pre">id</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">date</span> <span class="pre">of</span> <span class="pre">birth</span></code>, <code class="docutils literal notranslate"><span class="pre">mobile</span> <span class="pre">phone</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">bank</span> <span class="pre">account</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">medication</span></code>, <code class="docutils literal notranslate"><span class="pre">cpf</span></code>, <code class="docutils literal notranslate"><span class="pre">driver's</span> <span class="pre">license</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">tax</span> <span class="pre">identification</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">medical</span> <span class="pre">condition</span></code>, <code class="docutils literal notranslate"><span class="pre">identity</span> <span class="pre">card</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">national</span> <span class="pre">id</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">ip</span> <span class="pre">address</span></code>, <code class="docutils literal notranslate"><span class="pre">email</span> <span class="pre">address</span></code>, <code class="docutils literal notranslate"><span class="pre">iban</span></code>, <code class="docutils literal notranslate"><span class="pre">credit</span> <span class="pre">card</span> <span class="pre">expiration</span> <span class="pre">date</span></code>, <code class="docutils literal notranslate"><span class="pre">username</span></code>, <code class="docutils literal notranslate"><span class="pre">health</span> <span class="pre">insurance</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">registration</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">student</span> <span class="pre">id</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">insurance</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">flight</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">landline</span> <span class="pre">phone</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">blood</span> <span class="pre">type</span></code>, <code class="docutils literal notranslate"><span class="pre">cvv</span></code>, <code class="docutils literal notranslate"><span class="pre">reservation</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">digital</span> <span class="pre">signature</span></code>, <code class="docutils literal notranslate"><span class="pre">social</span> <span class="pre">media</span> <span class="pre">handle</span></code>, <code class="docutils literal notranslate"><span class="pre">license</span> <span class="pre">plate</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">cnpj</span></code>, <code class="docutils literal notranslate"><span class="pre">postal</span> <span class="pre">code</span></code>, <code class="docutils literal notranslate"><span class="pre">passport_number</span></code>, <code class="docutils literal notranslate"><span class="pre">serial</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">vehicle</span> <span class="pre">registration</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">credit</span> <span class="pre">card</span> <span class="pre">brand</span></code>, <code class="docutils literal notranslate"><span class="pre">fax</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">visa</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">insurance</span> <span class="pre">company</span></code>, <code class="docutils literal notranslate"><span class="pre">identity</span> <span class="pre">document</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">transaction</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">national</span> <span class="pre">health</span> <span class="pre">insurance</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">cvc</span></code>, <code class="docutils literal notranslate"><span class="pre">birth</span> <span class="pre">certificate</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">train</span> <span class="pre">ticket</span> <span class="pre">number</span></code>, <code class="docutils literal notranslate"><span class="pre">passport</span> <span class="pre">expiration</span> <span class="pre">date</span></code>, and <code class="docutils literal notranslate"><span class="pre">social_security_number</span></code>.</p></li>
+</ul>
+</li>
+<li><p><strong>Biomedical</strong>:</p>
+<ul>
+<li><p>🧬 <code class="docutils literal notranslate"><span class="pre">urchade/gliner_large_bio-v0.1</span></code> <em>(Apache 2.0)</em></p></li>
+<li><p><a class="reference external" href="https://huggingface.co/collections/Ihor/gliner-biomed-67b5dbb61225c634020de01a">GLiNER-BioMed collection of models</a>, trained on high-quality data corresponding to scientific articles, clinical trials, patents, drug labels, etc.</p></li>
+</ul>
+</li>
+<li><p><strong>Birds attribute extraction</strong>: 🐦 <code class="docutils literal notranslate"><span class="pre">wjbmattingly/gliner-large-v2.1-bird</span></code>  <em>(Apache 2.0)</em></p></li>
+</ul>
+</section>
+<section id="multi-task-models">
+<h4>📚 Multi-task Models<a class="headerlink" href="#multi-task-models" title="Link to this heading">¶</a></h4>
+<ul class="simple">
+<li><p><strong>GLiNER multi-task large v0.5</strong> <code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-multitask-large-v0.5</span></code> <em>(Apache 2.0)</em> - +4.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization and question-answering tasks.</p></li>
+<li><p><strong>GLiNER multi-task v1.0</strong> <code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-multitask-v1.0</span></code> <em>(Apache 2.0)</em> - +5.0% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization, classification and question-answering tasks.</p></li>
+<li><p><strong>GLiNER Llama multi-task v1.0</strong> <code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-llama-multitask-1B-v1.0</span></code> <em>(Apache 2.0)</em> - +3.5% on NER benchmarks over GLiNER Large v2.1, supports prompting, relation extraction, summarization, classification and question-answering tasks.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="installation-usage">
+<h2>🛠 Installation &amp; Usage<a class="headerlink" href="#installation-usage" title="Link to this heading">¶</a></h2>
+<p>To provide instructions on how to install the GLiNER model from source, you can add steps for cloning the repository and installing it manually. Here’s how you can incorporate those instructions:</p>
+</section>
+<hr class="docutils" />
+<section id="id1">
+<h2>🛠 Installation &amp; Usage<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h2>
+<p>To begin using the GLiNER model, you can install the GLiNER Python library through pip, conda, or directly from the source.</p>
+<section id="install-via-pip">
+<h3>Install via Pip<a class="headerlink" href="#install-via-pip" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner
+</span></pre></div>
+</div>
+<p>If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU feature. This also installs the <code class="docutils literal notranslate"><span class="pre">onnxruntime-gpu</span></code> dependency.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>gpu<span class="o">]</span>
+</span></pre></div>
+</div>
+<p>If you need to use a multi-lingual model, like this <a class="reference external" href="https://huggingface.co/collections/knowledgator/gliner-x-684320a3f1220315c651d2f5">one</a>, please install additional dependencies for running tokenisers for different languages.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>tokenizers<span class="o">]</span>
+</span></pre></div>
+</div>
+<p>In the case of a model that uses Stanza tokeniser, you can install GLiNER with this type of tokeniser in the following way:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>stanza<span class="o">]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="install-via-conda">
+<h3>Install via Conda<a class="headerlink" href="#install-via-conda" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>gliner
+</span></pre></div>
+</div>
+</section>
+<section id="install-from-source">
+<h3>Install from Source<a class="headerlink" href="#install-from-source" title="Link to this heading">¶</a></h3>
+<p>To install the GLiNER library from source, follow these steps:</p>
+<ol class="arabic">
+<li><p><strong>Clone the Repository:</strong></p>
+<p>First, clone the GLiNER repository from GitHub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">git<span class="w"> </span>clone<span class="w"> </span>https://github.com/urchade/GLiNER
+</span></pre></div>
+</div>
+</li>
+<li><p><strong>Navigate to the Project Directory:</strong></p>
+<p>Change to the directory containing the cloned repository:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">cd</span><span class="w"> </span>GLiNER
+</span></pre></div>
+</div>
+</li>
+<li><p><strong>Install Dependencies:</strong></p>
+<p>It’s a good practice to create and activate a virtual environment before installing dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+</span><span data-line="2"><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">   </span><span class="c1"># On Windows use: venv\Scripts\activate</span>
+</span></pre></div>
+</div>
+<p>Install the required dependencies listed in the <code class="docutils literal notranslate"><span class="pre">requirements.txt</span></code> file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
+</span></pre></div>
+</div>
+</li>
+<li><p><strong>Install the GLiNER Package:</strong></p>
+<p>Finally, install the GLiNER package using the setup script:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>.
+</span></pre></div>
+</div>
+</li>
+<li><p><strong>Verify Installation:</strong></p>
+<p>You can verify the installation by importing the library in a Python script:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">gliner</span>
+</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="n">gliner</span><span class="o">.</span><span class="n">__version__</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</li>
+</ol>
+</section>
+<hr class="docutils" />
+<section id="basic-use-case">
+<h3>🚀 Basic Use Case<a class="headerlink" href="#basic-use-case" title="Link to this heading">¶</a></h3>
+<p>After the installation of the GLiNER library, import the <code class="docutils literal notranslate"><span class="pre">GLiNER</span></code> class. Following this, you can load your chosen model with <code class="docutils literal notranslate"><span class="pre">GLiNER.from_pretrained</span></code> and utilize <code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> to discern entities within your text.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Initialize GLiNER with the base model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_mediumv2.1&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Sample text for entity prediction</span>
+</span><span data-line="7"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="s2">Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu ʁɔˈnaldu]; born 5 February 1985) is a Portuguese professional footballer who plays as a forward for and captains both Saudi Pro League club Al Nassr and the Portugal national team. Widely regarded as one of the greatest players of all time, Ronaldo has won five Ballon d&#39;Or awards,[note 3] a record three UEFA Men&#39;s Player of the Year Awards, and four European Golden Shoes, the most by a European player. He has won 33 trophies in his career, including seven league titles, five UEFA Champions Leagues, the UEFA European Championship and the UEFA Nations League. Ronaldo holds the records for most appearances (183), goals (140) and assists (42) in the Champions League, goals in the European Championship (14), international goals (128) and international appearances (205). He is one of the few players to have made over 1,200 professional career appearances, the most by an outfield player, and has scored over 850 official senior career goals for club and country, making him the top goalscorer of all time.</span>
+</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Labels for entity prediction</span>
+</span><span data-line="12"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Person&quot;</span><span class="p">,</span> <span class="s2">&quot;Award&quot;</span><span class="p">,</span> <span class="s2">&quot;Date&quot;</span><span class="p">,</span> <span class="s2">&quot;Competitions&quot;</span><span class="p">,</span> <span class="s2">&quot;Teams&quot;</span><span class="p">]</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Perform entity prediction</span>
+</span><span data-line="15"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># Display predicted entities and their labels</span>
+</span><span data-line="18"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="19">    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span> <span class="s2">&quot;=&gt;&quot;</span><span class="p">,</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])</span>
+</span></pre></div>
+</div>
+<section id="expected-output">
+<h4>Expected Output<a class="headerlink" href="#expected-output" title="Link to this heading">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">Cristiano</span> <span class="n">Ronaldo</span> <span class="n">dos</span> <span class="n">Santos</span> <span class="n">Aveiro</span> <span class="o">=&gt;</span> <span class="n">person</span>
+</span><span data-line="2"><span class="mi">5</span> <span class="n">February</span> <span class="mi">1985</span> <span class="o">=&gt;</span> <span class="n">date</span>
+</span><span data-line="3"><span class="n">Al</span> <span class="n">Nassr</span> <span class="o">=&gt;</span> <span class="n">teams</span>
+</span><span data-line="4"><span class="n">Portugal</span> <span class="n">national</span> <span class="n">team</span> <span class="o">=&gt;</span> <span class="n">teams</span>
+</span><span data-line="5"><span class="n">Ballon</span> <span class="n">d</span><span class="s1">&#39;Or =&gt; award</span>
+</span><span data-line="6"><span class="n">UEFA</span> <span class="n">Men</span><span class="s1">&#39;s Player of the Year Awards =&gt; award</span>
+</span><span data-line="7"><span class="n">European</span> <span class="n">Golden</span> <span class="n">Shoes</span> <span class="o">=&gt;</span> <span class="n">award</span>
+</span><span data-line="8"><span class="n">UEFA</span> <span class="n">Champions</span> <span class="n">Leagues</span> <span class="o">=&gt;</span> <span class="n">competitions</span>
+</span><span data-line="9"><span class="n">UEFA</span> <span class="n">European</span> <span class="n">Championship</span> <span class="o">=&gt;</span> <span class="n">competitions</span>
+</span><span data-line="10"><span class="n">UEFA</span> <span class="n">Nations</span> <span class="n">League</span> <span class="o">=&gt;</span> <span class="n">competitions</span>
+</span><span data-line="11"><span class="n">European</span> <span class="n">Championship</span> <span class="o">=&gt;</span> <span class="n">competitions</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="areas-of-improvements-research">
+<h2>🛠 Areas of Improvements / research<a class="headerlink" href="#areas-of-improvements-research" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>[ ] Decoding: allow a span to have multiple labels, eg: “Cristiano Ronaldo” is both a “person” and “football player”</p></li>
+<li><p>[ ] Dynamic thresholding (in <code class="docutils literal notranslate"><span class="pre">model.predict_entities(text,</span> <span class="pre">labels,</span> <span class="pre">threshold=0.5)</span></code>): allow the model to predict more entities, or less entities, depending on the context. Actually, the model tend to predict less entities where the entity type or the domain are not well represented in the training data.</p></li>
+<li><p>[ ] Train with EMAs (Exponential Moving Averages) or merge multiple checkpoints to improve model robustness (see <a class="reference external" href="https://openreview.net/forum?id=tq_J_MqB3UB">this paper</a>)</p></li>
+</ul>
+</section>
+<section id="citation">
+<h2>📚 Citation<a class="headerlink" href="#citation" title="Link to this heading">¶</a></h2>
+<p>If you find GLiNER useful in your research, please consider citing our paper:</p>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nc">@misc</span><span class="p">{</span><span class="nl">zaratiana2023gliner</span><span class="p">,</span>
+</span><span data-line="2"><span class="w">      </span><span class="na">title</span><span class="p">=</span><span class="s">{GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer}</span><span class="p">,</span><span class="w"> </span>
+</span><span data-line="3"><span class="w">      </span><span class="na">author</span><span class="p">=</span><span class="s">{Urchade Zaratiana and Nadi Tomeh and Pierre Holat and Thierry Charnois}</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">      </span><span class="na">year</span><span class="p">=</span><span class="s">{2023}</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">      </span><span class="na">eprint</span><span class="p">=</span><span class="s">{2311.08526}</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">      </span><span class="na">archivePrefix</span><span class="p">=</span><span class="s">{arXiv}</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">      </span><span class="na">primaryClass</span><span class="p">=</span><span class="s">{cs.CL}</span>
+</span><span data-line="8"><span class="p">}</span>
+</span></pre></div>
+</div>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nc">@misc</span><span class="p">{</span><span class="nl">stepanov2024glinermultitaskgeneralistlightweight</span><span class="p">,</span>
+</span><span data-line="2"><span class="w">      </span><span class="na">title</span><span class="p">=</span><span class="s">{GLiNER multi-task: Generalist Lightweight Model for Various Information Extraction Tasks}</span><span class="p">,</span><span class="w"> </span>
+</span><span data-line="3"><span class="w">      </span><span class="na">author</span><span class="p">=</span><span class="s">{Ihor Stepanov and Mykhailo Shtopko}</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">      </span><span class="na">year</span><span class="p">=</span><span class="s">{2024}</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">      </span><span class="na">eprint</span><span class="p">=</span><span class="s">{2406.12925}</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">      </span><span class="na">archivePrefix</span><span class="p">=</span><span class="s">{arXiv}</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">      </span><span class="na">primaryClass</span><span class="p">=</span><span class="s">{cs.LG}</span><span class="p">,</span>
+</span><span data-line="8"><span class="w">      </span><span class="na">url</span><span class="p">=</span><span class="s">{https://arxiv.org/abs/2406.12925}</span><span class="p">,</span><span class="w"> </span>
+</span><span data-line="9"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="index.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Home</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="instalation.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Installation</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

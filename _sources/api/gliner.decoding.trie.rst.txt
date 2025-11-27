@@ -1,0 +1,16 @@
+gliner.decoding.trie package
+============================
+
+.. automodule:: gliner.decoding.trie
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.decoding.trie.labels_trie
+   gliner.decoding.trie.python_labels_trie

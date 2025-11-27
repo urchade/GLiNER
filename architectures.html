@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Architectures - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="ONNX Export &amp; Deployment" href="convert_to_onnx.html" /><link rel="prev" title="Training" href="training.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Architectures"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#overview">Overview</a><ul>
+<li><a class="reference internal" href="#gliner-architecture-variants">GLiNER Architecture Variants</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#vanilla-gliner-uniencoderspan">Vanilla GLiNER (UniEncoderSpan)</a><ul>
+<li><a class="reference internal" href="#training-approach">Training Approach</a></li>
+<li><a class="reference internal" href="#span-decoding">Span Decoding</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner-multi-task-uniencodertoken">GLiNER Multi-task (UniEncoderToken)</a><ul>
+<li><a class="reference internal" href="#architecture-training-approach">Architecture &amp; Training Approach</a></li>
+<li><a class="reference internal" href="#decoding-spans">Decoding Spans</a></li>
+<li><a class="reference internal" href="#self-training">Self-training</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner-bi-encoder-biencoderspan-biencodertoken">GLiNER Bi-encoder (BiEncoderSpan &amp; BiEncoderToken)</a><ul>
+<li><a class="reference internal" href="#id1">Architecture &amp; Training Approach</a></li>
+<li><a class="reference internal" href="#span-vs-token-level-bi-encoders">Span vs Token-Level Bi-encoders</a></li>
+<li><a class="reference internal" href="#advantages-of-de-coupled-encoders">Advantages of de-coupled Encoders:</a></li>
+<li><a class="reference internal" href="#id2">Training Approach</a></li>
+<li><a class="reference internal" href="#training-considerations">Training Considerations</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner-with-generative-decoder-uniencoderspandecoder">GLiNER with Generative Decoder (UniEncoderSpanDecoder)</a><ul>
+<li><a class="reference internal" href="#architecture-overview">Architecture Overview</a></li>
+<li><a class="reference internal" href="#key-features">Key Features</a></li>
+<li><a class="reference internal" href="#use-cases">Use Cases</a></li>
+<li><a class="reference internal" href="#example-usage">Example Usage</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner-for-relation-extraction-uniencoderspanrelex">GLiNER for Relation Extraction (UniEncoderSpanRelex)</a><ul>
+<li><a class="reference internal" href="#id3">Architecture Overview</a></li>
+<li><a class="reference internal" href="#multi-task-training">Multi-task Training</a></li>
+<li><a class="reference internal" href="#architecture-details">Architecture Details</a></li>
+<li><a class="reference internal" href="#id4">Use Cases</a></li>
+<li><a class="reference internal" href="#id5">Example Usage</a></li>
+<li><a class="reference internal" href="#output-format">Output Format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#choosing-the-right-architecture">Choosing the Right Architecture</a></li>
+<li><a class="reference internal" href="#references">References</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Architectures</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="architectures">
+<h1>Architectures<a class="headerlink" href="#architectures" title="Link to this heading">¶</a></h1>
+<p>GLiNER (Generalist and Lightweight Model for Named Entity Recognition) is a Named Entity Recognition (NER) model capable of identifying any entity type using a bidirectional transformer encoder (BERT-like). It provides a practical alternative to traditional NER models, which are limited to predefined entities, and Large Language Models (LLMs) that, despite their flexibility, are costly and large for resource-constrained scenarios.</p>
+<p><img alt="alt text" src="_images/image-1.png" /></p>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>GLiNER addresses the critical limitation of traditional (BERT-like encoder-only) NER models, which entails that such models can only process a pre-defined set of discrete entities and lack zero-shot generalization capabilities outside the entity types of their training sets. Furthermore, such models become an even less attractive choice given the widespread proliferation of decoder-only LLMs. This is a byproduct of LLMs’ strong zero-shot performance mainly due to in-context learning and potential for further performance gains in few-shot regime.</p>
+<p>Despite the above-mentioned limitations of encoder-only models, they can still offer significant cost and computation saving given their small-sizes, ability to produce more enriched contextualized token, word, and sequence representations thanks to bi-directional attention. Thereby, GLiNER equips them with zero-shot capabilities and makes them a competitive alternative to decoder-only LLMs more importantly in resource-constrained production settings.</p>
+<p>In this section we would like to break-down the GLiNER architecture into its atomic pieces. Furthermore, there has been significant follow-up work on the original GLiNER architecture allowing the approach to extrapolate beyond NER to Extractive Question-answering, Open Information Extraction, Extractive Summarisation, Relation Extraction, and Open NER proposed in the GLiNER paper. Lastly, another facet of GLiNER that was most recently was to optimise its computational performance by de-coupling the entity-type and input sequence encoding processing into two different model. Hence, allowing for the possibility of pre-computing entity-type representations just once saving unnecessary computation. This speeds-up performance when the <code class="docutils literal notranslate"><span class="pre">num_tokens(entity_types)</span> <span class="pre">&gt;</span> <span class="pre">num_tokens(input_sequence)</span></code> condition is present.</p>
+<section id="gliner-architecture-variants">
+<h3>GLiNER Architecture Variants<a class="headerlink" href="#gliner-architecture-variants" title="Link to this heading">¶</a></h3>
+<p>The GLiNER framework now supports multiple architecture variants, each optimized for different use cases:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Architecture</p></th>
+<th class="head"><p>Encoding Strategy</p></th>
+<th class="head"><p>Prediction Level</p></th>
+<th class="head"><p>Key Features</p></th>
+<th class="head"><p>Best For</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>UniEncoderSpan</strong></p></td>
+<td><p>Single encoder for text + labels</p></td>
+<td><p>Span-level</p></td>
+<td><p>Original GLiNER, efficient, good zero-shot</p></td>
+<td><p>General NER, up to ~30 entity types</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UniEncoderToken</strong></p></td>
+<td><p>Single encoder for text + labels</p></td>
+<td><p>Token-level (BIO tagging)</p></td>
+<td><p>Better for long entities, multi-task capable</p></td>
+<td><p>Long-form extraction, summarization</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>BiEncoderSpan</strong></p></td>
+<td><p>Separate encoders for text &amp; labels</p></td>
+<td><p>Span-level</p></td>
+<td><p>Pre-compute label embeddings, handles 100+ entity types</p></td>
+<td><p>Many entity types, production deployment</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>BiEncoderToken</strong></p></td>
+<td><p>Separate encoders for text &amp; labels</p></td>
+<td><p>Token-level</p></td>
+<td><p>Combines bi-encoder efficiency with token-level prediction</p></td>
+<td><p>Long entities with many types</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>UniEncoderSpanDecoder</strong></p></td>
+<td><p>Single encoder + generative decoder</p></td>
+<td><p>Span-level with generation</p></td>
+<td><p>Generates entity labels, open vocabulary</p></td>
+<td><p>Open-domain NER, label discovery</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UniEncoderSpanRelex</strong></p></td>
+<td><p>Single encoder + relation layers</p></td>
+<td><p>Span-level + relations</p></td>
+<td><p>Joint entity and relation extraction</p></td>
+<td><p>Knowledge graph construction, IE</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The framework automatically selects the appropriate architecture based on your model configuration, providing a unified API across all variants.</p>
+</section>
+</section>
+<section id="vanilla-gliner-uniencoderspan">
+<h2>Vanilla GLiNER (UniEncoderSpan)<a class="headerlink" href="#vanilla-gliner-uniencoderspan" title="Link to this heading">¶</a></h2>
+<p><img alt="alt text" src="_images/image-2.png" /></p>
+<section id="training-approach">
+<h3>Training Approach<a class="headerlink" href="#training-approach" title="Link to this heading">¶</a></h3>
+<p>GLiNER primarily employs BERT-like bi-direction encoder-only pre-trained language models. Furthermore, both the entity labels and input sequence are concatenated and then passed through the encoder model. The standard <code class="docutils literal notranslate"><span class="pre">[SEP]</span></code> special token is used to indicate the boundary between entity labels and input sequence. Whereby, to represent boundary for each entity-type a special token <code class="docutils literal notranslate"><span class="pre">[ENT]</span></code> is placed before each entity type moreover, the embedding of this token is initialised randomly at the beginning of training.</p>
+<p><img alt="alt text" src="_images/image-3.png" /></p>
+<p>After the forward-pass of the encoder model the <code class="docutils literal notranslate"><span class="pre">[ENT]</span></code> token representations represent each of their preceding entity label and are passed through a two-layer feedforward network for further refinement. The resulting entity representation for an entity type <code class="docutils literal notranslate"><span class="pre">t</span></code> can be expressed as:</p>
+<p><img alt="alt text" src="_images/image-4.png" /></p>
+<p><img alt="alt text" src="_images/image-5.png" /></p>
+<p>Similarly, the input sequence tokens are combined to form spans for instance (assuming no word is split into subword tokens):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">input_sequence</span> <span class="o">=</span> <span class="s2">&quot;my name is john&quot;</span>
+</span><span data-line="2"><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">]</span>
+</span><span data-line="3"><span class="n">spans</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="4">    <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">],</span>
+</span><span data-line="5">    <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
+</span><span data-line="6">    <span class="p">[</span><span class="s2">&quot;is&quot;</span><span class="p">],</span>
+</span><span data-line="7">    <span class="p">[</span><span class="s2">&quot;john&quot;</span><span class="p">],</span>
+</span><span data-line="8">    <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">],</span>
+</span><span data-line="9">    <span class="p">[</span><span class="s2">&quot;name is&quot;</span><span class="p">],</span>
+</span><span data-line="10">    <span class="p">[</span><span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">],</span>
+</span><span data-line="11">    <span class="o">...</span>
+</span><span data-line="12"><span class="p">]</span>
+</span></pre></div>
+</div>
+<p>In case if the word is split into more than one tokens the first token and the last token are used to mark span boundaries and their representations are further used. Finally the span representations are computed, more for a span starting at index <code class="docutils literal notranslate"><span class="pre">i</span></code> and ending at <code class="docutils literal notranslate"><span class="pre">j</span></code>, the span representation for span <code class="docutils literal notranslate"><span class="pre">Sij</span></code> can be computed as:</p>
+<p><img alt="alt text" src="_images/image-6.png" /></p>
+<p><img alt="alt text" src="_images/image-7.png" /></p>
+<p>The resulting span representation would be D-dimensional vector:</p>
+<p><img alt="alt text" src="_images/image-8.png" /></p>
+<p>The above process is applied to all spans on their token representations to compute unified span representations. To keep the computational overhead in-check the maximum span length is set to 12.</p>
+<p>Lastly, to compute whether a given span belongs to a entity label the sigmoid activation is applied on the dot-production of entity label and span representation:</p>
+<p><img alt="alt text" src="_images/image-9.png" /></p>
+<p><img alt="alt text" src="_images/image-10.png" /></p>
+<p>To train the model on the sigmoid activations for each span and entity label interaction score Binary Cross Entropy loss is employed to classify between positive and negative instance of span and entity label interaction scores.</p>
+</section>
+<section id="span-decoding">
+<h3>Span Decoding<a class="headerlink" href="#span-decoding" title="Link to this heading">¶</a></h3>
+<p>To infer spans whether a give interaction score represents a particular entity type firstly, non-entity spans are removed by thresholding on interaction scores:</p>
+<p><img alt="alt text" src="_images/image-11.png" /></p>
+<p>Furthermore, two decoding strategies are proposed:</p>
+<ul class="simple">
+<li><p>Flat NER: Highest scoring non-overlapping spans are selected exhaustively.</p></li>
+<li><p>Nested NER: Similar to Flat NER, but allow for overlapping spans except partial overlaps.</p></li>
+</ul>
+</section>
+</section>
+<section id="gliner-multi-task-uniencodertoken">
+<h2>GLiNER Multi-task (UniEncoderToken)<a class="headerlink" href="#gliner-multi-task-uniencodertoken" title="Link to this heading">¶</a></h2>
+<p>As discussed in the overview, the GLiNER Multi-task work extends the original GLiNER architecture to new tasks including Extractive Question-answering, Open Information Extraction, Extractive Summarisation, Relation Extraction, and Open NER. Furthermore, it also explore synthetic label generation using Llama 3 8B LLM for the aforementioned tasks. Lastly, it also evaluates model’s self-learning capability where the pre-trained GLiNER Multi-task model initially generates weak labels for the task and then those labels are used to fine-tune the model resulting in significant gains in model generalisation on the downstream dataset.</p>
+<section id="architecture-training-approach">
+<h3>Architecture &amp; Training Approach<a class="headerlink" href="#architecture-training-approach" title="Link to this heading">¶</a></h3>
+<p>The GLiNER multi-task model uses tokens instead of spans for input sequence processing. This allows models to perform well on long-form prediction generation tasks such as summarisation and long entity extraction etc. Since a given extractive summarisation can potentially be multiple sentences long thereby, spans could be limiting factor here.</p>
+<p>During the forward pass of the model the the input sequence and labels are concatenated employing the identical mechanism to the original work. After the encoding the input sequence and labels, the input sequence’s token embeddings are passed through a bi-directional LSTM, which speeds up and stabilises the training against negative tokenisation and positional encoding artefacts. Finally, both label and input sequence’s token representations are refined further by passing via feedforward network which projects the token representations to higher dimensional space (2x times larger than original hidden dimension). The forward pass more formally look as follows:</p>
+<p>Let <code class="docutils literal notranslate"><span class="pre">T</span></code> be the token representations of input sequence and <code class="docutils literal notranslate"><span class="pre">L</span></code> be the token representations of labels. Where <code class="docutils literal notranslate"><span class="pre">M</span></code> is the input sequence length and <code class="docutils literal notranslate"><span class="pre">C</span></code> is the number of unique labels. <code class="docutils literal notranslate"><span class="pre">T'</span></code>, <code class="docutils literal notranslate"><span class="pre">T''</span></code> represent refined input sequence and label representations in high-dimensional latent space.</p>
+<p><img alt="alt text" src="_images/image-12.png" /></p>
+<p>Both <code class="docutils literal notranslate"><span class="pre">T'</span></code> and <code class="docutils literal notranslate"><span class="pre">L'</span></code> are element-wise multiplied across the axis <code class="docutils literal notranslate"><span class="pre">D</span></code> with <code class="docutils literal notranslate"><span class="pre">T'</span></code> and resulting in <code class="docutils literal notranslate"><span class="pre">M×C×2×D</span></code> dimensional matrices which then are re-permuted as:</p>
+<p><img alt="alt text" src="_images/image-13.png" /></p>
+<p>To better capture interactions between input sequence and labels element-wise dot product between refined token representations is concatenated to whilst also concatenating <code class="docutils literal notranslate"><span class="pre">T'''</span></code> and <code class="docutils literal notranslate"><span class="pre">L'''</span></code> together across the last dimension <code class="docutils literal notranslate"><span class="pre">D</span></code>. Importantly, first dimension is kept as it is whereby the last dimension is element-wise multiplied.</p>
+<p><img alt="alt text" src="_images/image-14.png" /></p>
+<p>Afterwards the concatenated representations are passed through a FFN. To generate token-level classification scores for each class generating three logits corresponding to start, end, intermediate. Let <code class="docutils literal notranslate"><span class="pre">S</span></code> be the score matrix then:</p>
+<p><img alt="alt text" src="_images/image-15.png" /></p>
+</section>
+<section id="decoding-spans">
+<h3>Decoding Spans<a class="headerlink" href="#decoding-spans" title="Link to this heading">¶</a></h3>
+<p>To determine whether a given token is positively interacting with a label scores, Flat NER decoding approach is used with a difference that scores are averaged for entire span:</p>
+<p><img alt="alt text" src="_images/image-16.png" /></p>
+</section>
+<section id="self-training">
+<h3>Self-training<a class="headerlink" href="#self-training" title="Link to this heading">¶</a></h3>
+<p>The pre-trained model is used to generated initial weak labels for domain NER benchmark and then model is fine-tuned on the weak labels by employing label smoothing which prevents the model to become over-confident on ground truth labels. This is beneficial when annotated labels are not GOLD standard.</p>
+<p>Essentially label smoothing acts as regularisation as it steals probability mass from correct label and distributes that to other classes hence, avoiding overfitting. For binary classification tasks the loss function with label smoothing looks like:</p>
+<p><img alt="alt text" src="_images/image-17.png" /></p>
+<p>Here <code class="docutils literal notranslate"><span class="pre">alpha</span></code> is the smoothing parameter.</p>
+</section>
+</section>
+<section id="gliner-bi-encoder-biencoderspan-biencodertoken">
+<h2>GLiNER Bi-encoder (BiEncoderSpan &amp; BiEncoderToken)<a class="headerlink" href="#gliner-bi-encoder-biencoderspan-biencodertoken" title="Link to this heading">¶</a></h2>
+<p><img alt="alt text" src="_images/image-18.png" /></p>
+<p>Although the original GLiNER architecture provides an powerful alternative to extract entities in zero-shot regimes. However, the model still have performance bottlenecks and limitations:</p>
+<ul class="simple">
+<li><p>Entities representations are conditioned on their order due to positional encoding layer of transformer.</p></li>
+<li><p>The model’s performance degrades when number of entity labels exceed 30.</p></li>
+<li><p>Joint entity label and input sequence representation create significant overhead specially when the number of entity tokens are greater than input sequence tokens. As most of entity labels won’t be present in the given smaller input sequence hence, forward pass (bi-directional attention, FFN etc.) on those un-matched entity types wastes the compute.</p></li>
+</ul>
+<section id="id1">
+<h3>Architecture &amp; Training Approach<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<p>To address the above-mentioned shortcomings of the original architecture, the authors of GLiNER multi-task also propose this extension of GLiNER, albeit as a completely separate work from the multi-task paper. Two architectures are proposed, namely:</p>
+<p><strong>Bi-encoder</strong>: The key idea behind their approach is to de-couple the encoding process of entity labels and input sequence. This allows for pre-computation of entity types just once resulting in more efficient acquisition of entity type representation. The authors employ pre-trained sentence transformers as entity type encoder and the original BERT-like model for encoding input sequence (identical to the original work).</p>
+<p><strong>Poly-encoder</strong>: This encoder uses the representations produced by entity label and input sequence encoders and fuses them together to capture the interactions between them to capture additional signal similar to the original BiLM.</p>
+<p><img alt="alt text" src="_images/image-19.png" /></p>
+<p>The subsequent steps after encoding, in order to obtain coarser label and span embeddings remain unchanged when compared to the original work.</p>
+</section>
+<section id="span-vs-token-level-bi-encoders">
+<h3>Span vs Token-Level Bi-encoders<a class="headerlink" href="#span-vs-token-level-bi-encoders" title="Link to this heading">¶</a></h3>
+<p>The bi-encoder architecture comes in two variants:</p>
+<ul class="simple">
+<li><p><strong>BiEncoderSpan</strong>: Uses span-level predictions (like vanilla GLiNER), best for standard NER tasks with discrete entity mentions</p></li>
+<li><p><strong>BiEncoderToken</strong>: Uses token-level predictions (like GLiNER Multi-task), better suited for long-form entities and when combined with the efficiency of pre-computed label embeddings</p></li>
+</ul>
+<p>Both variants benefit from the ability to pre-compute and cache label embeddings, making them particularly efficient when:</p>
+<ul class="simple">
+<li><p>Working with a large, fixed set of entity types (50-200+ types)</p></li>
+<li><p>Processing many documents with the same entity schema</p></li>
+<li><p>Deploying in production where latency matters</p></li>
+</ul>
+</section>
+<section id="advantages-of-de-coupled-encoders">
+<h3>Advantages of de-coupled Encoders:<a class="headerlink" href="#advantages-of-de-coupled-encoders" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Recognise large number of entities significantly beyond original maximum 30 entities without significant performance degradation</p></li>
+<li><p>Faster inference and robustness on out of distribution data, hence, solidifying zero-shot performance.</p></li>
+<li><p>Pre-compute label embeddings once and reuse across batches</p></li>
+</ul>
+</section>
+<section id="id2">
+<h3>Training Approach<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>The de-coupled GLiNER model uses pre-trained DeBERTa (input sequence encoder) and BGE (entity type encoder) models as encoders which are trained in two stages.</p>
+<ol class="arabic simple">
+<li><p>GLiNER bi-encoder is jointly pre-trained on one million NER samples in a supervised fashion. This stage focuses mainly on aligning entity label representations with span representations.</p></li>
+<li><p>At stage two, the pre-trained bi-encoder is further fine-tuned on <strong>35k</strong> higher quality input sequence and entity types. This stages enhances the model performance on the NER task itself by refining the fidelity of representations.</p></li>
+</ol>
+<p><img alt="alt text" src="_images/image-20.png" /></p>
+</section>
+<section id="training-considerations">
+<h3>Training Considerations<a class="headerlink" href="#training-considerations" title="Link to this heading">¶</a></h3>
+<p>The batch size can greatly influence the model generalisability. As, larger batch size leads to more stable training and less noisy gradients. However, as it pertains to span to entity label interactions, the larger the batch size, the more negative interactions would be produced, leading to model which has higher entropy in its decision boundary. Here, we mitigate this effect by using a weighted loss more formally known as focal loss.</p>
+<p>The key intuition behind focal loss is to mitigate class imbalance which is highly likely for larger batches. Focal loss can more formally be defined as:</p>
+<p><img alt="alt text" src="_images/image-21.png" /></p>
+<p><code class="docutils literal notranslate"><span class="pre">pt</span></code> refers to probability of target class</p>
+<ul class="simple">
+<li><p>α is to control the influence positive and negative samples within batch to reduce effect of class imbalance</p></li>
+<li><p>γ further reduces the loss values on correctly classified samples (i.e. easy samples) so that model can focus on miss-classified (hard samples) hence further reducing effect of majority negative examples</p></li>
+</ul>
+</section>
+</section>
+<section id="gliner-with-generative-decoder-uniencoderspandecoder">
+<h2>GLiNER with Generative Decoder (UniEncoderSpanDecoder)<a class="headerlink" href="#gliner-with-generative-decoder-uniencoderspandecoder" title="Link to this heading">¶</a></h2>
+<p>The UniEncoderSpanDecoder architecture extends the span-based GLiNER with a generative decoder component, enabling the model to generate entity type labels rather than just classify them. This architecture is particularly useful for open-domain NER where entity types are not known in advance or need to be discovered dynamically.</p>
+<section id="architecture-overview">
+<h3>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">¶</a></h3>
+<p>The architecture combines:</p>
+<ol class="arabic simple">
+<li><p><strong>Span Encoder</strong>: Standard GLiNER span-based encoder for detecting entity boundaries</p></li>
+<li><p><strong>Generative Decoder</strong>: GPT-2 or similar decoder that generates entity type labels for detected spans</p></li>
+</ol>
+<p><img alt="alt text" src="_images/image-22.png" /></p>
+</section>
+<section id="key-features">
+<h3>Key Features<a class="headerlink" href="#key-features" title="Link to this heading">¶</a></h3>
+<p><strong>Dual-Mode Operation</strong>:</p>
+<ul class="simple">
+<li><p><strong>Prompt Mode</strong>: The decoder generates labels that completely replace the predefined entity types</p></li>
+<li><p><strong>Span Mode</strong>: The decoder generates labels as additional information alongside predicted entity types</p></li>
+</ul>
+<p><strong>Label Generation Process</strong>:</p>
+<ol class="arabic simple">
+<li><p>Entity spans are first detected using standard GLiNER span classification</p></li>
+<li><p>For each detected span, contextualized representations are fed to the decoder</p></li>
+<li><p>The decoder autoregressively generates natural language labels for the entity</p></li>
+</ol>
+<p><strong>Training Objective</strong>:</p>
+<ul class="simple">
+<li><p>Joint training with two loss components:</p>
+<ul>
+<li><p>Span classification loss (standard binary cross-entropy)</p></li>
+<li><p>Decoder generation loss (cross-entropy on token predictions)</p></li>
+</ul>
+</li>
+<li><p>Loss coefficients can be adjusted via <code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code> and <code class="docutils literal notranslate"><span class="pre">decoder_loss_coef</span></code></p></li>
+</ul>
+</section>
+<section id="use-cases">
+<h3>Use Cases<a class="headerlink" href="#use-cases" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Open-vocabulary NER</strong>: Discover entity types not seen during training</p></li>
+<li><p><strong>Fine-grained typing</strong>: Generate more specific entity types than predefined categories</p></li>
+<li><p><strong>Zero-shot label generation</strong>: Let the model propose appropriate labels based on context</p></li>
+<li><p><strong>Label refinement</strong>: Generate detailed entity descriptions beyond simple type names</p></li>
+</ul>
+</section>
+<section id="example-usage">
+<h3>Example Usage<a class="headerlink" href="#example-usage" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a model with generative decoder</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-decoder-small-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. was founded by Steve Jobs in Cupertino, California.&quot;</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># The model can generate entity labels based on context</span>
+</span><span data-line="9"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="10">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
+</span><span data-line="11">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">],</span>  <span class="c1"># Generic prompt</span>
+</span><span data-line="12">    <span class="n">gen_constraints</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>  <span class="c1"># Optional: constrain generation</span>
+</span><span data-line="13">    <span class="n">num_gen_sequences</span><span class="o">=</span><span class="mi">1</span>
+</span><span data-line="14"><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Each entity will have both predicted type and generated label</span>
+</span><span data-line="17"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="19">    <span class="k">if</span> <span class="s1">&#39;generated_labels&#39;</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="20">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Generated: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;generated_labels&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="gliner-for-relation-extraction-uniencoderspanrelex">
+<h2>GLiNER for Relation Extraction (UniEncoderSpanRelex)<a class="headerlink" href="#gliner-for-relation-extraction-uniencoderspanrelex" title="Link to this heading">¶</a></h2>
+<p>The UniEncoderSpanRelex architecture extends GLiNER to perform joint entity and relation extraction, enabling the model to identify both entities and the relationships between them in a single forward pass.</p>
+<section id="id3">
+<h3>Architecture Overview<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<p>The architecture consists of three main components:</p>
+<ol class="arabic simple">
+<li><p><strong>Entity Span Encoder</strong>: Standard GLiNER span encoder for entity detection</p></li>
+<li><p><strong>Relation Representation Layer</strong>: Computes pairwise entity representations and adjacency predictions</p></li>
+<li><p><strong>Relation Classification Layer</strong>: Classifies relation types between entity pairs</p></li>
+</ol>
+<p><img alt="alt text" src="images/image-23.png" /></p>
+</section>
+<section id="multi-task-training">
+<h3>Multi-task Training<a class="headerlink" href="#multi-task-training" title="Link to this heading">¶</a></h3>
+<p>The model is trained with three loss components:</p>
+<ul class="simple">
+<li><p><strong>Span Loss</strong> (<code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code>): Binary cross-entropy for entity span classification</p></li>
+<li><p><strong>Adjacency Loss</strong> (<code class="docutils literal notranslate"><span class="pre">adjacency_loss_coef</span></code>): Binary cross-entropy for entity pair connectivity</p></li>
+<li><p><strong>Relation Loss</strong> (<code class="docutils literal notranslate"><span class="pre">relation_loss_coef</span></code>): Multi-label classification for relation types</p></li>
+</ul>
+</section>
+<section id="architecture-details">
+<h3>Architecture Details<a class="headerlink" href="#architecture-details" title="Link to this heading">¶</a></h3>
+<p><strong>Special Tokens</strong>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">[ENT]</span></code>: Entity type marker (as in vanilla GLiNER)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[REL]</span></code>: Relation type marker</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">[SEP]</span></code>: Separator between entity types, relation types, and input text</p></li>
+</ul>
+<p><strong>Forward Pass</strong>:</p>
+<ol class="arabic simple">
+<li><p>Encode text with entity and relation type prompts</p></li>
+<li><p>Extract entity spans and their representations</p></li>
+<li><p>Build entity pairs based on predicted adjacency matrix</p></li>
+<li><p>Classify relation types for each entity pair</p></li>
+</ol>
+<p><strong>Relation Representation Methods</strong>:</p>
+<ul class="simple">
+<li><p><strong>Concatenation</strong>: Concatenate head and tail entity representations, then project</p></li>
+<li><p><strong>Triple Scoring</strong>: Use learned scoring functions for (head, relation, tail) triples</p></li>
+</ul>
+</section>
+<section id="id4">
+<h3>Use Cases<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><strong>Knowledge Graph Construction</strong>: Extract entities and relations to build structured knowledge</p></li>
+<li><p><strong>Information Extraction</strong>: Capture complex relationships in text (e.g., “works_for”, “located_in”)</p></li>
+<li><p><strong>Document Understanding</strong>: Extract structured information from unstructured text</p></li>
+<li><p><strong>Question Answering</strong>: Build entity-relation graphs for reasoning</p></li>
+</ul>
+</section>
+<section id="id5">
+<h3>Example Usage<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a relation extraction model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-relex-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;John Smith works at Microsoft in Seattle.&quot;</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Define both entity types and relation types</span>
+</span><span data-line="9"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="10"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">]</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Extract entities and relations</span>
+</span><span data-line="13"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="14">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
+</span><span data-line="15">    <span class="n">labels</span><span class="o">=</span><span class="n">entity_labels</span><span class="p">,</span>
+</span><span data-line="16">    <span class="n">relations</span><span class="o">=</span><span class="n">relation_labels</span><span class="p">,</span>
+</span><span data-line="17">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="18">    <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.5</span>
+</span><span data-line="19"><span class="p">)</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># Display entities</span>
+</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="23"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="24">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="c1"># Display relations</span>
+</span><span data-line="27"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations:&quot;</span><span class="p">)</span>
+</span><span data-line="28"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="29">    <span class="n">head</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
+</span><span data-line="30">    <span class="n">tail</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
+</span><span data-line="31">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="output-format">
+<h3>Output Format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h3>
+<p><strong>Entities</strong>: Standard GLiNER entity format</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="3">    <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span data-line="4">    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;John Smith&#39;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.95</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Relations</strong>: Relation triplets with entity references</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s1">&#39;head&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span data-line="3">        <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="4">        <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span data-line="5">        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;John Smith&#39;</span><span class="p">,</span>
+</span><span data-line="6">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span>
+</span><span data-line="7">        <span class="s1">&#39;entity_idx&#39;</span><span class="p">:</span> <span class="mi">0</span>
+</span><span data-line="8">    <span class="p">},</span>
+</span><span data-line="9">    <span class="s1">&#39;tail&#39;</span><span class="p">:</span> <span class="p">{</span>
+</span><span data-line="10">        <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+</span><span data-line="11">        <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
+</span><span data-line="12">        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Microsoft&#39;</span><span class="p">,</span>
+</span><span data-line="13">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;organization&#39;</span><span class="p">,</span>
+</span><span data-line="14">        <span class="s1">&#39;entity_idx&#39;</span><span class="p">:</span> <span class="mi">1</span>
+</span><span data-line="15">    <span class="p">},</span>
+</span><span data-line="16">    <span class="s1">&#39;relation&#39;</span><span class="p">:</span> <span class="s1">&#39;works_at&#39;</span><span class="p">,</span>
+</span><span data-line="17">    <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.87</span>
+</span><span data-line="18"><span class="p">}</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="choosing-the-right-architecture">
+<h2>Choosing the Right Architecture<a class="headerlink" href="#choosing-the-right-architecture" title="Link to this heading">¶</a></h2>
+<p>Here’s a quick guide to selecting the appropriate GLiNER architecture:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Scenario</p></th>
+<th class="head"><p>Recommended Architecture</p></th>
+<th class="head"><p>Reason</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Standard NER, &lt; 30 entity types</p></td>
+<td><p>UniEncoderSpan</p></td>
+<td><p>Fastest, most efficient, good zero-shot</p></td>
+</tr>
+<tr class="row-odd"><td><p>Long entity spans, summaries</p></td>
+<td><p>UniEncoderToken</p></td>
+<td><p>Token-level better for long sequences</p></td>
+</tr>
+<tr class="row-even"><td><p>Many entity types (50-200+)</p></td>
+<td><p>BiEncoderSpan or BiEncoderToken</p></td>
+<td><p>Pre-compute labels, handles many types</p></td>
+</tr>
+<tr class="row-odd"><td><p>Production with fixed schema</p></td>
+<td><p>BiEncoder variants</p></td>
+<td><p>Cache label embeddings for speed</p></td>
+</tr>
+<tr class="row-even"><td><p>Open-domain, unknown types</p></td>
+<td><p>UniEncoderSpanDecoder</p></td>
+<td><p>Generate labels on-the-fly</p></td>
+</tr>
+<tr class="row-odd"><td><p>Knowledge graph extraction</p></td>
+<td><p>UniEncoderSpanRelex</p></td>
+<td><p>Joint entity and relation extraction</p></td>
+</tr>
+<tr class="row-even"><td><p>Both long entities + many types</p></td>
+<td><p>BiEncoderToken</p></td>
+<td><p>Combines both advantages</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p>The Intro section is based on the <a class="reference external" href="https://www.linkedin.com/in/shahrukhx01/">Shahrukh Khan</a> article <a class="reference external" href="https://medium.com/&#64;shahrukhx01/illustrated-gliner-e6971e4c8c52">Illustrated GLINER</a> and placed into documentation with consent of the author.</p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2311.08526">Urchade Zaratiana, Nadi Tomeh, Pierre Holat, and Thierry Charnois. 2023. Gliner: Generalist model for named entity recognition using bidirectional transformer</a></p></li>
+<li><p><a class="reference external" href="https://arxiv.org/abs/2311.08526">Ihor Stepanov, and Mykhailo Shtopko. 2024. GLINER MULTI-TASK: GENERALIST LIGHTWEIGHT MODEL FOR VARIOUS INFORMATION EXTRACTION TASKS</a></p></li>
+<li><p><a class="reference external" href="https://blog.knowledgator.com/meet-the-new-zero-shot-ner-architecture-30ffc2cb1ee0">Meet the new zero-shot NER architecture | by Knowledgator Engineering | Aug, 2024 | Medium</a></p></li>
+</ul>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="training.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Training</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="convert_to_onnx.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">ONNX Export &amp; Deployment</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

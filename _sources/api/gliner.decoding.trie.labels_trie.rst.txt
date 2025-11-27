@@ -1,0 +1,7 @@
+gliner.decoding.trie.labels\_trie module
+========================================
+
+.. automodule:: gliner.decoding.trie.labels_trie
+   :members:
+   :undoc-members:
+   :show-inheritance:

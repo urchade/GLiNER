@@ -1,0 +1,7 @@
+gliner.modeling.outputs module
+==============================
+
+.. automodule:: gliner.modeling.outputs
+   :members:
+   :undoc-members:
+   :show-inheritance:

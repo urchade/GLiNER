@@ -1,0 +1,7 @@
+gliner.multitask.base module
+============================
+
+.. automodule:: gliner.multitask.base
+   :members:
+   :undoc-members:
+   :show-inheritance:

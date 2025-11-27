@@ -1,0 +1,7 @@
+gliner.modeling.span\_rep module
+================================
+
+.. automodule:: gliner.modeling.span_rep
+   :members:
+   :undoc-members:
+   :show-inheritance:

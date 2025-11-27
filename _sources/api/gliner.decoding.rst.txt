@@ -1,0 +1,24 @@
+gliner.decoding package
+=======================
+
+.. automodule:: gliner.decoding
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.decoding.trie
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.decoding.decoder
+   gliner.decoding.utils

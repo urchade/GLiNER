@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.decoding.decoder - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.decoding.decoder"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.decoding.decoder</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.decoding.decoder</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">partial</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">has_overlapping</span><span class="p">,</span> <span class="n">has_overlapping_nested</span>
+</span><span data-line="8">
+</span><span data-line="9">
+<div class="viewcode-block" id="BaseDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseDecoder">[docs]</a>
+</span><span data-line="10"><span class="k">class</span><span class="w"> </span><span class="nc">BaseDecoder</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span><span data-line="11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="12"><span class="sd">    Abstract base class for all decoders.</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="sd">    Args:</span>
+</span><span data-line="15"><span class="sd">        config: Configuration object containing decoder parameters.</span>
+</span><span data-line="16"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="17">
+<div class="viewcode-block" id="BaseDecoder.__init__">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseDecoder.__init__">[docs]</a>
+</span><span data-line="18">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+</span><span data-line="19">        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span></div>
+
+</span><span data-line="20">
+<div class="viewcode-block" id="BaseDecoder.decode">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseDecoder.decode">[docs]</a>
+</span><span data-line="21">    <span class="nd">@abstractmethod</span>
+</span><span data-line="22">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="23"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="24"><span class="sd">        Decode model output into structured predictions.</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="sd">        Args:</span>
+</span><span data-line="27"><span class="sd">            *args: Variable positional arguments.</span>
+</span><span data-line="28"><span class="sd">            **kwargs: Variable keyword arguments.</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="sd">        Returns:</span>
+</span><span data-line="31"><span class="sd">            Decoded predictions in the appropriate format.</span>
+</span><span data-line="32"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="33">        <span class="k">pass</span></div>
+
+</span><span data-line="34">
+</span><span data-line="35">    <span class="k">def</span><span class="w"> </span><span class="nf">_get_id_to_class_for_sample</span><span class="p">(</span>
+</span><span data-line="36">        <span class="bp">self</span><span class="p">,</span> <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span> <span class="n">sample_idx</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="37">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="38"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="39"><span class="sd">        Get id_to_classes mapping for a specific sample.</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="sd">        Args:</span>
+</span><span data-line="42"><span class="sd">            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Either a single</span>
+</span><span data-line="43"><span class="sd">                mapping shared across all samples or per-sample mappings.</span>
+</span><span data-line="44"><span class="sd">            sample_idx (int): Index of the sample in the batch.</span>
+</span><span data-line="45">
+</span><span data-line="46"><span class="sd">        Returns:</span>
+</span><span data-line="47"><span class="sd">            Dict[int, str]: Mapping from class IDs to class names for this sample.</span>
+</span><span data-line="48"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="49">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+</span><span data-line="50">            <span class="k">return</span> <span class="n">id_to_classes</span><span class="p">[</span><span class="n">sample_idx</span><span class="p">]</span>
+</span><span data-line="51">        <span class="k">return</span> <span class="n">id_to_classes</span>
+</span><span data-line="52">
+<div class="viewcode-block" id="BaseDecoder.greedy_search">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseDecoder.greedy_search">[docs]</a>
+</span><span data-line="53">    <span class="k">def</span><span class="w"> </span><span class="nf">greedy_search</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">],</span> <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+</span><span data-line="54"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="55"><span class="sd">        Perform greedy search to remove overlapping spans.</span>
+</span><span data-line="56">
+</span><span data-line="57"><span class="sd">        Sorts spans by confidence score (descending) and keeps only non-overlapping</span>
+</span><span data-line="58"><span class="sd">        spans according to the specified NER mode.</span>
+</span><span data-line="59">
+</span><span data-line="60"><span class="sd">        Args:</span>
+</span><span data-line="61"><span class="sd">            spans (List[tuple]): List of span tuples containing at minimum</span>
+</span><span data-line="62"><span class="sd">                (start, end, ..., score).</span>
+</span><span data-line="63"><span class="sd">            flat_ner (bool): Whether to use flat NER (no nesting allowed) or</span>
+</span><span data-line="64"><span class="sd">                nested NER (allows nesting).</span>
+</span><span data-line="65"><span class="sd">            multi_label (bool): Whether to allow multiple labels for the same</span>
+</span><span data-line="66"><span class="sd">                span position.</span>
+</span><span data-line="67">
+</span><span data-line="68"><span class="sd">        Returns:</span>
+</span><span data-line="69"><span class="sd">            List[tuple]: Filtered list of non-overlapping spans, sorted by start position.</span>
+</span><span data-line="70"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="71">        <span class="k">if</span> <span class="n">flat_ner</span><span class="p">:</span>
+</span><span data-line="72">            <span class="n">has_ov</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">has_overlapping</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">)</span>
+</span><span data-line="73">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="74">            <span class="n">has_ov</span> <span class="o">=</span> <span class="n">partial</span><span class="p">(</span><span class="n">has_overlapping_nested</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">)</span>
+</span><span data-line="75">
+</span><span data-line="76">        <span class="n">new_list</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="77">        <span class="c1"># Sort by probability (descending)</span>
+</span><span data-line="78">        <span class="n">span_prob</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">spans</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="o">-</span><span class="n">x</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+</span><span data-line="79">
+</span><span data-line="80">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">spans</span><span class="p">)):</span>
+</span><span data-line="81">            <span class="n">b</span> <span class="o">=</span> <span class="n">span_prob</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span data-line="82">            <span class="n">flag</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="83">            <span class="k">for</span> <span class="n">new</span> <span class="ow">in</span> <span class="n">new_list</span><span class="p">:</span>
+</span><span data-line="84">                <span class="k">if</span> <span class="n">has_ov</span><span class="p">(</span><span class="n">b</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">new</span><span class="p">):</span>
+</span><span data-line="85">                    <span class="n">flag</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="86">                    <span class="k">break</span>
+</span><span data-line="87">            <span class="k">if</span> <span class="ow">not</span> <span class="n">flag</span><span class="p">:</span>
+</span><span data-line="88">                <span class="n">new_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+</span><span data-line="89">
+</span><span data-line="90">        <span class="c1"># Sort by start position</span>
+</span><span data-line="91">        <span class="n">new_list</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">new_list</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+</span><span data-line="92">        <span class="k">return</span> <span class="n">new_list</span></div>
+</div>
+
+</span><span data-line="93">
+</span><span data-line="94">
+<div class="viewcode-block" id="BaseSpanDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseSpanDecoder">[docs]</a>
+</span><span data-line="95"><span class="k">class</span><span class="w"> </span><span class="nc">BaseSpanDecoder</span><span class="p">(</span><span class="n">BaseDecoder</span><span class="p">):</span>
+</span><span data-line="96"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="97"><span class="sd">    Base class for span-based decoders with common decoding logic.</span>
+</span><span data-line="98">
+</span><span data-line="99"><span class="sd">    Provides shared functionality for finding candidate spans, validating them,</span>
+</span><span data-line="100"><span class="sd">    and decoding batch items.</span>
+</span><span data-line="101"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="102">
+</span><span data-line="103">    <span class="k">def</span><span class="w"> </span><span class="nf">_find_candidate_spans</span><span class="p">(</span>
+</span><span data-line="104">        <span class="bp">self</span><span class="p">,</span> <span class="n">probs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span>
+</span><span data-line="105">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+</span><span data-line="106"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="107"><span class="sd">        Find all span candidates above threshold.</span>
+</span><span data-line="108">
+</span><span data-line="109"><span class="sd">        Args:</span>
+</span><span data-line="110"><span class="sd">            probs (torch.Tensor): Probability tensor of shape (L, K, C) for one sample,</span>
+</span><span data-line="111"><span class="sd">                where L is sequence length, K is max span width, C is number of classes.</span>
+</span><span data-line="112"><span class="sd">            threshold (float): Confidence threshold for predictions.</span>
+</span><span data-line="113">
+</span><span data-line="114"><span class="sd">        Returns:</span>
+</span><span data-line="115"><span class="sd">            Tuple[torch.Tensor, torch.Tensor, torch.Tensor]: Tuple of</span>
+</span><span data-line="116"><span class="sd">                (start_indices, width_indices, class_indices) for spans above threshold.</span>
+</span><span data-line="117"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="118">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">probs</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)</span>
+</span><span data-line="119">
+</span><span data-line="120">    <span class="k">def</span><span class="w"> </span><span class="nf">_is_valid_span</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="121"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="122"><span class="sd">        Check if a span is valid (doesn&#39;t exceed sentence length).</span>
+</span><span data-line="123">
+</span><span data-line="124"><span class="sd">        Args:</span>
+</span><span data-line="125"><span class="sd">            start (int): Start position of the span.</span>
+</span><span data-line="126"><span class="sd">            width (int): Span width (0-indexed, so actual span length is width + 1).</span>
+</span><span data-line="127"><span class="sd">            tokens (List[str]): List of tokens for this sample.</span>
+</span><span data-line="128">
+</span><span data-line="129"><span class="sd">        Returns:</span>
+</span><span data-line="130"><span class="sd">            bool: True if span is valid, False otherwise.</span>
+</span><span data-line="131"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="132">        <span class="n">end</span> <span class="o">=</span> <span class="n">start</span> <span class="o">+</span> <span class="n">width</span> <span class="o">+</span> <span class="mi">1</span>
+</span><span data-line="133">        <span class="k">return</span> <span class="n">end</span> <span class="o">&lt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span>
+</span><span data-line="134">
+</span><span data-line="135">    <span class="nd">@abstractmethod</span>
+</span><span data-line="136">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_span_tuple</span><span class="p">(</span>
+</span><span data-line="137">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="138">        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="139">        <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="140">        <span class="n">class_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="141">        <span class="n">flat_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="142">        <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="143">        <span class="n">id_to_class</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="144">        <span class="n">span_label_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="145">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="146"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="147"><span class="sd">        Build a span tuple with decoder-specific format.</span>
+</span><span data-line="148">
+</span><span data-line="149"><span class="sd">        Args:</span>
+</span><span data-line="150"><span class="sd">            start (int): Start position of the span.</span>
+</span><span data-line="151"><span class="sd">            width (int): Span width (0-indexed).</span>
+</span><span data-line="152"><span class="sd">            class_idx (int): Class index.</span>
+</span><span data-line="153"><span class="sd">            flat_idx (int): Flattened span index (start * K + width).</span>
+</span><span data-line="154"><span class="sd">            score (float): Confidence score for this span.</span>
+</span><span data-line="155"><span class="sd">            id_to_class (Dict[int, str]): Mapping from class IDs to class names.</span>
+</span><span data-line="156"><span class="sd">            span_label_map (Dict[int, List[str]]): Mapping from flat span indices</span>
+</span><span data-line="157"><span class="sd">                to generated labels (empty for non-generative decoders).</span>
+</span><span data-line="158">
+</span><span data-line="159"><span class="sd">        Returns:</span>
+</span><span data-line="160"><span class="sd">            tuple: Span tuple in decoder-specific format.</span>
+</span><span data-line="161"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="162">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Subclasses must implement _build_span_tuple&quot;</span><span class="p">)</span>
+</span><span data-line="163">
+</span><span data-line="164">    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_batch_item</span><span class="p">(</span>
+</span><span data-line="165">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="166">        <span class="n">probs_i</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="167">        <span class="n">tokens_i</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="168">        <span class="n">id_to_class_i</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="169">        <span class="n">K</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="170">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="171">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="172">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="173">        <span class="n">span_label_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="174">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+</span><span data-line="175"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="176"><span class="sd">        Decode spans for a single batch item.</span>
+</span><span data-line="177">
+</span><span data-line="178"><span class="sd">        Finds all candidate spans above threshold, validates them, builds span tuples,</span>
+</span><span data-line="179"><span class="sd">        and applies greedy search to remove overlaps.</span>
+</span><span data-line="180">
+</span><span data-line="181"><span class="sd">        Args:</span>
+</span><span data-line="182"><span class="sd">            probs_i (torch.Tensor): Probability tensor of shape (L, K, C) for this sample.</span>
+</span><span data-line="183"><span class="sd">            tokens_i (List[str]): List of tokens for this sample.</span>
+</span><span data-line="184"><span class="sd">            id_to_class_i (Dict[int, str]): Class ID to class name mapping for this sample.</span>
+</span><span data-line="185"><span class="sd">            K (int): Maximum span width.</span>
+</span><span data-line="186"><span class="sd">            threshold (float): Confidence threshold for predictions.</span>
+</span><span data-line="187"><span class="sd">            flat_ner (bool): Whether to enforce non-overlapping spans.</span>
+</span><span data-line="188"><span class="sd">            multi_label (bool): Whether to allow multiple labels per span.</span>
+</span><span data-line="189"><span class="sd">            span_label_map (Dict[int, List[str]]): Mapping from flat span indices to</span>
+</span><span data-line="190"><span class="sd">                generated labels (empty dict for non-generative decoders).</span>
+</span><span data-line="191">
+</span><span data-line="192"><span class="sd">        Returns:</span>
+</span><span data-line="193"><span class="sd">            List[tuple]: List of decoded span tuples for this sample.</span>
+</span><span data-line="194"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="195">        <span class="n">span_i</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="196">
+</span><span data-line="197">        <span class="c1"># Find all spans above threshold</span>
+</span><span data-line="198">        <span class="n">s_idx</span><span class="p">,</span> <span class="n">k_idx</span><span class="p">,</span> <span class="n">c_idx</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_find_candidate_spans</span><span class="p">(</span><span class="n">probs_i</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+</span><span data-line="199">
+</span><span data-line="200">        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">s_idx</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">k_idx</span><span class="o">.</span><span class="n">tolist</span><span class="p">(),</span> <span class="n">c_idx</span><span class="o">.</span><span class="n">tolist</span><span class="p">()):</span>
+</span><span data-line="201">            <span class="c1"># Skip if span exceeds sentence length</span>
+</span><span data-line="202">            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_is_valid_span</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">tokens_i</span><span class="p">):</span>
+</span><span data-line="203">                <span class="k">continue</span>
+</span><span data-line="204">
+</span><span data-line="205">            <span class="c1"># Calculate flat index (matches encoder&#39;s indexing)</span>
+</span><span data-line="206">            <span class="n">flat_idx</span> <span class="o">=</span> <span class="n">s</span> <span class="o">*</span> <span class="n">K</span> <span class="o">+</span> <span class="n">k</span>
+</span><span data-line="207">            <span class="n">score</span> <span class="o">=</span> <span class="n">probs_i</span><span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="208">
+</span><span data-line="209">            <span class="c1"># Build span tuple (implementation varies by subclass)</span>
+</span><span data-line="210">            <span class="n">span_tuple</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_span_tuple</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">flat_idx</span><span class="p">,</span> <span class="n">score</span><span class="p">,</span> <span class="n">id_to_class_i</span><span class="p">,</span> <span class="n">span_label_map</span><span class="p">)</span>
+</span><span data-line="211">            <span class="n">span_i</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">span_tuple</span><span class="p">)</span>
+</span><span data-line="212">
+</span><span data-line="213">        <span class="c1"># Remove overlapping spans using greedy search</span>
+</span><span data-line="214">        <span class="n">span_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">greedy_search</span><span class="p">(</span><span class="n">span_i</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">)</span>
+</span><span data-line="215">        <span class="k">return</span> <span class="n">span_i</span>
+</span><span data-line="216">
+<div class="viewcode-block" id="BaseSpanDecoder.decode">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseSpanDecoder.decode">[docs]</a>
+</span><span data-line="217">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
+</span><span data-line="218">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="219">        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="220">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="221">        <span class="n">model_output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="222">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="223">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="224">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="225">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="226">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]:</span>
+</span><span data-line="227"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="228"><span class="sd">        Decode model output to extract named entity spans.</span>
+</span><span data-line="229">
+</span><span data-line="230"><span class="sd">        Args:</span>
+</span><span data-line="231"><span class="sd">            tokens (List[List[str]]): Tokenized input text for each sample in the batch.</span>
+</span><span data-line="232"><span class="sd">            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from</span>
+</span><span data-line="233"><span class="sd">                class IDs to class names. Can be a single dict (shared) or list (per-sample).</span>
+</span><span data-line="234"><span class="sd">            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C),</span>
+</span><span data-line="235"><span class="sd">                where B is batch size, L is sequence length, K is max span width,</span>
+</span><span data-line="236"><span class="sd">                C is number of classes.</span>
+</span><span data-line="237"><span class="sd">            flat_ner (bool): Whether to enforce non-overlapping spans.</span>
+</span><span data-line="238"><span class="sd">            threshold (float): Confidence threshold for span predictions.</span>
+</span><span data-line="239"><span class="sd">            multi_label (bool): Whether to allow multiple labels per span.</span>
+</span><span data-line="240"><span class="sd">            **kwargs: Additional keyword arguments (unused in base class).</span>
+</span><span data-line="241">
+</span><span data-line="242"><span class="sd">        Returns:</span>
+</span><span data-line="243"><span class="sd">            List[List[tuple]]: For each sample in batch, list of span tuples.</span>
+</span><span data-line="244"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="245">        <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model_output</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># B, L, K, C</span>
+</span><span data-line="246">        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">model_output</span><span class="p">)</span>
+</span><span data-line="247">
+</span><span data-line="248">        <span class="c1"># Decode spans for each sample in the batch</span>
+</span><span data-line="249">        <span class="n">spans</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="250">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+</span><span data-line="251">            <span class="n">probs_i</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span data-line="252">            <span class="n">id_to_class_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_id_to_class_for_sample</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span data-line="253">
+</span><span data-line="254">            <span class="c1"># For base decoder, span_label_map is empty</span>
+</span><span data-line="255">            <span class="n">span_label_map</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="256">
+</span><span data-line="257">            <span class="n">span_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_batch_item</span><span class="p">(</span>
+</span><span data-line="258">                <span class="n">probs_i</span><span class="o">=</span><span class="n">probs_i</span><span class="p">,</span>
+</span><span data-line="259">                <span class="n">tokens_i</span><span class="o">=</span><span class="n">tokens</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+</span><span data-line="260">                <span class="n">id_to_class_i</span><span class="o">=</span><span class="n">id_to_class_i</span><span class="p">,</span>
+</span><span data-line="261">                <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
+</span><span data-line="262">                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="263">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="264">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="265">                <span class="n">span_label_map</span><span class="o">=</span><span class="n">span_label_map</span><span class="p">,</span>
+</span><span data-line="266">            <span class="p">)</span>
+</span><span data-line="267">            <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">span_i</span><span class="p">)</span>
+</span><span data-line="268">
+</span><span data-line="269">        <span class="k">return</span> <span class="n">spans</span></div>
+</div>
+
+</span><span data-line="270">
+</span><span data-line="271">
+<div class="viewcode-block" id="SpanDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanDecoder">[docs]</a>
+</span><span data-line="272"><span class="k">class</span><span class="w"> </span><span class="nc">SpanDecoder</span><span class="p">(</span><span class="n">BaseSpanDecoder</span><span class="p">):</span>
+</span><span data-line="273"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="274"><span class="sd">    Simple span decoder without generative labels.</span>
+</span><span data-line="275">
+</span><span data-line="276"><span class="sd">    Returns spans in format: (start, end, entity_type, score)</span>
+</span><span data-line="277"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="278">
+</span><span data-line="279">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_span_tuple</span><span class="p">(</span>
+</span><span data-line="280">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="281">        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="282">        <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="283">        <span class="n">class_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="284">        <span class="n">flat_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="285">        <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="286">        <span class="n">id_to_class</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="287">        <span class="n">span_label_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="288">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="289"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="290"><span class="sd">        Build span tuple without generative labels.</span>
+</span><span data-line="291">
+</span><span data-line="292"><span class="sd">        Args:</span>
+</span><span data-line="293"><span class="sd">            start (int): Start position of the span.</span>
+</span><span data-line="294"><span class="sd">            width (int): Span width (0-indexed).</span>
+</span><span data-line="295"><span class="sd">            class_idx (int): Class index.</span>
+</span><span data-line="296"><span class="sd">            flat_idx (int): Flattened span index (unused in this decoder).</span>
+</span><span data-line="297"><span class="sd">            score (float): Confidence score for this span.</span>
+</span><span data-line="298"><span class="sd">            id_to_class (Dict[int, str]): Mapping from class IDs to class names.</span>
+</span><span data-line="299"><span class="sd">            span_label_map (Dict[int, List[str]]): Unused in this decoder.</span>
+</span><span data-line="300">
+</span><span data-line="301"><span class="sd">        Returns:</span>
+</span><span data-line="302"><span class="sd">            tuple: Span tuple in format (start, end, entity_type, score).</span>
+</span><span data-line="303"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="304">        <span class="n">ent_type</span> <span class="o">=</span> <span class="n">id_to_class</span><span class="p">[</span><span class="n">class_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 because 0 is &lt;pad&gt;</span>
+</span><span data-line="305">        <span class="k">return</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">ent_type</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span></div>
+
+</span><span data-line="306">
+</span><span data-line="307">
+<div class="viewcode-block" id="SpanGenerativeDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanGenerativeDecoder">[docs]</a>
+</span><span data-line="308"><span class="k">class</span><span class="w"> </span><span class="nc">SpanGenerativeDecoder</span><span class="p">(</span><span class="n">BaseSpanDecoder</span><span class="p">):</span>
+</span><span data-line="309"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="310"><span class="sd">    Span decoder with generative label support.</span>
+</span><span data-line="311">
+</span><span data-line="312"><span class="sd">    Supports two decoder modes:</span>
+</span><span data-line="313"><span class="sd">    - &#39;prompt&#39;: Generated labels replace the original class names</span>
+</span><span data-line="314"><span class="sd">    - &#39;span&#39;: Generated labels are added as additional fields to each span</span>
+</span><span data-line="315">
+</span><span data-line="316"><span class="sd">    Returns spans in format: (start, end, entity_type, generated_entity_type, score)</span>
+</span><span data-line="317"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="318">
+</span><span data-line="319">    <span class="k">def</span><span class="w"> </span><span class="nf">_update_id_to_classes_with_generated</span><span class="p">(</span>
+</span><span data-line="320">        <span class="bp">self</span><span class="p">,</span> <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]],</span> <span class="n">gen_labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="321">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">]]:</span>
+</span><span data-line="322"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="323"><span class="sd">        Update id_to_classes mapping with generated labels for prompt mode.</span>
+</span><span data-line="324">
+</span><span data-line="325"><span class="sd">        In prompt mode, the generated labels replace the original class names in the</span>
+</span><span data-line="326"><span class="sd">        id_to_class mapping. This method maps generated labels back to class IDs.</span>
+</span><span data-line="327">
+</span><span data-line="328"><span class="sd">        Args:</span>
+</span><span data-line="329"><span class="sd">            id_to_classes (Union[Dict, List[Dict]]): Original mapping from class IDs</span>
+</span><span data-line="330"><span class="sd">                to class names.</span>
+</span><span data-line="331"><span class="sd">            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.</span>
+</span><span data-line="332"><span class="sd">            batch_size (int): Number of samples in the batch.</span>
+</span><span data-line="333">
+</span><span data-line="334"><span class="sd">        Returns:</span>
+</span><span data-line="335"><span class="sd">            Union[Dict, List[Dict]]: Updated id_to_classes mapping with generated labels.</span>
+</span><span data-line="336"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="337">        <span class="n">new_id_to_classes</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="338">        <span class="n">cursor</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="339">
+</span><span data-line="340">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+</span><span data-line="341">            <span class="n">original</span> <span class="o">=</span> <span class="n">id_to_classes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">id_to_classes</span>
+</span><span data-line="342">            <span class="n">k</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">original</span><span class="p">)</span>  <span class="c1"># Number of labels for this example</span>
+</span><span data-line="343">
+</span><span data-line="344">            <span class="c1"># Map each class ID to its generated label</span>
+</span><span data-line="345">            <span class="n">mapping</span> <span class="o">=</span> <span class="p">{</span><span class="n">idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">:</span> <span class="n">gen_labels</span><span class="p">[</span><span class="n">cursor</span> <span class="o">+</span> <span class="n">idx</span><span class="p">]</span> <span class="k">for</span> <span class="n">idx</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">k</span><span class="p">)}</span>
+</span><span data-line="346">            <span class="n">new_id_to_classes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mapping</span><span class="p">)</span>
+</span><span data-line="347">            <span class="n">cursor</span> <span class="o">+=</span> <span class="n">k</span>
+</span><span data-line="348">
+</span><span data-line="349">        <span class="k">return</span> <span class="n">new_id_to_classes</span>
+</span><span data-line="350">
+</span><span data-line="351">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_span_label_map_for_batch</span><span class="p">(</span>
+</span><span data-line="352">        <span class="bp">self</span><span class="p">,</span> <span class="n">sel_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">num_gen_sequences</span><span class="p">:</span> <span class="nb">int</span>
+</span><span data-line="353">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]:</span>
+</span><span data-line="354"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="355"><span class="sd">        Build mapping from flat span indices to generated labels for span mode.</span>
+</span><span data-line="356">
+</span><span data-line="357"><span class="sd">        In span mode, each valid span gets one or more generated labels. This method</span>
+</span><span data-line="358"><span class="sd">        creates a mapping from flat span index to its corresponding generated label(s).</span>
+</span><span data-line="359">
+</span><span data-line="360"><span class="sd">        Args:</span>
+</span><span data-line="361"><span class="sd">            sel_idx (torch.LongTensor): Tensor of shape (B, M) containing indices of</span>
+</span><span data-line="362"><span class="sd">                selected spans. -1 indicates padding.</span>
+</span><span data-line="363"><span class="sd">            gen_labels (List[str]): All generated labels, flattened across batch.</span>
+</span><span data-line="364"><span class="sd">            num_gen_sequences (int): Number of label sequences generated per span.</span>
+</span><span data-line="365">
+</span><span data-line="366"><span class="sd">        Returns:</span>
+</span><span data-line="367"><span class="sd">            List[Dict[int, List[str]]]: One dict per batch element, mapping</span>
+</span><span data-line="368"><span class="sd">                flat_span_idx -&gt; list of generated labels.</span>
+</span><span data-line="369"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="370">        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">sel_idx</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="371">        <span class="n">span_label_maps</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+</span><span data-line="372">        <span class="n">cursor</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Tracks position in gen_labels</span>
+</span><span data-line="373">
+</span><span data-line="374">        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+</span><span data-line="375">            <span class="n">valid_pos</span> <span class="o">=</span> <span class="n">sel_idx</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span>
+</span><span data-line="376">            <span class="n">n</span> <span class="o">=</span> <span class="n">valid_pos</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>  <span class="c1"># Number of valid spans in this batch element</span>
+</span><span data-line="377">
+</span><span data-line="378">            <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="379">                <span class="c1"># Get the flat indices of spans that were kept</span>
+</span><span data-line="380">                <span class="n">flat_indices</span> <span class="o">=</span> <span class="n">sel_idx</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">valid_pos</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span data-line="381">
+</span><span data-line="382">                <span class="c1"># Calculate the range of labels for this batch element</span>
+</span><span data-line="383">                <span class="n">start_index</span> <span class="o">=</span> <span class="n">cursor</span> <span class="o">*</span> <span class="n">num_gen_sequences</span>
+</span><span data-line="384">                <span class="n">end_index</span> <span class="o">=</span> <span class="n">start_index</span> <span class="o">+</span> <span class="n">n</span> <span class="o">*</span> <span class="n">num_gen_sequences</span>
+</span><span data-line="385">                <span class="n">span_labels</span> <span class="o">=</span> <span class="n">gen_labels</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">]</span>
+</span><span data-line="386">
+</span><span data-line="387">                <span class="c1"># Group labels: each span gets num_gen_sequences consecutive labels</span>
+</span><span data-line="388">                <span class="n">labels_b</span> <span class="o">=</span> <span class="p">[</span><span class="n">span_labels</span><span class="p">[</span><span class="n">i</span> <span class="o">*</span> <span class="n">num_gen_sequences</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">num_gen_sequences</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span>
+</span><span data-line="389">
+</span><span data-line="390">                <span class="c1"># Create mapping from flat_index to labels</span>
+</span><span data-line="391">                <span class="n">span_label_maps</span><span class="p">[</span><span class="n">b</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">flat_indices</span><span class="p">,</span> <span class="n">labels_b</span><span class="p">))</span>
+</span><span data-line="392">                <span class="n">cursor</span> <span class="o">+=</span> <span class="n">n</span>
+</span><span data-line="393">
+</span><span data-line="394">        <span class="k">return</span> <span class="n">span_label_maps</span>
+</span><span data-line="395">
+</span><span data-line="396">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_span_tuple</span><span class="p">(</span>
+</span><span data-line="397">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="398">        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="399">        <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="400">        <span class="n">class_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="401">        <span class="n">flat_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="402">        <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="403">        <span class="n">id_to_class</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="404">        <span class="n">span_label_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="405">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="406"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="407"><span class="sd">        Build span tuple with generative labels.</span>
+</span><span data-line="408">
+</span><span data-line="409"><span class="sd">        Args:</span>
+</span><span data-line="410"><span class="sd">            start (int): Start position of the span.</span>
+</span><span data-line="411"><span class="sd">            width (int): Span width (0-indexed).</span>
+</span><span data-line="412"><span class="sd">            class_idx (int): Class index.</span>
+</span><span data-line="413"><span class="sd">            flat_idx (int): Flattened span index (start * K + width).</span>
+</span><span data-line="414"><span class="sd">            score (float): Confidence score for this span.</span>
+</span><span data-line="415"><span class="sd">            id_to_class (Dict[int, str]): Mapping from class IDs to class names.</span>
+</span><span data-line="416"><span class="sd">            span_label_map (Dict[int, List[str]]): Mapping from flat span indices</span>
+</span><span data-line="417"><span class="sd">                to generated labels.</span>
+</span><span data-line="418">
+</span><span data-line="419"><span class="sd">        Returns:</span>
+</span><span data-line="420"><span class="sd">            tuple: Span tuple in format (start, end, entity_type, generated_entity_type, score).</span>
+</span><span data-line="421"><span class="sd">                generated_entity_type is None if not found in span_label_map.</span>
+</span><span data-line="422"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="423">        <span class="n">ent_type</span> <span class="o">=</span> <span class="n">id_to_class</span><span class="p">[</span><span class="n">class_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 because 0 is &lt;pad&gt;</span>
+</span><span data-line="424">        <span class="n">gen_ent_type</span> <span class="o">=</span> <span class="n">span_label_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">flat_idx</span><span class="p">)</span>
+</span><span data-line="425">        <span class="k">return</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">ent_type</span><span class="p">,</span> <span class="n">gen_ent_type</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+</span><span data-line="426">
+<div class="viewcode-block" id="SpanGenerativeDecoder.decode_generative">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanGenerativeDecoder.decode_generative">[docs]</a>
+</span><span data-line="427">    <span class="k">def</span><span class="w"> </span><span class="nf">decode_generative</span><span class="p">(</span>
+</span><span data-line="428">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="429">        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="430">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="431">        <span class="n">model_output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="432">        <span class="n">gen_labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="433">        <span class="n">sel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="434">        <span class="n">num_gen_sequences</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span data-line="435">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="436">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="437">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="438">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]:</span>
+</span><span data-line="439"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="440"><span class="sd">        Decode model output with generated labels.</span>
+</span><span data-line="441">
+</span><span data-line="442"><span class="sd">        Handles both &#39;prompt&#39; and &#39;span&#39; decoder modes:</span>
+</span><span data-line="443"><span class="sd">        - prompt mode: Generated labels replace class names in id_to_classes</span>
+</span><span data-line="444"><span class="sd">        - span mode: Generated labels are added to span tuples via span_label_map</span>
+</span><span data-line="445">
+</span><span data-line="446"><span class="sd">        Args:</span>
+</span><span data-line="447"><span class="sd">            tokens (List[List[str]]): Tokenized input text for each sample in the batch.</span>
+</span><span data-line="448"><span class="sd">            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from</span>
+</span><span data-line="449"><span class="sd">                class IDs to class names.</span>
+</span><span data-line="450"><span class="sd">            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C).</span>
+</span><span data-line="451"><span class="sd">            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.</span>
+</span><span data-line="452"><span class="sd">            sel_idx (Optional[torch.LongTensor]): Tensor of shape (B, M) with selected</span>
+</span><span data-line="453"><span class="sd">                span indices. Required for span mode, unused for prompt mode.</span>
+</span><span data-line="454"><span class="sd">            num_gen_sequences (int): Number of label sequences generated per span.</span>
+</span><span data-line="455"><span class="sd">            flat_ner (bool): Whether to enforce non-overlapping spans.</span>
+</span><span data-line="456"><span class="sd">            threshold (float): Confidence threshold for span predictions.</span>
+</span><span data-line="457"><span class="sd">            multi_label (bool): Whether to allow multiple labels per span.</span>
+</span><span data-line="458">
+</span><span data-line="459"><span class="sd">        Returns:</span>
+</span><span data-line="460"><span class="sd">            List[List[tuple]]: For each sample, list of span tuples with generated labels.</span>
+</span><span data-line="461"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="462">        <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">model_output</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># B, L, K, C</span>
+</span><span data-line="463">        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">model_output</span><span class="p">)</span>
+</span><span data-line="464">
+</span><span data-line="465">        <span class="c1"># Handle prompt mode: update id_to_classes with generated labels</span>
+</span><span data-line="466">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoder_mode</span> <span class="o">==</span> <span class="s2">&quot;prompt&quot;</span><span class="p">:</span>
+</span><span data-line="467">            <span class="n">id_to_classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_update_id_to_classes_with_generated</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">,</span> <span class="n">B</span><span class="p">)</span>
+</span><span data-line="468">            <span class="c1"># In prompt mode, span_label_map is empty (labels already in id_to_classes)</span>
+</span><span data-line="469">            <span class="n">span_label_maps</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">)]</span>
+</span><span data-line="470">
+</span><span data-line="471">        <span class="c1"># Handle span mode: build span_label_map from sel_idx and gen_labels</span>
+</span><span data-line="472">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">decoder_mode</span> <span class="o">==</span> <span class="s2">&quot;span&quot;</span><span class="p">:</span>
+</span><span data-line="473">            <span class="k">if</span> <span class="n">sel_idx</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="474">                <span class="n">span_label_maps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_span_label_map_for_batch</span><span class="p">(</span><span class="n">sel_idx</span><span class="p">,</span> <span class="n">gen_labels</span><span class="p">,</span> <span class="n">num_gen_sequences</span><span class="p">)</span>
+</span><span data-line="475">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="476">                <span class="n">span_label_maps</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">)]</span>
+</span><span data-line="477">
+</span><span data-line="478">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="479">            <span class="c1"># No decoder mode or unknown mode</span>
+</span><span data-line="480">            <span class="n">span_label_maps</span> <span class="o">=</span> <span class="p">[{}</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">)]</span>
+</span><span data-line="481">
+</span><span data-line="482">        <span class="c1"># Decode spans for each sample in the batch</span>
+</span><span data-line="483">        <span class="n">spans</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="484">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+</span><span data-line="485">            <span class="n">probs_i</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span data-line="486">            <span class="n">id_to_class_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_id_to_class_for_sample</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span data-line="487">            <span class="n">span_label_map_i</span> <span class="o">=</span> <span class="n">span_label_maps</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+</span><span data-line="488">
+</span><span data-line="489">            <span class="n">span_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_batch_item</span><span class="p">(</span>
+</span><span data-line="490">                <span class="n">probs_i</span><span class="o">=</span><span class="n">probs_i</span><span class="p">,</span>
+</span><span data-line="491">                <span class="n">tokens_i</span><span class="o">=</span><span class="n">tokens</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+</span><span data-line="492">                <span class="n">id_to_class_i</span><span class="o">=</span><span class="n">id_to_class_i</span><span class="p">,</span>
+</span><span data-line="493">                <span class="n">K</span><span class="o">=</span><span class="n">K</span><span class="p">,</span>
+</span><span data-line="494">                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="495">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="496">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="497">                <span class="n">span_label_map</span><span class="o">=</span><span class="n">span_label_map_i</span><span class="p">,</span>
+</span><span data-line="498">            <span class="p">)</span>
+</span><span data-line="499">            <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">span_i</span><span class="p">)</span>
+</span><span data-line="500">
+</span><span data-line="501">        <span class="k">return</span> <span class="n">spans</span></div>
+
+</span><span data-line="502">
+<div class="viewcode-block" id="SpanGenerativeDecoder.decode">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanGenerativeDecoder.decode">[docs]</a>
+</span><span data-line="503">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
+</span><span data-line="504">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="505">        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="506">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="507">        <span class="n">model_output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="508">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="509">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="510">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="511">        <span class="n">gen_labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="512">        <span class="n">sel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="513">        <span class="n">num_gen_sequences</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">1</span><span class="p">,</span>
+</span><span data-line="514">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="515">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]:</span>
+</span><span data-line="516"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="517"><span class="sd">        Decode model output, with optional generative label support.</span>
+</span><span data-line="518">
+</span><span data-line="519"><span class="sd">        If gen_labels are provided and decoder has a labels_decoder, uses generative</span>
+</span><span data-line="520"><span class="sd">        decoding. Otherwise falls back to standard span decoding.</span>
+</span><span data-line="521">
+</span><span data-line="522"><span class="sd">        Args:</span>
+</span><span data-line="523"><span class="sd">            tokens (List[List[str]]): Tokenized input text for each sample in the batch.</span>
+</span><span data-line="524"><span class="sd">            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from</span>
+</span><span data-line="525"><span class="sd">                class IDs to class names.</span>
+</span><span data-line="526"><span class="sd">            model_output (torch.Tensor): Raw logits from the model with shape (B, L, K, C).</span>
+</span><span data-line="527"><span class="sd">            flat_ner (bool): Whether to enforce non-overlapping spans.</span>
+</span><span data-line="528"><span class="sd">            threshold (float): Confidence threshold for span predictions.</span>
+</span><span data-line="529"><span class="sd">            multi_label (bool): Whether to allow multiple labels per span.</span>
+</span><span data-line="530"><span class="sd">            gen_labels (Optional[List[str]]): Generated labels from decoder. If provided,</span>
+</span><span data-line="531"><span class="sd">                triggers generative decoding.</span>
+</span><span data-line="532"><span class="sd">            sel_idx (Optional[torch.LongTensor]): Selected span indices for span mode.</span>
+</span><span data-line="533"><span class="sd">            num_gen_sequences (int): Number of label sequences generated per span.</span>
+</span><span data-line="534"><span class="sd">            **kwargs: Additional keyword arguments (unused).</span>
+</span><span data-line="535">
+</span><span data-line="536"><span class="sd">        Returns:</span>
+</span><span data-line="537"><span class="sd">            List[List[tuple]]: For each sample, list of span tuples.</span>
+</span><span data-line="538"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="539">        <span class="c1"># Use generative decoding if labels_decoder is configured and gen_labels provided</span>
+</span><span data-line="540">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">gen_labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="541">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decode_generative</span><span class="p">(</span>
+</span><span data-line="542">                <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="543">                <span class="n">id_to_classes</span><span class="o">=</span><span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="544">                <span class="n">model_output</span><span class="o">=</span><span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="545">                <span class="n">gen_labels</span><span class="o">=</span><span class="n">gen_labels</span><span class="p">,</span>
+</span><span data-line="546">                <span class="n">sel_idx</span><span class="o">=</span><span class="n">sel_idx</span><span class="p">,</span>
+</span><span data-line="547">                <span class="n">num_gen_sequences</span><span class="o">=</span><span class="n">num_gen_sequences</span><span class="p">,</span>
+</span><span data-line="548">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="549">                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="550">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="551">            <span class="p">)</span>
+</span><span data-line="552">
+</span><span data-line="553">        <span class="c1"># Fall back to standard decoding without generative labels</span>
+</span><span data-line="554">        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+</span><span data-line="555">            <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="556">            <span class="n">id_to_classes</span><span class="o">=</span><span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="557">            <span class="n">model_output</span><span class="o">=</span><span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="558">            <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="559">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="560">            <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="561">        <span class="p">)</span></div>
+</div>
+
+</span><span data-line="562">
+</span><span data-line="563">
+<div class="viewcode-block" id="SpanRelexDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanRelexDecoder">[docs]</a>
+</span><span data-line="564"><span class="k">class</span><span class="w"> </span><span class="nc">SpanRelexDecoder</span><span class="p">(</span><span class="n">BaseSpanDecoder</span><span class="p">):</span>
+</span><span data-line="565"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span decoder with relation extraction support.</span>
+</span><span data-line="566">
+</span><span data-line="567"><span class="sd">    Extends the base span decoder to decode both entity spans and the relations</span>
+</span><span data-line="568"><span class="sd">    between them. Entity spans are extracted first using the parent class logic,</span>
+</span><span data-line="569"><span class="sd">    then relations are decoded by identifying pairs of entities and their</span>
+</span><span data-line="570"><span class="sd">    relationship types based on model predictions.</span>
+</span><span data-line="571">
+</span><span data-line="572"><span class="sd">    The decoder supports:</span>
+</span><span data-line="573"><span class="sd">    - Entity span extraction with confidence thresholding</span>
+</span><span data-line="574"><span class="sd">    - Relation extraction between detected entities</span>
+</span><span data-line="575"><span class="sd">    - Flexible entity and relation label mappings (per-sample or global)</span>
+</span><span data-line="576"><span class="sd">    - Optional flat NER (non-overlapping entities)</span>
+</span><span data-line="577"><span class="sd">    - Multi-label entity classification</span>
+</span><span data-line="578"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="579">
+</span><span data-line="580">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_span_tuple</span><span class="p">(</span>
+</span><span data-line="581">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="582">        <span class="n">start</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="583">        <span class="n">width</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="584">        <span class="n">class_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="585">        <span class="n">flat_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="586">        <span class="n">score</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="587">        <span class="n">id_to_class</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="588">        <span class="n">span_label_map</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="589">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">:</span>
+</span><span data-line="590"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build an entity span tuple for relation extraction.</span>
+</span><span data-line="591">
+</span><span data-line="592"><span class="sd">        Constructs a tuple representing a detected entity span with its boundaries,</span>
+</span><span data-line="593"><span class="sd">        type, and confidence score. This format is used for both entity representation</span>
+</span><span data-line="594"><span class="sd">        and as input to relation extraction.</span>
+</span><span data-line="595">
+</span><span data-line="596"><span class="sd">        Args:</span>
+</span><span data-line="597"><span class="sd">            start: Starting token position of the span (inclusive).</span>
+</span><span data-line="598"><span class="sd">            width: Width of the span in tokens (0-indexed, so actual span length is width + 1).</span>
+</span><span data-line="599"><span class="sd">            class_idx: Index of the entity class (0-indexed in the model output).</span>
+</span><span data-line="600"><span class="sd">            flat_idx: Flattened span index in the original span representation.</span>
+</span><span data-line="601"><span class="sd">                Unused in this decoder but required by the parent class interface.</span>
+</span><span data-line="602"><span class="sd">            score: Confidence score for this entity span prediction (typically 0-1).</span>
+</span><span data-line="603"><span class="sd">            id_to_class: Dictionary mapping class indices to entity type names.</span>
+</span><span data-line="604"><span class="sd">                Keys are 1-indexed (0 reserved for padding).</span>
+</span><span data-line="605"><span class="sd">            span_label_map: Mapping from span indices to allowed labels.</span>
+</span><span data-line="606"><span class="sd">                Unused in this decoder but required by the parent class interface.</span>
+</span><span data-line="607">
+</span><span data-line="608"><span class="sd">        Returns:</span>
+</span><span data-line="609"><span class="sd">            Tuple in format (start, end, entity_type, score) where:</span>
+</span><span data-line="610"><span class="sd">            - start: Starting token position (inclusive)</span>
+</span><span data-line="611"><span class="sd">            - end: Ending token position (exclusive)</span>
+</span><span data-line="612"><span class="sd">            - entity_type: String name of the entity type</span>
+</span><span data-line="613"><span class="sd">            - score: Confidence score (float)</span>
+</span><span data-line="614"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="615">        <span class="n">ent_type</span> <span class="o">=</span> <span class="n">id_to_class</span><span class="p">[</span><span class="n">class_idx</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>  <span class="c1"># +1 because 0 is &lt;pad&gt;</span>
+</span><span data-line="616">        <span class="k">return</span> <span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">start</span> <span class="o">+</span> <span class="n">width</span><span class="p">,</span> <span class="n">ent_type</span><span class="p">,</span> <span class="n">score</span><span class="p">)</span>
+</span><span data-line="617">
+</span><span data-line="618">    <span class="k">def</span><span class="w"> </span><span class="nf">_decode_relations</span><span class="p">(</span>
+</span><span data-line="619">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="620">        <span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="621">        <span class="n">spans</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]],</span>
+</span><span data-line="622">        <span class="n">rel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+</span><span data-line="623">        <span class="n">rel_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+</span><span data-line="624">        <span class="n">rel_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+</span><span data-line="625">        <span class="n">rel_id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="626">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="627">        <span class="n">batch_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="628">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]:</span>
+</span><span data-line="629"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode relations between detected entity spans.</span>
+</span><span data-line="630">
+</span><span data-line="631"><span class="sd">        Extracts relation predictions from model outputs and maps them to pairs</span>
+</span><span data-line="632"><span class="sd">        of detected entity spans. For each potential relation, checks if both</span>
+</span><span data-line="633"><span class="sd">        head and tail entities exist in the decoded spans and if the relation</span>
+</span><span data-line="634"><span class="sd">        confidence exceeds the threshold.</span>
+</span><span data-line="635">
+</span><span data-line="636"><span class="sd">        Args:</span>
+</span><span data-line="637"><span class="sd">            model_output: Model output object containing relation predictions.</span>
+</span><span data-line="638"><span class="sd">                Expected to have attributes rel_idx, rel_logits, and optionally rel_mask.</span>
+</span><span data-line="639"><span class="sd">            spans: List of entity spans for each sample in the batch.</span>
+</span><span data-line="640"><span class="sd">                Each sample contains a list of tuples: (start, end, entity_type, score).</span>
+</span><span data-line="641"><span class="sd">            rel_idx: Tensor of shape (batch_size, num_relations, 2) containing</span>
+</span><span data-line="642"><span class="sd">                indices of head and tail entities for each potential relation.</span>
+</span><span data-line="643"><span class="sd">                None if no relations to decode.</span>
+</span><span data-line="644"><span class="sd">            rel_logits: Tensor of shape (batch_size, num_relations, num_relation_classes)</span>
+</span><span data-line="645"><span class="sd">                containing logits for relation classifications. None if no relations.</span>
+</span><span data-line="646"><span class="sd">            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)</span>
+</span><span data-line="647"><span class="sd">                indicating which relations are valid (True) vs. padding (False).</span>
+</span><span data-line="648"><span class="sd">                If None, all relations are considered valid.</span>
+</span><span data-line="649"><span class="sd">            rel_id_to_classes: Mapping from relation class IDs to relation names.</span>
+</span><span data-line="650"><span class="sd">                Can be either:</span>
+</span><span data-line="651"><span class="sd">                - Dict: Single mapping used for all samples</span>
+</span><span data-line="652"><span class="sd">                - List[Dict]: Per-sample mappings for different relation schemas</span>
+</span><span data-line="653"><span class="sd">                Class IDs are 1-indexed (0 reserved for &quot;no relation&quot; or padding).</span>
+</span><span data-line="654"><span class="sd">            threshold: Minimum confidence score (after sigmoid) for a relation</span>
+</span><span data-line="655"><span class="sd">                to be included in the output. Must be in range [0, 1].</span>
+</span><span data-line="656"><span class="sd">            batch_size: Number of samples in the batch.</span>
+</span><span data-line="657">
+</span><span data-line="658"><span class="sd">        Returns:</span>
+</span><span data-line="659"><span class="sd">            List of relation lists, one per sample. Each relation is a tuple:</span>
+</span><span data-line="660"><span class="sd">            (head_idx, relation_label, tail_idx, score) where:</span>
+</span><span data-line="661"><span class="sd">            - head_idx: Index into the sample&#39;s spans list for the head entity</span>
+</span><span data-line="662"><span class="sd">            - relation_label: String name of the relation type</span>
+</span><span data-line="663"><span class="sd">            - tail_idx: Index into the sample&#39;s spans list for the tail entity</span>
+</span><span data-line="664"><span class="sd">            - score: Confidence score for this relation (float, 0-1 range)</span>
+</span><span data-line="665"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="666">        <span class="n">relations</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)]</span>
+</span><span data-line="667">
+</span><span data-line="668">        <span class="c1"># Check if relation outputs are available</span>
+</span><span data-line="669">        <span class="k">if</span> <span class="n">rel_idx</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">rel_logits</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="670">            <span class="k">return</span> <span class="n">relations</span>
+</span><span data-line="671">
+</span><span data-line="672">        <span class="c1"># Get or create relation mask</span>
+</span><span data-line="673">        <span class="k">if</span> <span class="n">rel_mask</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="674">            <span class="c1"># Create default mask (all valid)</span>
+</span><span data-line="675">            <span class="n">rel_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">rel_idx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">rel_idx</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="676">
+</span><span data-line="677">        <span class="n">rel_probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">rel_logits</span><span class="p">)</span>
+</span><span data-line="678">
+</span><span data-line="679">        <span class="c1"># Decode relations for each sample</span>
+</span><span data-line="680">        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">):</span>
+</span><span data-line="681">            <span class="n">rel_id_to_class_i</span> <span class="o">=</span> <span class="n">rel_id_to_classes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">rel_id_to_classes</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="n">rel_id_to_classes</span>
+</span><span data-line="682">
+</span><span data-line="683">            <span class="c1"># Process each potential relation</span>
+</span><span data-line="684">            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">rel_idx</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)):</span>
+</span><span data-line="685">                <span class="c1"># Skip if masked out</span>
+</span><span data-line="686">                <span class="k">if</span> <span class="ow">not</span> <span class="n">rel_mask</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]:</span>
+</span><span data-line="687">                    <span class="k">continue</span>
+</span><span data-line="688">
+</span><span data-line="689">                <span class="n">head_idx</span> <span class="o">=</span> <span class="n">rel_idx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="690">                <span class="n">tail_idx</span> <span class="o">=</span> <span class="n">rel_idx</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="691">
+</span><span data-line="692">                <span class="c1"># Skip invalid indices</span>
+</span><span data-line="693">                <span class="k">if</span> <span class="n">head_idx</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">tail_idx</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="694">                    <span class="k">continue</span>
+</span><span data-line="695">
+</span><span data-line="696">                <span class="c1"># Skip if either span was removed by greedy search</span>
+</span><span data-line="697">                <span class="k">if</span> <span class="n">head_idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="ow">or</span> <span class="n">tail_idx</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="n">spans</span><span class="p">[</span><span class="n">i</span><span class="p">]):</span>
+</span><span data-line="698">                    <span class="k">continue</span>
+</span><span data-line="699">
+</span><span data-line="700">                <span class="c1"># Check each relation class</span>
+</span><span data-line="701">                <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">rel_probs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]):</span>
+</span><span data-line="702">                    <span class="n">prob</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="703">
+</span><span data-line="704">                    <span class="c1"># Skip low confidence predictions</span>
+</span><span data-line="705">                    <span class="k">if</span> <span class="n">prob</span> <span class="o">&lt;=</span> <span class="n">threshold</span><span class="p">:</span>
+</span><span data-line="706">                        <span class="k">continue</span>
+</span><span data-line="707">
+</span><span data-line="708">                    <span class="c1"># Skip if class ID not in mapping</span>
+</span><span data-line="709">                    <span class="c1"># (c + 1 because 0 may be &quot;no-relation&quot; or padding)</span>
+</span><span data-line="710">                    <span class="k">if</span> <span class="p">(</span><span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">rel_id_to_class_i</span><span class="p">:</span>
+</span><span data-line="711">                        <span class="k">continue</span>
+</span><span data-line="712">
+</span><span data-line="713">                    <span class="n">rel_label</span> <span class="o">=</span> <span class="n">rel_id_to_class_i</span><span class="p">[</span><span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+</span><span data-line="714">
+</span><span data-line="715">                    <span class="c1"># Append relation: (head_idx, relation_label, tail_idx, score)</span>
+</span><span data-line="716">                    <span class="n">relations</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">head_idx</span><span class="p">,</span> <span class="n">rel_label</span><span class="p">,</span> <span class="n">tail_idx</span><span class="p">,</span> <span class="n">prob</span><span class="p">))</span>
+</span><span data-line="717">
+</span><span data-line="718">        <span class="k">return</span> <span class="n">relations</span>
+</span><span data-line="719">
+<div class="viewcode-block" id="SpanRelexDecoder.decode">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.SpanRelexDecoder.decode">[docs]</a>
+</span><span data-line="720">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
+</span><span data-line="721">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="722">        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="723">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="724">        <span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="725">        <span class="n">rel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="726">        <span class="n">rel_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="727">        <span class="n">rel_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="728">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="729">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="730">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="731">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="732">        <span class="n">rel_id_to_classes</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="733">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="734">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]]:</span>
+</span><span data-line="735"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode model output to extract entities and relations.</span>
+</span><span data-line="736">
+</span><span data-line="737"><span class="sd">        Main decoding method that extracts both entity spans and relations from</span>
+</span><span data-line="738"><span class="sd">        model outputs. First decodes entity spans using the parent class logic,</span>
+</span><span data-line="739"><span class="sd">        then decodes relations between the detected entities.</span>
+</span><span data-line="740">
+</span><span data-line="741"><span class="sd">        Args:</span>
+</span><span data-line="742"><span class="sd">            tokens: Tokenized input text for each sample in the batch.</span>
+</span><span data-line="743"><span class="sd">                Each sample is a list of token strings.</span>
+</span><span data-line="744"><span class="sd">            id_to_classes: Mapping from entity class IDs to entity type names.</span>
+</span><span data-line="745"><span class="sd">                Can be either:</span>
+</span><span data-line="746"><span class="sd">                - Dict: Single mapping used for all samples (global entity schema)</span>
+</span><span data-line="747"><span class="sd">                - List[Dict]: Per-sample mappings for different entity schemas</span>
+</span><span data-line="748"><span class="sd">                Class IDs are 1-indexed (0 is reserved for padding).</span>
+</span><span data-line="749"><span class="sd">            model_output: Model output object containing both entity logits and</span>
+</span><span data-line="750"><span class="sd">                optionally relation predictions. Must have a logits attribute for</span>
+</span><span data-line="751"><span class="sd">                entity extraction. May have rel_idx, rel_logits, and rel_mask for</span>
+</span><span data-line="752"><span class="sd">                relation extraction.</span>
+</span><span data-line="753"><span class="sd">            rel_idx: Optional tensor of shape (batch_size, num_relations, 2) containing</span>
+</span><span data-line="754"><span class="sd">                head and tail entity indices for each potential relation.</span>
+</span><span data-line="755"><span class="sd">            rel_logits: Optional tensor of shape (batch_size, num_relations, num_relation_classes)</span>
+</span><span data-line="756"><span class="sd">                containing relation classification logits.</span>
+</span><span data-line="757"><span class="sd">            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)</span>
+</span><span data-line="758"><span class="sd">                indicating valid relations. If None, all relations are considered valid.</span>
+</span><span data-line="759"><span class="sd">            flat_ner: If True, applies greedy filtering to ensure non-overlapping</span>
+</span><span data-line="760"><span class="sd">                entity spans. If False, allows overlapping entities. Defaults to False.</span>
+</span><span data-line="761"><span class="sd">            threshold: Minimum confidence score (0-1) for both entity</span>
+</span><span data-line="762"><span class="sd">                predictions to be included in the output. Defaults to 0.5.</span>
+</span><span data-line="763"><span class="sd">            relation_threshold: Minimum confidence score (0-1) for both relation</span>
+</span><span data-line="764"><span class="sd">                predictions to be included in the output. Defaults to 0.5.</span>
+</span><span data-line="765"><span class="sd">            multi_label: If True, allows multiple entity types per span. If False,</span>
+</span><span data-line="766"><span class="sd">                only the highest-scoring entity type per span is kept. Defaults to False.</span>
+</span><span data-line="767"><span class="sd">            rel_id_to_classes: Optional mapping from relation class IDs to relation names.</span>
+</span><span data-line="768"><span class="sd">                If None, relation decoding is skipped and empty relation lists are returned.</span>
+</span><span data-line="769"><span class="sd">                Can be either a single Dict or List[Dict] for per-sample mappings.</span>
+</span><span data-line="770"><span class="sd">                Class IDs are 1-indexed.</span>
+</span><span data-line="771"><span class="sd">            **kwargs: Additional keyword arguments passed to the parent class decode method.</span>
+</span><span data-line="772">
+</span><span data-line="773"><span class="sd">        Returns:</span>
+</span><span data-line="774"><span class="sd">            Tuple of (spans, relations) where:</span>
+</span><span data-line="775"><span class="sd">            - spans: List of entity span lists, one per sample. Each entity span is</span>
+</span><span data-line="776"><span class="sd">              a tuple: (start, end, entity_type, score)</span>
+</span><span data-line="777"><span class="sd">            - relations: List of relation lists, one per sample. Each relation is</span>
+</span><span data-line="778"><span class="sd">              a tuple: (head_idx, relation_label, tail_idx, score) where head_idx</span>
+</span><span data-line="779"><span class="sd">              and tail_idx are indices into the corresponding sample&#39;s spans list.</span>
+</span><span data-line="780">
+</span><span data-line="781"><span class="sd">        Examples:</span>
+</span><span data-line="782"><span class="sd">            &gt;&gt;&gt; decoder = SpanRelexDecoder()</span>
+</span><span data-line="783"><span class="sd">            &gt;&gt;&gt; tokens = [[&quot;John&quot;, &quot;works&quot;, &quot;at&quot;, &quot;Microsoft&quot;]]</span>
+</span><span data-line="784"><span class="sd">            &gt;&gt;&gt; id_to_classes = {1: &quot;PERSON&quot;, 2: &quot;ORG&quot;}</span>
+</span><span data-line="785"><span class="sd">            &gt;&gt;&gt; rel_id_to_classes = {1: &quot;works_at&quot;}</span>
+</span><span data-line="786"><span class="sd">            &gt;&gt;&gt; spans, relations = decoder.decode(</span>
+</span><span data-line="787"><span class="sd">            ...     tokens=tokens,</span>
+</span><span data-line="788"><span class="sd">            ...     id_to_classes=id_to_classes,</span>
+</span><span data-line="789"><span class="sd">            ...     model_output=output,</span>
+</span><span data-line="790"><span class="sd">            ...     rel_id_to_classes=rel_id_to_classes,</span>
+</span><span data-line="791"><span class="sd">            ...     threshold=0.5,</span>
+</span><span data-line="792"><span class="sd">            ... )</span>
+</span><span data-line="793"><span class="sd">            &gt;&gt;&gt; # spans[0] might be: [(0, 1, &quot;PERSON&quot;, 0.9), (3, 4, &quot;ORG&quot;, 0.85)]</span>
+</span><span data-line="794"><span class="sd">            &gt;&gt;&gt; # relations[0] might be: [(0, &quot;works_at&quot;, 1, 0.8)]</span>
+</span><span data-line="795"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="796">        <span class="c1"># Decode entity spans using base class logic</span>
+</span><span data-line="797">        <span class="n">spans</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+</span><span data-line="798">            <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="799">            <span class="n">id_to_classes</span><span class="o">=</span><span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="800">            <span class="n">model_output</span><span class="o">=</span><span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="801">            <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="802">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="803">            <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="804">            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="805">        <span class="p">)</span>
+</span><span data-line="806">
+</span><span data-line="807">        <span class="c1"># Decode relations if requested</span>
+</span><span data-line="808">        <span class="n">relations</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">))]</span>  <span class="c1"># Default: empty lists</span>
+</span><span data-line="809">
+</span><span data-line="810">        <span class="k">if</span> <span class="n">rel_id_to_classes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="811">            <span class="n">relations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_decode_relations</span><span class="p">(</span>
+</span><span data-line="812">                <span class="n">model_output</span><span class="o">=</span><span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="813">                <span class="n">rel_idx</span><span class="o">=</span><span class="n">rel_idx</span><span class="p">,</span>
+</span><span data-line="814">                <span class="n">rel_logits</span><span class="o">=</span><span class="n">rel_logits</span><span class="p">,</span>
+</span><span data-line="815">                <span class="n">rel_mask</span><span class="o">=</span><span class="n">rel_mask</span><span class="p">,</span>
+</span><span data-line="816">                <span class="n">spans</span><span class="o">=</span><span class="n">spans</span><span class="p">,</span>
+</span><span data-line="817">                <span class="n">rel_id_to_classes</span><span class="o">=</span><span class="n">rel_id_to_classes</span><span class="p">,</span>
+</span><span data-line="818">                <span class="n">threshold</span><span class="o">=</span><span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="819">                <span class="n">batch_size</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">),</span>
+</span><span data-line="820">            <span class="p">)</span>
+</span><span data-line="821">
+</span><span data-line="822">        <span class="k">return</span> <span class="n">spans</span><span class="p">,</span> <span class="n">relations</span></div>
+</div>
+
+</span><span data-line="823">
+</span><span data-line="824">
+<div class="viewcode-block" id="TokenDecoder">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.TokenDecoder">[docs]</a>
+</span><span data-line="825"><span class="k">class</span><span class="w"> </span><span class="nc">TokenDecoder</span><span class="p">(</span><span class="n">BaseDecoder</span><span class="p">):</span>
+</span><span data-line="826"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="827"><span class="sd">    Token-based decoder for sequence labeling tasks.</span>
+</span><span data-line="828">
+</span><span data-line="829"><span class="sd">    Uses BIO-style tagging with separate start, end, and inside predictions</span>
+</span><span data-line="830"><span class="sd">    to identify entity spans.</span>
+</span><span data-line="831"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="832">
+</span><span data-line="833">    <span class="k">def</span><span class="w"> </span><span class="nf">_get_indices_above_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+</span><span data-line="834"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="835"><span class="sd">        Get indices where scores exceed threshold.</span>
+</span><span data-line="836">
+</span><span data-line="837"><span class="sd">        Args:</span>
+</span><span data-line="838"><span class="sd">            scores (torch.Tensor): Score tensor for one sample.</span>
+</span><span data-line="839"><span class="sd">            threshold (float): Confidence threshold.</span>
+</span><span data-line="840">
+</span><span data-line="841"><span class="sd">        Returns:</span>
+</span><span data-line="842"><span class="sd">            List[torch.Tensor]: List of tensors containing indices above threshold.</span>
+</span><span data-line="843"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="844">        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</span><span data-line="845">        <span class="k">return</span> <span class="p">[</span><span class="n">k</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">scores</span> <span class="o">&gt;</span> <span class="n">threshold</span><span class="p">)]</span>
+</span><span data-line="846">
+</span><span data-line="847">    <span class="k">def</span><span class="w"> </span><span class="nf">_calculate_span_score</span><span class="p">(</span>
+</span><span data-line="848">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="849">        <span class="n">start_idx</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+</span><span data-line="850">        <span class="n">end_idx</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">,</span>
+</span><span data-line="851">        <span class="n">scores_inside_i</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="852">        <span class="n">start_i</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="853">        <span class="n">end_i</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="854">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+</span><span data-line="855">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="856">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]:</span>
+</span><span data-line="857"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="858"><span class="sd">        Calculate spans and their scores from start/end/inside predictions.</span>
+</span><span data-line="859">
+</span><span data-line="860"><span class="sd">        Matches start and end positions of the same class, validates inside scores,</span>
+</span><span data-line="861"><span class="sd">        and computes final span scores.</span>
+</span><span data-line="862">
+</span><span data-line="863"><span class="sd">        Args:</span>
+</span><span data-line="864"><span class="sd">            start_idx (tuple): Tuple of (positions, classes) for start predictions.</span>
+</span><span data-line="865"><span class="sd">            end_idx (tuple): Tuple of (positions, classes) for end predictions.</span>
+</span><span data-line="866"><span class="sd">            scores_inside_i (torch.Tensor): Inside scores for this sample.</span>
+</span><span data-line="867"><span class="sd">            start_i (torch.Tensor): Start scores for this sample.</span>
+</span><span data-line="868"><span class="sd">            end_i (torch.Tensor): End scores for this sample.</span>
+</span><span data-line="869"><span class="sd">            id_to_classes (Dict[int, str]): Mapping from class IDs to class names.</span>
+</span><span data-line="870"><span class="sd">            threshold (float): Confidence threshold.</span>
+</span><span data-line="871">
+</span><span data-line="872"><span class="sd">        Returns:</span>
+</span><span data-line="873"><span class="sd">            List[tuple]: List of span tuples (start, end, entity_type, score).</span>
+</span><span data-line="874"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="875">        <span class="n">span_i</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="876">        <span class="k">for</span> <span class="n">st</span><span class="p">,</span> <span class="n">cls_st</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">start_idx</span><span class="p">):</span>
+</span><span data-line="877">            <span class="k">for</span> <span class="n">ed</span><span class="p">,</span> <span class="n">cls_ed</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">end_idx</span><span class="p">):</span>
+</span><span data-line="878">                <span class="k">if</span> <span class="n">ed</span> <span class="o">&gt;=</span> <span class="n">st</span> <span class="ow">and</span> <span class="n">cls_st</span> <span class="o">==</span> <span class="n">cls_ed</span><span class="p">:</span>
+</span><span data-line="879">                    <span class="n">ins</span> <span class="o">=</span> <span class="n">scores_inside_i</span><span class="p">[</span><span class="n">st</span> <span class="p">:</span> <span class="n">ed</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cls_st</span><span class="p">]</span>
+</span><span data-line="880">                    <span class="k">if</span> <span class="p">(</span><span class="n">ins</span> <span class="o">&lt;</span> <span class="n">threshold</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+</span><span data-line="881">                        <span class="k">continue</span>
+</span><span data-line="882">                    <span class="c1"># Get the start and end scores for this span</span>
+</span><span data-line="883">                    <span class="n">start_score</span> <span class="o">=</span> <span class="n">start_i</span><span class="p">[</span><span class="n">st</span><span class="p">,</span> <span class="n">cls_st</span><span class="p">]</span>
+</span><span data-line="884">                    <span class="n">end_score</span> <span class="o">=</span> <span class="n">end_i</span><span class="p">[</span><span class="n">ed</span><span class="p">,</span> <span class="n">cls_ed</span><span class="p">]</span>
+</span><span data-line="885">                    <span class="c1"># Concatenate the inside scores with start and end scores</span>
+</span><span data-line="886">                    <span class="n">combined</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">ins</span><span class="p">,</span> <span class="n">start_score</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="n">end_score</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)])</span>
+</span><span data-line="887">                    <span class="c1"># The span score is the minimum value among these scores</span>
+</span><span data-line="888">                    <span class="n">spn_score</span> <span class="o">=</span> <span class="n">combined</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="889">                    <span class="n">span_i</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">st</span><span class="p">,</span> <span class="n">ed</span><span class="p">,</span> <span class="n">id_to_classes</span><span class="p">[</span><span class="n">cls_st</span> <span class="o">+</span> <span class="mi">1</span><span class="p">],</span> <span class="n">spn_score</span><span class="p">))</span>
+</span><span data-line="890">        <span class="k">return</span> <span class="n">span_i</span>
+</span><span data-line="891">
+<div class="viewcode-block" id="TokenDecoder.decode">
+<a class="viewcode-back" href="../../../api/gliner.decoding.decoder.html#gliner.decoding.decoder.TokenDecoder.decode">[docs]</a>
+</span><span data-line="892">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
+</span><span data-line="893">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="894">        <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="895">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="896">        <span class="n">model_output</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="897">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="898">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="899">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="900">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="901">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">tuple</span><span class="p">]]:</span>
+</span><span data-line="902"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="903"><span class="sd">        Decode token-level predictions to extract spans.</span>
+</span><span data-line="904">
+</span><span data-line="905"><span class="sd">        Args:</span>
+</span><span data-line="906"><span class="sd">            tokens (List[List[str]]): Tokenized input text for each sample in the batch.</span>
+</span><span data-line="907"><span class="sd">            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from</span>
+</span><span data-line="908"><span class="sd">                class IDs to class names.</span>
+</span><span data-line="909"><span class="sd">            model_output (torch.Tensor): Raw logits from the model with shape ( B, L, C, 3),</span>
+</span><span data-line="910"><span class="sd">                where the first dimension represents [start, end, inside] predictions.</span>
+</span><span data-line="911"><span class="sd">            flat_ner (bool): Whether to enforce non-overlapping spans.</span>
+</span><span data-line="912"><span class="sd">            threshold (float): Confidence threshold for predictions.</span>
+</span><span data-line="913"><span class="sd">            multi_label (bool): Whether to allow multiple labels per span.</span>
+</span><span data-line="914"><span class="sd">            **kwargs: Additional keyword arguments (unused).</span>
+</span><span data-line="915">
+</span><span data-line="916"><span class="sd">        Returns:</span>
+</span><span data-line="917"><span class="sd">            List[List[tuple]]: For each sample, list of span tuples in format</span>
+</span><span data-line="918"><span class="sd">                (start, end, entity_type, None, score).</span>
+</span><span data-line="919"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="920">        <span class="n">model_output</span> <span class="o">=</span> <span class="n">model_output</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+</span><span data-line="921">        <span class="n">scores_start</span><span class="p">,</span> <span class="n">scores_end</span><span class="p">,</span> <span class="n">scores_inside</span> <span class="o">=</span> <span class="n">model_output</span>
+</span><span data-line="922">        <span class="n">spans</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="923">
+</span><span data-line="924">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+</span><span data-line="925">            <span class="n">id_to_class_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_id_to_class_for_sample</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+</span><span data-line="926">            <span class="n">span_scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_calculate_span_score</span><span class="p">(</span>
+</span><span data-line="927">                <span class="bp">self</span><span class="o">.</span><span class="n">_get_indices_above_threshold</span><span class="p">(</span><span class="n">scores_start</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">threshold</span><span class="p">),</span>
+</span><span data-line="928">                <span class="bp">self</span><span class="o">.</span><span class="n">_get_indices_above_threshold</span><span class="p">(</span><span class="n">scores_end</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">threshold</span><span class="p">),</span>
+</span><span data-line="929">                <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">scores_inside</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+</span><span data-line="930">                <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">scores_start</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+</span><span data-line="931">                <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">scores_end</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span>
+</span><span data-line="932">                <span class="n">id_to_class_i</span><span class="p">,</span>
+</span><span data-line="933">                <span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="934">            <span class="p">)</span>
+</span><span data-line="935">            <span class="n">span_i</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">greedy_search</span><span class="p">(</span><span class="n">span_scores</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">)</span>
+</span><span data-line="936">            <span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">span_i</span><span class="p">)</span>
+</span><span data-line="937">
+</span><span data-line="938">        <span class="k">return</span> <span class="n">spans</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

@@ -1,0 +1,16 @@
+gliner.modeling.multitask package
+=================================
+
+.. automodule:: gliner.modeling.multitask
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.modeling.multitask.relations_layers
+   gliner.modeling.multitask.triples_layers

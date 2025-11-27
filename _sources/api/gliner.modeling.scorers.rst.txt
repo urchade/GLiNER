@@ -1,0 +1,7 @@
+gliner.modeling.scorers module
+==============================
+
+.. automodule:: gliner.modeling.scorers
+   :members:
+   :undoc-members:
+   :show-inheritance:

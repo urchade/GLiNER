@@ -1,0 +1,7 @@
+gliner.config module
+====================
+
+.. automodule:: gliner.config
+   :members:
+   :undoc-members:
+   :show-inheritance:

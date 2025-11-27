@@ -1,0 +1,32 @@
+gliner package
+==============
+
+.. automodule:: gliner
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.data_processing
+   gliner.decoding
+   gliner.evaluation
+   gliner.modeling
+   gliner.multitask
+   gliner.onnx
+   gliner.training
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.config
+   gliner.infer_packing
+   gliner.model
+   gliner.utils

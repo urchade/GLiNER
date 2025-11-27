@@ -1,0 +1,7 @@
+gliner.modeling.multitask.triples\_layers module
+================================================
+
+.. automodule:: gliner.modeling.multitask.triples_layers
+   :members:
+   :undoc-members:
+   :show-inheritance:

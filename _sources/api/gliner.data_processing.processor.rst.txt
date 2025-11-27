@@ -1,0 +1,7 @@
+gliner.data\_processing.processor module
+========================================
+
+.. automodule:: gliner.data_processing.processor
+   :members:
+   :undoc-members:
+   :show-inheritance:

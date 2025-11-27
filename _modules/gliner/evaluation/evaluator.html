@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.evaluation.evaluator - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.evaluation.evaluator"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.evaluation.evaluator</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.evaluation.evaluator</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+</span><span data-line="4"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">_prf_divide</span><span class="p">,</span> <span class="n">flatten_for_eval</span><span class="p">,</span> <span class="n">extract_tp_actual_correct</span>
+</span><span data-line="7">
+</span><span data-line="8">
+<div class="viewcode-block" id="BaseEvaluator">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator">[docs]</a>
+</span><span data-line="9"><span class="k">class</span><span class="w"> </span><span class="nc">BaseEvaluator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+</span><span data-line="10"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract base class for evaluation of NER and relation extraction tasks.</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="sd">    Provides common functionality for computing precision, recall, and F1 scores</span>
+</span><span data-line="13"><span class="sd">    from ground truth and predicted annotations. Subclasses must implement</span>
+</span><span data-line="14"><span class="sd">    transform_data() to convert task-specific data formats.</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="sd">    Attributes:</span>
+</span><span data-line="17"><span class="sd">        all_true: List of ground truth annotations for all samples.</span>
+</span><span data-line="18"><span class="sd">        all_outs: List of predicted annotations for all samples.</span>
+</span><span data-line="19"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="20">
+<div class="viewcode-block" id="BaseEvaluator.__init__">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.__init__">[docs]</a>
+</span><span data-line="21">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">all_true</span><span class="p">,</span> <span class="n">all_outs</span><span class="p">):</span>
+</span><span data-line="22"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the evaluator with ground truth and predictions.</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="sd">        Args:</span>
+</span><span data-line="25"><span class="sd">            all_true: List of ground truth annotations for all samples.</span>
+</span><span data-line="26"><span class="sd">                Format depends on the specific evaluator subclass.</span>
+</span><span data-line="27"><span class="sd">            all_outs: List of predicted annotations for all samples.</span>
+</span><span data-line="28"><span class="sd">                Format depends on the specific evaluator subclass.</span>
+</span><span data-line="29"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="30">        <span class="bp">self</span><span class="o">.</span><span class="n">all_true</span> <span class="o">=</span> <span class="n">all_true</span>
+</span><span data-line="31">        <span class="bp">self</span><span class="o">.</span><span class="n">all_outs</span> <span class="o">=</span> <span class="n">all_outs</span></div>
+
+</span><span data-line="32">
+<div class="viewcode-block" id="BaseEvaluator.compute_prf">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.compute_prf">[docs]</a>
+</span><span data-line="33">    <span class="nd">@staticmethod</span>
+</span><span data-line="34">    <span class="k">def</span><span class="w"> </span><span class="nf">compute_prf</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">,</span> <span class="n">average</span><span class="o">=</span><span class="s2">&quot;micro&quot;</span><span class="p">):</span>
+</span><span data-line="35"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute precision, recall, and F1 score.</span>
+</span><span data-line="36">
+</span><span data-line="37"><span class="sd">        Calculates evaluation metrics by comparing true and predicted annotations.</span>
+</span><span data-line="38"><span class="sd">        Supports both micro-averaging (aggregate all predictions) and macro-averaging</span>
+</span><span data-line="39"><span class="sd">        (average per-class metrics).</span>
+</span><span data-line="40">
+</span><span data-line="41"><span class="sd">        Args:</span>
+</span><span data-line="42"><span class="sd">            y_true: List of ground truth annotations in flattened format.</span>
+</span><span data-line="43"><span class="sd">                Each annotation is [label, span] where span is tuple of positions.</span>
+</span><span data-line="44"><span class="sd">            y_pred: List of predicted annotations in flattened format.</span>
+</span><span data-line="45"><span class="sd">                Each annotation is [label, span] where span is tuple of positions.</span>
+</span><span data-line="46"><span class="sd">            average: Averaging strategy. Defaults to &quot;micro&quot;.</span>
+</span><span data-line="47"><span class="sd">                - &quot;micro&quot;: Aggregate TP, FP, FN across all classes</span>
+</span><span data-line="48"><span class="sd">                - Other values: Per-class metrics (requires additional logic)</span>
+</span><span data-line="49">
+</span><span data-line="50"><span class="sd">        Returns:</span>
+</span><span data-line="51"><span class="sd">            Dictionary containing:</span>
+</span><span data-line="52"><span class="sd">            - &#39;precision&#39;: Precision score (float between 0 and 1)</span>
+</span><span data-line="53"><span class="sd">            - &#39;recall&#39;: Recall score (float between 0 and 1)</span>
+</span><span data-line="54"><span class="sd">            - &#39;f_score&#39;: F1 score (float between 0 and 1)</span>
+</span><span data-line="55">
+</span><span data-line="56"><span class="sd">        Note:</span>
+</span><span data-line="57"><span class="sd">            The function handles division by zero with warnings through the</span>
+</span><span data-line="58"><span class="sd">            _prf_divide utility function.</span>
+</span><span data-line="59"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="60">        <span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span> <span class="o">=</span> <span class="n">flatten_for_eval</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+</span><span data-line="61">        <span class="n">pred_sum</span><span class="p">,</span> <span class="n">tp_sum</span><span class="p">,</span> <span class="n">true_sum</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">extract_tp_actual_correct</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">)</span>
+</span><span data-line="62">
+</span><span data-line="63">        <span class="k">if</span> <span class="n">average</span> <span class="o">==</span> <span class="s2">&quot;micro&quot;</span><span class="p">:</span>
+</span><span data-line="64">            <span class="n">tp_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">tp_sum</span><span class="o">.</span><span class="n">sum</span><span class="p">()])</span>
+</span><span data-line="65">            <span class="n">pred_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pred_sum</span><span class="o">.</span><span class="n">sum</span><span class="p">()])</span>
+</span><span data-line="66">            <span class="n">true_sum</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">true_sum</span><span class="o">.</span><span class="n">sum</span><span class="p">()])</span>
+</span><span data-line="67">
+</span><span data-line="68">        <span class="n">precision</span> <span class="o">=</span> <span class="n">_prf_divide</span><span class="p">(</span>
+</span><span data-line="69">            <span class="n">numerator</span><span class="o">=</span><span class="n">tp_sum</span><span class="p">,</span>
+</span><span data-line="70">            <span class="n">denominator</span><span class="o">=</span><span class="n">pred_sum</span><span class="p">,</span>
+</span><span data-line="71">            <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span>
+</span><span data-line="72">            <span class="n">modifier</span><span class="o">=</span><span class="s2">&quot;predicted&quot;</span><span class="p">,</span>
+</span><span data-line="73">            <span class="n">average</span><span class="o">=</span><span class="n">average</span><span class="p">,</span>
+</span><span data-line="74">            <span class="n">warn_for</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="s2">&quot;recall&quot;</span><span class="p">,</span> <span class="s2">&quot;f-score&quot;</span><span class="p">],</span>
+</span><span data-line="75">            <span class="n">zero_division</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+</span><span data-line="76">        <span class="p">)</span>
+</span><span data-line="77">        <span class="n">recall</span> <span class="o">=</span> <span class="n">_prf_divide</span><span class="p">(</span>
+</span><span data-line="78">            <span class="n">numerator</span><span class="o">=</span><span class="n">tp_sum</span><span class="p">,</span>
+</span><span data-line="79">            <span class="n">denominator</span><span class="o">=</span><span class="n">true_sum</span><span class="p">,</span>
+</span><span data-line="80">            <span class="n">metric</span><span class="o">=</span><span class="s2">&quot;recall&quot;</span><span class="p">,</span>
+</span><span data-line="81">            <span class="n">modifier</span><span class="o">=</span><span class="s2">&quot;true&quot;</span><span class="p">,</span>
+</span><span data-line="82">            <span class="n">average</span><span class="o">=</span><span class="n">average</span><span class="p">,</span>
+</span><span data-line="83">            <span class="n">warn_for</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;precision&quot;</span><span class="p">,</span> <span class="s2">&quot;recall&quot;</span><span class="p">,</span> <span class="s2">&quot;f-score&quot;</span><span class="p">],</span>
+</span><span data-line="84">            <span class="n">zero_division</span><span class="o">=</span><span class="s2">&quot;warn&quot;</span><span class="p">,</span>
+</span><span data-line="85">        <span class="p">)</span>
+</span><span data-line="86">
+</span><span data-line="87">        <span class="n">denominator</span> <span class="o">=</span> <span class="n">precision</span> <span class="o">+</span> <span class="n">recall</span>
+</span><span data-line="88">        <span class="n">denominator</span><span class="p">[</span><span class="n">denominator</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="89">        <span class="n">f_score</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="n">precision</span> <span class="o">*</span> <span class="n">recall</span><span class="p">)</span> <span class="o">/</span> <span class="n">denominator</span>
+</span><span data-line="90">
+</span><span data-line="91">        <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;precision&quot;</span><span class="p">:</span> <span class="n">precision</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;recall&quot;</span><span class="p">:</span> <span class="n">recall</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="s2">&quot;f_score&quot;</span><span class="p">:</span> <span class="n">f_score</span><span class="p">[</span><span class="mi">0</span><span class="p">]}</span></div>
+
+</span><span data-line="92">
+<div class="viewcode-block" id="BaseEvaluator.transform_data">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.transform_data">[docs]</a>
+</span><span data-line="93">    <span class="nd">@abstractmethod</span>
+</span><span data-line="94">    <span class="k">def</span><span class="w"> </span><span class="nf">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="95"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform task-specific data into evaluation format.</span>
+</span><span data-line="96">
+</span><span data-line="97"><span class="sd">        Abstract method that must be implemented by subclasses to convert</span>
+</span><span data-line="98"><span class="sd">        their specific annotation formats into the standard format expected</span>
+</span><span data-line="99"><span class="sd">        by compute_prf().</span>
+</span><span data-line="100">
+</span><span data-line="101"><span class="sd">        Returns:</span>
+</span><span data-line="102"><span class="sd">            Tuple of (transformed_true, transformed_pred) where each is a list</span>
+</span><span data-line="103"><span class="sd">            of annotations in the format: [label, span_tuple]</span>
+</span><span data-line="104">
+</span><span data-line="105"><span class="sd">        Raises:</span>
+</span><span data-line="106"><span class="sd">            NotImplementedError: If called on the base class directly.</span>
+</span><span data-line="107"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="108">        <span class="k">pass</span></div>
+
+</span><span data-line="109">
+<div class="viewcode-block" id="BaseEvaluator.evaluate">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.evaluate">[docs]</a>
+</span><span data-line="110">    <span class="nd">@torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">()</span>
+</span><span data-line="111">    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="112"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate predictions against ground truth.</span>
+</span><span data-line="113">
+</span><span data-line="114"><span class="sd">        Transforms data using transform_data() and computes precision, recall,</span>
+</span><span data-line="115"><span class="sd">        and F1 score using micro-averaging.</span>
+</span><span data-line="116">
+</span><span data-line="117"><span class="sd">        Returns:</span>
+</span><span data-line="118"><span class="sd">            Tuple of (output_str, f1) where:</span>
+</span><span data-line="119"><span class="sd">            - output_str: Formatted string with P, R, F1 percentages</span>
+</span><span data-line="120"><span class="sd">            - f1: F1 score as a float</span>
+</span><span data-line="121">
+</span><span data-line="122"><span class="sd">        Note:</span>
+</span><span data-line="123"><span class="sd">            This method disables gradient computation with @torch.no_grad()</span>
+</span><span data-line="124"><span class="sd">            for efficiency during evaluation.</span>
+</span><span data-line="125"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="126">        <span class="n">all_true_typed</span><span class="p">,</span> <span class="n">all_outs_typed</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform_data</span><span class="p">()</span>
+</span><span data-line="127">        <span class="n">precision</span><span class="p">,</span> <span class="n">recall</span><span class="p">,</span> <span class="n">f1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_prf</span><span class="p">(</span><span class="n">all_true_typed</span><span class="p">,</span> <span class="n">all_outs_typed</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">()</span>
+</span><span data-line="128">        <span class="n">output_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;P: </span><span class="si">{</span><span class="n">precision</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="se">\t</span><span class="s2">R: </span><span class="si">{</span><span class="n">recall</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="se">\t</span><span class="s2">F1: </span><span class="si">{</span><span class="n">f1</span><span class="si">:</span><span class="s2">.2%</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+</span><span data-line="129">        <span class="k">return</span> <span class="n">output_str</span><span class="p">,</span> <span class="n">f1</span></div>
+</div>
+
+</span><span data-line="130">
+</span><span data-line="131">
+<div class="viewcode-block" id="BaseNEREvaluator">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseNEREvaluator">[docs]</a>
+</span><span data-line="132"><span class="k">class</span><span class="w"> </span><span class="nc">BaseNEREvaluator</span><span class="p">(</span><span class="n">BaseEvaluator</span><span class="p">):</span>
+</span><span data-line="133"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluator for Named Entity Recognition tasks.</span>
+</span><span data-line="134">
+</span><span data-line="135"><span class="sd">    Evaluates NER predictions by comparing predicted entity spans and types</span>
+</span><span data-line="136"><span class="sd">    against ground truth annotations. An entity is considered correct only</span>
+</span><span data-line="137"><span class="sd">    if both the span boundaries and entity type match exactly.</span>
+</span><span data-line="138"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="139">
+<div class="viewcode-block" id="BaseNEREvaluator.get_ground_truth">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseNEREvaluator.get_ground_truth">[docs]</a>
+</span><span data-line="140">    <span class="k">def</span><span class="w"> </span><span class="nf">get_ground_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">):</span>
+</span><span data-line="141"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract ground truth entities in evaluation format.</span>
+</span><span data-line="142">
+</span><span data-line="143"><span class="sd">        Args:</span>
+</span><span data-line="144"><span class="sd">            ents: List of ground truth entity tuples in format (start, end, label)</span>
+</span><span data-line="145"><span class="sd">                where start and end are word-level indices.</span>
+</span><span data-line="146">
+</span><span data-line="147"><span class="sd">        Returns:</span>
+</span><span data-line="148"><span class="sd">            List of entities in format [[label, (start, end)], ...] suitable</span>
+</span><span data-line="149"><span class="sd">            for evaluation.</span>
+</span><span data-line="150"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="151">        <span class="n">all_ents</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="152">        <span class="k">for</span> <span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">ents</span><span class="p">:</span>
+</span><span data-line="153">            <span class="n">all_ents</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">e</span><span class="p">)])</span>
+</span><span data-line="154">        <span class="k">return</span> <span class="n">all_ents</span></div>
+
+</span><span data-line="155">
+<div class="viewcode-block" id="BaseNEREvaluator.get_predictions">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseNEREvaluator.get_predictions">[docs]</a>
+</span><span data-line="156">    <span class="k">def</span><span class="w"> </span><span class="nf">get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">):</span>
+</span><span data-line="157"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract predicted entities in evaluation format.</span>
+</span><span data-line="158">
+</span><span data-line="159"><span class="sd">        Args:</span>
+</span><span data-line="160"><span class="sd">            ents: List of predicted entity tuples in format (start, end, label)</span>
+</span><span data-line="161"><span class="sd">                where start and end are word-level indices.</span>
+</span><span data-line="162">
+</span><span data-line="163"><span class="sd">        Returns:</span>
+</span><span data-line="164"><span class="sd">            List of entities in format [[label, (start, end)], ...] suitable</span>
+</span><span data-line="165"><span class="sd">            for evaluation.</span>
+</span><span data-line="166"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="167">        <span class="n">all_ents</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="168">        <span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">ents</span><span class="p">:</span>
+</span><span data-line="169">            <span class="n">all_ents</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">ent</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">(</span><span class="n">ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+</span><span data-line="170">        <span class="k">return</span> <span class="n">all_ents</span></div>
+
+</span><span data-line="171">
+<div class="viewcode-block" id="BaseNEREvaluator.transform_data">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseNEREvaluator.transform_data">[docs]</a>
+</span><span data-line="172">    <span class="k">def</span><span class="w"> </span><span class="nf">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="173"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform NER data into evaluation format.</span>
+</span><span data-line="174">
+</span><span data-line="175"><span class="sd">        Converts both ground truth and predicted entities from their original</span>
+</span><span data-line="176"><span class="sd">        format into the standardized format required by compute_prf().</span>
+</span><span data-line="177">
+</span><span data-line="178"><span class="sd">        Returns:</span>
+</span><span data-line="179"><span class="sd">            Tuple of (all_true_ent, all_outs_ent) where:</span>
+</span><span data-line="180"><span class="sd">            - all_true_ent: List of ground truth entity lists, one per sample</span>
+</span><span data-line="181"><span class="sd">            - all_outs_ent: List of predicted entity lists, one per sample</span>
+</span><span data-line="182"><span class="sd">            Each entity is in format [label, (start, end)]</span>
+</span><span data-line="183"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="184">        <span class="n">all_true_ent</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="185">        <span class="n">all_outs_ent</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="186">        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_outs</span><span class="p">):</span>
+</span><span data-line="187">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ground_truth</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+</span><span data-line="188">            <span class="n">all_true_ent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="189">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_predictions</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+</span><span data-line="190">            <span class="n">all_outs_ent</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="191">        <span class="k">return</span> <span class="n">all_true_ent</span><span class="p">,</span> <span class="n">all_outs_ent</span></div>
+</div>
+
+</span><span data-line="192">
+</span><span data-line="193">
+<div class="viewcode-block" id="BaseRelexEvaluator">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator">[docs]</a>
+</span><span data-line="194"><span class="k">class</span><span class="w"> </span><span class="nc">BaseRelexEvaluator</span><span class="p">(</span><span class="n">BaseEvaluator</span><span class="p">):</span>
+</span><span data-line="195"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluator for Relation Extraction tasks.</span>
+</span><span data-line="196">
+</span><span data-line="197"><span class="sd">    Evaluates relation extraction predictions by comparing predicted relations</span>
+</span><span data-line="198"><span class="sd">    (head entity, tail entity, relation type) against ground truth. A relation</span>
+</span><span data-line="199"><span class="sd">    is considered correct only if both entity spans and the relation type match</span>
+</span><span data-line="200"><span class="sd">    exactly.</span>
+</span><span data-line="201">
+</span><span data-line="202"><span class="sd">    Note:</span>
+</span><span data-line="203"><span class="sd">        The input format expects entity indices rather than entity spans directly.</span>
+</span><span data-line="204"><span class="sd">        Entity spans are looked up from the entity list using these indices.</span>
+</span><span data-line="205"><span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="BaseRelexEvaluator.get_ground_truth">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.get_ground_truth">[docs]</a>
+</span><span data-line="206">    <span class="k">def</span><span class="w"> </span><span class="nf">get_ground_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+</span><span data-line="207"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract ground truth relations in evaluation format.</span>
+</span><span data-line="208">
+</span><span data-line="209"><span class="sd">        Args:</span>
+</span><span data-line="210"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
+</span><span data-line="211"><span class="sd">            rels: List of relation tuples in format (head_idx, tail_idx, rel_label)</span>
+</span><span data-line="212"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
+</span><span data-line="213">
+</span><span data-line="214"><span class="sd">        Returns:</span>
+</span><span data-line="215"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
+</span><span data-line="216"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
+</span><span data-line="217"><span class="sd">            are tail entity boundaries.</span>
+</span><span data-line="218"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="219">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="220">        <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
+</span><span data-line="221">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+</span><span data-line="222">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+</span><span data-line="223">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+</span><span data-line="224">        <span class="k">return</span> <span class="n">all_rels</span></div>
+
+</span><span data-line="225">
+<div class="viewcode-block" id="BaseRelexEvaluator.get_predictions">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.get_predictions">[docs]</a>
+</span><span data-line="226">    <span class="k">def</span><span class="w"> </span><span class="nf">get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+</span><span data-line="227"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract predicted relations in evaluation format.</span>
+</span><span data-line="228">
+</span><span data-line="229"><span class="sd">        Args:</span>
+</span><span data-line="230"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
+</span><span data-line="231"><span class="sd">            rels: List of predicted relation tuples in format (head_idx, rel_label, tail_idx)</span>
+</span><span data-line="232"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
+</span><span data-line="233">
+</span><span data-line="234"><span class="sd">        Returns:</span>
+</span><span data-line="235"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
+</span><span data-line="236"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
+</span><span data-line="237"><span class="sd">            are tail entity boundaries.</span>
+</span><span data-line="238">
+</span><span data-line="239"><span class="sd">        Note:</span>
+</span><span data-line="240"><span class="sd">            The order of elements in predicted relations is (head_idx, rel_label, tail_idx),</span>
+</span><span data-line="241"><span class="sd">            which differs from ground truth format (head_idx, tail_idx, rel_label).</span>
+</span><span data-line="242"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="243">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="244">        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
+</span><span data-line="245">            <span class="n">h</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="246">            <span class="n">lab</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="247">            <span class="n">t</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="248">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+</span><span data-line="249">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+</span><span data-line="250">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+</span><span data-line="251">        <span class="k">return</span> <span class="n">all_rels</span></div>
+
+</span><span data-line="252">
+<div class="viewcode-block" id="BaseRelexEvaluator.transform_data">
+<a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.transform_data">[docs]</a>
+</span><span data-line="253">    <span class="k">def</span><span class="w"> </span><span class="nf">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="254"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform relation extraction data into evaluation format.</span>
+</span><span data-line="255">
+</span><span data-line="256"><span class="sd">        Converts both ground truth and predicted relations from their original</span>
+</span><span data-line="257"><span class="sd">        format into the standardized format required by compute_prf().</span>
+</span><span data-line="258">
+</span><span data-line="259"><span class="sd">        Returns:</span>
+</span><span data-line="260"><span class="sd">            Tuple of (all_true_rel, all_outs_rel) where:</span>
+</span><span data-line="261"><span class="sd">            - all_true_rel: List of ground truth relation lists, one per sample</span>
+</span><span data-line="262"><span class="sd">            - all_outs_rel: List of predicted relation lists, one per sample</span>
+</span><span data-line="263"><span class="sd">            Each relation is in format [rel_label, (h_start, h_end, t_start, t_end)]</span>
+</span><span data-line="264">
+</span><span data-line="265"><span class="sd">        Note:</span>
+</span><span data-line="266"><span class="sd">            The input format (self.all_true and self.all_outs) is expected to</span>
+</span><span data-line="267"><span class="sd">            contain tuples of (entities, relations) for each sample.</span>
+</span><span data-line="268"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="269">        <span class="n">all_true_rel</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="270">        <span class="n">all_outs_rel</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="271">        <span class="k">for</span> <span class="n">true_item</span><span class="p">,</span> <span class="n">pred_item</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_outs</span><span class="p">):</span>
+</span><span data-line="272">            <span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span> <span class="o">=</span> <span class="n">true_item</span>
+</span><span data-line="273">            <span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span> <span class="o">=</span> <span class="n">pred_item</span>
+</span><span data-line="274">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ground_truth</span><span class="p">(</span><span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span><span class="p">)</span>
+</span><span data-line="275">            <span class="n">all_true_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="276">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_predictions</span><span class="p">(</span><span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span><span class="p">)</span>
+</span><span data-line="277">            <span class="n">all_outs_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="278">        <span class="k">return</span> <span class="n">all_true_rel</span><span class="p">,</span> <span class="n">all_outs_rel</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

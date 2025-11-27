@@ -1,0 +1,7 @@
+gliner.modeling.layers module
+=============================
+
+.. automodule:: gliner.modeling.layers
+   :members:
+   :undoc-members:
+   :show-inheritance:

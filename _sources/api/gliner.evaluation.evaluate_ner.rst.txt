@@ -1,0 +1,7 @@
+gliner.evaluation.evaluate\_ner module
+======================================
+
+.. automodule:: gliner.evaluation.evaluate_ner
+   :members:
+   :undoc-members:
+   :show-inheritance:

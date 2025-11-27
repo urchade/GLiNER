@@ -1,0 +1,7 @@
+gliner.multitask.question\_answering module
+===========================================
+
+.. automodule:: gliner.multitask.question_answering
+   :members:
+   :undoc-members:
+   :show-inheritance:

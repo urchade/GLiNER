@@ -1,0 +1,18 @@
+gliner.data\_processing package
+===============================
+
+.. automodule:: gliner.data_processing
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.data_processing.collator
+   gliner.data_processing.processor
+   gliner.data_processing.tokenizer
+   gliner.data_processing.utils

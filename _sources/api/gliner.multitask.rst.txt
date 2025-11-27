@@ -1,0 +1,20 @@
+gliner.multitask package
+========================
+
+.. automodule:: gliner.multitask
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.multitask.base
+   gliner.multitask.classification
+   gliner.multitask.open_extraction
+   gliner.multitask.question_answering
+   gliner.multitask.relation_extraction
+   gliner.multitask.summarization

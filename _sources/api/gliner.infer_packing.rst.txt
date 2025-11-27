@@ -1,0 +1,7 @@
+gliner.infer\_packing module
+============================
+
+.. automodule:: gliner.infer_packing
+   :members:
+   :undoc-members:
+   :show-inheritance:

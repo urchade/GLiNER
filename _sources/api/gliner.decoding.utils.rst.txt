@@ -1,0 +1,7 @@
+gliner.decoding.utils module
+============================
+
+.. automodule:: gliner.decoding.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:

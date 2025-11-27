@@ -1,0 +1,7 @@
+gliner.modeling.decoder module
+==============================
+
+.. automodule:: gliner.modeling.decoder
+   :members:
+   :undoc-members:
+   :show-inheritance:

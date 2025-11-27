@@ -1,0 +1,15 @@
+gliner.onnx package
+===================
+
+.. automodule:: gliner.onnx
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.onnx.model

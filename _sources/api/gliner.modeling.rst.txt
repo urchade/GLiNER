@@ -1,0 +1,31 @@
+gliner.modeling package
+=======================
+
+.. automodule:: gliner.modeling
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.modeling.multitask
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.modeling.base
+   gliner.modeling.decoder
+   gliner.modeling.encoder
+   gliner.modeling.layers
+   gliner.modeling.loss_functions
+   gliner.modeling.outputs
+   gliner.modeling.scorers
+   gliner.modeling.span_rep
+   gliner.modeling.utils

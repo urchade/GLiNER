@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.decoding.trie.python_labels_trie - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../../genindex.html" /><link rel="search" title="Search" href="../../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.decoding.trie.python_labels_trie"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.decoding.trie.python_labels_trie</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.decoding.trie.python_labels_trie</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+</span><span data-line="2">
+</span><span data-line="3">
+<div class="viewcode-block" id="Node">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node">[docs]</a>
+</span><span data-line="4"><span class="k">class</span><span class="w"> </span><span class="nc">Node</span><span class="p">:</span>
+</span><span data-line="5">    <span class="vm">__slots__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;_children&quot;</span><span class="p">,</span> <span class="s2">&quot;_key&quot;</span><span class="p">,</span> <span class="s2">&quot;_permanent&quot;</span><span class="p">)</span>
+</span><span data-line="6">
+<div class="viewcode-block" id="Node.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.__init__">[docs]</a>
+</span><span data-line="7">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">permanent</span><span class="p">:</span> <span class="nb">bool</span><span class="p">):</span>
+</span><span data-line="8">        <span class="bp">self</span><span class="o">.</span><span class="n">_key</span> <span class="o">=</span> <span class="n">key</span>
+</span><span data-line="9">        <span class="bp">self</span><span class="o">.</span><span class="n">_permanent</span> <span class="o">=</span> <span class="n">permanent</span>
+</span><span data-line="10">        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Node</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+</span><span data-line="11">
+<div class="viewcode-block" id="Node.get_key">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.get_key">[docs]</a>
+</span><span data-line="12">    <span class="k">def</span><span class="w"> </span><span class="nf">get_key</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="13">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_key</span></div>
+
+</span><span data-line="14">
+<div class="viewcode-block" id="Node.is_permanent">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.is_permanent">[docs]</a>
+</span><span data-line="15">    <span class="k">def</span><span class="w"> </span><span class="nf">is_permanent</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="16">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_permanent</span></div>
+
+</span><span data-line="17">
+<div class="viewcode-block" id="Node.add_child">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.add_child">[docs]</a>
+</span><span data-line="18">    <span class="k">def</span><span class="w"> </span><span class="nf">add_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child</span><span class="p">:</span> <span class="s2">&quot;Node&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="19">        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">get_key</span><span class="p">()]</span> <span class="o">=</span> <span class="n">child</span></div>
+
+</span><span data-line="20">
+<div class="viewcode-block" id="Node.get_child">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.get_child">[docs]</a>
+</span><span data-line="21">    <span class="k">def</span><span class="w"> </span><span class="nf">get_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child_key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;Node&quot;</span><span class="p">]:</span>
+</span><span data-line="22">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">child_key</span><span class="p">)</span></div>
+
+</span><span data-line="23">
+<div class="viewcode-block" id="Node.get_children">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.get_children">[docs]</a>
+</span><span data-line="24">    <span class="k">def</span><span class="w"> </span><span class="nf">get_children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="s2">&quot;Node&quot;</span><span class="p">]:</span>
+</span><span data-line="25">        <span class="c1"># Preserve insertion order like iterating a vector</span>
+</span><span data-line="26">        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+</span><span data-line="27">
+<div class="viewcode-block" id="Node.has_children">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.has_children">[docs]</a>
+</span><span data-line="28">    <span class="k">def</span><span class="w"> </span><span class="nf">has_children</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="29">        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="p">)</span></div>
+
+</span><span data-line="30">
+<div class="viewcode-block" id="Node.delete_child">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.delete_child">[docs]</a>
+</span><span data-line="31">    <span class="k">def</span><span class="w"> </span><span class="nf">delete_child</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">child_key</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="32">        <span class="bp">self</span><span class="o">.</span><span class="n">_children</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">child_key</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="33">
+</span><span data-line="34">
+<div class="viewcode-block" id="Trie">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie">[docs]</a>
+</span><span data-line="35"><span class="k">class</span><span class="w"> </span><span class="nc">Trie</span><span class="p">:</span>
+<div class="viewcode-block" id="Trie.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.__init__">[docs]</a>
+</span><span data-line="36">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">init_value</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+</span><span data-line="37">        <span class="c1"># Root has key=0 and is permanent (matches the C++ code)</span>
+</span><span data-line="38">        <span class="bp">self</span><span class="o">.</span><span class="n">root</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="39">        <span class="k">if</span> <span class="n">init_value</span><span class="p">:</span>
+</span><span data-line="40">            <span class="bp">self</span><span class="o">.</span><span class="n">add_batch</span><span class="p">(</span><span class="n">init_value</span><span class="p">,</span> <span class="n">permanent</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+</span><span data-line="41">
+<div class="viewcode-block" id="Trie.add_batch">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.add_batch">[docs]</a>
+</span><span data-line="42">    <span class="k">def</span><span class="w"> </span><span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">permanent</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="43">        <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="44">            <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span> <span class="n">permanent</span><span class="p">)</span></div>
+
+</span><span data-line="45">
+<div class="viewcode-block" id="Trie.add">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.add">[docs]</a>
+</span><span data-line="46">    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">permanent</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="47">        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+</span><span data-line="48">        <span class="k">for</span> <span class="n">token_id</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="49">            <span class="n">nxt</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+</span><span data-line="50">            <span class="k">if</span> <span class="n">nxt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="51">                <span class="n">nxt</span> <span class="o">=</span> <span class="n">Node</span><span class="p">(</span><span class="n">token_id</span><span class="p">,</span> <span class="n">permanent</span><span class="p">)</span>
+</span><span data-line="52">                <span class="n">current</span><span class="o">.</span><span class="n">add_child</span><span class="p">(</span><span class="n">nxt</span><span class="p">)</span>
+</span><span data-line="53">            <span class="n">current</span> <span class="o">=</span> <span class="n">nxt</span></div>
+
+</span><span data-line="54">
+<div class="viewcode-block" id="Trie.get_possible_next_keys">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.get_possible_next_keys">[docs]</a>
+</span><span data-line="55">    <span class="k">def</span><span class="w"> </span><span class="nf">get_possible_next_keys</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+</span><span data-line="56">        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+</span><span data-line="57">        <span class="k">for</span> <span class="n">token_id</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="58">            <span class="n">nxt</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+</span><span data-line="59">            <span class="k">if</span> <span class="n">nxt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="60">                <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="61">            <span class="n">tmp</span> <span class="o">=</span> <span class="n">nxt</span>
+</span><span data-line="62">        <span class="k">return</span> <span class="p">[</span><span class="n">child</span><span class="o">.</span><span class="n">get_key</span><span class="p">()</span> <span class="k">for</span> <span class="n">child</span> <span class="ow">in</span> <span class="n">tmp</span><span class="o">.</span><span class="n">get_children</span><span class="p">()]</span></div>
+
+</span><span data-line="63">
+<div class="viewcode-block" id="Trie.get_branch">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.get_branch">[docs]</a>
+</span><span data-line="64">    <span class="k">def</span><span class="w"> </span><span class="nf">get_branch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Node</span><span class="p">]:</span>
+</span><span data-line="65">        <span class="c1"># Includes root at position 0 when the full path exists.</span>
+</span><span data-line="66">        <span class="n">branch</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">root</span><span class="p">]</span>
+</span><span data-line="67">        <span class="n">tmp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">root</span>
+</span><span data-line="68">        <span class="k">for</span> <span class="n">token_id</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="69">            <span class="n">nxt</span> <span class="o">=</span> <span class="n">tmp</span><span class="o">.</span><span class="n">get_child</span><span class="p">(</span><span class="n">token_id</span><span class="p">)</span>
+</span><span data-line="70">            <span class="k">if</span> <span class="n">nxt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="71">                <span class="k">return</span> <span class="p">[]</span>
+</span><span data-line="72">            <span class="n">tmp</span> <span class="o">=</span> <span class="n">nxt</span>
+</span><span data-line="73">            <span class="n">branch</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+</span><span data-line="74">        <span class="k">return</span> <span class="n">branch</span></div>
+
+</span><span data-line="75">
+<div class="viewcode-block" id="Trie.remove_batch">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.remove_batch">[docs]</a>
+</span><span data-line="76">    <span class="k">def</span><span class="w"> </span><span class="nf">remove_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="77">        <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="78">            <span class="bp">self</span><span class="o">.</span><span class="n">remove_entity</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span></div>
+
+</span><span data-line="79">
+<div class="viewcode-block" id="Trie.remove_entity">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.remove_entity">[docs]</a>
+</span><span data-line="80">    <span class="k">def</span><span class="w"> </span><span class="nf">remove_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entity</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="81">        <span class="n">branch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_branch</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+</span><span data-line="82">        <span class="c1"># If not found or only root, nothing to remove</span>
+</span><span data-line="83">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">branch</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="84">            <span class="k">return</span>
+</span><span data-line="85">        <span class="k">for</span> <span class="n">child</span><span class="p">,</span> <span class="n">parent</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">reversed</span><span class="p">(</span><span class="n">branch</span><span class="p">[</span><span class="mi">1</span><span class="p">:]),</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">branch</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])):</span>
+</span><span data-line="86">            <span class="k">if</span> <span class="n">child</span><span class="o">.</span><span class="n">has_children</span><span class="p">()</span> <span class="ow">or</span> <span class="n">child</span><span class="o">.</span><span class="n">is_permanent</span><span class="p">():</span>
+</span><span data-line="87">                <span class="k">break</span>
+</span><span data-line="88">            <span class="n">parent</span><span class="o">.</span><span class="n">delete_child</span><span class="p">(</span><span class="n">child</span><span class="o">.</span><span class="n">get_key</span><span class="p">())</span></div>
+</div>
+
+</span><span data-line="89">
+</span><span data-line="90">
+<div class="viewcode-block" id="LabelsTrie">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie">[docs]</a>
+</span><span data-line="91"><span class="k">class</span><span class="w"> </span><span class="nc">LabelsTrie</span><span class="p">:</span>
+<div class="viewcode-block" id="LabelsTrie.__init__">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.__init__">[docs]</a>
+</span><span data-line="92">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+</span><span data-line="93"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the trie.</span>
+</span><span data-line="94">
+</span><span data-line="95"><span class="sd">        Args:</span>
+</span><span data-line="96"><span class="sd">            entities: Optional initial list of token sequences to add to the trie.</span>
+</span><span data-line="97"><span class="sd">                     If None or empty, creates an empty trie.</span>
+</span><span data-line="98"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="99">        <span class="k">if</span> <span class="ow">not</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="100">            <span class="bp">self</span><span class="o">.</span><span class="n">trie</span> <span class="o">=</span> <span class="n">Trie</span><span class="p">()</span>
+</span><span data-line="101">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="102">            <span class="bp">self</span><span class="o">.</span><span class="n">trie</span> <span class="o">=</span> <span class="n">Trie</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span></div>
+
+</span><span data-line="103">
+<div class="viewcode-block" id="LabelsTrie.add_batch">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.add_batch">[docs]</a>
+</span><span data-line="104">    <span class="k">def</span><span class="w"> </span><span class="nf">add_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+</span><span data-line="105"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Add multiple token sequences to the trie.</span>
+</span><span data-line="106">
+</span><span data-line="107"><span class="sd">        Args:</span>
+</span><span data-line="108"><span class="sd">            entities: List of token sequences to add.</span>
+</span><span data-line="109"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="110">        <span class="bp">self</span><span class="o">.</span><span class="n">trie</span><span class="o">.</span><span class="n">add_batch</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">permanent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+</span><span data-line="111">
+<div class="viewcode-block" id="LabelsTrie.add">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.add">[docs]</a>
+</span><span data-line="112">    <span class="k">def</span><span class="w"> </span><span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+</span><span data-line="113"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a single token sequence to the trie.</span>
+</span><span data-line="114">
+</span><span data-line="115"><span class="sd">        Args:</span>
+</span><span data-line="116"><span class="sd">            tokens: Token sequence to add.</span>
+</span><span data-line="117"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="118">        <span class="bp">self</span><span class="o">.</span><span class="n">trie</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">permanent</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+</span><span data-line="119">
+<div class="viewcode-block" id="LabelsTrie.get">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.get">[docs]</a>
+</span><span data-line="120">    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">prefix</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>
+</span><span data-line="121"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Get possible next tokens after a given prefix.</span>
+</span><span data-line="122">
+</span><span data-line="123"><span class="sd">        Args:</span>
+</span><span data-line="124"><span class="sd">            prefix: The token sequence to search for.</span>
+</span><span data-line="125">
+</span><span data-line="126"><span class="sd">        Returns:</span>
+</span><span data-line="127"><span class="sd">            List of possible next token IDs.</span>
+</span><span data-line="128"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="129">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trie</span><span class="o">.</span><span class="n">get_possible_next_keys</span><span class="p">(</span><span class="n">prefix</span><span class="p">)</span></div>
+
+</span><span data-line="130">
+<div class="viewcode-block" id="LabelsTrie.remove_batch">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.remove_batch">[docs]</a>
+</span><span data-line="131">    <span class="k">def</span><span class="w"> </span><span class="nf">remove_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">entities</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]):</span>
+</span><span data-line="132"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove multiple token sequences from the trie.</span>
+</span><span data-line="133">
+</span><span data-line="134"><span class="sd">        Args:</span>
+</span><span data-line="135"><span class="sd">            entities: List of token sequences to remove.</span>
+</span><span data-line="136"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="137">        <span class="bp">self</span><span class="o">.</span><span class="n">trie</span><span class="o">.</span><span class="n">remove_batch</span><span class="p">(</span><span class="n">entities</span><span class="p">)</span></div>
+
+</span><span data-line="138">
+<div class="viewcode-block" id="LabelsTrie.remove_entity">
+<a class="viewcode-back" href="../../../../api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.remove_entity">[docs]</a>
+</span><span data-line="139">    <span class="k">def</span><span class="w"> </span><span class="nf">remove_entity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]):</span>
+</span><span data-line="140"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Remove a single token sequence from the trie.</span>
+</span><span data-line="141">
+</span><span data-line="142"><span class="sd">        Args:</span>
+</span><span data-line="143"><span class="sd">            tokens: Token sequence to remove.</span>
+</span><span data-line="144"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="145">        <span class="bp">self</span><span class="o">.</span><span class="n">trie</span><span class="o">.</span><span class="n">remove_entity</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span></div>
+</div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

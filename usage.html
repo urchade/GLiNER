@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Advanced Usage - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Components &amp; Configs" href="configs.html" /><link rel="prev" title="Quickstart" href="quickstart.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Advanced Usage"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#basic-use-case">&#128640; Basic Use Case</a><ul>
+<li><a class="reference internal" href="#understanding-the-output">Understanding the Output</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#batch-processing">Batch Processing</a></li>
+<li><a class="reference internal" href="#using-different-model-architectures">Using Different Model Architectures</a><ul>
+<li><a class="reference internal" href="#uniencoder-models-standard">UniEncoder Models (Standard)</a></li>
+<li><a class="reference internal" href="#biencoder-models-scalable">BiEncoder Models (Scalable)</a></li>
+<li><a class="reference internal" href="#token-level-models">Token-Level Models</a></li>
+<li><a class="reference internal" href="#relation-extraction-models">Relation Extraction Models</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-configuration">Advanced Configuration</a><ul>
+<li><a class="reference internal" href="#adjusting-the-threshold">Adjusting the Threshold</a></li>
+<li><a class="reference internal" href="#multi-label-classification">Multi-label Classification</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#local-models-and-caching">Local Models and Caching</a><ul>
+<li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
+<li><a class="reference internal" href="#device-selection">Device Selection</a></li>
+<li><a class="reference internal" href="#model-compilation-pytorch-2-0">Model Compilation (PyTorch 2.0+)</a></li>
+<li><a class="reference internal" href="#accelerating-inference-with-sequence-packing">&#9889; Accelerating Inference with Sequence Packing</a></li>
+<li><a class="reference internal" href="#usage-with-spacy">&#128268; Usage with spaCy</a><ul>
+<li><a class="reference internal" href="#expected-output">Expected Output</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#using-flashdeberta">&#127939;&#8205;&#9792;&#65039; Using FlashDeBERTa</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#usage">Usage</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#high-level-pipelines-pipelines">&#128736;&#65039; High-Level Pipelines {#pipelines}</a><ul>
+<li><a class="reference internal" href="#classification">Classification</a></li>
+<li><a class="reference internal" href="#question-answering">Question-Answering</a></li>
+<li><a class="reference internal" href="#relation-extraction">Relation Extraction</a></li>
+<li><a class="reference internal" href="#open-information-extraction">Open Information Extraction</a></li>
+<li><a class="reference internal" href="#summarization">Summarization</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-relation-extraction-with-utca">Advanced Relation Extraction with UTCA</a><ul>
+<li><a class="reference internal" href="#id1">Installation</a></li>
+<li><a class="reference internal" href="#setting-up-the-pipeline">Setting Up the Pipeline</a></li>
+<li><a class="reference internal" href="#running-the-pipeline">Running the Pipeline</a></li>
+<li><a class="reference internal" href="#advanced-utca-features">Advanced UTCA Features</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#practical-examples">Practical Examples</a><ul>
+<li><a class="reference internal" href="#example-1-extract-company-information">Example 1: Extract Company Information</a></li>
+<li><a class="reference internal" href="#example-2-process-scientific-papers">Example 2: Process Scientific Papers</a></li>
+<li><a class="reference internal" href="#example-3-analyze-news-articles">Example 3: Analyze News Articles</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tips-and-best-practices">Tips and Best Practices</a></li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#low-accuracy">Low Accuracy</a></li>
+<li><a class="reference internal" href="#slow-inference">Slow Inference</a></li>
+<li><a class="reference internal" href="#out-of-memory">Out of Memory</a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Advanced Usage</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="advanced-usage">
+<h1>Advanced Usage<a class="headerlink" href="#advanced-usage" title="Link to this heading">¶</a></h1>
+<section id="basic-use-case">
+<h2>🚀 Basic Use Case<a class="headerlink" href="#basic-use-case" title="Link to this heading">¶</a></h2>
+<p>After installing the GLiNER library, import the <code class="docutils literal notranslate"><span class="pre">GLiNER</span></code> class. You can load your chosen model with <code class="docutils literal notranslate"><span class="pre">GLiNER.from_pretrained</span></code> and use <code class="docutils literal notranslate"><span class="pre">inference</span></code> to identify entities within your text.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a GLiNER model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Sample text for entity prediction</span>
+</span><span data-line="7"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="s2">Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu ʁɔˈnaldu]; </span>
+</span><span data-line="9"><span class="s2">born 5 February 1985) is a Portuguese professional footballer who plays as a forward for </span>
+</span><span data-line="10"><span class="s2">and captains both Saudi Pro League club Al Nassr and the Portugal national team. Widely </span>
+</span><span data-line="11"><span class="s2">regarded as one of the greatest players of all time, Ronaldo has won five Ballon d&#39;Or </span>
+</span><span data-line="12"><span class="s2">awards, a record three UEFA Men&#39;s Player of the Year Awards, and four European Golden </span>
+</span><span data-line="13"><span class="s2">Shoes, the most by a European player.</span>
+</span><span data-line="14"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Define labels for entity extraction</span>
+</span><span data-line="17"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;award&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;teams&quot;</span><span class="p">,</span> <span class="s2">&quot;competition&quot;</span><span class="p">]</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># Perform entity prediction</span>
+</span><span data-line="20"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="21">
+</span><span data-line="22"><span class="c1"># Display predicted entities and their labels</span>
+</span><span data-line="23"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="24">    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span> <span class="s2">&quot;=&gt;&quot;</span><span class="p">,</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">])</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">Cristiano<span class="w"> </span>Ronaldo<span class="w"> </span>dos<span class="w"> </span>Santos<span class="w"> </span><span class="nv">Aveiro</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>person
+</span><span data-line="2"><span class="m">5</span><span class="w"> </span>February<span class="w"> </span><span class="nv">1985</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>date
+</span><span data-line="3">Al<span class="w"> </span><span class="nv">Nassr</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>teams
+</span><span data-line="4">Portugal<span class="w"> </span>national<span class="w"> </span><span class="nv">team</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>teams
+</span><span data-line="5">Ballon<span class="w"> </span>d<span class="s1">&#39;Or =&gt; award</span>
+</span><span data-line="6"><span class="s1">UEFA Men&#39;</span>s<span class="w"> </span>Player<span class="w"> </span>of<span class="w"> </span>the<span class="w"> </span>Year<span class="w"> </span><span class="nv">Awards</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>award
+</span><span data-line="7">European<span class="w"> </span>Golden<span class="w"> </span><span class="nv">Shoes</span><span class="w"> </span><span class="o">=</span>&gt;<span class="w"> </span>award
+</span></pre></div>
+</div>
+</details>
+<section id="understanding-the-output">
+<h3>Understanding the Output<a class="headerlink" href="#understanding-the-output" title="Link to this heading">¶</a></h3>
+<p>Each predicted entity is a dictionary with the following structure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>      <span class="c1"># Start character position in text</span>
+</span><span data-line="3">    <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>        <span class="c1"># End character position in text</span>
+</span><span data-line="4">    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>       <span class="c1"># Extracted text span</span>
+</span><span data-line="5">    <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>      <span class="c1"># Predicted entity type</span>
+</span><span data-line="6">    <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="nb">float</span>     <span class="c1"># Confidence score (0-1)</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>Example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="2">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Text: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="3">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Label: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="4">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Score: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="5">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Position: [</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;start&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">:</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;end&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]&quot;</span><span class="p">)</span>
+</span><span data-line="6">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="batch-processing">
+<h2>Batch Processing<a class="headerlink" href="#batch-processing" title="Link to this heading">¶</a></h2>
+<p>For processing multiple texts efficiently, use the <code class="docutils literal notranslate"><span class="pre">inference</span></code> method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Multiple texts to process</span>
+</span><span data-line="6"><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="7">    <span class="s2">&quot;Apple Inc. was founded by Steve Jobs in Cupertino, California.&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">&quot;Google LLC is headquartered in Mountain View.&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">&quot;Amazon was started by Jeff Bezos in Seattle.&quot;</span>
+</span><span data-line="10"><span class="p">]</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Process all texts at once</span>
+</span><span data-line="15"><span class="n">all_entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># Display results for each text</span>
+</span><span data-line="18"><span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">entities</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">all_entities</span><span class="p">):</span>
+</span><span data-line="19">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Text </span><span class="si">{</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">texts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="21">    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="22">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  - </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">): </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits of Batch Processing:</strong></p>
+<ul class="simple">
+<li><p><strong>Faster</strong>: Process multiple texts in parallel</p></li>
+<li><p><strong>Efficient</strong>: Better GPU utilization</p></li>
+<li><p><strong>Scalable</strong>: Handle large document collections</p></li>
+</ul>
+</section>
+<section id="using-different-model-architectures">
+<h2>Using Different Model Architectures<a class="headerlink" href="#using-different-model-architectures" title="Link to this heading">¶</a></h2>
+<p>GLiNER supports multiple architecture variants, each optimized for different scenarios.</p>
+<section id="uniencoder-models-standard">
+<h3>UniEncoder Models (Standard)<a class="headerlink" href="#uniencoder-models-standard" title="Link to this heading">¶</a></h3>
+<p>Best for general-purpose NER with up to ~30 entity types:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a standard UniEncoder model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. was founded by Steve Jobs in 1976.&quot;</span>
+</span><span data-line="7"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="10"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="11">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="biencoder-models-scalable">
+<h3>BiEncoder Models (Scalable)<a class="headerlink" href="#biencoder-models-scalable" title="Link to this heading">¶</a></h3>
+<p>Best for handling many entity types (50-200+) with pre-computed label embeddings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a BiEncoder model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-bi-small-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># BiEncoders handle many entity types efficiently</span>
+</span><span data-line="7"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="8">    <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">&quot;technology&quot;</span><span class="p">,</span> <span class="s2">&quot;software&quot;</span><span class="p">,</span> <span class="s2">&quot;hardware&quot;</span><span class="p">,</span> <span class="s2">&quot;programming_language&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="s2">&quot;framework&quot;</span><span class="p">,</span> <span class="s2">&quot;library&quot;</span><span class="p">,</span> <span class="s2">&quot;database&quot;</span><span class="p">,</span> <span class="s2">&quot;protocol&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span>
+</span><span data-line="11">    <span class="c1"># ... can handle 100+ types efficiently</span>
+</span><span data-line="12"><span class="p">]</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Python is a programming language created by Guido van Rossum.&quot;</span>
+</span><span data-line="15"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="c1"># For production: pre-compute label embeddings</span>
+</span><span data-line="18"><span class="n">label_embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="c1"># Then use cached embeddings for faster inference</span>
+</span><span data-line="21"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_with_embeds</span><span class="p">(</span>
+</span><span data-line="22">    <span class="n">text</span><span class="p">,</span> 
+</span><span data-line="23">    <span class="n">label_embeddings</span><span class="p">,</span> 
+</span><span data-line="24">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="25">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span>
+</span><span data-line="26"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><strong>BiEncoder Advantages:</strong></p>
+<ul class="simple">
+<li><p>Handle 100+ entity types without performance degradation</p></li>
+<li><p>Pre-compute label embeddings once, reuse across documents</p></li>
+<li><p>Faster inference when processing many documents with same entity types</p></li>
+</ul>
+</section>
+<section id="token-level-models">
+<h3>Token-Level Models<a class="headerlink" href="#token-level-models" title="Link to this heading">¶</a></h3>
+<p>Best for extracting long entity spans (multi-sentence entities, summaries):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a token-level model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Token-level models excel at long entities</span>
+</span><span data-line="7"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="s2">The European Union is a political and economic union of 27 member states </span>
+</span><span data-line="9"><span class="s2">that are located primarily in Europe. The EU has developed an internal </span>
+</span><span data-line="10"><span class="s2">single market through a standardised system of laws.</span>
+</span><span data-line="11"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;number&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;concept&quot;</span><span class="p">]</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="16"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="17">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span><span class="si">}</span><span class="s2">... =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="relation-extraction-models">
+<h3>Relation Extraction Models<a class="headerlink" href="#relation-extraction-models" title="Link to this heading">¶</a></h3>
+<p>Extract both entities and relationships between them:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a relation extraction model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-relex-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Bill Gates founded Microsoft in 1975. The company is headquartered in Redmond.&quot;</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Define entity types and relation types</span>
+</span><span data-line="9"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="10"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_in&quot;</span><span class="p">,</span> <span class="s2">&quot;headquartered_in&quot;</span><span class="p">]</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Extract entities and relations</span>
+</span><span data-line="13"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="14">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
+</span><span data-line="15">    <span class="n">labels</span><span class="o">=</span><span class="n">entity_labels</span><span class="p">,</span>
+</span><span data-line="16">    <span class="n">relations</span><span class="o">=</span><span class="n">relation_labels</span><span class="p">,</span>
+</span><span data-line="17">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="18">    <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.5</span>
+</span><span data-line="19"><span class="p">)</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># Display entities</span>
+</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="23"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="24">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="c1"># Display relations</span>
+</span><span data-line="27"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations:&quot;</span><span class="p">)</span>
+</span><span data-line="28"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="29">    <span class="n">head</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
+</span><span data-line="30">    <span class="n">tail</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
+</span><span data-line="31">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">Entities:
+</span><span data-line="2"><span class="w">  </span>Bill<span class="w"> </span>Gates<span class="w"> </span><span class="o">(</span>person<span class="o">)</span>
+</span><span data-line="3"><span class="w">  </span>Microsoft<span class="w"> </span><span class="o">(</span>organization<span class="o">)</span>
+</span><span data-line="4"><span class="w">  </span><span class="m">1975</span><span class="w"> </span><span class="o">(</span>date<span class="o">)</span>
+</span><span data-line="5"><span class="w">  </span>Redmond<span class="w"> </span><span class="o">(</span>location<span class="o">)</span>
+</span><span data-line="6">
+</span><span data-line="7">Relations:
+</span><span data-line="8"><span class="w">  </span>Bill<span class="w"> </span>Gates<span class="w"> </span>--<span class="o">[</span>founded<span class="o">]</span>--&gt;<span class="w"> </span>Microsoft
+</span><span data-line="9"><span class="w">  </span>Microsoft<span class="w"> </span>--<span class="o">[</span>founded_in<span class="o">]</span>--&gt;<span class="w"> </span><span class="m">1975</span>
+</span><span data-line="10"><span class="w">  </span>Microsoft<span class="w"> </span>--<span class="o">[</span>headquartered_in<span class="o">]</span>--&gt;<span class="w"> </span>Redmond
+</span></pre></div>
+</div>
+</details>
+</section>
+</section>
+<section id="advanced-configuration">
+<h2>Advanced Configuration<a class="headerlink" href="#advanced-configuration" title="Link to this heading">¶</a></h2>
+<section id="adjusting-the-threshold">
+<h3>Adjusting the Threshold<a class="headerlink" href="#adjusting-the-threshold" title="Link to this heading">¶</a></h3>
+<p>Control the precision-recall tradeoff:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. is a technology company.&quot;</span>
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;industry&quot;</span><span class="p">]</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># High threshold: Higher precision, lower recall</span>
+</span><span data-line="8"><span class="n">entities_high</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;High threshold (0.7): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">entities_high</span><span class="p">)</span><span class="si">}</span><span class="s2"> entities&quot;</span><span class="p">)</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Low threshold: Lower precision, higher recall</span>
+</span><span data-line="12"><span class="n">entities_low</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</span><span data-line="13"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Low threshold (0.3): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">entities_low</span><span class="p">)</span><span class="si">}</span><span class="s2"> entities&quot;</span><span class="p">)</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="c1"># Default threshold</span>
+</span><span data-line="16"><span class="n">entities_default</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>  <span class="c1"># threshold=0.5</span>
+</span><span data-line="17"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Default threshold (0.5): </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">entities_default</span><span class="p">)</span><span class="si">}</span><span class="s2"> entities&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Relation extraction model also has two additional threshold parameters:</p>
+<ul class="simple">
+<li><p>adjacency_threshold: Confidence threshold for adjacency matrix reconstruction (defaults to threshold).</p></li>
+<li><p>relation_threshold: Confidence threshold for relations (defaults to threshold).</p></li>
+</ul>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. is a technology company founded in 1976.&quot;</span>
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;industry&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="6"><span class="n">relations</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;founded in&quot;</span><span class="p">]</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="n">results</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="o">=</span><span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span> <span class="n">adjacency_threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Use a lower adjacency threshold so the model can rerank and classify more pairs of entities that may be linked. Set a higher relations threshold for more specificity and better precision. Feel free to adapt all three thresholds based on your use case.### Flat vs Nested NER</p>
+<p>Control whether entities can overlap:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The University of California, Berkeley is located in California.&quot;</span>
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;university&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Flat NER: No overlapping entities (default)</span>
+</span><span data-line="8"><span class="n">entities_flat</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">flat_ner</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Flat NER:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entities_flat</span><span class="p">])</span>
+</span><span data-line="10"><span class="c1"># Output: [&#39;University of California, Berkeley&#39;, &#39;California&#39;]</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Nested NER: Allow overlapping entities</span>
+</span><span data-line="13"><span class="n">entities_nested</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">flat_ner</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="14"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Nested NER:&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entities_nested</span><span class="p">])</span>
+</span><span data-line="15"><span class="c1"># Output: [&#39;University of California, Berkeley&#39;, &#39;California, Berkeley&#39;, &#39;California&#39;]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="multi-label-classification">
+<h3>Multi-label Classification<a class="headerlink" href="#multi-label-classification" title="Link to this heading">¶</a></h3>
+<p>Allow entities to have multiple types:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Dr. Smith is a cardiologist at Mayo Clinic.&quot;</span>
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;doctor&quot;</span><span class="p">,</span> <span class="s2">&quot;specialist&quot;</span><span class="p">,</span> <span class="s2">&quot;professional&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;hospital&quot;</span><span class="p">]</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Single label per entity (default)</span>
+</span><span data-line="8"><span class="n">entities_single</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="9"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Single label:&quot;</span><span class="p">)</span>
+</span><span data-line="10"><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entities_single</span><span class="p">:</span>
+</span><span data-line="11">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Multiple labels per entity</span>
+</span><span data-line="14"><span class="n">entities_multi</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="15"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Multi-label:&quot;</span><span class="p">)</span>
+</span><span data-line="16"><span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">entities_multi</span><span class="p">:</span>
+</span><span data-line="17">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="local-models-and-caching">
+<h2>Local Models and Caching<a class="headerlink" href="#local-models-and-caching" title="Link to this heading">¶</a></h2>
+<section id="loading-from-local-directory">
+<h3>Loading from Local Directory<a class="headerlink" href="#loading-from-local-directory" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load from local directory</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;/path/to/local/model&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Or load from HuggingFace Hub with local cache</span>
+</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="8">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">cache_dir</span><span class="o">=</span><span class="s2">&quot;./model_cache&quot;</span>  <span class="c1"># Cache models locally</span>
+</span><span data-line="10"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="device-selection">
+<h3>Device Selection<a class="headerlink" href="#device-selection" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load on GPU</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="5">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span>  <span class="c1"># Use GPU</span>
+</span><span data-line="7"><span class="p">)</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Load on CPU</span>
+</span><span data-line="10"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="11">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span>
+</span><span data-line="13"><span class="p">)</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="c1"># Check device</span>
+</span><span data-line="16"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model is on: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="model-compilation-pytorch-2-0">
+<h3>Model Compilation (PyTorch 2.0+)<a class="headerlink" href="#model-compilation-pytorch-2-0" title="Link to this heading">¶</a></h3>
+<p>Compile models for faster inference:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load and compile (requires PyTorch 2.0+ and CUDA)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="5">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">compile_torch_model</span><span class="o">=</span><span class="kc">True</span>
+</span><span data-line="7"><span class="p">)</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Expect ~2x speedup on compatible hardware</span>
+</span></pre></div>
+</div>
+</section>
+<section id="accelerating-inference-with-sequence-packing">
+<h3>⚡ Accelerating Inference with Sequence Packing<a class="headerlink" href="#accelerating-inference-with-sequence-packing" title="Link to this heading">¶</a></h3>
+<p>Sequence packing allows GLiNER to combine multiple short requests into a single transformer pass while keeping a block-diagonal attention mask. This drastically reduces the number of padding tokens the encoder needs to process and yields higher throughput.</p>
+<ol class="arabic">
+<li><p><strong>Configure packing once for all predictions</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span><span class="p">,</span> <span class="n">InferencePackingConfig</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">packing_cfg</span> <span class="o">=</span> <span class="n">InferencePackingConfig</span><span class="p">(</span>
+</span><span data-line="6">    <span class="n">max_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">sep_token_id</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">data_processor</span><span class="o">.</span><span class="n">transformer_tokenizer</span><span class="o">.</span><span class="n">sep_token_id</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">streams_per_batch</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+</span><span data-line="9"><span class="p">)</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Enable packing for every subsequent `run`/`predict_*` call.</span>
+</span><span data-line="12"><span class="n">model</span><span class="o">.</span><span class="n">configure_inference_packing</span><span class="p">(</span><span class="n">packing_cfg</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Email CEO to approve budget&quot;</span><span class="p">,</span> <span class="s2">&quot;Schedule yearly medical checkup&quot;</span><span class="p">]</span>
+</span><span data-line="15"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;action&quot;</span><span class="p">]</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="n">predictions</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>You can override or disable the default configuration on a per-call basis by passing <code class="docutils literal notranslate"><span class="pre">packing_config=&lt;new_cfg&gt;</span></code> or <code class="docutils literal notranslate"><span class="pre">packing_config=None</span></code> respectively when invoking <code class="docutils literal notranslate"><span class="pre">model.inference</span></code> or <code class="docutils literal notranslate"><span class="pre">model.predict_entities</span></code>.</p>
+</li>
+<li><p><strong>Benchmark the impact</strong></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">bench/bench_gliner_e2e.py</span></code> script can stress the full GLiNER pipeline in addition to encoder-only Hugging Face models:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>bench/bench_gliner_e2e.py
+</span></pre></div>
+</div>
+<p>To isolate and measure the impact on the encoder:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>bench/bench_infer_packing.py<span class="w"> </span>--batch_size<span class="w"> </span><span class="m">32</span><span class="w"> </span>--scenario<span class="w"> </span>short_zipf
+</span></pre></div>
+</div>
+</li>
+</ol>
+</section>
+<section id="usage-with-spacy">
+<h3>🔌 Usage with spaCy<a class="headerlink" href="#usage-with-spacy" title="Link to this heading">¶</a></h3>
+<p>GLiNER can be seamlessly integrated with spaCy. To begin, install the <code class="docutils literal notranslate"><span class="pre">gliner-spacy</span></code> library via pip:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner-spacy
+</span></pre></div>
+</div>
+<p>Following installation, you can add GLiNER to a spaCy NLP pipeline. Here’s how to integrate it with a blank English pipeline; however, it’s compatible with any spaCy model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner_spacy.pipeline</span><span class="w"> </span><span class="kn">import</span> <span class="n">GlinerSpacy</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Configuration for GLiNER integration</span>
+</span><span data-line="5"><span class="n">custom_spacy_config</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="6">    <span class="s2">&quot;gliner_model&quot;</span><span class="p">:</span> <span class="s2">&quot;urchade/gliner_mediumv2.1&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="s2">&quot;chunk_size&quot;</span><span class="p">:</span> <span class="mi">250</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">],</span>
+</span><span data-line="9">    <span class="s2">&quot;style&quot;</span><span class="p">:</span> <span class="s2">&quot;ent&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="mf">0.3</span><span class="p">,</span>
+</span><span data-line="11">    <span class="s2">&quot;map_location&quot;</span><span class="p">:</span> <span class="s2">&quot;cpu&quot;</span> <span class="c1"># only available in v.0.0.7</span>
+</span><span data-line="12"><span class="p">}</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Initialize a blank English spaCy pipeline and add GLiNER</span>
+</span><span data-line="15"><span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">blank</span><span class="p">(</span><span class="s2">&quot;en&quot;</span><span class="p">)</span>
+</span><span data-line="16"><span class="n">nlp</span><span class="o">.</span><span class="n">add_pipe</span><span class="p">(</span><span class="s2">&quot;gliner_spacy&quot;</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="n">custom_spacy_config</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Example text for entity detection</span>
+</span><span data-line="19"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;This is a text about Bill Gates and Microsoft.&quot;</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># Process the text with the pipeline</span>
+</span><span data-line="22"><span class="n">doc</span> <span class="o">=</span> <span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="c1"># Output detected entities</span>
+</span><span data-line="25"><span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">doc</span><span class="o">.</span><span class="n">ents</span><span class="p">:</span>
+</span><span data-line="26">    <span class="nb">print</span><span class="p">(</span><span class="n">ent</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">label_</span><span class="p">,</span> <span class="n">ent</span><span class="o">.</span><span class="n">_</span><span class="o">.</span><span class="n">score</span><span class="p">)</span> <span class="c1"># ent._.score only available in v. 0.0.7</span>
+</span></pre></div>
+</div>
+<section id="expected-output">
+<h4>Expected Output<a class="headerlink" href="#expected-output" title="Link to this heading">¶</a></h4>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">Bill</span> <span class="n">Gates</span> <span class="o">=&gt;</span> <span class="n">person</span>
+</span><span data-line="2"><span class="n">Microsoft</span> <span class="o">=&gt;</span> <span class="n">organization</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="using-flashdeberta">
+<h2>🏃‍♀️ Using FlashDeBERTa<a class="headerlink" href="#using-flashdeberta" title="Link to this heading">¶</a></h2>
+<p>Most GLiNER models use the DeBERTa encoder as their backbone. This architecture offers strong token classification performance and typically requires less data to achieve good results. However, a major drawback has been its slower inference speed, and until recently, there was no flash attention implementation compatible with DeBERTa’s disentangled attention mechanism.</p>
+<p>To address this, <a class="reference external" href="https://github.com/Knowledgator/FlashDeBERTa">FlashDeBERTa</a> was introduced.</p>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>flashdeberta<span class="w"> </span>-U
+</span></pre></div>
+</div>
+<p>:::tip
+Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.47.0</span></code>.
+:::</p>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
+<p>GLiNER will automatically detect and use FlashDeBERTa. If needed, you can switch to the standard <code class="docutils literal notranslate"><span class="pre">eager</span></code> attention mechanism:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Use FlashDeBERTa (automatic if installed)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Or explicitly use eager attention</span>
+</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="8">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span>
+</span><span data-line="10"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><strong>Performance Boost</strong>: FlashDeBERTa provides up to a <strong>3× speed boost</strong> for typical sequence lengths—and even greater improvements for longer sequences.</p>
+</section>
+</section>
+<section id="high-level-pipelines-pipelines">
+<h2>🛠️ High-Level Pipelines {#pipelines}<a class="headerlink" href="#high-level-pipelines-pipelines" title="Link to this heading">¶</a></h2>
+<p>GLiNER-Multitask models are designed to extract relevant information from plain text based on user-provided custom prompts. These encoder-based multitask models enable efficient and controllable information extraction with a single model, reducing computational and storage costs.</p>
+<p><strong>Supported Tasks:</strong></p>
+<ul class="simple">
+<li><p><strong>Named Entity Recognition (NER)</strong>: Identify and categorize entities</p></li>
+<li><p><strong>Relation Extraction</strong>: Detect relationships between entities</p></li>
+<li><p><strong>Summarization</strong>: Extract key sentences</p></li>
+<li><p><strong>Sentiment Extraction</strong>: Identify sentiment-bearing text spans</p></li>
+<li><p><strong>Key-Phrase Extraction</strong>: Extract important phrases and keywords</p></li>
+<li><p><strong>Question-Answering</strong>: Find answers to questions in text</p></li>
+<li><p><strong>Open Information Extraction</strong>: Extract information based on open prompts</p></li>
+<li><p><strong>Text Classification</strong>: Classify text against predefined labels</p></li>
+</ul>
+<section id="classification">
+<h3>Classification<a class="headerlink" href="#classification" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">GLiNERClassifier</span></code> pipeline performs text classification tasks:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClassifier</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Initialize</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">classifier</span> <span class="o">=</span> <span class="n">GLiNERClassifier</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Single-label classification</span>
+</span><span data-line="9"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;SpaceX successfully launched a new rocket into orbit.&quot;</span>
+</span><span data-line="10"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;science&#39;</span><span class="p">,</span> <span class="s1">&#39;technology&#39;</span><span class="p">,</span> <span class="s1">&#39;business&#39;</span><span class="p">,</span> <span class="s1">&#39;sports&#39;</span><span class="p">]</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">predictions</span> <span class="o">=</span> <span class="n">classifier</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="13"><span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+</span><span data-line="14"><span class="c1"># Output: [[{&#39;label&#39;: &#39;technology&#39;, &#39;score&#39;: 0.84}]]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Multi-label classification</span>
+</span><span data-line="17"><span class="n">predictions_multi</span> <span class="o">=</span> <span class="n">classifier</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">classes</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">multi_label</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="18"><span class="nb">print</span><span class="p">(</span><span class="n">predictions_multi</span><span class="p">)</span>
+</span><span data-line="19"><span class="c1"># Output: [[{&#39;label&#39;: &#39;technology&#39;, &#39;score&#39;: 0.84}, {&#39;label&#39;: &#39;science&#39;, &#39;score&#39;: 0.72}]]</span>
+</span></pre></div>
+</div>
+<p><strong>Evaluation on Dataset:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Evaluate on HuggingFace dataset</span>
+</span><span data-line="2"><span class="n">metrics</span> <span class="o">=</span> <span class="n">classifier</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="s1">&#39;dair-ai/emotion&#39;</span><span class="p">)</span>
+</span><span data-line="3"><span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</span><span data-line="4"><span class="c1"># Output: {&#39;micro&#39;: 0.4465, &#39;macro&#39;: 0.4243, &#39;weighted&#39;: 0.4884}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="question-answering">
+<h3>Question-Answering<a class="headerlink" href="#question-answering" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">GLiNERQuestionAnswerer</span></code> pipeline extracts answers from text:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERQuestionAnswerer</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Initialize</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">answerer</span> <span class="o">=</span> <span class="n">GLiNERQuestionAnswerer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Extract answer</span>
+</span><span data-line="9"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;SpaceX was founded by Elon Musk in 2002 to reduce space transportation costs.&quot;</span>
+</span><span data-line="10"><span class="n">question</span> <span class="o">=</span> <span class="s2">&quot;Who founded SpaceX?&quot;</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">predictions</span> <span class="o">=</span> <span class="n">answerer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">questions</span><span class="o">=</span><span class="n">question</span><span class="p">)</span>
+</span><span data-line="13"><span class="nb">print</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+</span><span data-line="14"><span class="c1"># Output: [[{&#39;answer&#39;: &#39;Elon Musk&#39;, &#39;score&#39;: 0.998}]]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Multiple questions</span>
+</span><span data-line="17"><span class="n">questions</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Who founded SpaceX?&quot;</span><span class="p">,</span> <span class="s2">&quot;When was SpaceX founded?&quot;</span><span class="p">,</span> <span class="s2">&quot;What is SpaceX&#39;s goal?&quot;</span><span class="p">]</span>
+</span><span data-line="18"><span class="n">predictions</span> <span class="o">=</span> <span class="n">answerer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">questions</span><span class="o">=</span><span class="n">questions</span><span class="p">)</span>
+</span><span data-line="19"><span class="k">for</span> <span class="n">q</span><span class="p">,</span> <span class="n">pred</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">questions</span><span class="p">,</span> <span class="n">predictions</span><span class="p">):</span>
+</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Q: </span><span class="si">{</span><span class="n">q</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;A: </span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;answer&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (score: </span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><strong>Evaluation on SQuAD:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERSquadEvaluator</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">evaluator</span> <span class="o">=</span> <span class="n">GLiNERSquadEvaluator</span><span class="p">(</span><span class="n">model_id</span><span class="o">=</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">metrics</span> <span class="o">=</span> <span class="n">evaluator</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.25</span><span class="p">)</span>
+</span><span data-line="5"><span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="p">)</span>
+</span><span data-line="6"><span class="c1"># Output: {&#39;exact&#39;: 29.41, &#39;f1&#39;: 29.80, &#39;total&#39;: 11873, ...}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="relation-extraction">
+<h3>Relation Extraction<a class="headerlink" href="#relation-extraction" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">GLiNERRelationExtractor</span></code> pipeline extracts relationships between entities:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERRelationExtractor</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Initialize</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">relation_extractor</span> <span class="o">=</span> <span class="n">GLiNERRelationExtractor</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Extract relations</span>
+</span><span data-line="9"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Elon Musk founded SpaceX in 2002 to reduce space transportation costs.&quot;</span>
+</span><span data-line="10"><span class="n">entities</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;person&#39;</span><span class="p">,</span> <span class="s1">&#39;company&#39;</span><span class="p">,</span> <span class="s1">&#39;year&#39;</span><span class="p">,</span> <span class="s1">&#39;goal&#39;</span><span class="p">]</span>
+</span><span data-line="11"><span class="n">relations</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;founded&#39;</span><span class="p">,</span> <span class="s1">&#39;founded_in&#39;</span><span class="p">,</span> <span class="s1">&#39;goal&#39;</span><span class="p">]</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="n">predictions</span> <span class="o">=</span> <span class="n">relation_extractor</span><span class="p">(</span>
+</span><span data-line="14">    <span class="n">text</span><span class="p">,</span> 
+</span><span data-line="15">    <span class="n">entities</span><span class="o">=</span><span class="n">entities</span><span class="p">,</span> 
+</span><span data-line="16">    <span class="n">relations</span><span class="o">=</span><span class="n">relations</span><span class="p">,</span>
+</span><span data-line="17">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span>
+</span><span data-line="18"><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">predictions</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="22">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Score: </span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">Elon<span class="w"> </span>Musk<span class="w"> </span>--<span class="o">[</span>founded<span class="o">]</span>--&gt;<span class="w"> </span>SpaceX
+</span><span data-line="2"><span class="w">  </span>Score:<span class="w"> </span><span class="m">0</span>.958
+</span><span data-line="3">SpaceX<span class="w"> </span>--<span class="o">[</span>founded_in<span class="o">]</span>--&gt;<span class="w"> </span><span class="m">2002</span>
+</span><span data-line="4"><span class="w">  </span>Score:<span class="w"> </span><span class="m">0</span>.912
+</span></pre></div>
+</div>
+</details>
+</section>
+<section id="open-information-extraction">
+<h3>Open Information Extraction<a class="headerlink" href="#open-information-extraction" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">GLiNEROpenExtractor</span></code> pipeline extracts information based on custom prompts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNEROpenExtractor</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Initialize with custom prompt</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">extractor</span> <span class="o">=</span> <span class="n">GLiNEROpenExtractor</span><span class="p">(</span>
+</span><span data-line="7">    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Extract all companies related to space technologies&quot;</span>
+</span><span data-line="9"><span class="p">)</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="c1"># Extract information</span>
+</span><span data-line="12"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="13"><span class="s2">Elon Musk founded SpaceX in 2002 to reduce space transportation costs. </span>
+</span><span data-line="14"><span class="s2">Also Elon is founder of Tesla, NeuroLink and many other companies.</span>
+</span><span data-line="15"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;company&#39;</span><span class="p">]</span>
+</span><span data-line="18"><span class="n">predictions</span> <span class="o">=</span> <span class="n">extractor</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="k">for</span> <span class="n">pred</span> <span class="ow">in</span> <span class="n">predictions</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (score: </span><span class="si">{</span><span class="n">pred</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">SpaceX<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.962<span class="o">)</span>
+</span><span data-line="2">Tesla<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.936<span class="o">)</span>
+</span><span data-line="3">NeuroLink<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.912<span class="o">)</span>
+</span></pre></div>
+</div>
+</details>
+<p><strong>Custom Prompts for Different Tasks:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Extract product descriptions</span>
+</span><span data-line="2"><span class="n">extractor</span> <span class="o">=</span> <span class="n">GLiNEROpenExtractor</span><span class="p">(</span>
+</span><span data-line="3">    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Extract product descriptions and features from the text&quot;</span>
+</span><span data-line="5"><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Extract technical specifications</span>
+</span><span data-line="8"><span class="n">extractor</span> <span class="o">=</span> <span class="n">GLiNEROpenExtractor</span><span class="p">(</span>
+</span><span data-line="9">    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Extract technical specifications and requirements&quot;</span>
+</span><span data-line="11"><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Extract contact information</span>
+</span><span data-line="14"><span class="n">extractor</span> <span class="o">=</span> <span class="n">GLiNEROpenExtractor</span><span class="p">(</span>
+</span><span data-line="15">    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="16">    <span class="n">prompt</span><span class="o">=</span><span class="s2">&quot;Extract all contact information including emails and phone numbers&quot;</span>
+</span><span data-line="17"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="summarization">
+<h3>Summarization<a class="headerlink" href="#summarization" title="Link to this heading">¶</a></h3>
+<p>The <code class="docutils literal notranslate"><span class="pre">GLiNERSummarizer</span></code> pipeline extracts key sentences for summarization:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.multitask</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERSummarizer</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Initialize</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">summarizer</span> <span class="o">=</span> <span class="n">GLiNERSummarizer</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="c1"># Extract summary</span>
+</span><span data-line="9"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="10"><span class="s2">Microsoft was founded by Bill Gates and Paul Allen on April 4, 1975 to develop </span>
+</span><span data-line="11"><span class="s2">and sell BASIC interpreters for the Altair 8800. During his career at Microsoft, </span>
+</span><span data-line="12"><span class="s2">Gates held the positions of chairman, chief executive officer, president and chief </span>
+</span><span data-line="13"><span class="s2">software architect, while also being the largest individual shareholder until May 2014.</span>
+</span><span data-line="14"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="n">summary</span> <span class="o">=</span> <span class="n">summarizer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+</span><span data-line="17"><span class="nb">print</span><span class="p">(</span><span class="n">summary</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="o">[</span><span class="s1">&#39;Microsoft was founded by Bill Gates and Paul Allen on April 4, 1975 to develop </span>
+</span><span data-line="2"><span class="s1">and sell BASIC interpreters for the Altair 8800.&#39;</span><span class="o">]</span>
+</span></pre></div>
+</div>
+</details>
+<p><strong>Controlling Summary Length:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># More selective (higher threshold = shorter summary)</span>
+</span><span data-line="2"><span class="n">summary_short</span> <span class="o">=</span> <span class="n">summarizer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># More comprehensive (lower threshold = longer summary)</span>
+</span><span data-line="5"><span class="n">summary_long</span> <span class="o">=</span> <span class="n">summarizer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-relation-extraction-with-utca">
+<h2>Advanced Relation Extraction with UTCA<a class="headerlink" href="#advanced-relation-extraction-with-utca" title="Link to this heading">¶</a></h2>
+<p>For more nuanced control over relation extraction, use the <a class="reference external" href="https://github.com/Knowledgator/utca">utca</a> framework:</p>
+<section id="id1">
+<h3>Installation<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>utca<span class="w"> </span>-U
+</span></pre></div>
+</div>
+</section>
+<section id="setting-up-the-pipeline">
+<h3>Setting Up the Pipeline<a class="headerlink" href="#setting-up-the-pipeline" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">utca.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">RenameAttribute</span>
+</span><span data-line="2"><span class="kn">from</span><span class="w"> </span><span class="nn">utca.implementation.predictors</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERPredictor</span><span class="p">,</span> <span class="n">GLiNERPredictorConfig</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">utca.implementation.tasks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+</span><span data-line="4">    <span class="n">GLiNER</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">GLiNERPreprocessor</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">GLiNERRelationExtraction</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">GLiNERRelationExtractionPreprocessor</span><span class="p">,</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Initialize predictor</span>
+</span><span data-line="11"><span class="n">predictor</span> <span class="o">=</span> <span class="n">GLiNERPredictor</span><span class="p">(</span>
+</span><span data-line="12">    <span class="n">GLiNERPredictorConfig</span><span class="p">(</span>
+</span><span data-line="13">        <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;knowledgator/gliner-multitask-large-v0.5&quot;</span><span class="p">,</span>
+</span><span data-line="14">        <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda:0&quot;</span><span class="p">,</span>  <span class="c1"># Use &quot;cpu&quot; for CPU inference</span>
+</span><span data-line="15">    <span class="p">)</span>
+</span><span data-line="16"><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Create pipeline</span>
+</span><span data-line="19"><span class="n">pipe</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="20">    <span class="n">GLiNER</span><span class="p">(</span>  <span class="c1"># Extract entities</span>
+</span><span data-line="21">        <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+</span><span data-line="22">        <span class="n">preprocess</span><span class="o">=</span><span class="n">GLiNERPreprocessor</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.7</span><span class="p">)</span>
+</span><span data-line="23">    <span class="p">)</span>
+</span><span data-line="24">    <span class="o">|</span> <span class="n">RenameAttribute</span><span class="p">(</span><span class="s2">&quot;output&quot;</span><span class="p">,</span> <span class="s2">&quot;entities&quot;</span><span class="p">)</span>  <span class="c1"># Prepare for relation extraction</span>
+</span><span data-line="25">    <span class="o">|</span> <span class="n">GLiNERRelationExtraction</span><span class="p">(</span>  <span class="c1"># Extract relations</span>
+</span><span data-line="26">        <span class="n">predictor</span><span class="o">=</span><span class="n">predictor</span><span class="p">,</span>
+</span><span data-line="27">        <span class="n">preprocess</span><span class="o">=</span><span class="p">(</span>
+</span><span data-line="28">            <span class="n">GLiNERPreprocessor</span><span class="p">(</span><span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="29">            <span class="o">|</span> <span class="n">GLiNERRelationExtractionPreprocessor</span><span class="p">()</span>
+</span><span data-line="30">        <span class="p">)</span>
+</span><span data-line="31">    <span class="p">)</span>
+</span><span data-line="32"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="running-the-pipeline">
+<h3>Running the Pipeline<a class="headerlink" href="#running-the-pipeline" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="2"><span class="s2">Microsoft was founded by Bill Gates and Paul Allen on April 4, 1975 to develop </span>
+</span><span data-line="3"><span class="s2">and sell BASIC interpreters for the Altair 8800. During his career at Microsoft, </span>
+</span><span data-line="4"><span class="s2">Gates held the positions of chairman, chief executive officer, president and chief </span>
+</span><span data-line="5"><span class="s2">software architect, while also being the largest individual shareholder until May 2014.</span>
+</span><span data-line="6"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="n">result</span> <span class="o">=</span> <span class="n">pipe</span><span class="o">.</span><span class="n">run</span><span class="p">({</span>
+</span><span data-line="9">    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+</span><span data-line="10">    <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">],</span>
+</span><span data-line="11">    <span class="s2">&quot;relations&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="12">        <span class="p">{</span>
+</span><span data-line="13">            <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;founder&quot;</span><span class="p">,</span>
+</span><span data-line="14">            <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">)],</span>  <span class="c1"># Only consider org-person pairs</span>
+</span><span data-line="15">            <span class="s2">&quot;distance_threshold&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>  <span class="c1"># Max distance between entities (in characters)</span>
+</span><span data-line="16">        <span class="p">},</span>
+</span><span data-line="17">        <span class="p">{</span>
+</span><span data-line="18">            <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;inception_date&quot;</span><span class="p">,</span>
+</span><span data-line="19">            <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">)],</span>
+</span><span data-line="20">        <span class="p">},</span>
+</span><span data-line="21">        <span class="p">{</span>
+</span><span data-line="22">            <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;held_position&quot;</span><span class="p">,</span>
+</span><span data-line="23">            <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">)],</span>
+</span><span data-line="24">        <span class="p">}</span>
+</span><span data-line="25">    <span class="p">]</span>
+</span><span data-line="26"><span class="p">})</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="c1"># Display results</span>
+</span><span data-line="29"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;output&quot;</span><span class="p">]:</span>
+</span><span data-line="30">    <span class="n">source</span> <span class="o">=</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;source&#39;</span><span class="p">][</span><span class="s1">&#39;span&#39;</span><span class="p">]</span>
+</span><span data-line="31">    <span class="n">target</span> <span class="o">=</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;target&#39;</span><span class="p">][</span><span class="s1">&#39;span&#39;</span><span class="p">]</span>
+</span><span data-line="32">    <span class="n">rel_type</span> <span class="o">=</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span>
+</span><span data-line="33">    <span class="n">score</span> <span class="o">=</span> <span class="n">relation</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span>
+</span><span data-line="34">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">rel_type</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2"> (score: </span><span class="si">{</span><span class="n">score</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">Microsoft<span class="w"> </span>--<span class="o">[</span>founder<span class="o">]</span>--&gt;<span class="w"> </span>Bill<span class="w"> </span>Gates<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.968<span class="o">)</span>
+</span><span data-line="2">Microsoft<span class="w"> </span>--<span class="o">[</span>founder<span class="o">]</span>--&gt;<span class="w"> </span>Paul<span class="w"> </span>Allen<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.863<span class="o">)</span>
+</span><span data-line="3">Microsoft<span class="w"> </span>--<span class="o">[</span>inception_date<span class="o">]</span>--&gt;<span class="w"> </span>April<span class="w"> </span><span class="m">4</span>,<span class="w"> </span><span class="m">1975</span><span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.997<span class="o">)</span>
+</span><span data-line="4">Bill<span class="w"> </span>Gates<span class="w"> </span>--<span class="o">[</span>held_position<span class="o">]</span>--&gt;<span class="w"> </span>chairman<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.966<span class="o">)</span>
+</span><span data-line="5">Bill<span class="w"> </span>Gates<span class="w"> </span>--<span class="o">[</span>held_position<span class="o">]</span>--&gt;<span class="w"> </span>chief<span class="w"> </span>executive<span class="w"> </span>officer<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.947<span class="o">)</span>
+</span><span data-line="6">Bill<span class="w"> </span>Gates<span class="w"> </span>--<span class="o">[</span>held_position<span class="o">]</span>--&gt;<span class="w"> </span>president<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.973<span class="o">)</span>
+</span><span data-line="7">Bill<span class="w"> </span>Gates<span class="w"> </span>--<span class="o">[</span>held_position<span class="o">]</span>--&gt;<span class="w"> </span>chief<span class="w"> </span>software<span class="w"> </span>architect<span class="w"> </span><span class="o">(</span>score:<span class="w"> </span><span class="m">0</span>.950<span class="o">)</span>
+</span></pre></div>
+</div>
+</details>
+</section>
+<section id="advanced-utca-features">
+<h3>Advanced UTCA Features<a class="headerlink" href="#advanced-utca-features" title="Link to this heading">¶</a></h3>
+<p><strong>Distance Filtering:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Only extract relations where entities are close together</span>
+</span><span data-line="2"><span class="n">relations</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="3">    <span class="p">{</span>
+</span><span data-line="4">        <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;works_for&quot;</span><span class="p">,</span>
+</span><span data-line="5">        <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">)],</span>
+</span><span data-line="6">        <span class="s2">&quot;distance_threshold&quot;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span>  <span class="c1"># Entities must be within 50 characters</span>
+</span><span data-line="7">    <span class="p">}</span>
+</span><span data-line="8"><span class="p">]</span>
+</span></pre></div>
+</div>
+<p><strong>Multiple Relation Types:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Define complex relation schemas</span>
+</span><span data-line="2"><span class="n">relations</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="3">    <span class="p">{</span>
+</span><span data-line="4">        <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;employed_by&quot;</span><span class="p">,</span>
+</span><span data-line="5">        <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">)],</span>
+</span><span data-line="6">    <span class="p">},</span>
+</span><span data-line="7">    <span class="p">{</span>
+</span><span data-line="8">        <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;located_in&quot;</span><span class="p">,</span>
+</span><span data-line="9">        <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">)],</span>
+</span><span data-line="10">    <span class="p">},</span>
+</span><span data-line="11">    <span class="p">{</span>
+</span><span data-line="12">        <span class="s2">&quot;relation&quot;</span><span class="p">:</span> <span class="s2">&quot;acquired_by&quot;</span><span class="p">,</span>
+</span><span data-line="13">        <span class="s2">&quot;pairs_filter&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">)],</span>
+</span><span data-line="14">    <span class="p">},</span>
+</span><span data-line="15"><span class="p">]</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="practical-examples">
+<h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
+<section id="example-1-extract-company-information">
+<h3>Example 1: Extract Company Information<a class="headerlink" href="#example-1-extract-company-information" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="6"><span class="s2">Apple Inc. is headquartered in Cupertino, California. The company was founded </span>
+</span><span data-line="7"><span class="s2">by Steve Jobs, Steve Wozniak, and Ronald Wayne in April 1976. Tim Cook is the </span>
+</span><span data-line="8"><span class="s2">current CEO. Apple&#39;s main products include iPhone, iPad, and Mac computers.</span>
+</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="12"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Organize by type</span>
+</span><span data-line="15"><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
+</span><span data-line="16"><span class="n">by_type</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+</span><span data-line="17"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="18">    <span class="n">by_type</span><span class="p">[</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">items</span> <span class="ow">in</span> <span class="n">by_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">items</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="example-2-process-scientific-papers">
+<h3>Example 2: Process Scientific Papers<a class="headerlink" href="#example-2-process-scientific-papers" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">abstract</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="6"><span class="s2">We introduce GPT-4, a large-scale multimodal model developed by OpenAI. </span>
+</span><span data-line="7"><span class="s2">The model was trained on a diverse dataset and exhibits strong performance </span>
+</span><span data-line="8"><span class="s2">on various benchmarks including MMLU, HumanEval, and GSM-8K.</span>
+</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="12">    <span class="s2">&quot;model_name&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark&quot;</span><span class="p">,</span> 
+</span><span data-line="13">    <span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span>
+</span><span data-line="14"><span class="p">]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">abstract</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracted Information:&quot;</span><span class="p">)</span>
+</span><span data-line="19"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="example-3-analyze-news-articles">
+<h3>Example 3: Analyze News Articles<a class="headerlink" href="#example-3-analyze-news-articles" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-bi-small-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">article</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="6"><span class="s2">Tesla CEO Elon Musk announced on Twitter that the company will open a new </span>
+</span><span data-line="7"><span class="s2">Gigafactory in Austin, Texas. The facility will produce the Cybertruck and </span>
+</span><span data-line="8"><span class="s2">Model Y vehicles. Construction began in July 2020 and operations started in 2021.</span>
+</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="12">    <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;facility&quot;</span><span class="p">,</span> 
+</span><span data-line="13">    <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span>
+</span><span data-line="14"><span class="p">]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Process with BiEncoder for efficiency</span>
+</span><span data-line="17"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># Group related entities</span>
+</span><span data-line="20"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Key Information:&quot;</span><span class="p">)</span>
+</span><span data-line="21"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Company: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;company&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Location: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;location&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="23"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Products: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;product&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Timeline: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="tips-and-best-practices">
+<h2>Tips and Best Practices<a class="headerlink" href="#tips-and-best-practices" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Choose the right model architecture</strong>:</p>
+<ul class="simple">
+<li><p>UniEncoder: General purpose, &lt; 30 entity types</p></li>
+<li><p>BiEncoder: Many entity types (50-200+)</p></li>
+<li><p>Token-level: Long entity spans</p></li>
+<li><p>Relation extraction: Knowledge graph construction</p></li>
+</ul>
+</li>
+<li><p><strong>Optimize threshold for your use case</strong>:</p>
+<ul class="simple">
+<li><p>High precision: threshold = 0.6-0.8</p></li>
+<li><p>Balanced: threshold = 0.4-0.6</p></li>
+<li><p>High recall: threshold = 0.2-0.4</p></li>
+</ul>
+</li>
+<li><p><strong>Use batch processing for multiple documents</strong>:</p>
+<ul class="simple">
+<li><p>More efficient GPU utilization</p></li>
+<li><p>Faster overall processing</p></li>
+</ul>
+</li>
+<li><p><strong>Pre-compute label embeddings (BiEncoder)</strong>:</p>
+<ul class="simple">
+<li><p>Cache embeddings when processing many documents</p></li>
+<li><p>Significant speedup for production use</p></li>
+</ul>
+</li>
+<li><p><strong>Enable FlashDeBERTa</strong>:</p>
+<ul class="simple">
+<li><p>~3x speed improvement</p></li>
+<li><p>No accuracy loss</p></li>
+</ul>
+</li>
+<li><p><strong>Use appropriate labels</strong>:</p>
+<ul class="simple">
+<li><p>Specific labels work better than generic ones</p></li>
+<li><p>“company” &gt; “entity”</p></li>
+<li><p>“medication” &gt; “word”</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="low-accuracy">
+<h3>Low Accuracy<a class="headerlink" href="#low-accuracy" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Try lowering the threshold</span>
+</span><span data-line="2"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Use more specific labels</span>
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tech_company&quot;</span><span class="p">,</span> <span class="s2">&quot;software_product&quot;</span><span class="p">,</span> <span class="s2">&quot;founder&quot;</span><span class="p">]</span>  <span class="c1"># Specific</span>
+</span><span data-line="6"><span class="c1"># instead of</span>
+</span><span data-line="7"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;thing&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">]</span>  <span class="c1"># Too generic</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># Try a larger model</span>
+</span><span data-line="10"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_large-v2.1&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="slow-inference">
+<h3>Slow Inference<a class="headerlink" href="#slow-inference" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Enable FlashDeBERTa</span>
+</span><span data-line="2"><span class="c1"># pip install flashdeberta</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Compile model</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="6">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">compile_torch_model</span><span class="o">=</span><span class="kc">True</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Use batch processing</span>
+</span><span data-line="11"><span class="n">entities_batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># For BiEncoder: pre-compute embeddings</span>
+</span><span data-line="14"><span class="n">label_embeds</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</span><span data-line="15"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_with_embeds</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">label_embeds</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="out-of-memory">
+<h3>Out of Memory<a class="headerlink" href="#out-of-memory" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Reduce batch size</span>
+</span><span data-line="2"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Use a smaller model</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="c1"># Process on CPU</span>
+</span><span data-line="8"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="9">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cpu&quot;</span>
+</span><span data-line="11"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="quickstart.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Quickstart</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="configs.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Components &amp; Configs</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

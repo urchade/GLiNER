@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Components &amp; Configs - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Training" href="training.html" /><link rel="prev" title="Advanced Usage" href="usage.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Components &amp; Configs"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#architecture-overview">Architecture Overview</a></li>
+<li><a class="reference internal" href="#base-configuration-parameters">Base Configuration Parameters</a><ul>
+<li><a class="reference internal" href="#core-parameters">Core Parameters</a><ul>
+<li><a class="reference internal" href="#model-name"><code class="docutils literal notranslate"><span class="pre">model_name</span></code></a></li>
+<li><a class="reference internal" href="#name"><code class="docutils literal notranslate"><span class="pre">name</span></code></a></li>
+<li><a class="reference internal" href="#max-width"><code class="docutils literal notranslate"><span class="pre">max_width</span></code></a></li>
+<li><a class="reference internal" href="#hidden-size"><code class="docutils literal notranslate"><span class="pre">hidden_size</span></code></a></li>
+<li><a class="reference internal" href="#dropout"><code class="docutils literal notranslate"><span class="pre">dropout</span></code></a></li>
+<li><a class="reference internal" href="#fine-tune"><code class="docutils literal notranslate"><span class="pre">fine_tune</span></code></a></li>
+<li><a class="reference internal" href="#subtoken-pooling"><code class="docutils literal notranslate"><span class="pre">subtoken_pooling</span></code></a></li>
+<li><a class="reference internal" href="#span-mode-source"><code class="docutils literal notranslate"><span class="pre">span_mode</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/span_rep.py" target="_blank" rel="noopener noreferrer">[source]</a></sup></a></li>
+<li><a class="reference internal" href="#post-fusion-schema-source"><code class="docutils literal notranslate"><span class="pre">post_fusion_schema</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/layers.py#L298" target="_blank" rel="noopener noreferrer">[source]</a></sup></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated">:::tip
+The number of fusion layers (<code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code>) controls how many times the entire schema is repeated.
+:::</a><ul>
+<li><a class="reference internal" href="#num-post-fusion-layers"><code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code></a></li>
+<li><a class="reference internal" href="#vocab-size"><code class="docutils literal notranslate"><span class="pre">vocab_size</span></code></a></li>
+<li><a class="reference internal" href="#max-neg-type-ratio"><code class="docutils literal notranslate"><span class="pre">max_neg_type_ratio</span></code></a></li>
+<li><a class="reference internal" href="#max-types"><code class="docutils literal notranslate"><span class="pre">max_types</span></code></a></li>
+<li><a class="reference internal" href="#max-len"><code class="docutils literal notranslate"><span class="pre">max_len</span></code></a></li>
+<li><a class="reference internal" href="#words-splitter-type"><code class="docutils literal notranslate"><span class="pre">words_splitter_type</span></code></a></li>
+<li><a class="reference internal" href="#num-rnn-layers"><code class="docutils literal notranslate"><span class="pre">num_rnn_layers</span></code></a></li>
+<li><a class="reference internal" href="#fuse-layers"><code class="docutils literal notranslate"><span class="pre">fuse_layers</span></code></a></li>
+<li><a class="reference internal" href="#embed-ent-token"><code class="docutils literal notranslate"><span class="pre">embed_ent_token</span></code></a></li>
+<li><a class="reference internal" href="#class-token-index"><code class="docutils literal notranslate"><span class="pre">class_token_index</span></code></a></li>
+<li><a class="reference internal" href="#encoder-config"><code class="docutils literal notranslate"><span class="pre">encoder_config</span></code></a></li>
+<li><a class="reference internal" href="#ent-token"><code class="docutils literal notranslate"><span class="pre">ent_token</span></code></a></li>
+<li><a class="reference internal" href="#sep-token"><code class="docutils literal notranslate"><span class="pre">sep_token</span></code></a></li>
+<li><a class="reference internal" href="#attn-implementation"><code class="docutils literal notranslate"><span class="pre">_attn_implementation</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniencoder-span-configuration">UniEncoder Span Configuration</a><ul>
+<li><a class="reference internal" href="#architecture-specific-parameters">Architecture-Specific Parameters</a></li>
+<li><a class="reference internal" href="#usage-example">Usage Example</a></li>
+<li><a class="reference internal" href="#training-config-example">Training Config Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniencoder-token-configuration">UniEncoder Token Configuration</a><ul>
+<li><a class="reference internal" href="#id1">Architecture-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#span-mode"><code class="docutils literal notranslate"><span class="pre">span_mode</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id2">Usage Example</a></li>
+<li><a class="reference internal" href="#id3">Training Config Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#biencoder-span-configuration">BiEncoder Span Configuration</a><ul>
+<li><a class="reference internal" href="#id4">Architecture-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#labels-encoder"><code class="docutils literal notranslate"><span class="pre">labels_encoder</span></code></a></li>
+<li><a class="reference internal" href="#labels-encoder-config"><code class="docutils literal notranslate"><span class="pre">labels_encoder_config</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#important-notes">Important Notes</a></li>
+<li><a class="reference internal" href="#id5">Usage Example</a></li>
+<li><a class="reference internal" href="#id6">Training Config Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#biencoder-token-configuration">BiEncoder Token Configuration</a><ul>
+<li><a class="reference internal" href="#id7">Architecture-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate"><span class="pre">labels_encoder</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate"><span class="pre">span_mode</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id10">Usage Example</a></li>
+<li><a class="reference internal" href="#id11">Training Config Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniencoder-span-decoder-configuration">UniEncoder Span Decoder Configuration</a><ul>
+<li><a class="reference internal" href="#id12">Architecture-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#labels-decoder"><code class="docutils literal notranslate"><span class="pre">labels_decoder</span></code></a></li>
+<li><a class="reference internal" href="#decoder-mode"><code class="docutils literal notranslate"><span class="pre">decoder_mode</span></code></a></li>
+<li><a class="reference internal" href="#full-decoder-context"><code class="docutils literal notranslate"><span class="pre">full_decoder_context</span></code></a></li>
+<li><a class="reference internal" href="#blank-entity-prob"><code class="docutils literal notranslate"><span class="pre">blank_entity_prob</span></code></a></li>
+<li><a class="reference internal" href="#labels-decoder-config"><code class="docutils literal notranslate"><span class="pre">labels_decoder_config</span></code></a></li>
+<li><a class="reference internal" href="#decoder-loss-coef"><code class="docutils literal notranslate"><span class="pre">decoder_loss_coef</span></code></a></li>
+<li><a class="reference internal" href="#span-loss-coef"><code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id13">Usage Example</a></li>
+<li><a class="reference internal" href="#id14">Training Config Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#uniencoder-span-relex-configuration">UniEncoder Span Relex Configuration</a><ul>
+<li><a class="reference internal" href="#id15">Architecture-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#relations-layer"><code class="docutils literal notranslate"><span class="pre">relations_layer</span></code></a></li>
+<li><a class="reference internal" href="#triples-layer"><code class="docutils literal notranslate"><span class="pre">triples_layer</span></code></a></li>
+<li><a class="reference internal" href="#embed-rel-token"><code class="docutils literal notranslate"><span class="pre">embed_rel_token</span></code></a></li>
+<li><a class="reference internal" href="#rel-token-index"><code class="docutils literal notranslate"><span class="pre">rel_token_index</span></code></a></li>
+<li><a class="reference internal" href="#rel-token"><code class="docutils literal notranslate"><span class="pre">rel_token</span></code></a></li>
+<li><a class="reference internal" href="#id16"><code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code></a></li>
+<li><a class="reference internal" href="#adjacency-loss-coef"><code class="docutils literal notranslate"><span class="pre">adjacency_loss_coef</span></code></a></li>
+<li><a class="reference internal" href="#relation-loss-coef"><code class="docutils literal notranslate"><span class="pre">relation_loss_coef</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#id17">Usage Example</a></li>
+<li><a class="reference internal" href="#id18">Training Config Example</a></li>
+<li><a class="reference internal" href="#data-format-for-relation-extraction">Data Format for Relation Extraction</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#trainingarguments">TrainingArguments</a><ul>
+<li><a class="reference internal" href="#gliner-specific-parameters">GLiNER-Specific Parameters</a><ul>
+<li><a class="reference internal" href="#others-lr"><code class="docutils literal notranslate"><span class="pre">others_lr</span></code></a></li>
+<li><a class="reference internal" href="#others-weight-decay"><code class="docutils literal notranslate"><span class="pre">others_weight_decay</span></code></a></li>
+<li><a class="reference internal" href="#focal-loss-alpha"><code class="docutils literal notranslate"><span class="pre">focal_loss_alpha</span></code></a></li>
+<li><a class="reference internal" href="#focal-loss-gamma"><code class="docutils literal notranslate"><span class="pre">focal_loss_gamma</span></code></a></li>
+<li><a class="reference internal" href="#focal-loss-prob-margin"><code class="docutils literal notranslate"><span class="pre">focal_loss_prob_margin</span></code></a></li>
+<li><a class="reference internal" href="#label-smoothing"><code class="docutils literal notranslate"><span class="pre">label_smoothing</span></code></a></li>
+<li><a class="reference internal" href="#loss-reduction"><code class="docutils literal notranslate"><span class="pre">loss_reduction</span></code></a></li>
+<li><a class="reference internal" href="#negatives"><code class="docutils literal notranslate"><span class="pre">negatives</span></code></a></li>
+<li><a class="reference internal" href="#masking"><code class="docutils literal notranslate"><span class="pre">masking</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Components &amp; Configs</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="components-configs">
+<h1>Components &amp; Configs<a class="headerlink" href="#components-configs" title="Link to this heading">¶</a></h1>
+<p>GLiNER supports multiple architecture variants, each with its own configuration class. This page documents the configuration parameters for each architecture and provides training examples.</p>
+<section id="architecture-overview">
+<h2>Architecture Overview<a class="headerlink" href="#architecture-overview" title="Link to this heading">¶</a></h2>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Architecture</p></th>
+<th class="head"><p>Config Class</p></th>
+<th class="head"><p>Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference internal" href="#uniencoder-span-configuration"><span class="xref myst">UniEncoderSpan</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanConfig</span></code></p></td>
+<td><p>Standard span-based NER, original GLiNER</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#uniencoder-token-configuration"><span class="xref myst">UniEncoderToken</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenConfig</span></code></p></td>
+<td><p>Token-level NER, long-form extraction</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#biencoder-span-configuration"><span class="xref myst">BiEncoderSpan</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanConfig</span></code></p></td>
+<td><p>Span NER with separate label encoder</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#biencoder-token-configuration"><span class="xref myst">BiEncoderToken</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenConfig</span></code></p></td>
+<td><p>Token NER with separate label encoder</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#uniencoder-span-decoder-configuration"><span class="xref myst">UniEncoderSpanDecoder</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderConfig</span></code></p></td>
+<td><p>Generative label prediction</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#uniencoder-span-relex-configuration"><span class="xref myst">UniEncoderSpanRelex</span></a></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexConfig</span></code></p></td>
+<td><p>Joint entity and relation extraction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="base-configuration-parameters">
+<h2>Base Configuration Parameters<a class="headerlink" href="#base-configuration-parameters" title="Link to this heading">¶</a></h2>
+<p>All GLiNER architectures share these base configuration parameters from <code class="docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code>:</p>
+<section id="core-parameters">
+<h3>Core Parameters<a class="headerlink" href="#core-parameters" title="Link to this heading">¶</a></h3>
+<section id="model-name">
+<h4><code class="docutils literal notranslate"><span class="pre">model_name</span></code><a class="headerlink" href="#model-name" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;microsoft/deberta-v3-small&quot;</span></code></p>
+<p>Base encoder model identifier from Hugging Face Hub or local path.</p>
+</section>
+<hr class="docutils" />
+<section id="name">
+<h4><code class="docutils literal notranslate"><span class="pre">name</span></code><a class="headerlink" href="#name" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;gliner&quot;</span></code></p>
+<p>Optional display name for this model configuration.</p>
+</section>
+<hr class="docutils" />
+<section id="max-width">
+<h4><code class="docutils literal notranslate"><span class="pre">max_width</span></code><a class="headerlink" href="#max-width" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">12</span></code></p>
+<p>Maximum span width (in number of tokens) allowed when generating candidate spans. Only applies to span-based architectures.</p>
+</section>
+<hr class="docutils" />
+<section id="hidden-size">
+<h4><code class="docutils literal notranslate"><span class="pre">hidden_size</span></code><a class="headerlink" href="#hidden-size" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">512</span></code></p>
+<p>Dimensionality of hidden representations in internal layers.</p>
+</section>
+<hr class="docutils" />
+<section id="dropout">
+<h4><code class="docutils literal notranslate"><span class="pre">dropout</span></code><a class="headerlink" href="#dropout" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.4</span></code></p>
+<p>Dropout rate applied to intermediate layers.</p>
+</section>
+<hr class="docutils" />
+<section id="fine-tune">
+<h4><code class="docutils literal notranslate"><span class="pre">fine_tune</span></code><a class="headerlink" href="#fine-tune" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Whether to fine-tune the encoder during training.</p>
+</section>
+<hr class="docutils" />
+<section id="subtoken-pooling">
+<h4><code class="docutils literal notranslate"><span class="pre">subtoken_pooling</span></code><a class="headerlink" href="#subtoken-pooling" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;first&quot;</span></code></p>
+<p>Currently only first token pooling is supported. More approaches will be added in the future.</p>
+</section>
+<hr class="docutils" />
+<section id="span-mode-source">
+<h4><code class="docutils literal notranslate"><span class="pre">span_mode</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/span_rep.py" target="_blank" rel="noopener noreferrer">[source]</a></sup><a class="headerlink" href="#span-mode-source" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;markerV0&quot;</span></code></p>
+<p>Defines the strategy for constructing span representations from encoder outputs. Only applies to span-based architectures.</p>
+<p><strong>Available options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;markerV0&quot;</span></code> — Projects the start and end token representations with MLPs, concatenates them, and then applies a final projection. Lightweight and default.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;marker&quot;</span></code> — Similar to <code class="docutils literal notranslate"><span class="pre">markerV0</span></code> but with deeper two-layer projections; better for complex tasks.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;query&quot;</span></code> — Uses learned per-span-width query vectors and dot-product interaction.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;mlp&quot;</span></code> — Applies a feedforward MLP and reshapes output into span format; fast but position-agnostic.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;cat&quot;</span></code> — Concatenates token features with learned span width embeddings before projection.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;conv_conv&quot;</span></code> — Uses multiple 1D convolutions with increasing kernel sizes; captures internal structure.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;conv_max&quot;</span></code> — Max pooling over tokens in span; emphasizes the strongest token.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;conv_mean&quot;</span></code> — Mean pooling across span tokens.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;conv_sum&quot;</span></code> — Sum pooling; raw additive representation.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;conv_share&quot;</span></code> — Shared convolution kernel over span widths; parameter-efficient alternative.</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="post-fusion-schema-source">
+<h4><code class="docutils literal notranslate"><span class="pre">post_fusion_schema</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/layers.py#L298" target="_blank" rel="noopener noreferrer">[source]</a></sup><a class="headerlink" href="#post-fusion-schema-source" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code></p>
+<p>Defines the multi-step attention schema used to fuse span and label embeddings. The value is a string with hyphen-separated tokens that determine the sequence of attention operations applied in the <code class="docutils literal notranslate"><span class="pre">CrossFuser</span></code> module.</p>
+<p>Each token in the schema defines one of the following attention types:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;l2l&quot;</span></code> — <strong>label-to-label self-attention</strong> (intra-label interaction)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;t2t&quot;</span></code> — <strong>token-to-token self-attention</strong> (intra-span interaction)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;l2t&quot;</span></code> — <strong>label-to-token cross-attention</strong> (labels attend to span tokens)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;t2l&quot;</span></code> — <strong>token-to-label cross-attention</strong> (tokens attend to labels)</p></li>
+</ul>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;l2l-l2t-t2t&quot;</span></code> — apply label self-attention → label-to-token attention → token self-attention</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;l2t&quot;</span></code> — a single step where labels attend to span tokens</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> — disables fusion entirely (no interaction is applied)</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated">
+<h2>:::tip
+The number of fusion layers (<code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code>) controls how many times the entire schema is repeated.
+:::<a class="headerlink" href="#tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated" title="Link to this heading">¶</a></h2>
+<section id="num-post-fusion-layers">
+<h3><code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code><a class="headerlink" href="#num-post-fusion-layers" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Number of layers applied after span-label fusion.</p>
+<hr class="docutils" />
+</section>
+<section id="vocab-size">
+<h3><code class="docutils literal notranslate"><span class="pre">vocab_size</span></code><a class="headerlink" href="#vocab-size" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+<p>Vocabulary size override if needed. Automatically set during model initialization.</p>
+<hr class="docutils" />
+</section>
+<section id="max-neg-type-ratio">
+<h3><code class="docutils literal notranslate"><span class="pre">max_neg_type_ratio</span></code><a class="headerlink" href="#max-neg-type-ratio" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Controls the ratio of negative (non-matching) types during training.</p>
+<hr class="docutils" />
+</section>
+<section id="max-types">
+<h3><code class="docutils literal notranslate"><span class="pre">max_types</span></code><a class="headerlink" href="#max-types" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">25</span></code></p>
+<p>Maximum number of entity types supported per batch.</p>
+<hr class="docutils" />
+</section>
+<section id="max-len">
+<h3><code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#max-len" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">384</span></code></p>
+<p>Maximum sequence length accepted by the encoder.</p>
+<hr class="docutils" />
+</section>
+<section id="words-splitter-type">
+<h3><code class="docutils literal notranslate"><span class="pre">words_splitter_type</span></code><a class="headerlink" href="#words-splitter-type" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;whitespace&quot;</span></code></p>
+<p>Heuristic used for word-level splitting during inference.<br />
+<strong>Choices:</strong> <code class="docutils literal notranslate"><span class="pre">&quot;whitespace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spacy&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;moses&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">stanza</span></code>, <code class="docutils literal notranslate"><span class="pre">universal</span></code></p>
+<hr class="docutils" />
+</section>
+<section id="num-rnn-layers">
+<h3><code class="docutils literal notranslate"><span class="pre">num_rnn_layers</span></code><a class="headerlink" href="#num-rnn-layers" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
+<p>Number of LSTM layers to apply on top of encoder outputs. Set to 0 to disable LSTM.</p>
+<hr class="docutils" />
+</section>
+<section id="fuse-layers">
+<h3><code class="docutils literal notranslate"><span class="pre">fuse_layers</span></code><a class="headerlink" href="#fuse-layers" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
+<p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, combine representations from multiple encoders (labels and main encoder).</p>
+<hr class="docutils" />
+</section>
+<section id="embed-ent-token">
+<h3><code class="docutils literal notranslate"><span class="pre">embed_ent_token</span></code><a class="headerlink" href="#embed-ent-token" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;ENT&gt;&gt;</span></code> tokens will be pooled for each label. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the first token of each label will be pooled as label embedding.</p>
+<hr class="docutils" />
+</section>
+<section id="class-token-index">
+<h3><code class="docutils literal notranslate"><span class="pre">class_token_index</span></code><a class="headerlink" href="#class-token-index" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+<p>Index of the entity token in the vocabulary. Set automatically during initialization.</p>
+<hr class="docutils" />
+</section>
+<section id="encoder-config">
+<h3><code class="docutils literal notranslate"><span class="pre">encoder_config</span></code><a class="headerlink" href="#encoder-config" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or <code class="docutils literal notranslate"><span class="pre">PretrainedConfig</span></code>, <em>optional</em></p>
+<p>A nested config dictionary for the encoder model. If a dict is passed, its <code class="docutils literal notranslate"><span class="pre">model_type</span></code> must be set or inferred.</p>
+<hr class="docutils" />
+</section>
+<section id="ent-token">
+<h3><code class="docutils literal notranslate"><span class="pre">ent_token</span></code><a class="headerlink" href="#ent-token" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;ENT&gt;&gt;&quot;</span></code></p>
+<p>Special token used to mark entity type boundaries in the input.</p>
+<hr class="docutils" />
+</section>
+<section id="sep-token">
+<h3><code class="docutils literal notranslate"><span class="pre">sep_token</span></code><a class="headerlink" href="#sep-token" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;SEP&gt;&gt;&quot;</span></code></p>
+<p>Token used to separate entity types from input text.</p>
+<hr class="docutils" />
+</section>
+<section id="attn-implementation">
+<h3><code class="docutils literal notranslate"><span class="pre">_attn_implementation</span></code><a class="headerlink" href="#attn-implementation" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em></p>
+<p>Optional override for attention logic. Can be used to disable Flash Attention if installed.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="2">    <span class="s2">&quot;urchade/gliner_mediumv2.1&quot;</span><span class="p">,</span> 
+</span><span data-line="3">    <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span>  <span class="c1"># Disable Flash Attention</span>
+</span><span data-line="4"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="uniencoder-span-configuration">
+<h2>UniEncoder Span Configuration<a class="headerlink" href="#uniencoder-span-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanConfig</span></code> is used for the original GLiNER architecture with span-based prediction.</p>
+<section id="architecture-specific-parameters">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#architecture-specific-parameters" title="Link to this heading">¶</a></h3>
+<p>This architecture uses all <a class="reference internal" href="#base-configuration-parameters"><span class="xref myst">base parameters</span></a> without additional architecture-specific parameters.</p>
+</section>
+<section id="usage-example">
+<h3>Usage Example<a class="headerlink" href="#usage-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for UniEncoderSpan</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">max_width</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">hidden_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;markerV0&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="c1"># labels_encoder=None  # Makes it UniEncoder</span>
+</span><span data-line="10">    <span class="c1"># labels_decoder=None  # No decoder</span>
+</span><span data-line="11">    <span class="c1"># relations_layer=None  # No relations</span>
+</span><span data-line="12"><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Initialize model from config</span>
+</span><span data-line="15"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="training-config-example">
+<h3>Training Config Example<a class="headerlink" href="#training-config-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">labels_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># UniEncoder</span>
+</span><span data-line="4"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;span</span><span class="nv"> </span><span class="s">level</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="5"><span class="nt">max_width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span data-line="6"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="7"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="8"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="9"><span class="nt">subtoken_pooling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">first</span>
+</span><span data-line="10"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markerV0</span>
+</span><span data-line="11"><span class="nt">post_fusion_schema</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&quot;</span>
+</span><span data-line="12"><span class="nt">num_post_fusion_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Training Parameters</span>
+</span><span data-line="15"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="16"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span data-line="17"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="18"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="19"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="c1"># Loss Configuration</span>
+</span><span data-line="22"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+</span><span data-line="23"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="24"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="25"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="28"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="29"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="30"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="31"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="32"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="33">
+</span><span data-line="34"><span class="c1"># Data Configuration</span>
+</span><span data-line="35"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data.json&quot;</span>
+</span><span data-line="36"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Training from scratch</span>
+</span><span data-line="37"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="38">
+</span><span data-line="39"><span class="c1"># Advanced Settings</span>
+</span><span data-line="40"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="41"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="uniencoder-token-configuration">
+<h2>UniEncoder Token Configuration<a class="headerlink" href="#uniencoder-token-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenConfig</span></code> is used for token-level classification, suitable for long-form entity extraction.</p>
+<section id="id1">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="span-mode">
+<h4><code class="docutils literal notranslate"><span class="pre">span_mode</span></code><a class="headerlink" href="#span-mode" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em>, fixed to <code class="docutils literal notranslate"><span class="pre">&quot;token-level&quot;</span></code></p>
+<p>This parameter is automatically set to <code class="docutils literal notranslate"><span class="pre">&quot;token-level&quot;</span></code> and cannot be changed for this architecture.</p>
+</section>
+</section>
+<section id="id2">
+<h3>Usage Example<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for UniEncoderToken</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">hidden_size</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;token-level&quot;</span><span class="p">,</span>  <span class="c1"># Automatically set for this architecture</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id3">
+<h3>Training Config Example<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">labels_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="4"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;token</span><span class="nv"> </span><span class="s">level</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="5"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="6"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="7"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="8"><span class="nt">subtoken_pooling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">first</span>
+</span><span data-line="9"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">token-level</span><span class="w">  </span><span class="c1"># Token-level prediction</span>
+</span><span data-line="10"><span class="nt">num_rnn_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span><span class="w">  </span><span class="c1"># LSTM helps with token sequences</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Training Parameters (same as span)</span>
+</span><span data-line="13"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="14"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span data-line="15"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="16"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="17"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># Loss Configuration</span>
+</span><span data-line="20"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+</span><span data-line="21"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="22"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="23"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="26"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="27"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="28"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="29"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="30"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="31">
+</span><span data-line="32"><span class="c1"># Data Configuration</span>
+</span><span data-line="33"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data.json&quot;</span>
+</span><span data-line="34"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="35"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="36">
+</span><span data-line="37"><span class="c1"># Advanced Settings</span>
+</span><span data-line="38"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="39"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="biencoder-span-configuration">
+<h2>BiEncoder Span Configuration<a class="headerlink" href="#biencoder-span-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanConfig</span></code> uses separate encoders for text and entity labels, enabling pre-computation of label embeddings.</p>
+<section id="id4">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
+<section id="labels-encoder">
+<h4><code class="docutils literal notranslate"><span class="pre">labels_encoder</span></code><a class="headerlink" href="#labels-encoder" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em></p>
+<p>Model identifier or path for the label encoder. Typically a sentence transformer model.</p>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;sentence-transformers/all-MiniLM-L6-v2&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;BAAI/bge-small-en-v1.5&quot;</span></code></p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="labels-encoder-config">
+<h4><code class="docutils literal notranslate"><span class="pre">labels_encoder_config</span></code><a class="headerlink" href="#labels-encoder-config" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or <code class="docutils literal notranslate"><span class="pre">PretrainedConfig</span></code>, <em>optional</em></p>
+<p>Nested configuration for the label encoder model.</p>
+</section>
+</section>
+<section id="important-notes">
+<h3>Important Notes<a class="headerlink" href="#important-notes" title="Link to this heading">¶</a></h3>
+<p>:::warning Embedding Resizing Not Supported
+Unlike UniEncoder models, BiEncoder models do not support token embedding resizing. The vocabulary is fixed to the pretrained encoder’s vocabulary.
+:::</p>
+</section>
+<section id="id5">
+<h3>Usage Example<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for BiEncoderSpan</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-base&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">labels_encoder</span><span class="o">=</span><span class="s2">&quot;sentence-transformers/all-MiniLM-L6-v2&quot;</span><span class="p">,</span>  <span class="c1"># Bi-encoder</span>
+</span><span data-line="7">    <span class="n">max_width</span><span class="o">=</span><span class="mi">12</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">hidden_size</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;markerV0&quot;</span><span class="p">,</span>
+</span><span data-line="10"><span class="p">)</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Pre-compute label embeddings for efficiency</span>
+</span><span data-line="15"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="16"><span class="n">labels_embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Use pre-computed embeddings for inference</span>
+</span><span data-line="19"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">batch_predict_with_embeds</span><span class="p">(</span>
+</span><span data-line="20">    <span class="n">texts</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">],</span>
+</span><span data-line="21">    <span class="n">labels_embeddings</span><span class="o">=</span><span class="n">labels_embeddings</span><span class="p">,</span>
+</span><span data-line="22">    <span class="n">labels</span><span class="o">=</span><span class="n">labels</span>
+</span><span data-line="23"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id6">
+<h3>Training Config Example<a class="headerlink" href="#id6" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">labels_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sentence-transformers/all-MiniLM-L6-v2</span><span class="w">  </span><span class="c1"># Bi-encoder</span>
+</span><span data-line="4"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bi-encoder</span><span class="nv"> </span><span class="s">span</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="5"><span class="nt">max_width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span data-line="6"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="7"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="8"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="9"><span class="nt">subtoken_pooling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">first</span>
+</span><span data-line="10"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markerV0</span>
+</span><span data-line="11"><span class="nt">post_fusion_schema</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;l2t-t2l&quot;</span><span class="w">  </span><span class="c1"># Cross-attention fusion</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Training Parameters</span>
+</span><span data-line="14"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="15"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span data-line="16"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="17"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="18"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="c1"># Loss Configuration (Focal loss recommended)</span>
+</span><span data-line="21"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+</span><span data-line="22"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+</span><span data-line="23"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="24"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="27"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="28"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="29"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="30"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="31"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="32">
+</span><span data-line="33"><span class="c1"># Data Configuration</span>
+</span><span data-line="34"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data.json&quot;</span>
+</span><span data-line="35"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="36"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="37">
+</span><span data-line="38"><span class="c1"># Advanced Settings</span>
+</span><span data-line="39"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span><span class="w">  </span><span class="c1"># Can handle many more types</span>
+</span><span data-line="40"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="biencoder-token-configuration">
+<h2>BiEncoder Token Configuration<a class="headerlink" href="#biencoder-token-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenConfig</span></code> combines bi-encoder architecture with token-level prediction.</p>
+<section id="id7">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#id7" title="Link to this heading">¶</a></h3>
+<section id="id8">
+<h4><code class="docutils literal notranslate"><span class="pre">labels_encoder</span></code><a class="headerlink" href="#id8" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em></p>
+<p>Model identifier for the label encoder.</p>
+</section>
+<section id="id9">
+<h4><code class="docutils literal notranslate"><span class="pre">span_mode</span></code><a class="headerlink" href="#id9" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em>, fixed to <code class="docutils literal notranslate"><span class="pre">&quot;token-level&quot;</span></code></p>
+<p>Automatically set to <code class="docutils literal notranslate"><span class="pre">&quot;token-level&quot;</span></code> for this architecture.</p>
+</section>
+</section>
+<section id="id10">
+<h3>Usage Example<a class="headerlink" href="#id10" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for BiEncoderToken</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-base&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">labels_encoder</span><span class="o">=</span><span class="s2">&quot;sentence-transformers/all-MiniLM-L6-v2&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">hidden_size</span><span class="o">=</span><span class="mi">768</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;token-level&quot;</span><span class="p">,</span>
+</span><span data-line="9"><span class="p">)</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id11">
+<h3>Training Config Example<a class="headerlink" href="#id11" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">labels_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">sentence-transformers/all-MiniLM-L6-v2</span>
+</span><span data-line="4"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;bi-encoder</span><span class="nv"> </span><span class="s">token</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="5"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="6"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="7"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="8"><span class="nt">subtoken_pooling</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">first</span>
+</span><span data-line="9"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">token-level</span>
+</span><span data-line="10"><span class="nt">num_rnn_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="c1"># Training Parameters</span>
+</span><span data-line="13"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="14"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span data-line="15"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="16"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="17"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># Loss Configuration</span>
+</span><span data-line="20"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.25</span>
+</span><span data-line="21"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+</span><span data-line="22"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="23"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="26"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="27"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="28"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="29"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="30"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="31">
+</span><span data-line="32"><span class="c1"># Data Configuration</span>
+</span><span data-line="33"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data.json&quot;</span>
+</span><span data-line="34"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="35"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="36">
+</span><span data-line="37"><span class="c1"># Advanced Settings</span>
+</span><span data-line="38"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+</span><span data-line="39"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="uniencoder-span-decoder-configuration">
+<h2>UniEncoder Span Decoder Configuration<a class="headerlink" href="#uniencoder-span-decoder-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderConfig</span></code> extends span-based NER with a generative decoder for label generation.</p>
+<section id="id12">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#id12" title="Link to this heading">¶</a></h3>
+<section id="labels-decoder">
+<h4><code class="docutils literal notranslate"><span class="pre">labels_decoder</span></code><a class="headerlink" href="#labels-decoder" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em></p>
+<p>Model identifier for the generative decoder (e.g., GPT-2).</p>
+<p><strong>Examples:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;gpt2&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;distilgpt2&quot;</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;EleutherAI/gpt-neo-125M&quot;</span></code></p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="decoder-mode">
+<h4><code class="docutils literal notranslate"><span class="pre">decoder_mode</span></code><a class="headerlink" href="#decoder-mode" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em></p>
+<p>Defines how decoder inputs are constructed.</p>
+<p><strong>Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;prompt&quot;</span></code> — Use entity type embeddings as decoder context</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;span&quot;</span></code> — Use span token representations as decoder context</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="full-decoder-context">
+<h4><code class="docutils literal notranslate"><span class="pre">full_decoder_context</span></code><a class="headerlink" href="#full-decoder-context" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Whether to provide full context to the decoder (all tokens in span) or just boundary markers.</p>
+</section>
+<hr class="docutils" />
+<section id="blank-entity-prob">
+<h4><code class="docutils literal notranslate"><span class="pre">blank_entity_prob</span></code><a class="headerlink" href="#blank-entity-prob" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.1</span></code></p>
+<p>Probability of using a generic “entity” label during training for improved generalization.</p>
+</section>
+<hr class="docutils" />
+<section id="labels-decoder-config">
+<h4><code class="docutils literal notranslate"><span class="pre">labels_decoder_config</span></code><a class="headerlink" href="#labels-decoder-config" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or <code class="docutils literal notranslate"><span class="pre">PretrainedConfig</span></code>, <em>optional</em></p>
+<p>Nested configuration for the decoder model.</p>
+</section>
+<hr class="docutils" />
+<section id="decoder-loss-coef">
+<h4><code class="docutils literal notranslate"><span class="pre">decoder_loss_coef</span></code><a class="headerlink" href="#decoder-loss-coef" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.5</span></code></p>
+<p>Weight for the decoder generation loss in the total loss.</p>
+</section>
+<hr class="docutils" />
+<section id="span-loss-coef">
+<h4><code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code><a class="headerlink" href="#span-loss-coef" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.5</span></code></p>
+<p>Weight for the span classification loss in the total loss.</p>
+</section>
+</section>
+<section id="id13">
+<h3>Usage Example<a class="headerlink" href="#id13" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for UniEncoderSpanDecoder</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-base&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">labels_decoder</span><span class="o">=</span><span class="s2">&quot;gpt2&quot;</span><span class="p">,</span>  <span class="c1"># Add decoder</span>
+</span><span data-line="7">    <span class="n">decoder_mode</span><span class="o">=</span><span class="s2">&quot;span&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">full_decoder_context</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">blank_entity_prob</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">decoder_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="12"><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id14">
+<h3>Training Config Example<a class="headerlink" href="#id14" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">labels_decoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gpt2</span><span class="w">  </span><span class="c1"># Generative decoder</span>
+</span><span data-line="4"><span class="nt">decoder_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">span</span>
+</span><span data-line="5"><span class="nt">full_decoder_context</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="6"><span class="nt">blank_entity_prob</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="7"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;span</span><span class="nv"> </span><span class="s">decoder</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="8"><span class="nt">max_width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span data-line="9"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="10"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="11"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="12"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markerV0</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Loss Configuration</span>
+</span><span data-line="15"><span class="nt">decoder_loss_coef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</span><span data-line="16"><span class="nt">span_loss_coef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Training Parameters</span>
+</span><span data-line="19"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="20"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span><span class="w">  </span><span class="c1"># Smaller due to decoder</span>
+</span><span data-line="21"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="22"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="23"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="c1"># Loss Configuration</span>
+</span><span data-line="26"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+</span><span data-line="27"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="28"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span><span class="w">  </span><span class="c1"># Helps with generation</span>
+</span><span data-line="29"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="30">
+</span><span data-line="31"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="32"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="33"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="34"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="35"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="36"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="37">
+</span><span data-line="38"><span class="c1"># Data Configuration</span>
+</span><span data-line="39"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data.json&quot;</span>
+</span><span data-line="40"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="41"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="c1"># Advanced Settings</span>
+</span><span data-line="44"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="45"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="uniencoder-span-relex-configuration">
+<h2>UniEncoder Span Relex Configuration<a class="headerlink" href="#uniencoder-span-relex-configuration" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexConfig</span></code> extends span-based NER with relation extraction capabilities.</p>
+<section id="id15">
+<h3>Architecture-Specific Parameters<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
+<section id="relations-layer">
+<h4><code class="docutils literal notranslate"><span class="pre">relations_layer</span></code><a class="headerlink" href="#relations-layer" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>required</em></p>
+<p>Type of relation representation layer to use.</p>
+<p><strong>Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;dot&quot;</span></code> — Dot product between entity representations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;gcn&quot;</span></code> — Graph convolutional network for modeling interactions between entities</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;gat&quot;</span></code> — Graph attention network for modeling interactions between entities</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="triples-layer">
+<h4><code class="docutils literal notranslate"><span class="pre">triples_layer</span></code><a class="headerlink" href="#triples-layer" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em></p>
+<p>Type of triple scoring layer for (head, relation, tail) scoring.</p>
+<p><strong>Choices:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;distmult&quot;</span></code> — DistMult scoring function</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;complex&quot;</span></code> — ComplEx scoring function</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">&quot;transe&quot;</span></code> — TransE scoring function</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="embed-rel-token">
+<h4><code class="docutils literal notranslate"><span class="pre">embed_rel_token</span></code><a class="headerlink" href="#embed-rel-token" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
+<p>Whether to embed relation type tokens similar to entity tokens.</p>
+</section>
+<hr class="docutils" />
+<section id="rel-token-index">
+<h4><code class="docutils literal notranslate"><span class="pre">rel_token_index</span></code><a class="headerlink" href="#rel-token-index" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
+<p>Index of the relation token in vocabulary. Set automatically during initialization.</p>
+</section>
+<hr class="docutils" />
+<section id="rel-token">
+<h4><code class="docutils literal notranslate"><span class="pre">rel_token</span></code><a class="headerlink" href="#rel-token" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;REL&gt;&gt;&quot;</span></code></p>
+<p>Special token used to mark relation types in the input.</p>
+</section>
+<hr class="docutils" />
+<section id="id16">
+<h4><code class="docutils literal notranslate"><span class="pre">span_loss_coef</span></code><a class="headerlink" href="#id16" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code></p>
+<p>Weight for entity span classification loss.</p>
+</section>
+<hr class="docutils" />
+<section id="adjacency-loss-coef">
+<h4><code class="docutils literal notranslate"><span class="pre">adjacency_loss_coef</span></code><a class="headerlink" href="#adjacency-loss-coef" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code></p>
+<p>Weight for entity pair adjacency prediction loss.</p>
+</section>
+<hr class="docutils" />
+<section id="relation-loss-coef">
+<h4><code class="docutils literal notranslate"><span class="pre">relation_loss_coef</span></code><a class="headerlink" href="#relation-loss-coef" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code></p>
+<p>Weight for relation type classification loss.</p>
+</section>
+</section>
+<section id="id17">
+<h3>Usage Example<a class="headerlink" href="#id17" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span><span class="p">,</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Create config for UniEncoderSpanRelex</span>
+</span><span data-line="4"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
+</span><span data-line="5">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-base&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">relations_layer</span><span class="o">=</span><span class="s2">&quot;biaffine&quot;</span><span class="p">,</span>  <span class="c1"># Enable relations</span>
+</span><span data-line="7">    <span class="n">triples_layer</span><span class="o">=</span><span class="s2">&quot;distmult&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">rel_token</span><span class="o">=</span><span class="s2">&quot;&lt;&lt;REL&gt;&gt;&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">adjacency_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">relation_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="12"><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id18">
+<h3>Training Config Example<a class="headerlink" href="#id18" title="Link to this heading">¶</a></h3>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Model Configuration</span>
+</span><span data-line="2"><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">microsoft/deberta-v3-base</span>
+</span><span data-line="3"><span class="nt">relations_layer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">biaffine</span><span class="w">  </span><span class="c1"># Enable relation extraction</span>
+</span><span data-line="4"><span class="nt">triples_layer</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">distmult</span>
+</span><span data-line="5"><span class="nt">rel_token</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;&lt;&lt;REL&gt;&gt;&quot;</span>
+</span><span data-line="6"><span class="nt">embed_rel_token</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="7"><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;span</span><span class="nv"> </span><span class="s">relex</span><span class="nv"> </span><span class="s">gliner&quot;</span>
+</span><span data-line="8"><span class="nt">max_width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span data-line="9"><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="10"><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="11"><span class="nt">fine_tune</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</span><span data-line="12"><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">markerV0</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="c1"># Loss Configuration</span>
+</span><span data-line="15"><span class="nt">span_loss_coef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="16"><span class="nt">adjacency_loss_coef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="17"><span class="nt">relation_loss_coef</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="c1"># Training Parameters</span>
+</span><span data-line="20"><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">30000</span>
+</span><span data-line="21"><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span><span class="w">  </span><span class="c1"># Smaller due to relation computation</span>
+</span><span data-line="22"><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="23"><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="24"><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="c1"># Loss Configuration</span>
+</span><span data-line="27"><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+</span><span data-line="28"><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="29"><span class="nt">label_smoothing</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+</span><span data-line="30"><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="31">
+</span><span data-line="32"><span class="c1"># Learning Rate Configuration</span>
+</span><span data-line="33"><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span>
+</span><span data-line="34"><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span>
+</span><span data-line="35"><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="36"><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="37"><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="38">
+</span><span data-line="39"><span class="c1"># Data Configuration</span>
+</span><span data-line="40"><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data_with_relations.json&quot;</span><span class="w">  </span><span class="c1"># Must include relation annotations</span>
+</span><span data-line="41"><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span>
+</span><span data-line="42"><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="43">
+</span><span data-line="44"><span class="c1"># Advanced Settings</span>
+</span><span data-line="45"><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="46"><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span></pre></div>
+</div>
+</section>
+<section id="data-format-for-relation-extraction">
+<h3>Data Format for Relation Extraction<a class="headerlink" href="#data-format-for-relation-extraction" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span>
+</span><span data-line="3">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="s2">&quot;works&quot;</span><span class="p">,</span> <span class="s2">&quot;at&quot;</span><span class="p">,</span> <span class="s2">&quot;Microsoft&quot;</span><span class="p">],</span>
+</span><span data-line="4">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">]],</span>
+</span><span data-line="5">        <span class="s2">&quot;relations&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;works_at&quot;</span><span class="p">]]</span>  <span class="c1"># (head_entity_idx, tail_entity_idx, relation_type)</span>
+</span><span data-line="6">    <span class="p">}</span>
+</span><span data-line="7"><span class="p">]</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<hr class="docutils" />
+<section id="trainingarguments">
+<h2>TrainingArguments<a class="headerlink" href="#trainingarguments" title="Link to this heading">¶</a></h2>
+<p>Custom extension of <code class="docutils literal notranslate"><span class="pre">transformers.TrainingArguments</span></code> with additional parameters for GLiNER models.</p>
+<section id="gliner-specific-parameters">
+<h3>GLiNER-Specific Parameters<a class="headerlink" href="#gliner-specific-parameters" title="Link to this heading">¶</a></h3>
+<section id="others-lr">
+<h4><code class="docutils literal notranslate"><span class="pre">others_lr</span></code><a class="headerlink" href="#others-lr" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em><br />
+Learning rate for non-encoder parameters (e.g., span layers, label encoder). If not specified, uses main <code class="docutils literal notranslate"><span class="pre">learning_rate</span></code>.</p>
+</section>
+<hr class="docutils" />
+<section id="others-weight-decay">
+<h4><code class="docutils literal notranslate"><span class="pre">others_weight_decay</span></code><a class="headerlink" href="#others-weight-decay" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code><br />
+Weight decay for non-encoder parameters.</p>
+</section>
+<hr class="docutils" />
+<section id="focal-loss-alpha">
+<h4><code class="docutils literal notranslate"><span class="pre">focal_loss_alpha</span></code><a class="headerlink" href="#focal-loss-alpha" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code><br />
+Alpha parameter for focal loss. If ≥ 0, focal loss is activated.</p>
+<p>Focal loss formula:<br />
+<code class="docutils literal notranslate"><span class="pre">FL(p_t)</span> <span class="pre">=</span> <span class="pre">-α</span> <span class="pre">×</span> <span class="pre">(1</span> <span class="pre">-</span> <span class="pre">p_t)^γ</span> <span class="pre">×</span> <span class="pre">log(p_t)</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="focal-loss-gamma">
+<h4><code class="docutils literal notranslate"><span class="pre">focal_loss_gamma</span></code><a class="headerlink" href="#focal-loss-gamma" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0</span></code><br />
+Gamma parameter for focal loss. Higher values increase focus on hard examples.</p>
+</section>
+<hr class="docutils" />
+<section id="focal-loss-prob-margin">
+<h4><code class="docutils literal notranslate"><span class="pre">focal_loss_prob_margin</span></code><a class="headerlink" href="#focal-loss-prob-margin" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code><br />
+Probability margin for focal loss adjustment.</p>
+</section>
+<hr class="docutils" />
+<section id="label-smoothing">
+<h4><code class="docutils literal notranslate"><span class="pre">label_smoothing</span></code><a class="headerlink" href="#label-smoothing" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">0.0</span></code><br />
+Label smoothing factor ε for regularization.</p>
+</section>
+<hr class="docutils" />
+<section id="loss-reduction">
+<h4><code class="docutils literal notranslate"><span class="pre">loss_reduction</span></code><a class="headerlink" href="#loss-reduction" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code><br />
+How to aggregate loss across samples.<br />
+<strong>Choices:</strong> <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code></p>
+</section>
+<hr class="docutils" />
+<section id="negatives">
+<h4><code class="docutils literal notranslate"><span class="pre">negatives</span></code><a class="headerlink" href="#negatives" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">float</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1.0</span></code><br />
+Ratio of negative to positive spans during training.</p>
+</section>
+<hr class="docutils" />
+<section id="masking">
+<h4><code class="docutils literal notranslate"><span class="pre">masking</span></code><a class="headerlink" href="#masking" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code><br />
+Masking strategy for negative sampling.<br />
+<strong>Choices:</strong> <code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;global&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;label&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;span&quot;</span></code></p>
+</section>
+</section>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="usage.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Advanced Usage</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="training.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Training</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

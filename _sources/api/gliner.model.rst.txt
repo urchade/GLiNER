@@ -1,0 +1,7 @@
+gliner.model module
+===================
+
+.. automodule:: gliner.model
+   :members:
+   :undoc-members:
+   :show-inheritance:

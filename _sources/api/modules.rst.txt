@@ -1,0 +1,7 @@
+gliner
+======
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner

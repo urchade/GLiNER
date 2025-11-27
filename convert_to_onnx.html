@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>ONNX Export &amp; Deployment - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="gliner.model module" href="api/gliner.model.html" /><link rel="prev" title="Architectures" href="architectures.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="ONNX Export &amp; Deployment"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#overview">Overview</a></li>
+<li><a class="reference internal" href="#converting-models-to-onnx">Converting Models to ONNX</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#conversion-script">Conversion Script</a></li>
+<li><a class="reference internal" href="#usage-examples">Usage Examples</a><ul>
+<li><a class="reference internal" href="#basic-conversion">Basic Conversion</a></li>
+<li><a class="reference internal" href="#convert-with-quantization">Convert with Quantization</a></li>
+<li><a class="reference internal" href="#convert-local-model">Convert Local Model</a></li>
+<li><a class="reference internal" href="#custom-configuration">Custom Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#parameters-reference">Parameters Reference</a></li>
+<li><a class="reference internal" href="#quantization-benefits">Quantization Benefits</a></li>
+<li><a class="reference internal" href="#output-structure">Output Structure</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#running-onnx-models">Running ONNX Models</a><ul>
+<li><a class="reference internal" href="#python-native-gliner-support">Python (Native GLiNER Support)</a><ul>
+<li><a class="reference internal" href="#onnx-runtime-configuration">ONNX Runtime Configuration</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cross-platform-frameworks">Cross-Platform Frameworks</a><ul>
+<li><a class="reference internal" href="#rust-gline-rs">&#129408; Rust: gline-rs</a></li>
+<li><a class="reference internal" href="#javascript-typescript-gliner-js">&#127760; JavaScript/TypeScript: GLiNER.js</a></li>
+<li><a class="reference internal" href="#c-gliner-cpp">&#9889; C++: GLiNER.cpp</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#framework-comparison">Framework Comparison</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#supported-model-architectures">Supported Model Architectures</a></li>
+<li><a class="reference internal" href="#advanced-onnx-features">Advanced ONNX Features</a><ul>
+<li><a class="reference internal" href="#bi-encoder-export-options">Bi-Encoder Export Options</a></li>
+<li><a class="reference internal" href="#custom-opset-versions">Custom Opset Versions</a></li>
+<li><a class="reference internal" href="#programmatic-export">Programmatic Export</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
+<li><a class="reference internal" href="#common-issues">Common Issues</a></li>
+<li><a class="reference internal" href="#validation">Validation</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">ONNX Export &amp; Deployment</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="onnx-export-deployment">
+<h1>ONNX Export &amp; Deployment<a class="headerlink" href="#onnx-export-deployment" title="Link to this heading">¶</a></h1>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Link to this heading">¶</a></h2>
+<p>GLiNER models can be exported to ONNX format for optimized inference across different platforms and frameworks. ONNX (Open Neural Network Exchange) provides:</p>
+<ul class="simple">
+<li><p><strong>Cross-platform compatibility</strong>: Deploy on web, mobile, embedded systems</p></li>
+<li><p><strong>Optimized inference</strong>: Hardware-specific optimizations and acceleration</p></li>
+<li><p><strong>Production deployment</strong>: Integrate with existing ML infrastructure</p></li>
+<li><p><strong>Reduced dependencies</strong>: Lighter runtime without full PyTorch stack</p></li>
+</ul>
+</section>
+<section id="converting-models-to-onnx">
+<h2>Converting Models to ONNX<a class="headerlink" href="#converting-models-to-onnx" title="Link to this heading">¶</a></h2>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h3>
+<p>First, ensure you have GLiNER installed with ONNX support:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>onnx<span class="o">]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="conversion-script">
+<h3>Conversion Script<a class="headerlink" href="#conversion-script" title="Link to this heading">¶</a></h3>
+<p>Save the following script as <code class="docutils literal notranslate"><span class="pre">convert_to_onnx.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="6">    <span class="c1"># Load the GLiNER model</span>
+</span><span data-line="7">    <span class="n">gliner_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">model_path</span><span class="p">)</span>
+</span><span data-line="8">    
+</span><span data-line="9">    <span class="c1"># Export to ONNX format</span>
+</span><span data-line="10">    <span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span>
+</span><span data-line="11">        <span class="n">save_dir</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="p">,</span> 
+</span><span data-line="12">        <span class="n">onnx_filename</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">file_name</span><span class="p">,</span> 
+</span><span data-line="13">        <span class="n">quantized_filename</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">quantized_file_name</span><span class="p">,</span>
+</span><span data-line="14">        <span class="n">quantize</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">quantize</span><span class="p">,</span>
+</span><span data-line="15">        <span class="n">opset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">opset</span><span class="p">,</span>
+</span><span data-line="16">    <span class="p">)</span>
+</span><span data-line="17">    
+</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model exported successfully to </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span data-line="21">    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Convert GLiNER model to ONNX format&#39;</span><span class="p">)</span>
+</span><span data-line="22">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--model_path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="23">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path or HuggingFace model ID (e.g., urchade/gliner_small-v2.1)&#39;</span><span class="p">)</span>
+</span><span data-line="24">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--save_path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./onnx_models&#39;</span><span class="p">,</span>
+</span><span data-line="25">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save ONNX model&#39;</span><span class="p">)</span>
+</span><span data-line="26">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--file_name&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;model.onnx&#39;</span><span class="p">,</span>
+</span><span data-line="27">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the ONNX model file&#39;</span><span class="p">)</span>
+</span><span data-line="28">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--quantized_file_name&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;model_quantized.onnx&#39;</span><span class="p">,</span>
+</span><span data-line="29">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the quantized ONNX model file&#39;</span><span class="p">)</span>
+</span><span data-line="30">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--opset&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span>
+</span><span data-line="31">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;ONNX opset version (default: 19)&#39;</span><span class="p">)</span>
+</span><span data-line="32">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--quantize&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+</span><span data-line="33">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Also create a quantized INT8 version&#39;</span><span class="p">)</span>
+</span><span data-line="34">    
+</span><span data-line="35">    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+</span><span data-line="36">    
+</span><span data-line="37">    <span class="c1"># Create output directory if it doesn&#39;t exist</span>
+</span><span data-line="38">    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="p">):</span>
+</span><span data-line="39">        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="p">)</span>
+</span><span data-line="40">    
+</span><span data-line="41">    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
+</span><span data-line="42">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="usage-examples">
+<h3>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">¶</a></h3>
+<section id="basic-conversion">
+<h4>Basic Conversion<a class="headerlink" href="#basic-conversion" title="Link to this heading">¶</a></h4>
+<p>Convert a model from HuggingFace Hub:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>convert_to_onnx.py<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model_path<span class="w"> </span>urchade/gliner_small-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--save_path<span class="w"> </span>./onnx_models
+</span></pre></div>
+</div>
+</section>
+<section id="convert-with-quantization">
+<h4>Convert with Quantization<a class="headerlink" href="#convert-with-quantization" title="Link to this heading">¶</a></h4>
+<p>Create both standard and quantized versions:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>convert_to_onnx.py<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model_path<span class="w"> </span>urchade/gliner_small-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--save_path<span class="w"> </span>./onnx_models<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--quantize
+</span></pre></div>
+</div>
+</section>
+<section id="convert-local-model">
+<h4>Convert Local Model<a class="headerlink" href="#convert-local-model" title="Link to this heading">¶</a></h4>
+<p>Convert a locally trained or fine-tuned model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>convert_to_onnx.py<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model_path<span class="w"> </span>./my_finetuned_model<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--save_path<span class="w"> </span>./onnx_models<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--file_name<span class="w"> </span>my_model.onnx
+</span></pre></div>
+</div>
+</section>
+<section id="custom-configuration">
+<h4>Custom Configuration<a class="headerlink" href="#custom-configuration" title="Link to this heading">¶</a></h4>
+<p>Specify all parameters:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>convert_to_onnx.py<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model_path<span class="w"> </span>knowledgator/gliner-multitask-large-v0.5<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--save_path<span class="w"> </span>./production_models<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--file_name<span class="w"> </span>gliner_large.onnx<span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--quantized_file_name<span class="w"> </span>gliner_large_int8.onnx<span class="w"> </span><span class="se">\</span>
+</span><span data-line="6"><span class="w">    </span>--opset<span class="w"> </span><span class="m">19</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="7"><span class="w">    </span>--quantize
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="parameters-reference">
+<h3>Parameters Reference<a class="headerlink" href="#parameters-reference" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--model_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><strong>Required</strong></p></td>
+<td><p>Path to local model or HuggingFace model ID</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--save_path</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">./onnx_models</span></code></p></td>
+<td><p>Output directory for ONNX files</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--file_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model.onnx</span></code></p></td>
+<td><p>Name for the ONNX model file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--quantized_file_name</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">str</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">model_quantized.onnx</span></code></p></td>
+<td><p>Name for quantized model file</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">--opset</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">int</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">19</span></code></p></td>
+<td><p>ONNX opset version (14-19 supported)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">--quantize</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bool</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">False</span></code></p></td>
+<td><p>Create INT8 quantized version</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="quantization-benefits">
+<h3>Quantization Benefits<a class="headerlink" href="#quantization-benefits" title="Link to this heading">¶</a></h3>
+<p>Quantized models (INT8) offer:</p>
+<ul class="simple">
+<li><p><strong>50-75% smaller file size</strong>: Faster downloads and reduced storage</p></li>
+<li><p><strong>2-4x faster inference on CPU</strong>: Especially on AVX512-capable processors</p></li>
+<li><p><strong>Lower memory usage</strong>: Important for edge deployment</p></li>
+<li><p><strong>Minimal accuracy loss</strong>: Typically &lt; 1% F1 score difference</p></li>
+</ul>
+<p>:::tip When to Use Quantization
+Use quantized models for:</p>
+<ul class="simple">
+<li><p>CPU-based production deployments</p></li>
+<li><p>Mobile and edge devices</p></li>
+<li><p>Bandwidth-constrained environments</p></li>
+<li><p>High-throughput scenarios</p></li>
+</ul>
+<p>Use standard models for:</p>
+<ul class="simple">
+<li><p>GPU inference (GPUs are optimized for FP16/FP32)</p></li>
+<li><p>Maximum accuracy requirements</p></li>
+<li><p>Research and experimentation
+:::</p></li>
+</ul>
+</section>
+<section id="output-structure">
+<h3>Output Structure<a class="headerlink" href="#output-structure" title="Link to this heading">¶</a></h3>
+<p>After conversion, your directory will contain:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1">onnx_models/
+</span><span data-line="2">├── model.onnx              # Standard ONNX model (FP32)
+</span><span data-line="3">├── model_quantized.onnx    # Quantized model (INT8, if --quantize used)
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="running-onnx-models">
+<h2>Running ONNX Models<a class="headerlink" href="#running-onnx-models" title="Link to this heading">¶</a></h2>
+<section id="python-native-gliner-support">
+<h3>Python (Native GLiNER Support)<a class="headerlink" href="#python-native-gliner-support" title="Link to this heading">¶</a></h3>
+<p>GLiNER provides native support for loading and running ONNX models:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load ONNX model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="5">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Use exactly like PyTorch models</span>
+</span><span data-line="11"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
+</span><span data-line="12">    <span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">,</span>
+</span><span data-line="13">    <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">]</span>
+</span><span data-line="14"><span class="p">)</span>
+</span></pre></div>
+</div>
+<section id="onnx-runtime-configuration">
+<h4>ONNX Runtime Configuration<a class="headerlink" href="#onnx-runtime-configuration" title="Link to this heading">¶</a></h4>
+<p>Configure ONNX Runtime for optimal performance:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">onnxruntime</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ort</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># CPU with optimizations</span>
+</span><span data-line="4"><span class="n">session_options</span> <span class="o">=</span> <span class="n">ort</span><span class="o">.</span><span class="n">SessionOptions</span><span class="p">()</span>
+</span><span data-line="5"><span class="n">session_options</span><span class="o">.</span><span class="n">graph_optimization_level</span> <span class="o">=</span> <span class="n">ort</span><span class="o">.</span><span class="n">GraphOptimizationLevel</span><span class="o">.</span><span class="n">ORT_ENABLE_ALL</span>
+</span><span data-line="6"><span class="n">session_options</span><span class="o">.</span><span class="n">intra_op_num_threads</span> <span class="o">=</span> <span class="mi">4</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="9">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">session_options</span><span class="o">=</span><span class="n">session_options</span>
+</span><span data-line="13"><span class="p">)</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="c1"># GPU (CUDA) inference</span>
+</span><span data-line="16"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="17">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="18">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="19">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="20">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span>
+</span><span data-line="21"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="cross-platform-frameworks">
+<h3>Cross-Platform Frameworks<a class="headerlink" href="#cross-platform-frameworks" title="Link to this heading">¶</a></h3>
+<p>GLiNER ONNX models are compatible with multiple frameworks and languages:</p>
+<section id="rust-gline-rs">
+<h4>🦀 Rust: gline-rs<a class="headerlink" href="#rust-gline-rs" title="Link to this heading">¶</a></h4>
+<p>High-performance inference engine for production systems.</p>
+<div class="highlight-rust notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">use</span><span class="w"> </span><span class="n">gline_rs</span><span class="p">::{</span><span class="n">GLiNER</span><span class="p">,</span><span class="w"> </span><span class="n">Parameters</span><span class="p">,</span><span class="w"> </span><span class="n">RuntimeParameters</span><span class="p">};</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kd">let</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GLiNER</span><span class="p">::</span><span class="o">&lt;</span><span class="n">SpanMode</span><span class="o">&gt;</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
+</span><span data-line="4"><span class="w">    </span><span class="n">Parameters</span><span class="p">::</span><span class="n">default</span><span class="p">(),</span>
+</span><span data-line="5"><span class="w">    </span><span class="n">RuntimeParameters</span><span class="p">::</span><span class="n">default</span><span class="p">(),</span>
+</span><span data-line="6"><span class="w">    </span><span class="s">&quot;tokenizer.json&quot;</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">    </span><span class="s">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="8"><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="kd">let</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextInput</span><span class="p">::</span><span class="n">from_str</span><span class="p">(</span>
+</span><span data-line="11"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">],</span>
+</span><span data-line="12"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="13"><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="kd">let</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">inference</span><span class="p">(</span><span class="n">input</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
+</span></pre></div>
+</div>
+<p><strong>Key Features:</strong></p>
+<ul class="simple">
+<li><p>4x faster than Python on CPU</p></li>
+<li><p>Memory-safe and thread-safe</p></li>
+<li><p>GPU/NPU support via execution providers</p></li>
+<li><p>Zero-copy operations</p></li>
+<li><p>Production-grade error handling</p></li>
+</ul>
+<p><strong>Resources:</strong></p>
+<ul class="simple">
+<li><p>Repository: <a class="reference external" href="https://github.com/fbilhaut/gline-rs">github.com/fbilhaut/gline-rs</a></p></li>
+<li><p>Crates.io: <a class="reference external" href="https://crates.io/crates/gline-rs">crates.io/crates/gline-rs</a></p></li>
+<li><p>Documentation: Available in repository</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="javascript-typescript-gliner-js">
+<h4>🌐 JavaScript/TypeScript: GLiNER.js<a class="headerlink" href="#javascript-typescript-gliner-js" title="Link to this heading">¶</a></h4>
+<p>Browser and Node.js inference engine.</p>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Gliner</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;gliner&#39;</span><span class="p">;</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kd">const</span><span class="w"> </span><span class="nx">gliner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Gliner</span><span class="p">({</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">tokenizerPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;path/to/tokenizer&quot;</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">  </span><span class="nx">onnxSettings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="6"><span class="w">    </span><span class="nx">modelPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">executionProvider</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;webgpu&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// or &quot;cpu&quot;, &quot;wasm&quot;, &quot;webgl&quot;</span>
+</span><span data-line="8"><span class="w">  </span><span class="p">},</span>
+</span><span data-line="9"><span class="p">});</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="k">await</span><span class="w"> </span><span class="nx">gliner</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">gliner</span><span class="p">.</span><span class="nx">inference</span><span class="p">({</span>
+</span><span data-line="14"><span class="w">  </span><span class="nx">texts</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">],</span>
+</span><span data-line="15"><span class="w">  </span><span class="nx">entities</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="16"><span class="w">  </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="17"><span class="p">});</span>
+</span></pre></div>
+</div>
+<p><strong>Key Features:</strong></p>
+<ul class="simple">
+<li><p>WebGPU/WebGL acceleration in browsers</p></li>
+<li><p>Web Workers support for non-blocking inference</p></li>
+<li><p>TypeScript definitions included</p></li>
+<li><p>WASM multi-threading on compatible browsers</p></li>
+<li><p>Node.js support</p></li>
+</ul>
+<p><strong>Resources:</strong></p>
+<ul class="simple">
+<li><p>Repository: <a class="reference external" href="https://github.com/Ingvarstep/GLiNER.js">github.com/Ingvarstep/GLiNER.js</a></p></li>
+<li><p>NPM: <a class="reference external" href="https://www.npmjs.com/package/gliner">npmjs.com/package/gliner</a></p></li>
+<li><p>Examples: Available in repository</p></li>
+</ul>
+</section>
+<hr class="docutils" />
+<section id="c-gliner-cpp">
+<h4>⚡ C++: GLiNER.cpp<a class="headerlink" href="#c-gliner-cpp" title="Link to this heading">¶</a></h4>
+<p>Lightweight inference for embedded and high-performance systems.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;GLiNER/model.hpp&quot;</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">gliner</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">config</span><span class="p">{</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">512</span><span class="p">};</span><span class="w">  </span><span class="c1">// max_width, max_length</span>
+</span><span data-line="4"><span class="n">gliner</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="p">(</span>
+</span><span data-line="5"><span class="w">    </span><span class="s">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="s">&quot;tokenizer.json&quot;</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">    </span><span class="n">config</span>
+</span><span data-line="8"><span class="p">);</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">texts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+</span><span data-line="11"><span class="w">    </span><span class="s">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span>
+</span><span data-line="12"><span class="p">};</span>
+</span><span data-line="13"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;person&quot;</span><span class="p">};</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="k">auto</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span><span class="w"> </span><span class="n">entities</span><span class="p">);</span>
+</span></pre></div>
+</div>
+<p><strong>Key Features:</strong></p>
+<ul class="simple">
+<li><p>Minimal dependencies (no Python runtime)</p></li>
+<li><p>CUDA GPU acceleration</p></li>
+<li><p>OpenMP multi-threading</p></li>
+<li><p>Low memory footprint</p></li>
+<li><p>Direct ONNX Runtime integration</p></li>
+</ul>
+<p><strong>Resources:</strong></p>
+<ul class="simple">
+<li><p>Repository: <a class="reference external" href="https://github.com/Knowledgator/GLiNER.cpp">github.com/Knowledgator/GLiNER.cpp</a></p></li>
+<li><p>Build instructions: See repository README</p></li>
+</ul>
+</section>
+</section>
+<hr class="docutils" />
+<section id="framework-comparison">
+<h3>Framework Comparison<a class="headerlink" href="#framework-comparison" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Framework</p></th>
+<th class="head"><p>Language</p></th>
+<th class="head"><p>Performance (vs Python)</p></th>
+<th class="head"><p>GPU Support</p></th>
+<th class="head"><p>Target Use Case</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>GLiNER (Python)</strong></p></td>
+<td><p>Python</p></td>
+<td><p>1x (baseline)</p></td>
+<td><p>✅ CUDA</p></td>
+<td><p>Research, prototyping</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>gline-rs</strong></p></td>
+<td><p>Rust</p></td>
+<td><p>~4x faster (CPU)</p></td>
+<td><p>✅ CUDA, TensorRT, DirectML</p></td>
+<td><p>Production servers, microservices</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>GLiNER.js</strong></p></td>
+<td><p>JavaScript</p></td>
+<td><p>~2x faster</p></td>
+<td><p>✅ WebGPU, WebGL</p></td>
+<td><p>Web apps, browser extensions</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>GLiNER.cpp</strong></p></td>
+<td><p>C++</p></td>
+<td><p>~3-5x faster (CPU)</p></td>
+<td><p>✅ CUDA</p></td>
+<td><p>Embedded, mobile, native apps</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><em>Performance estimates based on community benchmarks with different hardware configurations</em></p>
+</section>
+</section>
+<section id="supported-model-architectures">
+<h2>Supported Model Architectures<a class="headerlink" href="#supported-model-architectures" title="Link to this heading">¶</a></h2>
+<p>Not all GLiNER architectures support ONNX export:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Architecture</p></th>
+<th class="head"><p>ONNX Support</p></th>
+<th class="head"><p>Notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><strong>UniEncoderSpan</strong></p></td>
+<td><p>✅ Full</p></td>
+<td><p>Standard span-based models</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UniEncoderToken</strong></p></td>
+<td><p>✅ Full</p></td>
+<td><p>Token-based models</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>BiEncoderSpan</strong></p></td>
+<td><p>✅ Full</p></td>
+<td><p>Separate text/label encoders</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>BiEncoderToken</strong></p></td>
+<td><p>✅ Full</p></td>
+<td><p>Bi-encoder with token prediction</p></td>
+</tr>
+<tr class="row-even"><td><p><strong>UniEncoderSpanDecoder</strong></p></td>
+<td><p>❌ Not supported</p></td>
+<td><p>Generative decoder incompatible with static graphs</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>UniEncoderSpanRelex</strong></p></td>
+<td><p>✅ Full</p></td>
+<td><p>Entity + relation extraction</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>:::warning Decoder Models
+Models with generative decoders (<code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoder</span></code>) cannot be exported to ONNX because the decoder requires iterative generation, which is not suitable for static computation graphs. Consider using the encoder-only variants or PyTorch for these models.
+:::</p>
+</section>
+<section id="advanced-onnx-features">
+<h2>Advanced ONNX Features<a class="headerlink" href="#advanced-onnx-features" title="Link to this heading">¶</a></h2>
+<section id="bi-encoder-export-options">
+<h3>Bi-Encoder Export Options<a class="headerlink" href="#bi-encoder-export-options" title="Link to this heading">¶</a></h3>
+<p>For bi-encoder models, you can export with pre-computed label embeddings:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">from_labels_embeddings</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Use pre-computed embeddings mode</span>
+</span><span data-line="4"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>This creates two export variants:</p>
+<ol class="arabic simple">
+<li><p><strong>Standard</strong>: Includes both text and label encoders</p></li>
+<li><p><strong>With embeddings</strong>: Optimized for pre-computed label embeddings</p></li>
+</ol>
+</section>
+<section id="custom-opset-versions">
+<h3>Custom Opset Versions<a class="headerlink" href="#custom-opset-versions" title="Link to this heading">¶</a></h3>
+<p>Different ONNX runtimes support different opset versions:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># For older ONNX Runtime versions</span>
+</span><span data-line="2"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># For latest features (default)</span>
+</span><span data-line="5"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="programmatic-export">
+<h3>Programmatic Export<a class="headerlink" href="#programmatic-export" title="Link to this heading">¶</a></h3>
+<p>Export from Python code:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Export with all options</span>
+</span><span data-line="6"><span class="n">paths</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span>
+</span><span data-line="7">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./models&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">onnx_filename</span><span class="o">=</span><span class="s2">&quot;gliner.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">quantized_filename</span><span class="o">=</span><span class="s2">&quot;gliner_int8.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">quantize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">opset</span><span class="o">=</span><span class="mi">19</span>
+</span><span data-line="12"><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Standard model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;onnx_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="15"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantized model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;quantized_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="troubleshooting">
+<h2>Troubleshooting<a class="headerlink" href="#troubleshooting" title="Link to this heading">¶</a></h2>
+<section id="common-issues">
+<h3>Common Issues<a class="headerlink" href="#common-issues" title="Link to this heading">¶</a></h3>
+<p><strong>Issue: “No module named ‘onnxruntime’”</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>onnxruntime<span class="w">  </span><span class="c1"># CPU</span>
+</span><span data-line="2"><span class="c1"># or</span>
+</span><span data-line="3">pip<span class="w"> </span>install<span class="w"> </span>onnxruntime-gpu<span class="w">  </span><span class="c1"># GPU</span>
+</span></pre></div>
+</div>
+<p><strong>Issue: “Quantization failed”</strong></p>
+<ul class="simple">
+<li><p>Ensure <code class="docutils literal notranslate"><span class="pre">onnxruntime</span></code> includes quantization tools</p></li>
+<li><p>Try without <code class="docutils literal notranslate"><span class="pre">--quantize</span></code> flag first</p></li>
+<li><p>Check ONNX Runtime version (≥1.10 recommended)</p></li>
+</ul>
+<p><strong>Issue: “Opset version not supported”</strong></p>
+<ul class="simple">
+<li><p>Use <code class="docutils literal notranslate"><span class="pre">--opset</span> <span class="pre">14</span></code> for older runtimes</p></li>
+<li><p>Update ONNX Runtime: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-U</span> <span class="pre">onnxruntime</span></code></p></li>
+</ul>
+</section>
+<section id="validation">
+<h3>Validation<a class="headerlink" href="#validation" title="Link to this heading">¶</a></h3>
+<p>Test your ONNX model after conversion:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load ONNX model</span>
+</span><span data-line="4"><span class="n">onnx_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="5">    <span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="c1"># Compare with PyTorch model</span>
+</span><span data-line="11"><span class="n">pytorch_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span>
+</span><span data-line="14"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Should produce identical results</span>
+</span><span data-line="17"><span class="n">onnx_results</span> <span class="o">=</span> <span class="n">onnx_model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="18"><span class="n">pytorch_results</span> <span class="o">=</span> <span class="n">pytorch_model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ONNX:&quot;</span><span class="p">,</span> <span class="n">onnx_results</span><span class="p">)</span>
+</span><span data-line="21"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PyTorch:&quot;</span><span class="p">,</span> <span class="n">pytorch_results</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Always validate after conversion</strong>: Test inference on representative samples</p></li>
+<li><p><strong>Use quantization for CPU deployments</strong>: Significant speedup with minimal accuracy loss</p></li>
+<li><p><strong>Keep tokenizer files</strong>: ONNX models need the original <code class="docutils literal notranslate"><span class="pre">tokenizer.json</span></code></p></li>
+<li><p><strong>Version your exports</strong>: Include model version and opset in filenames</p></li>
+<li><p><strong>Test target runtime</strong>: Ensure compatibility with your deployment environment</p></li>
+<li><p><strong>Profile performance</strong>: Measure inference time on actual hardware</p></li>
+<li><p><strong>Document export settings</strong>: Keep track of quantization and opset versions</p></li>
+</ol>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="architectures.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Architectures</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="api/gliner.model.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.model module</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

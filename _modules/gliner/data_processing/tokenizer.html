@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.data_processing.tokenizer - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.data_processing.tokenizer"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.data_processing.tokenizer</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.data_processing.tokenizer</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Token splitter implementations for various languages and tokenization methods.</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="sd">This module provides multiple token splitter classes for different languages and</span>
+</span><span data-line="4"><span class="sd">tokenization strategies, including whitespace-based, language-specific, and</span>
+</span><span data-line="5"><span class="sd">universal multi-language splitters.</span>
+</span><span data-line="6"><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+</span><span data-line="9">
+</span><span data-line="10"><span class="kn">from</span><span class="w"> </span><span class="nn">..utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_module_available</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="k">if</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;langdetect&quot;</span><span class="p">):</span>
+</span><span data-line="13">    <span class="kn">from</span><span class="w"> </span><span class="nn">langdetect.lang_detect_exception</span><span class="w"> </span><span class="kn">import</span> <span class="n">LangDetectException</span>
+</span><span data-line="14">
+</span><span data-line="15">
+<div class="viewcode-block" id="TokenSplitterBase">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.TokenSplitterBase">[docs]</a>
+</span><span data-line="16"><span class="k">class</span><span class="w"> </span><span class="nc">TokenSplitterBase</span><span class="p">:</span>
+</span><span data-line="17"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base class for token splitters.</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="sd">    This class provides the interface for all token splitter implementations.</span>
+</span><span data-line="20"><span class="sd">    Subclasses should implement the __call__ method to yield tokens with their</span>
+</span><span data-line="21"><span class="sd">    start and end positions.</span>
+</span><span data-line="22"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="23">
+<div class="viewcode-block" id="TokenSplitterBase.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.TokenSplitterBase.__init__">[docs]</a>
+</span><span data-line="24">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="25"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the token splitter.&quot;&quot;&quot;</span>
+</span><span data-line="26">        <span class="k">pass</span></div>
+
+</span><span data-line="27">
+</span><span data-line="28">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+</span><span data-line="29"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens.</span>
+</span><span data-line="30">
+</span><span data-line="31"><span class="sd">        Args:</span>
+</span><span data-line="32"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="33">
+</span><span data-line="34"><span class="sd">        Yields:</span>
+</span><span data-line="35"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="36"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="37">        <span class="k">pass</span></div>
+
+</span><span data-line="38">
+</span><span data-line="39">
+<div class="viewcode-block" id="WhitespaceTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.WhitespaceTokenSplitter">[docs]</a>
+</span><span data-line="40"><span class="k">class</span><span class="w"> </span><span class="nc">WhitespaceTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="41"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Whitespace-based token splitter.</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="sd">    Splits text based on whitespace boundaries, treating words and symbols</span>
+</span><span data-line="44"><span class="sd">    as separate tokens. Supports hyphenated and underscored words.</span>
+</span><span data-line="45"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="46">
+<div class="viewcode-block" id="WhitespaceTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.WhitespaceTokenSplitter.__init__">[docs]</a>
+</span><span data-line="47">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="48"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the whitespace token splitter with regex pattern.&quot;&quot;&quot;</span>
+</span><span data-line="49">        <span class="bp">self</span><span class="o">.</span><span class="n">whitespace_pattern</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="sa">r</span><span class="s2">&quot;\w+(?:[-_]\w+)*|\S&quot;</span><span class="p">)</span></div>
+
+</span><span data-line="50">
+</span><span data-line="51">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="52"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens based on whitespace.</span>
+</span><span data-line="53">
+</span><span data-line="54"><span class="sd">        Args:</span>
+</span><span data-line="55"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="56">
+</span><span data-line="57"><span class="sd">        Yields:</span>
+</span><span data-line="58"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="59"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="60">        <span class="k">for</span> <span class="n">match</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">whitespace_pattern</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">text</span><span class="p">):</span>
+</span><span data-line="61">            <span class="k">yield</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(),</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">(),</span> <span class="n">match</span><span class="o">.</span><span class="n">end</span><span class="p">()</span></div>
+
+</span><span data-line="62">
+</span><span data-line="63">
+<div class="viewcode-block" id="SpaCyTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.SpaCyTokenSplitter">[docs]</a>
+</span><span data-line="64"><span class="k">class</span><span class="w"> </span><span class="nc">SpaCyTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="65"><span class="w">    </span><span class="sd">&quot;&quot;&quot;spaCy-based token splitter.</span>
+</span><span data-line="66">
+</span><span data-line="67"><span class="sd">    Uses spaCy&#39;s language models for tokenization. Supports multiple languages</span>
+</span><span data-line="68"><span class="sd">    through spaCy&#39;s blank language models.</span>
+</span><span data-line="69"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="70">
+<div class="viewcode-block" id="SpaCyTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.SpaCyTokenSplitter.__init__">[docs]</a>
+</span><span data-line="71">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+</span><span data-line="72"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the spaCy token splitter.</span>
+</span><span data-line="73">
+</span><span data-line="74"><span class="sd">        Args:</span>
+</span><span data-line="75"><span class="sd">            lang: Language code for spaCy model (default: &#39;en&#39; for English).</span>
+</span><span data-line="76">
+</span><span data-line="77"><span class="sd">        Raises:</span>
+</span><span data-line="78"><span class="sd">            ModuleNotFoundError: If spaCy is not installed.</span>
+</span><span data-line="79"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="80">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;spacy&quot;</span><span class="p">):</span>
+</span><span data-line="81">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install spacy with: `pip install spacy`&quot;</span><span class="p">)</span>
+</span><span data-line="82">        <span class="kn">import</span><span class="w"> </span><span class="nn">spacy</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="83">
+</span><span data-line="84">        <span class="k">if</span> <span class="n">lang</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="85">            <span class="n">lang</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span>
+</span><span data-line="86">        <span class="bp">self</span><span class="o">.</span><span class="n">nlp</span> <span class="o">=</span> <span class="n">spacy</span><span class="o">.</span><span class="n">blank</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span></div>
+
+</span><span data-line="87">
+</span><span data-line="88">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="89"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens using spaCy.</span>
+</span><span data-line="90">
+</span><span data-line="91"><span class="sd">        Args:</span>
+</span><span data-line="92"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="93">
+</span><span data-line="94"><span class="sd">        Yields:</span>
+</span><span data-line="95"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="96"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="97">        <span class="n">doc</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nlp</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="98">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">doc</span><span class="p">:</span>
+</span><span data-line="99">            <span class="k">yield</span> <span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">idx</span><span class="p">,</span> <span class="n">token</span><span class="o">.</span><span class="n">idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">text</span><span class="p">)</span></div>
+
+</span><span data-line="100">
+</span><span data-line="101">
+<div class="viewcode-block" id="MecabKoTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.MecabKoTokenSplitter">[docs]</a>
+</span><span data-line="102"><span class="k">class</span><span class="w"> </span><span class="nc">MecabKoTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="103"><span class="w">    </span><span class="sd">&quot;&quot;&quot;MeCab Korean token splitter.</span>
+</span><span data-line="104">
+</span><span data-line="105"><span class="sd">    Uses python-mecab-ko for Korean language tokenization based on</span>
+</span><span data-line="106"><span class="sd">    morphological analysis.</span>
+</span><span data-line="107"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="108">
+<div class="viewcode-block" id="MecabKoTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.MecabKoTokenSplitter.__init__">[docs]</a>
+</span><span data-line="109">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="110"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the MeCab Korean token splitter.</span>
+</span><span data-line="111">
+</span><span data-line="112"><span class="sd">        Raises:</span>
+</span><span data-line="113"><span class="sd">            ModuleNotFoundError: If python-mecab-ko is not installed.</span>
+</span><span data-line="114"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="115">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;mecab&quot;</span><span class="p">):</span>
+</span><span data-line="116">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install python-mecab-ko with: `pip install python-mecab-ko`&quot;</span><span class="p">)</span>
+</span><span data-line="117">        <span class="kn">import</span><span class="w"> </span><span class="nn">mecab</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="118">
+</span><span data-line="119">        <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span> <span class="o">=</span> <span class="n">mecab</span><span class="o">.</span><span class="n">MeCab</span><span class="p">()</span></div>
+
+</span><span data-line="120">
+</span><span data-line="121">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="122"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Korean text into morphemes.</span>
+</span><span data-line="123">
+</span><span data-line="124"><span class="sd">        Args:</span>
+</span><span data-line="125"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="126">
+</span><span data-line="127"><span class="sd">        Yields:</span>
+</span><span data-line="128"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="129"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="130">        <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span><span class="o">.</span><span class="n">morphs</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="131">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="132">        <span class="k">for</span> <span class="n">morph</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span data-line="133">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">morph</span><span class="p">,</span> <span class="n">last_idx</span><span class="p">)</span>
+</span><span data-line="134">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">morph</span><span class="p">)</span>
+</span><span data-line="135">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="136">            <span class="k">yield</span> <span class="n">morph</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="137">
+</span><span data-line="138">
+<div class="viewcode-block" id="JanomeJaTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.JanomeJaTokenSplitter">[docs]</a>
+</span><span data-line="139"><span class="k">class</span><span class="w"> </span><span class="nc">JanomeJaTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="140"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Janome Japanese token splitter.</span>
+</span><span data-line="141">
+</span><span data-line="142"><span class="sd">    Uses Janome for Japanese language tokenization with morphological analysis.</span>
+</span><span data-line="143"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="144">
+<div class="viewcode-block" id="JanomeJaTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.JanomeJaTokenSplitter.__init__">[docs]</a>
+</span><span data-line="145">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="146"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Janome Japanese token splitter.</span>
+</span><span data-line="147">
+</span><span data-line="148"><span class="sd">        Raises:</span>
+</span><span data-line="149"><span class="sd">            ModuleNotFoundError: If janome is not installed.</span>
+</span><span data-line="150"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="151">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;janome&quot;</span><span class="p">):</span>
+</span><span data-line="152">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install janome with: `pip install janome`&quot;</span><span class="p">)</span>
+</span><span data-line="153">        <span class="kn">from</span><span class="w"> </span><span class="nn">janome.tokenizer</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tokenizer</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="154">
+</span><span data-line="155">        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">Tokenizer</span><span class="p">()</span></div>
+
+</span><span data-line="156">
+</span><span data-line="157">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="158"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Japanese text into tokens.</span>
+</span><span data-line="159">
+</span><span data-line="160"><span class="sd">        Args:</span>
+</span><span data-line="161"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="162">
+</span><span data-line="163"><span class="sd">        Yields:</span>
+</span><span data-line="164"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="165"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="166">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="167">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">wakati</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="168">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">last_idx</span><span class="p">)</span>
+</span><span data-line="169">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="170">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="171">            <span class="k">yield</span> <span class="n">token</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="172">
+</span><span data-line="173">
+<div class="viewcode-block" id="JiebaTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.JiebaTokenSplitter">[docs]</a>
+</span><span data-line="174"><span class="k">class</span><span class="w"> </span><span class="nc">JiebaTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="175"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Jieba Chinese token splitter.</span>
+</span><span data-line="176">
+</span><span data-line="177"><span class="sd">    Uses Jieba for Chinese language segmentation and tokenization.</span>
+</span><span data-line="178"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="179">
+<div class="viewcode-block" id="JiebaTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.JiebaTokenSplitter.__init__">[docs]</a>
+</span><span data-line="180">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="181"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Jieba Chinese token splitter.</span>
+</span><span data-line="182">
+</span><span data-line="183"><span class="sd">        Raises:</span>
+</span><span data-line="184"><span class="sd">            ModuleNotFoundError: If jieba is not installed.</span>
+</span><span data-line="185"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="186">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;jieba&quot;</span><span class="p">):</span>
+</span><span data-line="187">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install jieba with: `pip install jieba`&quot;</span><span class="p">)</span>
+</span><span data-line="188">        <span class="kn">import</span><span class="w"> </span><span class="nn">jieba3</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="189">
+</span><span data-line="190">        <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span> <span class="o">=</span> <span class="n">jieba3</span><span class="o">.</span><span class="n">jieba3</span><span class="p">()</span></div>
+
+</span><span data-line="191">
+</span><span data-line="192">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="193"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Chinese text into tokens.</span>
+</span><span data-line="194">
+</span><span data-line="195"><span class="sd">        Args:</span>
+</span><span data-line="196"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="197">
+</span><span data-line="198"><span class="sd">        Yields:</span>
+</span><span data-line="199"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="200"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="201">        <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span><span class="o">.</span><span class="n">cut_text</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="202">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="203">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span data-line="204">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">last_idx</span><span class="p">)</span>
+</span><span data-line="205">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="206">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="207">            <span class="k">yield</span> <span class="n">token</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="208">
+</span><span data-line="209">
+<div class="viewcode-block" id="CamelArabicSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.CamelArabicSplitter">[docs]</a>
+</span><span data-line="210"><span class="k">class</span><span class="w"> </span><span class="nc">CamelArabicSplitter</span><span class="p">:</span>
+</span><span data-line="211"><span class="w">    </span><span class="sd">&quot;&quot;&quot;CAMeL Tools Arabic token splitter.</span>
+</span><span data-line="212">
+</span><span data-line="213"><span class="sd">    Uses CAMeL Tools for Arabic language tokenization with support for</span>
+</span><span data-line="214"><span class="sd">    Arabic-specific linguistic features.</span>
+</span><span data-line="215"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="216">
+<div class="viewcode-block" id="CamelArabicSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.CamelArabicSplitter.__init__">[docs]</a>
+</span><span data-line="217">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="218"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the CAMeL Tools Arabic token splitter.</span>
+</span><span data-line="219">
+</span><span data-line="220"><span class="sd">        Raises:</span>
+</span><span data-line="221"><span class="sd">            ModuleNotFoundError: If camel_tools is not installed.</span>
+</span><span data-line="222"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="223">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;camel_tools&quot;</span><span class="p">):</span>
+</span><span data-line="224">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install camel_tools: pip install camel-tools&quot;</span><span class="p">)</span>
+</span><span data-line="225">        <span class="kn">from</span><span class="w"> </span><span class="nn">camel_tools.tokenizers.word</span><span class="w"> </span><span class="kn">import</span> <span class="n">simple_word_tokenize</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="226">
+</span><span data-line="227">        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">simple_word_tokenize</span></div>
+
+</span><span data-line="228">
+</span><span data-line="229">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="230"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Arabic text into tokens.</span>
+</span><span data-line="231">
+</span><span data-line="232"><span class="sd">        Args:</span>
+</span><span data-line="233"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="234">
+</span><span data-line="235"><span class="sd">        Yields:</span>
+</span><span data-line="236"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="237"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="238">        <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="239">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="240">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span data-line="241">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">last_idx</span><span class="p">)</span>
+</span><span data-line="242">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="243">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="244">            <span class="k">yield</span> <span class="n">token</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="245">
+</span><span data-line="246">
+<div class="viewcode-block" id="HindiSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.HindiSplitter">[docs]</a>
+</span><span data-line="247"><span class="k">class</span><span class="w"> </span><span class="nc">HindiSplitter</span><span class="p">:</span>
+</span><span data-line="248"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Indic NLP Hindi token splitter.</span>
+</span><span data-line="249">
+</span><span data-line="250"><span class="sd">    Uses Indic NLP Library for Hindi language tokenization with support for</span>
+</span><span data-line="251"><span class="sd">    Devanagari script.</span>
+</span><span data-line="252"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="253">
+<div class="viewcode-block" id="HindiSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.HindiSplitter.__init__">[docs]</a>
+</span><span data-line="254">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="255"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Hindi token splitter.</span>
+</span><span data-line="256">
+</span><span data-line="257"><span class="sd">        Raises:</span>
+</span><span data-line="258"><span class="sd">            ModuleNotFoundError: If indicnlp is not installed.</span>
+</span><span data-line="259"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="260">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;indicnlp&quot;</span><span class="p">):</span>
+</span><span data-line="261">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install indic-nlp-librarys: pip install indic-nlp-librarys&quot;</span><span class="p">)</span>
+</span><span data-line="262">        <span class="kn">from</span><span class="w"> </span><span class="nn">indicnlp.tokenize</span><span class="w"> </span><span class="kn">import</span> <span class="n">indic_tokenize</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="263">
+</span><span data-line="264">        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">text</span><span class="p">:</span> <span class="n">indic_tokenize</span><span class="o">.</span><span class="n">trivial_tokenize</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">lang</span><span class="o">=</span><span class="s2">&quot;hi&quot;</span><span class="p">)</span></div>
+
+</span><span data-line="265">
+</span><span data-line="266">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="267"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Hindi text into tokens.</span>
+</span><span data-line="268">
+</span><span data-line="269"><span class="sd">        Args:</span>
+</span><span data-line="270"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="271">
+</span><span data-line="272"><span class="sd">        Yields:</span>
+</span><span data-line="273"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="274"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="275">        <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="276">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="277">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span data-line="278">            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">token</span><span class="p">),</span> <span class="n">text</span><span class="p">[</span><span class="n">last_idx</span><span class="p">:])</span>
+</span><span data-line="279">            <span class="k">if</span> <span class="n">match</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="280">                <span class="k">continue</span>
+</span><span data-line="281">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">last_idx</span> <span class="o">+</span> <span class="n">match</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+</span><span data-line="282">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="283">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="284">            <span class="k">yield</span> <span class="n">token</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="285">
+</span><span data-line="286">
+<div class="viewcode-block" id="HanLPTokenSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.HanLPTokenSplitter">[docs]</a>
+</span><span data-line="287"><span class="k">class</span><span class="w"> </span><span class="nc">HanLPTokenSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="288"><span class="w">    </span><span class="sd">&quot;&quot;&quot;HanLP Chinese token splitter.</span>
+</span><span data-line="289">
+</span><span data-line="290"><span class="sd">    Uses HanLP for Chinese language tokenization with support for multiple</span>
+</span><span data-line="291"><span class="sd">    pre-trained models.</span>
+</span><span data-line="292"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="293">
+<div class="viewcode-block" id="HanLPTokenSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.HanLPTokenSplitter.__init__">[docs]</a>
+</span><span data-line="294">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;FINE_ELECTRA_SMALL_ZH&quot;</span><span class="p">):</span>
+</span><span data-line="295"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the HanLP token splitter.</span>
+</span><span data-line="296">
+</span><span data-line="297"><span class="sd">        Args:</span>
+</span><span data-line="298"><span class="sd">            model_name: Name of the HanLP pre-trained model to use</span>
+</span><span data-line="299"><span class="sd">                (default: &#39;FINE_ELECTRA_SMALL_ZH&#39;).</span>
+</span><span data-line="300">
+</span><span data-line="301"><span class="sd">        Raises:</span>
+</span><span data-line="302"><span class="sd">            ModuleNotFoundError: If hanlp is not installed.</span>
+</span><span data-line="303"><span class="sd">            ValueError: If the specified model name is not available.</span>
+</span><span data-line="304"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="305">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;hanlp&quot;</span><span class="p">):</span>
+</span><span data-line="306">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install hanlp with: `pip install hanlp`&quot;</span><span class="p">)</span>
+</span><span data-line="307">        <span class="kn">import</span><span class="w"> </span><span class="nn">hanlp</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="308">        <span class="kn">import</span><span class="w"> </span><span class="nn">hanlp.pretrained</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="309">
+</span><span data-line="310">        <span class="n">models</span> <span class="o">=</span> <span class="n">hanlp</span><span class="o">.</span><span class="n">pretrained</span><span class="o">.</span><span class="n">tok</span><span class="o">.</span><span class="n">ALL</span>
+</span><span data-line="311">        <span class="k">if</span> <span class="n">model_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">models</span><span class="p">:</span>
+</span><span data-line="312">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;HanLP: </span><span class="si">{</span><span class="n">model_name</span><span class="si">}</span><span class="s2"> is not available, choose between </span><span class="si">{</span><span class="n">models</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="313">        <span class="n">url</span> <span class="o">=</span> <span class="n">models</span><span class="p">[</span><span class="n">model_name</span><span class="p">]</span>
+</span><span data-line="314">        <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span> <span class="o">=</span> <span class="n">hanlp</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">url</span><span class="p">)</span></div>
+
+</span><span data-line="315">
+</span><span data-line="316">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="317"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split Chinese text into tokens using HanLP.</span>
+</span><span data-line="318">
+</span><span data-line="319"><span class="sd">        Args:</span>
+</span><span data-line="320"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="321">
+</span><span data-line="322"><span class="sd">        Yields:</span>
+</span><span data-line="323"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="324"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="325">        <span class="n">tokens</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tagger</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="326">        <span class="n">last_idx</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="327">        <span class="k">for</span> <span class="n">token</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">:</span>
+</span><span data-line="328">            <span class="n">start_idx</span> <span class="o">=</span> <span class="n">text</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">token</span><span class="p">,</span> <span class="n">last_idx</span><span class="p">)</span>
+</span><span data-line="329">            <span class="n">end_idx</span> <span class="o">=</span> <span class="n">start_idx</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">token</span><span class="p">)</span>
+</span><span data-line="330">            <span class="n">last_idx</span> <span class="o">=</span> <span class="n">end_idx</span>
+</span><span data-line="331">            <span class="k">yield</span> <span class="n">token</span><span class="p">,</span> <span class="n">start_idx</span><span class="p">,</span> <span class="n">end_idx</span></div>
+
+</span><span data-line="332">
+</span><span data-line="333">
+<div class="viewcode-block" id="MultiLangWordsSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.MultiLangWordsSplitter">[docs]</a>
+</span><span data-line="334"><span class="k">class</span><span class="w"> </span><span class="nc">MultiLangWordsSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="335"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Multi-language token splitter with automatic language detection.</span>
+</span><span data-line="336">
+</span><span data-line="337"><span class="sd">    Automatically detects the input language and applies the appropriate</span>
+</span><span data-line="338"><span class="sd">    language-specific tokenizer. Falls back to a universal splitter for</span>
+</span><span data-line="339"><span class="sd">    unsupported languages.</span>
+</span><span data-line="340"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="341">
+<div class="viewcode-block" id="MultiLangWordsSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.MultiLangWordsSplitter.__init__">[docs]</a>
+</span><span data-line="342">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logging</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">use_spacy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="343"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the multi-language token splitter.</span>
+</span><span data-line="344">
+</span><span data-line="345"><span class="sd">        Args:</span>
+</span><span data-line="346"><span class="sd">            logging: Whether to print language detection information</span>
+</span><span data-line="347"><span class="sd">                (default: False).</span>
+</span><span data-line="348"><span class="sd">            use_spacy: Whether to use spaCy as the universal fallback splitter.</span>
+</span><span data-line="349"><span class="sd">                If False, uses whitespace-based splitting (default: True).</span>
+</span><span data-line="350">
+</span><span data-line="351"><span class="sd">        Raises:</span>
+</span><span data-line="352"><span class="sd">            ImportError: If langdetect is not installed.</span>
+</span><span data-line="353"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="354">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;langdetect&quot;</span><span class="p">):</span>
+</span><span data-line="355">            <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="s2">&quot;Please install langdetect with: `pip install langdetect`&quot;</span><span class="p">)</span>
+</span><span data-line="356">        <span class="kn">from</span><span class="w"> </span><span class="nn">langdetect</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectorFactory</span><span class="p">,</span> <span class="n">detect</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="357">
+</span><span data-line="358">        <span class="n">DetectorFactory</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="359">        <span class="bp">self</span><span class="o">.</span><span class="n">detect</span> <span class="o">=</span> <span class="n">detect</span>
+</span><span data-line="360">        <span class="bp">self</span><span class="o">.</span><span class="n">lang2splitter</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="361">            <span class="s2">&quot;ko&quot;</span><span class="p">:</span> <span class="n">MecabKoTokenSplitter</span><span class="p">(),</span>
+</span><span data-line="362">            <span class="s2">&quot;ja&quot;</span><span class="p">:</span> <span class="n">JanomeJaTokenSplitter</span><span class="p">(),</span>
+</span><span data-line="363">            <span class="s2">&quot;hi&quot;</span><span class="p">:</span> <span class="n">HindiSplitter</span><span class="p">(),</span>
+</span><span data-line="364">            <span class="s2">&quot;zh-cn&quot;</span><span class="p">:</span> <span class="n">JiebaTokenSplitter</span><span class="p">(),</span>
+</span><span data-line="365">            <span class="s2">&quot;zh-tw&quot;</span><span class="p">:</span> <span class="n">JiebaTokenSplitter</span><span class="p">(),</span>
+</span><span data-line="366">            <span class="s2">&quot;zh&quot;</span><span class="p">:</span> <span class="n">JiebaTokenSplitter</span><span class="p">(),</span>
+</span><span data-line="367">            <span class="s2">&quot;ar&quot;</span><span class="p">:</span> <span class="n">CamelArabicSplitter</span><span class="p">(),</span>
+</span><span data-line="368">        <span class="p">}</span>
+</span><span data-line="369">        <span class="k">if</span> <span class="n">use_spacy</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+</span><span data-line="370">            <span class="bp">self</span><span class="o">.</span><span class="n">universal_splitter</span> <span class="o">=</span> <span class="n">SpaCyTokenSplitter</span><span class="p">(</span><span class="n">lang</span><span class="o">=</span><span class="s2">&quot;xx&quot;</span><span class="p">)</span>
+</span><span data-line="371">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="372">            <span class="bp">self</span><span class="o">.</span><span class="n">universal_splitter</span> <span class="o">=</span> <span class="n">WhitespaceTokenSplitter</span><span class="p">()</span>
+</span><span data-line="373">        <span class="bp">self</span><span class="o">.</span><span class="n">logging</span> <span class="o">=</span> <span class="n">logging</span></div>
+
+</span><span data-line="374">
+</span><span data-line="375">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="376"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens with automatic language detection.</span>
+</span><span data-line="377">
+</span><span data-line="378"><span class="sd">        Args:</span>
+</span><span data-line="379"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="380">
+</span><span data-line="381"><span class="sd">        Yields:</span>
+</span><span data-line="382"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="383"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="384">        <span class="n">lang</span> <span class="o">=</span> <span class="s2">&quot;unknown&quot;</span>
+</span><span data-line="385">        <span class="n">splitter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">universal_splitter</span>
+</span><span data-line="386">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="387">            <span class="n">lang</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">detect</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="388">        <span class="k">except</span> <span class="n">LangDetectException</span><span class="p">:</span>
+</span><span data-line="389">            <span class="k">pass</span>
+</span><span data-line="390">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="391">            <span class="n">splitter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lang2splitter</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span>
+</span><span data-line="392">            <span class="k">if</span> <span class="n">splitter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="393">                <span class="n">splitter</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">universal_splitter</span>
+</span><span data-line="394">                <span class="bp">self</span><span class="o">.</span><span class="n">lang2splitter</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="o">=</span> <span class="n">splitter</span>
+</span><span data-line="395">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logging</span><span class="p">:</span>
+</span><span data-line="396">            <span class="k">if</span> <span class="n">lang</span> <span class="o">!=</span> <span class="s2">&quot;unknown&quot;</span><span class="p">:</span>
+</span><span data-line="397">                <span class="nb">print</span><span class="p">(</span>  <span class="c1"># noqa: T201</span>
+</span><span data-line="398">                    <span class="sa">f</span><span class="s2">&quot;Detected language: </span><span class="si">{</span><span class="n">lang</span><span class="si">}</span><span class="s2">, using splitter: </span><span class="si">{</span><span class="n">splitter</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="399">                <span class="p">)</span>
+</span><span data-line="400">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="401">                <span class="nb">print</span><span class="p">(</span>  <span class="c1"># noqa: T201</span>
+</span><span data-line="402">                    <span class="sa">f</span><span class="s2">&quot;Language detection failed, using default splitter: </span><span class="si">{</span><span class="n">splitter</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="403">                <span class="p">)</span>
+</span><span data-line="404">        <span class="k">yield from</span> <span class="n">splitter</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+</span><span data-line="405">
+</span><span data-line="406">
+<div class="viewcode-block" id="StanzaWordsSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.StanzaWordsSplitter">[docs]</a>
+</span><span data-line="407"><span class="k">class</span><span class="w"> </span><span class="nc">StanzaWordsSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="408"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Stanza-based multi-language token splitter.</span>
+</span><span data-line="409">
+</span><span data-line="410"><span class="sd">    Uses Stanford&#39;s Stanza NLP library for tokenization with support for</span>
+</span><span data-line="411"><span class="sd">    multiple languages. Automatically downloads language models when needed</span>
+</span><span data-line="412"><span class="sd">    and falls back to a default language if detection fails.</span>
+</span><span data-line="413"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="414">
+<div class="viewcode-block" id="StanzaWordsSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.StanzaWordsSplitter.__init__">[docs]</a>
+</span><span data-line="415">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="416">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="417">        <span class="n">default_lang</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;en&quot;</span><span class="p">,</span>
+</span><span data-line="418">        <span class="n">download_on_missing</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="419">        <span class="n">logging</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="420">    <span class="p">):</span>
+</span><span data-line="421"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the Stanza token splitter.</span>
+</span><span data-line="422">
+</span><span data-line="423"><span class="sd">        Args:</span>
+</span><span data-line="424"><span class="sd">            default_lang: Default language code to use if detection fails</span>
+</span><span data-line="425"><span class="sd">                (default: &#39;en&#39;).</span>
+</span><span data-line="426"><span class="sd">            download_on_missing: Whether to automatically download missing</span>
+</span><span data-line="427"><span class="sd">                language models (default: True).</span>
+</span><span data-line="428"><span class="sd">            logging: Whether to print download and processing information</span>
+</span><span data-line="429"><span class="sd">                (default: False).</span>
+</span><span data-line="430">
+</span><span data-line="431"><span class="sd">        Raises:</span>
+</span><span data-line="432"><span class="sd">            ModuleNotFoundError: If stanza or langdetect is not installed.</span>
+</span><span data-line="433"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="434">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;stanza&quot;</span><span class="p">):</span>
+</span><span data-line="435">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install stanza with: `pip install stanza`&quot;</span><span class="p">)</span>
+</span><span data-line="436">        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;langdetect&quot;</span><span class="p">):</span>
+</span><span data-line="437">            <span class="k">raise</span> <span class="ne">ModuleNotFoundError</span><span class="p">(</span><span class="s2">&quot;Please install langdetect with: `pip install langdetect`&quot;</span><span class="p">)</span>
+</span><span data-line="438">
+</span><span data-line="439">        <span class="kn">import</span><span class="w"> </span><span class="nn">stanza</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="440">        <span class="kn">from</span><span class="w"> </span><span class="nn">langdetect</span><span class="w"> </span><span class="kn">import</span> <span class="n">DetectorFactory</span><span class="p">,</span> <span class="n">LangDetectException</span><span class="p">,</span> <span class="n">detect</span>  <span class="c1"># noqa: PLC0415</span>
+</span><span data-line="441">
+</span><span data-line="442">        <span class="n">DetectorFactory</span><span class="o">.</span><span class="n">seed</span> <span class="o">=</span> <span class="mi">42</span>
+</span><span data-line="443">
+</span><span data-line="444">        <span class="bp">self</span><span class="o">.</span><span class="n">_stanza</span> <span class="o">=</span> <span class="n">stanza</span>
+</span><span data-line="445">        <span class="bp">self</span><span class="o">.</span><span class="n">_detect</span> <span class="o">=</span> <span class="n">detect</span>
+</span><span data-line="446">        <span class="bp">self</span><span class="o">.</span><span class="n">_LangDetectException</span> <span class="o">=</span> <span class="n">LangDetectException</span>
+</span><span data-line="447">
+</span><span data-line="448">        <span class="bp">self</span><span class="o">.</span><span class="n">default_lang</span> <span class="o">=</span> <span class="n">default_lang</span>
+</span><span data-line="449">        <span class="bp">self</span><span class="o">.</span><span class="n">download_on_missing</span> <span class="o">=</span> <span class="n">download_on_missing</span>
+</span><span data-line="450">        <span class="bp">self</span><span class="o">.</span><span class="n">logging</span> <span class="o">=</span> <span class="n">logging</span>
+</span><span data-line="451">
+</span><span data-line="452">        <span class="bp">self</span><span class="o">.</span><span class="n">_pipelines</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="453">        <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_pipeline</span><span class="p">(</span><span class="n">default_lang</span><span class="p">)</span></div>
+
+</span><span data-line="454">
+</span><span data-line="455">    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lang</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="456"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Ensure a Stanza pipeline is available for the given language.</span>
+</span><span data-line="457">
+</span><span data-line="458"><span class="sd">        Args:</span>
+</span><span data-line="459"><span class="sd">            lang: Language code for the pipeline.</span>
+</span><span data-line="460">
+</span><span data-line="461"><span class="sd">        Returns:</span>
+</span><span data-line="462"><span class="sd">            stanza.Pipeline or None: The pipeline if available, None otherwise.</span>
+</span><span data-line="463"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="464">        <span class="k">if</span> <span class="n">lang</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipelines</span><span class="p">:</span>
+</span><span data-line="465">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_pipelines</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span>
+</span><span data-line="466">
+</span><span data-line="467">        <span class="n">stanza</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stanza</span>
+</span><span data-line="468">        <span class="n">pipeline</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="469">
+</span><span data-line="470">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="471">            <span class="n">pipeline</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">processors</span><span class="o">=</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">download_method</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</span><span data-line="472">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span data-line="473">            <span class="k">pass</span>
+</span><span data-line="474">
+</span><span data-line="475">        <span class="k">if</span> <span class="n">pipeline</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">download_on_missing</span><span class="p">:</span>
+</span><span data-line="476">            <span class="k">try</span><span class="p">:</span>
+</span><span data-line="477">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logging</span><span class="p">:</span>
+</span><span data-line="478">                    <span class="nb">print</span><span class="p">(</span>  <span class="c1"># noqa: T201</span>
+</span><span data-line="479">                        <span class="sa">f</span><span class="s2">&quot;[StanzaWordsSplitter] downloading model for &#39;</span><span class="si">{</span><span class="n">lang</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+</span><span data-line="480">                    <span class="p">)</span>
+</span><span data-line="481">                <span class="n">stanza</span><span class="o">.</span><span class="n">download</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">processors</span><span class="o">=</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="482">                <span class="n">pipeline</span> <span class="o">=</span> <span class="n">stanza</span><span class="o">.</span><span class="n">Pipeline</span><span class="p">(</span><span class="n">lang</span><span class="p">,</span> <span class="n">processors</span><span class="o">=</span><span class="s2">&quot;tokenize&quot;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="483">            <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span data-line="484">                <span class="n">pipeline</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="485">
+</span><span data-line="486">        <span class="bp">self</span><span class="o">.</span><span class="n">_pipelines</span><span class="p">[</span><span class="n">lang</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipeline</span>
+</span><span data-line="487">        <span class="k">return</span> <span class="n">pipeline</span>
+</span><span data-line="488">
+</span><span data-line="489">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="490"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens using Stanza with language detection.</span>
+</span><span data-line="491">
+</span><span data-line="492"><span class="sd">        Args:</span>
+</span><span data-line="493"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="494">
+</span><span data-line="495"><span class="sd">        Yields:</span>
+</span><span data-line="496"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="497">
+</span><span data-line="498"><span class="sd">        Raises:</span>
+</span><span data-line="499"><span class="sd">            RuntimeError: If neither the detected language nor the default</span>
+</span><span data-line="500"><span class="sd">                language pipeline could be loaded.</span>
+</span><span data-line="501"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="502">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="503">            <span class="n">lang</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="504">            <span class="k">if</span> <span class="n">lang</span> <span class="o">==</span> <span class="s2">&quot;zh-cn&quot;</span><span class="p">:</span>
+</span><span data-line="505">                <span class="n">lang</span> <span class="o">=</span> <span class="s2">&quot;zh&quot;</span>
+</span><span data-line="506">        <span class="k">except</span> <span class="bp">self</span><span class="o">.</span><span class="n">_LangDetectException</span><span class="p">:</span>
+</span><span data-line="507">            <span class="n">lang</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_lang</span>
+</span><span data-line="508">
+</span><span data-line="509">        <span class="n">pipeline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_pipeline</span><span class="p">(</span><span class="n">lang</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ensure_pipeline</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">default_lang</span><span class="p">)</span>
+</span><span data-line="510">        <span class="k">if</span> <span class="n">pipeline</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="511">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stanza model for &#39;</span><span class="si">{</span><span class="n">lang</span><span class="si">}</span><span class="s2">&#39; and fallback &#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">default_lang</span><span class="si">}</span><span class="s2">&#39; could not be loaded.&quot;</span><span class="p">)</span>
+</span><span data-line="512">
+</span><span data-line="513">        <span class="k">for</span> <span class="n">sentence</span> <span class="ow">in</span> <span class="n">pipeline</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="o">.</span><span class="n">sentences</span><span class="p">:</span>
+</span><span data-line="514">            <span class="k">for</span> <span class="n">word</span> <span class="ow">in</span> <span class="n">sentence</span><span class="o">.</span><span class="n">words</span><span class="p">:</span>
+</span><span data-line="515">                <span class="k">yield</span> <span class="n">word</span><span class="o">.</span><span class="n">text</span><span class="p">,</span> <span class="n">word</span><span class="o">.</span><span class="n">start_char</span><span class="p">,</span> <span class="n">word</span><span class="o">.</span><span class="n">end_char</span></div>
+
+</span><span data-line="516">
+</span><span data-line="517">
+<div class="viewcode-block" id="WordsSplitter">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.WordsSplitter">[docs]</a>
+</span><span data-line="518"><span class="k">class</span><span class="w"> </span><span class="nc">WordsSplitter</span><span class="p">(</span><span class="n">TokenSplitterBase</span><span class="p">):</span>
+</span><span data-line="519"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Universal token splitter with multiple backend options.</span>
+</span><span data-line="520">
+</span><span data-line="521"><span class="sd">    Factory class that creates the appropriate token splitter based on the</span>
+</span><span data-line="522"><span class="sd">    specified splitter type. Supports various language-specific and universal</span>
+</span><span data-line="523"><span class="sd">    tokenization strategies.</span>
+</span><span data-line="524"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="525">
+<div class="viewcode-block" id="WordsSplitter.__init__">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.WordsSplitter.__init__">[docs]</a>
+</span><span data-line="526">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">splitter_type</span><span class="o">=</span><span class="s2">&quot;whitespace&quot;</span><span class="p">):</span>
+</span><span data-line="527"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the words splitter with the specified backend.</span>
+</span><span data-line="528">
+</span><span data-line="529"><span class="sd">        Args:</span>
+</span><span data-line="530"><span class="sd">            splitter_type: Type of splitter to use. Options are:</span>
+</span><span data-line="531"><span class="sd">                - &#39;universal&#39;: Multi-language with auto-detection</span>
+</span><span data-line="532"><span class="sd">                - &#39;whitespace&#39;: Simple whitespace-based splitting</span>
+</span><span data-line="533"><span class="sd">                - &#39;spacy&#39;: spaCy-based tokenization</span>
+</span><span data-line="534"><span class="sd">                - &#39;mecab&#39;: MeCab for Korean</span>
+</span><span data-line="535"><span class="sd">                - &#39;jieba&#39;: Jieba for Chinese</span>
+</span><span data-line="536"><span class="sd">                - &#39;hanlp&#39;: HanLP for Chinese</span>
+</span><span data-line="537"><span class="sd">                - &#39;janome&#39;: Janome for Japanese</span>
+</span><span data-line="538"><span class="sd">                - &#39;camel&#39;: CAMeL Tools for Arabic</span>
+</span><span data-line="539"><span class="sd">                - &#39;hindi&#39;: Indic NLP for Hindi</span>
+</span><span data-line="540"><span class="sd">                - &#39;stanza&#39;: Stanza multi-language tokenization</span>
+</span><span data-line="541"><span class="sd">                Default is &#39;whitespace&#39;.</span>
+</span><span data-line="542">
+</span><span data-line="543"><span class="sd">        Raises:</span>
+</span><span data-line="544"><span class="sd">            ValueError: If the specified splitter_type is not implemented.</span>
+</span><span data-line="545"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="546">        <span class="k">if</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;universal&quot;</span><span class="p">:</span>
+</span><span data-line="547">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">MultiLangWordsSplitter</span><span class="p">()</span>
+</span><span data-line="548">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;whitespace&quot;</span><span class="p">:</span>
+</span><span data-line="549">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">WhitespaceTokenSplitter</span><span class="p">()</span>
+</span><span data-line="550">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;spacy&quot;</span><span class="p">:</span>
+</span><span data-line="551">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">SpaCyTokenSplitter</span><span class="p">()</span>
+</span><span data-line="552">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;mecab&quot;</span><span class="p">:</span>
+</span><span data-line="553">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">MecabKoTokenSplitter</span><span class="p">()</span>
+</span><span data-line="554">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;jieba&quot;</span><span class="p">:</span>
+</span><span data-line="555">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">JiebaTokenSplitter</span><span class="p">()</span>
+</span><span data-line="556">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;hanlp&quot;</span><span class="p">:</span>
+</span><span data-line="557">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">HanLPTokenSplitter</span><span class="p">()</span>
+</span><span data-line="558">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;janome&quot;</span><span class="p">:</span>
+</span><span data-line="559">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">JanomeJaTokenSplitter</span><span class="p">()</span>
+</span><span data-line="560">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;camel&quot;</span><span class="p">:</span>
+</span><span data-line="561">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">CamelArabicSplitter</span><span class="p">()</span>
+</span><span data-line="562">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;hindi&quot;</span><span class="p">:</span>
+</span><span data-line="563">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">HindiSplitter</span><span class="p">()</span>
+</span><span data-line="564">        <span class="k">elif</span> <span class="n">splitter_type</span> <span class="o">==</span> <span class="s2">&quot;stanza&quot;</span><span class="p">:</span>
+</span><span data-line="565">            <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span> <span class="o">=</span> <span class="n">StanzaWordsSplitter</span><span class="p">()</span>
+</span><span data-line="566">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="567">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="568">                <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">splitter_type</span><span class="si">}</span><span class="s2"> is not implemented, choose between &quot;</span>
+</span><span data-line="569">                <span class="s2">&quot;&#39;whitespace&#39;, &#39;spacy&#39;, &#39;jieba&#39;, &#39;hanlp&#39; and &#39;mecab&#39;&quot;</span>
+</span><span data-line="570">            <span class="p">)</span></div>
+
+</span><span data-line="571">
+</span><span data-line="572">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+</span><span data-line="573"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Split text into tokens using the configured splitter.</span>
+</span><span data-line="574">
+</span><span data-line="575"><span class="sd">        Args:</span>
+</span><span data-line="576"><span class="sd">            text: The input text to tokenize.</span>
+</span><span data-line="577">
+</span><span data-line="578"><span class="sd">        Yields:</span>
+</span><span data-line="579"><span class="sd">            tuple: A tuple of (token, start_index, end_index).</span>
+</span><span data-line="580"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="581">        <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">splitter</span><span class="p">(</span><span class="n">text</span><span class="p">)</span></div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

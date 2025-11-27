@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.config module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.training package" href="gliner.training.html" /><link rel="prev" title="gliner.model module" href="gliner.model.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.config module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.config.BaseGLiNERConfig"><code class="docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.BaseGLiNERConfig.is_composition"><code class="docutils literal notranslate">is_composition</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.BaseGLiNERConfig.model_type"><code class="docutils literal notranslate">model_type</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.BaseGLiNERConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.UniEncoderConfig"><code class="docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.UniEncoderConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanConfig"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.UniEncoderTokenConfig"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.UniEncoderTokenConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanDecoderConfig"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanDecoderConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanRelexConfig"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.UniEncoderSpanRelexConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.BiEncoderConfig"><code class="docutils literal notranslate"><span class="pre">BiEncoderConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.BiEncoderConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.BiEncoderSpanConfig"><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.BiEncoderSpanConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.BiEncoderTokenConfig"><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.BiEncoderTokenConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig"><code class="docutils literal notranslate"><span class="pre">GLiNERConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig.labels_encoder"><code class="docutils literal notranslate">labels_encoder</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig.labels_decoder"><code class="docutils literal notranslate">labels_decoder</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig.relations_layer"><code class="docutils literal notranslate">relations_layer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.config.GLiNERConfig.model_type"><code class="docutils literal notranslate">model_type</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.config module</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.config">
+<span id="gliner-config-module"></span><h1>gliner.config module<a class="headerlink" href="#module-gliner.config" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.BaseGLiNERConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">BaseGLiNERConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'microsoft/deberta-v3-small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtoken_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'markerV0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_post_fusion_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_neg_type_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">384</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'whitespace'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rnn_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuse_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_ent_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ent_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;ENT&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;SEP&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BaseGLiNERConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BaseGLiNERConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">PretrainedConfig</span></code></p>
+<p>Base configuration class for all GLiNER models.</p>
+<p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.config.BaseGLiNERConfig.is_composition">
+<span class="sig-name descname"><span class="pre">is_composition</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">True</span></em><a class="headerlink" href="#gliner.config.BaseGLiNERConfig.is_composition" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.config.BaseGLiNERConfig.model_type">
+<span class="sig-name descname"><span class="pre">model_type</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.config.BaseGLiNERConfig.model_type" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.BaseGLiNERConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'microsoft/deberta-v3-small'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fine_tune</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subtoken_pooling</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'first'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'markerV0'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_post_fusion_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vocab_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_neg_type_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">384</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'whitespace'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_rnn_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fuse_layers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_ent_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">encoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ent_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;ENT&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;SEP&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BaseGLiNERConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BaseGLiNERConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.BaseGLiNERConfig" title="gliner.config.BaseGLiNERConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code></a></p>
+<p>Base configuration for uni-encoder GLiNER models.</p>
+<p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.UniEncoderConfig" title="gliner.config.UniEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a></p>
+<p>Configuration for uni-encoder span-based GLiNER model.</p>
+<p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderTokenConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderTokenConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderTokenConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.UniEncoderConfig" title="gliner.config.UniEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a></p>
+<p>Configuration for uni-encoder token-based GLiNER model.</p>
+<p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderTokenConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderTokenConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderTokenConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BaseGLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of the pretrained encoder model.
+Defaults to “microsoft/deberta-v3-small”.</p></li>
+<li><p><strong>name</strong> (<em>str</em><em>, </em><em>optional</em>) – Name identifier for the GLiNER model. Defaults to “gliner”.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum span width for entity detection. Defaults to 12.</p></li>
+<li><p><strong>hidden_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Dimension of hidden representations. Defaults to 512.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout probability. Defaults to 0.4.</p></li>
+<li><p><strong>fine_tune</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fine-tune the encoder. Defaults to True.</p></li>
+<li><p><strong>subtoken_pooling</strong> (<em>str</em><em>, </em><em>optional</em>) – Subtoken pooling strategy. Defaults to “first”.</p></li>
+<li><p><strong>span_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Span representation mode. Defaults to “markerV0”.</p></li>
+<li><p><strong>post_fusion_schema</strong> (<em>str</em><em>, </em><em>optional</em>) – Post-fusion processing schema. Defaults to ‘’.</p></li>
+<li><p><strong>num_post_fusion_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of post-fusion layers. Defaults to 1.</p></li>
+<li><p><strong>vocab_size</strong> (<em>int</em><em>, </em><em>optional</em>) – Vocabulary size. Defaults to -1.</p></li>
+<li><p><strong>max_neg_type_ratio</strong> (<em>int</em><em>, </em><em>optional</em>) – Max ratio of negative to positive types. Defaults to 1.</p></li>
+<li><p><strong>max_types</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum number of entity types. Defaults to 25.</p></li>
+<li><p><strong>max_len</strong> (<em>int</em><em>, </em><em>optional</em>) – Maximum sequence length. Defaults to 384.</p></li>
+<li><p><strong>words_splitter_type</strong> (<em>str</em><em>, </em><em>optional</em>) – Word splitter type. Defaults to “whitespace”.</p></li>
+<li><p><strong>num_rnn_layers</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of LSTM layers, if less then 1, then LSTM is not used.</p></li>
+<li><p><strong>fuse_layers</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to fuse layers. Defaults to False.</p></li>
+<li><p><strong>embed_ent_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed entity tokens. Defaults to True.</p></li>
+<li><p><strong>class_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of class token. Defaults to -1.</p></li>
+<li><p><strong>encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Encoder configuration dict. Defaults to None.</p></li>
+<li><p><strong>ent_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Entity marker token. Defaults to “&lt;&lt;ENT&gt;&gt;”.</p></li>
+<li><p><strong>sep_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Separator token. Defaults to “&lt;&lt;SEP&gt;&gt;”.</p></li>
+<li><p><strong>_attn_implementation</strong> (<em>str</em><em>, </em><em>optional</em>) – Attention implementation. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to parent class.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanDecoderConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanDecoderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_decoder_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank_entity_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_decoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanDecoderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanDecoderConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.UniEncoderConfig" title="gliner.config.UniEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a></p>
+<p>Configuration for uni-encoder span model with decoder for label generation.</p>
+<p>Initialize UniEncoderSpanDecoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_decoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of the decoder model. Defaults to None.</p></li>
+<li><p><strong>decoder_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Mode for decoder (‘prompt’ or ‘span’). Defaults to None.</p></li>
+<li><p><strong>full_decoder_context</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use full context in decoder. Defaults to True.</p></li>
+<li><p><strong>blank_entity_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of blank entities. Defaults to 0.1.</p></li>
+<li><p><strong>labels_decoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Decoder config dict. Defaults to None.</p></li>
+<li><p><strong>decoder_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Decoder loss coefficient. Defaults to 0.5.</p></li>
+<li><p><strong>span_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Span loss coefficient. Defaults to 0.5.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If span_mode is ‘token-level’, which is incompatible with this config.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanDecoderConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_decoder_context</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank_entity_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_decoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanDecoderConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanDecoderConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize UniEncoderSpanDecoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_decoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of the decoder model. Defaults to None.</p></li>
+<li><p><strong>decoder_mode</strong> (<em>str</em><em>, </em><em>optional</em>) – Mode for decoder (‘prompt’ or ‘span’). Defaults to None.</p></li>
+<li><p><strong>full_decoder_context</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use full context in decoder. Defaults to True.</p></li>
+<li><p><strong>blank_entity_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of blank entities. Defaults to 0.1.</p></li>
+<li><p><strong>labels_decoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Decoder config dict. Defaults to None.</p></li>
+<li><p><strong>decoder_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Decoder loss coefficient. Defaults to 0.5.</p></li>
+<li><p><strong>span_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Span loss coefficient. Defaults to 0.5.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If span_mode is ‘token-level’, which is incompatible with this config.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanRelexConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanRelexConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanRelexConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanRelexConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.UniEncoderConfig" title="gliner.config.UniEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a></p>
+<p>Configuration for uni-encoder span model with relation extraction.</p>
+<p>Initialize UniEncoderSpanRelexConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+<li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
+see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
+<li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
+<li><p><strong>rel_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of relation token. Defaults to -1.</p></li>
+<li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
+<li><p><strong>span_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Span representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If span_mode is ‘token_level’, which is incompatible with this config.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.UniEncoderSpanRelexConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderSpanRelexConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderSpanRelexConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize UniEncoderSpanRelexConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+<li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
+see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
+<li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
+<li><p><strong>rel_token_index</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of relation token. Defaults to -1.</p></li>
+<li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
+<li><p><strong>span_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Span representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If span_mode is ‘token_level’, which is incompatible with this config.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">BiEncoderConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_encoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.BaseGLiNERConfig" title="gliner.config.BaseGLiNERConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code></a></p>
+<p>Base configuration for bi-encoder GLiNER models.</p>
+<p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_encoder_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderSpanConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">BiEncoderSpanConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderSpanConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderSpanConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.BiEncoderConfig" title="gliner.config.BiEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderConfig</span></code></a></p>
+<p>Configuration for bi-encoder span-based GLiNER model.</p>
+<p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderSpanConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderSpanConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderSpanConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderTokenConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">BiEncoderTokenConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderTokenConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderTokenConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.BiEncoderConfig" title="gliner.config.BiEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderConfig</span></code></a></p>
+<p>Configuration for bi-encoder token-based GLiNER model.</p>
+<p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.BiEncoderTokenConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#BiEncoderTokenConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.BiEncoderTokenConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize BiEncoderConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Name/path of labels encoder model. Defaults to None.</p></li>
+<li><p><strong>labels_encoder_config</strong> (<em>dict</em><em>, </em><em>optional</em>) – Labels encoder config dict. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">GLiNERConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#GLiNERConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.GLiNERConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.config.BaseGLiNERConfig" title="gliner.config.BaseGLiNERConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseGLiNERConfig</span></code></a></p>
+<p>Legacy configuration class that auto-detects model type.</p>
+<p>This class provides backward compatibility by automatically determining the
+appropriate model type based on the provided configuration parameters.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig.labels_encoder">
+<span class="sig-name descname"><span class="pre">labels_encoder</span></span><a class="headerlink" href="#gliner.config.GLiNERConfig.labels_encoder" title="Link to this definition">¶</a></dt>
+<dd><p>Name of the encoder for entity labels (bi-encoder).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig.labels_decoder">
+<span class="sig-name descname"><span class="pre">labels_decoder</span></span><a class="headerlink" href="#gliner.config.GLiNERConfig.labels_decoder" title="Link to this definition">¶</a></dt>
+<dd><p>Name of the decoder for label generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig.relations_layer">
+<span class="sig-name descname"><span class="pre">relations_layer</span></span><a class="headerlink" href="#gliner.config.GLiNERConfig.relations_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Layer configuration for relation extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize GLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Labels encoder for bi-encoder models. Defaults to None.</p></li>
+<li><p><strong>labels_decoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Decoder for label generation. Defaults to None.</p></li>
+<li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Relations layer for relation extraction. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels_encoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#GLiNERConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.GLiNERConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize GLiNERConfig.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels_encoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Labels encoder for bi-encoder models. Defaults to None.</p></li>
+<li><p><strong>labels_decoder</strong> (<em>str</em><em>, </em><em>optional</em>) – Decoder for label generation. Defaults to None.</p></li>
+<li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Relations layer for relation extraction. Defaults to None.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to BaseGLiNERConfig.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.config.GLiNERConfig.model_type">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">model_type</span></span><a class="headerlink" href="#gliner.config.GLiNERConfig.model_type" title="Link to this definition">¶</a></dt>
+<dd><p>Auto-detect model type based on configuration.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.model.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.model module</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.training.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.training package</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

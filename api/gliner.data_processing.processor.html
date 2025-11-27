@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.data_processing.processor module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.data_processing.tokenizer module" href="gliner.data_processing.tokenizer.html" /><link rel="prev" title="gliner.data_processing.collator module" href="gliner.data_processing.collator.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.data_processing.processor module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor"><code class="docutils literal notranslate"><span class="pre">BaseProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.get_dict"><code class="docutils literal notranslate">get_dict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.preprocess_example"><code class="docutils literal notranslate">preprocess_example()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.create_labels"><code class="docutils literal notranslate">create_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.prepare_inputs"><code class="docutils literal notranslate">prepare_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.prepare_word_mask"><code class="docutils literal notranslate">prepare_word_mask()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.tokenize_inputs"><code class="docutils literal notranslate">tokenize_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.batch_generate_class_mappings"><code class="docutils literal notranslate">batch_generate_class_mappings()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.collate_raw_batch"><code class="docutils literal notranslate">collate_raw_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.collate_fn"><code class="docutils literal notranslate">collate_fn()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.create_batch_dict"><code class="docutils literal notranslate">create_batch_dict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor.create_dataloader"><code class="docutils literal notranslate">create_dataloader()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.preprocess_example"><code class="docutils literal notranslate">preprocess_example()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.create_batch_dict"><code class="docutils literal notranslate">create_batch_dict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.create_labels"><code class="docutils literal notranslate">create_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.preprocess_example"><code class="docutils literal notranslate">preprocess_example()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.create_batch_dict"><code class="docutils literal notranslate">create_batch_dict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.create_labels"><code class="docutils literal notranslate">create_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor"><code class="docutils literal notranslate"><span class="pre">BaseBiEncoderProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.tokenize_inputs"><code class="docutils literal notranslate">tokenize_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.batch_generate_class_mappings"><code class="docutils literal notranslate">batch_generate_class_mappings()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BiEncoderSpanProcessor"><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BiEncoderSpanProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BiEncoderTokenProcessor"><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.BiEncoderTokenProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_inputs"><code class="docutils literal notranslate">tokenize_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.create_labels"><code class="docutils literal notranslate">create_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor"><code class="docutils literal notranslate"><span class="pre">RelationExtractionSpanProcessor</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings"><code class="docutils literal notranslate">batch_generate_class_mappings()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.collate_raw_batch"><code class="docutils literal notranslate">collate_raw_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.preprocess_example"><code class="docutils literal notranslate">preprocess_example()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_batch_dict"><code class="docutils literal notranslate">create_batch_dict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels"><code class="docutils literal notranslate">create_relation_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.prepare_inputs"><code class="docutils literal notranslate">prepare_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_inputs"><code class="docutils literal notranslate">tokenize_inputs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_and_prepare_labels"><code class="docutils literal notranslate">tokenize_and_prepare_labels()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.data_processing.html"><span itemprop="name">gliner.data_processing package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.data_processing.processor module</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.data_processing.processor">
+<span id="gliner-data-processing-processor-module"></span><h1>gliner.data_processing.processor module<a class="headerlink" href="#module-gliner.data_processing.processor" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">BaseProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>Abstract base class for data processors.</p>
+<p>This class provides the common interface and utilities for all processor
+implementations, handling tokenization, label preparation, and batch collation
+for NER and RE tasks.</p>
+<p>Initialize the base processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object containing model and processing parameters.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for subword tokenization.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter. If None, creates one
+based on config.words_splitter_type.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the base processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object containing model and processing parameters.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for subword tokenization.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter. If None, creates one
+based on config.words_splitter_type.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.get_dict">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">spans</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes_to_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.get_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.get_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Create a dictionary mapping spans to their class IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>spans</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – List of tuples (start, end, label) representing entity spans.</p></li>
+<li><p><strong>classes_to_id</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – Mapping from class labels to integer IDs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary mapping (start, end) tuples to class IDs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[<em>Tuple</em>[int, int], int]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.preprocess_example">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">preprocess_example</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes_to_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.preprocess_example"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.preprocess_example" title="Link to this definition">¶</a></dt>
+<dd><p>Preprocess a single example for model input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of token strings.</p></li>
+<li><p><strong>ner</strong> (<em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – List of NER annotations as (start, end, label) tuples.</p></li>
+<li><p><strong>classes_to_id</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em>) – Mapping from class labels to integer IDs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing preprocessed example data.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – Must be implemented by subclasses.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.create_labels">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.create_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.create_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Create label tensors from batch data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tensor containing labels for the batch.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotImplementedError</strong> – Must be implemented by subclasses.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.tokenize_and_prepare_labels">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare labels for a batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – Must be implemented by subclasses.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.prepare_inputs">
+<span class="sig-name descname"><span class="pre">prepare_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.prepare_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.prepare_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare input texts with entity type prompts.</p>
+<p>Prepends entity type special tokens that aggregates entity label information.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Sequences of token strings, one per example.</p></li>
+<li><p><strong>entities</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>str</em><em>]</em>) – Entity types to extract. Can be:
+- List of lists (per-example entity types)
+- Dictionary (shared entity types)
+- List of strings (same types for all examples)</p></li>
+<li><p><strong>blank</strong> (<em>str</em><em> | </em><em>None</em>) – Optional blank entity token for zero-shot scenarios.</p></li>
+<li><p><strong>add_entities</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether to add entity text string to the prompt.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of input text sequences with prepended prompts</p></li>
+<li><p>List of prompt lengths for each example</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.prepare_word_mask">
+<span class="sig-name descname"><span class="pre">prepare_word_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenized_inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_first_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.prepare_word_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.prepare_word_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare word-level masks for tokenized inputs.</p>
+<p>Creates masks that map subword tokens back to their original words.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> – Original text sequences.</p></li>
+<li><p><strong>tokenized_inputs</strong> – Tokenized inputs from transformer tokenizer.</p></li>
+<li><p><strong>skip_first_words</strong> – Optional list of word counts to skip per example
+(e.g., prompt words).</p></li>
+<li><p><strong>token_level</strong> – If True, create token-level masks instead of word-level.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Word mask array.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.tokenize_inputs">
+<span class="sig-name descname"><span class="pre">tokenize_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.tokenize_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.tokenize_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize input texts with entity prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> – Sequences of token strings.</p></li>
+<li><p><strong>entities</strong> – Entity types for extraction.</p></li>
+<li><p><strong>blank</strong> – Optional blank entity token.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>input_ids: Token IDs</p></li>
+<li><p>attention_mask: Attention mask</p></li>
+<li><p>words_mask: Word-level mask</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing tokenized inputs with keys</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.batch_generate_class_mappings">
+<span class="sig-name descname"><span class="pre">batch_generate_class_mappings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_neg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.batch_generate_class_mappings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.batch_generate_class_mappings" title="Link to this definition">¶</a></dt>
+<dd><p>Generate class mappings for a batch with negative sampling.</p>
+<p>Creates bidirectional mappings between class labels and integer IDs,
+with support for negative type sampling to improve model robustness.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of example dictionaries.</p></li>
+<li><p><strong>negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional pre-sampled negative types. If None, samples
+from batch.</p></li>
+<li><p><strong>key</strong> (<em>str</em>) – Key to access labels in batch dictionaries (default: ‘ner’).</p></li>
+<li><p><strong>sampled_neg</strong> (<em>int</em>) – Number of negative types to sample if negatives is None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of class-to-ID mappings (one per example)</p></li>
+<li><p>List of ID-to-class mappings (one per example)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.collate_raw_batch">
+<span class="sig-name descname"><span class="pre">collate_raw_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ner'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.collate_raw_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.collate_raw_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Collate a raw batch with optional dynamic or provided label mappings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of raw example dictionaries.</p></li>
+<li><p><strong>entity_types</strong> (<em>List</em><em>[</em><em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional predefined entity types. Can be a single list
+for all examples or list of lists for per-example types.</p></li>
+<li><p><strong>negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of negative entity types.</p></li>
+<li><p><strong>class_to_ids</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional predefined class-to-ID mapping(s).</p></li>
+<li><p><strong>id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional predefined ID-to-class mapping(s).</p></li>
+<li><p><strong>key</strong> – Key for accessing labels in batch (default: ‘ner’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing collated batch data ready for model input.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.collate_fn">
+<span class="sig-name descname"><span class="pre">collate_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.collate_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.collate_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Collate function for DataLoader.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch of examples from dataset.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels (default: True).</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing model inputs and labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.create_batch_dict">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_batch_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.create_batch_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.create_batch_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Create a batch dictionary from preprocessed examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of preprocessed example dictionaries.</p></li>
+<li><p><strong>class_to_ids</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>]</em>) – List of class-to-ID mappings.</p></li>
+<li><p><strong>id_to_classes</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – List of ID-to-class mappings.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing collated batch tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>NotImplementedError</strong> – Must be implemented by subclasses.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Dict</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseProcessor.create_dataloader">
+<span class="sig-name descname"><span class="pre">create_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseProcessor.create_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseProcessor.create_dataloader" title="Link to this definition">¶</a></dt>
+<dd><p>Create a PyTorch DataLoader with the processor’s collate function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> – Dataset to load.</p></li>
+<li><p><strong>entity_types</strong> – Optional entity types for extraction.</p></li>
+<li><p><strong>*args</strong> – Additional positional arguments for DataLoader.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments for DataLoader.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DataLoader instance configured with this processor’s collate_fn.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>DataLoader</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor" title="gliner.data_processing.processor.BaseProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseProcessor</span></code></a></p>
+<p>Processor for span-based NER with uni-encoder architecture.</p>
+<p>This processor handles span enumeration and labeling for models that
+predict entity types for all possible spans up to a maximum width.</p>
+<p>Initialize the base processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object containing model and processing parameters.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for subword tokenization.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter. If None, creates one
+based on config.words_splitter_type.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanProcessor.preprocess_example">
+<span class="sig-name descname"><span class="pre">preprocess_example</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes_to_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanProcessor.preprocess_example"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.preprocess_example" title="Link to this definition">¶</a></dt>
+<dd><p>Preprocess a single example for span-based prediction.</p>
+<p>Enumerates all possible spans up to max_width and creates labels
+for each span based on NER annotations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> – List of token strings.</p></li>
+<li><p><strong>ner</strong> – List of NER annotations as (start, end, label) tuples.</p></li>
+<li><p><strong>classes_to_id</strong> – Mapping from class labels to integer IDs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>tokens: Token strings</p></li>
+<li><p>span_idx: Tensor of span indices (start, end)</p></li>
+<li><p>span_label: Tensor of span labels</p></li>
+<li><p>seq_length: Sequence length</p></li>
+<li><p>entities: Original NER annotations</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>UserWarning: If sequence length exceeds max_len (gets truncated).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanProcessor.create_batch_dict">
+<span class="sig-name descname"><span class="pre">create_batch_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanProcessor.create_batch_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.create_batch_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Create a batch dictionary from preprocessed span examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – List of preprocessed example dictionaries.</p></li>
+<li><p><strong>class_to_ids</strong> – List of class-to-ID mappings.</p></li>
+<li><p><strong>id_to_classes</strong> – List of ID-to-class mappings.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>seq_length: Sequence lengths</p></li>
+<li><p>span_idx: Padded span indices</p></li>
+<li><p>tokens: Token strings</p></li>
+<li><p>span_mask: Mask for valid spans</p></li>
+<li><p>span_label: Padded span labels</p></li>
+<li><p>entities: Original NER annotations</p></li>
+<li><p>classes_to_id: Class mappings</p></li>
+<li><p>id_to_classes: Reverse class mappings</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanProcessor.create_labels">
+<span class="sig-name descname"><span class="pre">create_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanProcessor.create_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.create_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Create one-hot encoded labels for spans.</p>
+<p>Creates multi-label one-hot vectors for each span, allowing spans
+to have multiple entity types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>batch</strong> – Batch dictionary containing tokens, entities, and class mappings.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of shape (batch_size, max_spans, num_classes) containing
+one-hot encoded labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare span labels for a batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs and optionally labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderTokenProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderTokenProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderTokenProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor" title="gliner.data_processing.processor.BaseProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseProcessor</span></code></a></p>
+<p>Processor for token-based NER with uni-encoder architecture.</p>
+<p>This processor handles token-level classification where each token is
+labeled with BIO-style tags (Begin, Inside, Outside) for each entity type.</p>
+<p>Initialize the base processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object containing model and processing parameters.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for subword tokenization.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter. If None, creates one
+based on config.words_splitter_type.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderTokenProcessor.preprocess_example">
+<span class="sig-name descname"><span class="pre">preprocess_example</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes_to_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderTokenProcessor.preprocess_example"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.preprocess_example" title="Link to this definition">¶</a></dt>
+<dd><p>Preprocess a single example for token-based prediction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> – List of token strings.</p></li>
+<li><p><strong>ner</strong> – List of NER annotations as (start, end, label) tuples.</p></li>
+<li><p><strong>classes_to_id</strong> – Mapping from class labels to integer IDs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>tokens: Token strings</p></li>
+<li><p>seq_length: Sequence length</p></li>
+<li><p>entities: Original NER annotations</p></li>
+<li><p>entities_id: Entity annotations with class IDs</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>UserWarning: If sequence length exceeds max_len (gets truncated).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderTokenProcessor.create_batch_dict">
+<span class="sig-name descname"><span class="pre">create_batch_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderTokenProcessor.create_batch_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.create_batch_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Create a batch dictionary from preprocessed token examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – List of preprocessed example dictionaries.</p></li>
+<li><p><strong>class_to_ids</strong> – List of class-to-ID mappings.</p></li>
+<li><p><strong>id_to_classes</strong> – List of ID-to-class mappings.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>tokens: Token strings</p></li>
+<li><p>seq_length: Sequence lengths</p></li>
+<li><p>entities: Original NER annotations</p></li>
+<li><p>entities_id: Entity annotations with class IDs</p></li>
+<li><p>classes_to_id: Class mappings</p></li>
+<li><p>id_to_classes: Reverse class mappings</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderTokenProcessor.create_labels">
+<span class="sig-name descname"><span class="pre">create_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entities_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderTokenProcessor.create_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.create_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Create token-level labels with begin/inside/end markers.</p>
+<p>Creates labels indicating which tokens are at the start, end, or inside
+of entity spans for each entity type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entities_id</strong> – List of entity annotations with class IDs for each example.</p></li>
+<li><p><strong>batch_size</strong> – Size of the batch.</p></li>
+<li><p><strong>seq_len</strong> – Maximum sequence length in batch.</p></li>
+<li><p><strong>num_classes</strong> – Number of entity classes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of shape (batch_size, seq_len, num_classes, 3) where the last
+dimension contains [start_marker, end_marker, inside_marker].</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderTokenProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderTokenProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderTokenProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare token-level labels for a batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs and optionally labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseBiEncoderProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">BaseBiEncoderProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseBiEncoderProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseBiEncoderProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.BaseProcessor" title="gliner.data_processing.processor.BaseProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseProcessor</span></code></a></p>
+<p>Base processor for bi-encoder architectures.</p>
+<p>Bi-encoder models use separate encoders for text and entity types.</p>
+<p>Initialize the bi-encoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for text encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>labels_tokenizer</strong> – Separate tokenizer for entity type encoding.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseBiEncoderProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseBiEncoderProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the bi-encoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for text encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>labels_tokenizer</strong> – Separate tokenizer for entity type encoding.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseBiEncoderProcessor.tokenize_inputs">
+<span class="sig-name descname"><span class="pre">tokenize_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseBiEncoderProcessor.tokenize_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.tokenize_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs for bi-encoder architecture.</p>
+<p>Separately tokenizes text sequences and entity types using different
+tokenizers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> – Sequences of token strings.</p></li>
+<li><p><strong>entities</strong> – Optional list of entity types to encode.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>input_ids: Text token IDs</p></li>
+<li><p>attention_mask: Text attention mask</p></li>
+<li><p>words_mask: Word-level mask</p></li>
+<li><p>labels_input_ids: Entity type token IDs (if entities provided)</p></li>
+<li><p>labels_attention_mask: Entity type attention mask (if entities provided)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BaseBiEncoderProcessor.batch_generate_class_mappings">
+<span class="sig-name descname"><span class="pre">batch_generate_class_mappings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BaseBiEncoderProcessor.batch_generate_class_mappings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BaseBiEncoderProcessor.batch_generate_class_mappings" title="Link to this definition">¶</a></dt>
+<dd><p>Generate class mappings for bi-encoder with batch-level type pooling.</p>
+<p>Unlike uni-encoder which generates per-example mappings, bi-encoder
+creates a single shared mapping across the batch for more efficient
+entity type encoding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of example dictionaries.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list (unused).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of identical class-to-ID mappings (one per example)</p></li>
+<li><p>List of identical ID-to-class mappings (one per example)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BiEncoderSpanProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">BiEncoderSpanProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BiEncoderSpanProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BiEncoderSpanProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor" title="gliner.data_processing.processor.UniEncoderSpanProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanProcessor</span></code></a>, <a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor" title="gliner.data_processing.processor.BaseBiEncoderProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBiEncoderProcessor</span></code></a></p>
+<p>Processor for span-based NER with bi-encoder architecture.</p>
+<p>Combines span enumeration from UniEncoderSpanProcessor with the bi-encoder
+approach from BaseBiEncoderProcessor.</p>
+<p>Initialize the bi-encoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for text encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>labels_tokenizer</strong> – Separate tokenizer for entity type encoding.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BiEncoderSpanProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BiEncoderSpanProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BiEncoderSpanProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare span labels for bi-encoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>prepare_entities</strong> – Whether to encode entity types separately.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs, entity encodings, and optionally labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BiEncoderTokenProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">BiEncoderTokenProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BiEncoderTokenProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BiEncoderTokenProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.UniEncoderTokenProcessor" title="gliner.data_processing.processor.UniEncoderTokenProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenProcessor</span></code></a>, <a class="reference internal" href="#gliner.data_processing.processor.BaseBiEncoderProcessor" title="gliner.data_processing.processor.BaseBiEncoderProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBiEncoderProcessor</span></code></a></p>
+<p>Processor for token-based NER with bi-encoder architecture.</p>
+<p>Combines token-level classification from UniEncoderTokenProcessor with the
+dual-encoder approach from BaseBiEncoderProcessor.</p>
+<p>Initialize the bi-encoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for text encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>labels_tokenizer</strong> – Separate tokenizer for entity type encoding.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.BiEncoderTokenProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#BiEncoderTokenProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.BiEncoderTokenProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare token-level labels for bi-encoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>prepare_entities</strong> – Whether to encode entity types separately.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs, entity encodings, and optionally labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanDecoderProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanDecoderProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor" title="gliner.data_processing.processor.UniEncoderSpanProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanProcessor</span></code></a></p>
+<p>Processor for span-based NER with encoder-decoder architecture.</p>
+<p>Extends span-based processing with a decoder that generates entity type
+labels autoregressively, enabling more flexible prediction strategies.</p>
+<p>Initialize the encoder-decoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>decoder_tokenizer</strong> – Separate tokenizer for decoder (label generation).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_tokenizer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanDecoderProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the encoder-decoder processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer for encoding.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+<li><p><strong>decoder_tokenizer</strong> – Separate tokenizer for decoder (label generation).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_inputs">
+<span class="sig-name descname"><span class="pre">tokenize_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanDecoderProcessor.tokenize_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs for encoder-decoder architecture.</p>
+<p>Prepares both encoder and decoder inputs, with optional decoder context
+based on configuration.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> – Sequences of token strings.</p></li>
+<li><p><strong>entities</strong> – Entity types for extraction.</p></li>
+<li><p><strong>blank</strong> – Optional blank entity token for zero-shot scenarios.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing encoder and decoder tokenized inputs.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.create_labels">
+<span class="sig-name descname"><span class="pre">create_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanDecoderProcessor.create_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.create_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Create labels for both span classification and decoder generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary containing tokens, entities, and class mappings.</p></li>
+<li><p><strong>blank</strong> – Optional blank entity token for zero-shot scenarios.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Span classification labels (one-hot encoded)</p></li>
+<li><p>Decoder generation labels (tokenized entity types) or None</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#UniEncoderSpanDecoderProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare labels for encoder-decoder training.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing encoder inputs, decoder inputs, and labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.processor.</span></span><span class="sig-name descname"><span class="pre">RelationExtractionSpanProcessor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.processor.UniEncoderSpanProcessor" title="gliner.data_processing.processor.UniEncoderSpanProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanProcessor</span></code></a></p>
+<p>Processor for joint entity and relation extraction.</p>
+<p>Extends span-based NER processing to additionally handle relation extraction
+between entity pairs, supporting end-to-end joint training.</p>
+<p>Initialize the relation extraction processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_splitter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the relation extraction processor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>tokenizer</strong> – Transformer tokenizer.</p></li>
+<li><p><strong>words_splitter</strong> – Word-level tokenizer/splitter.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings">
+<span class="sig-name descname"><span class="pre">batch_generate_class_mappings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_neg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.batch_generate_class_mappings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings" title="Link to this definition">¶</a></dt>
+<dd><p>Generate class mappings for both entities and relations.</p>
+<p>Creates separate mappings for entity types and relation types with
+support for negative sampling for both.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of example dictionaries.</p></li>
+<li><p><strong>ner_negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional pre-sampled negative entity types.</p></li>
+<li><p><strong>rel_negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional pre-sampled negative relation types.</p></li>
+<li><p><strong>sampled_neg</strong> (<em>int</em>) – Number of negative types to sample if negatives not provided.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of entity class-to-ID mappings</p></li>
+<li><p>List of entity ID-to-class mappings</p></li>
+<li><p>List of relation class-to-ID mappings</p></li>
+<li><p>List of relation ID-to-class mappings</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.collate_raw_batch">
+<span class="sig-name descname"><span class="pre">collate_raw_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_class_to_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ner'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.collate_raw_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.collate_raw_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Collate a raw batch with entity and relation label mappings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of raw example dictionaries.</p></li>
+<li><p><strong>entity_types</strong> (<em>List</em><em>[</em><em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional predefined entity types.</p></li>
+<li><p><strong>relation_types</strong> (<em>List</em><em>[</em><em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional predefined relation types.</p></li>
+<li><p><strong>ner_negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional negative entity types.</p></li>
+<li><p><strong>rel_negatives</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional negative relation types.</p></li>
+<li><p><strong>class_to_ids</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional entity class-to-ID mapping(s).</p></li>
+<li><p><strong>id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional entity ID-to-class mapping(s).</p></li>
+<li><p><strong>rel_class_to_ids</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>int</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional relation class-to-ID mapping(s).</p></li>
+<li><p><strong>rel_id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional relation ID-to-class mapping(s).</p></li>
+<li><p><strong>key</strong> – Key for accessing labels in batch (default: ‘ner’).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing collated batch data for joint entity and
+relation extraction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.preprocess_example">
+<span class="sig-name descname"><span class="pre">preprocess_example</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">classes_to_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_classes_to_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.preprocess_example"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.preprocess_example" title="Link to this definition">¶</a></dt>
+<dd><p>Preprocess a single example for joint entity and relation extraction.</p>
+<p>Processes both entity spans and relation triplets, ensuring consistent
+indexing when entities are reordered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tokens</strong> – List of token strings.</p></li>
+<li><p><strong>ner</strong> – List of entity annotations as (start, end, label) tuples.</p></li>
+<li><p><strong>classes_to_id</strong> – Mapping from entity class labels to integer IDs.</p></li>
+<li><p><strong>relations</strong> – List of relation annotations as (head_idx, tail_idx, rel_type) tuples.</p></li>
+<li><p><strong>rel_classes_to_id</strong> – Mapping from relation class labels to integer IDs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>tokens: Token strings</p></li>
+<li><p>span_idx: Tensor of span indices</p></li>
+<li><p>span_label: Tensor of entity labels for each span</p></li>
+<li><p>seq_length: Sequence length</p></li>
+<li><p>entities: Original entity annotations</p></li>
+<li><p>relations: Original relation annotations</p></li>
+<li><p>rel_idx: Tensor of relation head/tail indices</p></li>
+<li><p>rel_label: Tensor of relation type labels</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>UserWarning: If sequence length exceeds max_len (gets truncated).</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.create_batch_dict">
+<span class="sig-name descname"><span class="pre">create_batch_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_to_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_class_to_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.create_batch_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_batch_dict" title="Link to this definition">¶</a></dt>
+<dd><p>Create a batch dictionary from preprocessed relation extraction examples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – List of preprocessed example dictionaries.</p></li>
+<li><p><strong>class_to_ids</strong> – List of entity class-to-ID mappings.</p></li>
+<li><p><strong>id_to_classes</strong> – List of entity ID-to-class mappings.</p></li>
+<li><p><strong>rel_class_to_ids</strong> – List of relation class-to-ID mappings.</p></li>
+<li><p><strong>rel_id_to_classes</strong> – List of relation ID-to-class mappings.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing all batch data for joint entity and relation
+extraction, including entity spans, relation pairs, and their labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels">
+<span class="sig-name descname"><span class="pre">create_relation_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_reversed_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_random_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.create_relation_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Create relation labels with negative pair sampling.</p>
+<p>Generates training labels for relation extraction including both positive
+relation pairs and carefully sampled negative pairs for contrastive learning.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary containing entities and relations.</p></li>
+<li><p><strong>add_reversed_negatives</strong> – If True, add reversed direction pairs as
+negatives (h,t) -&gt; (t,h). These are important hard negatives
+for learning relation directionality.</p></li>
+<li><p><strong>add_random_negatives</strong> – If True, add random entity pairs as negatives
+to provide additional training signal.</p></li>
+<li><p><strong>negative_ratio</strong> – Ratio of negative to positive pairs. For example,
+2.0 means twice as many negatives as positives.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>adj_matrix: Adjacency matrix indicating which entity pairs
+to consider (shape: [B, max_entities, max_entities])</p></li>
+<li><p>rel_matrix: Multi-hot encoded relation labels for each pair
+(shape: [B, max_pairs, num_relation_classes])</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.prepare_inputs">
+<span class="sig-name descname"><span class="pre">prepare_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.prepare_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.prepare_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare input texts with entity and relation type prompts.</p>
+<p>Extends the base prepare_inputs to include relation type tokens in the prompt.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Sequences of token strings, one per example.</p></li>
+<li><p><strong>entities</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>str</em><em>]</em>) – Entity types to extract.</p></li>
+<li><p><strong>blank</strong> (<em>str</em><em> | </em><em>None</em>) – Optional blank entity token for zero-shot scenarios.</p></li>
+<li><p><strong>relations</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>Sequence</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Relation types to extract (optional).</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>List of input text sequences with prepended prompts</p></li>
+<li><p>List of prompt lengths for each example</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_inputs">
+<span class="sig-name descname"><span class="pre">tokenize_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entities</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">blank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.tokenize_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_inputs" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize input texts with entity and relation prompts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> – Sequences of token strings.</p></li>
+<li><p><strong>entities</strong> – Entity types for extraction.</p></li>
+<li><p><strong>blank</strong> – Optional blank entity token.</p></li>
+<li><p><strong>relations</strong> – Optional relation types for extraction.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs with word masks.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_and_prepare_labels">
+<span class="sig-name descname"><span class="pre">tokenize_and_prepare_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.tokenize_and_prepare_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.tokenize_and_prepare_labels" title="Link to this definition">¶</a></dt>
+<dd><p>Tokenize inputs and prepare labels for joint entity-relation extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – Batch dictionary with tokens, entities, relations, and class mappings.</p></li>
+<li><p><strong>prepare_labels</strong> – Whether to prepare labels.</p></li>
+<li><p><strong>*args</strong> – Variable length argument list.</p></li>
+<li><p><strong>**kwargs</strong> – Arbitrary keyword arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing tokenized inputs, entity labels, relation adjacency
+matrix, and relation labels.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.data_processing.collator.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.data_processing.collator module</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.data_processing.tokenizer.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.data_processing.tokenizer module</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

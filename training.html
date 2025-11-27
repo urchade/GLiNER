@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Training - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Architectures" href="architectures.html" /><link rel="prev" title="Components &amp; Configs" href="configs.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Training"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#quickstart">Quickstart</a><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#simple-training-example">Simple Training Example</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#dataset-format">Dataset Format</a><ul>
+<li><a class="reference internal" href="#basic-format">Basic Format</a></li>
+<li><a class="reference internal" href="#basic-example">Basic Example</a></li>
+<li><a class="reference internal" href="#advanced-format-explicit-labels-and-negatives">Advanced Format: Explicit Labels and Negatives</a><ul>
+<li><a class="reference internal" href="#example-with-explicit-labels">Example with Explicit Labels</a></li>
+<li><a class="reference internal" href="#example-with-hard-negatives">Example with Hard Negatives</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#relation-extraction-dataset-format">Relation Extraction Dataset Format</a></li>
+<li><a class="reference internal" href="#decoder-based-models-dataset-format">Decoder-Based Models Dataset Format</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#training-configuration">Training Configuration</a><ul>
+<li><a class="reference internal" href="#using-configuration-files">Using Configuration Files</a></li>
+<li><a class="reference internal" href="#training-script">Training Script</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#best-practices">Best Practices</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Training</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="training">
+<h1>Training<a class="headerlink" href="#training" title="Link to this heading">¶</a></h1>
+<p>GLiNER can be easily fine-tuned thanks to its architecture and carefully pre-trained models available on <a class="reference external" href="https://huggingface.co/models?sort=trending&amp;amp;search=gliner">Hugging Face</a>.</p>
+<section id="quickstart">
+<h2>Quickstart<a class="headerlink" href="#quickstart" title="Link to this heading">¶</a></h2>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h3>
+<p>To install GLiNER with training dependencies:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Install with training support</span>
+</span><span data-line="2">pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>training<span class="o">]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="simple-training-example">
+<h3>Simple Training Example<a class="headerlink" href="#simple-training-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Load a pretrained model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Define your training data</span>
+</span><span data-line="7"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="8">    <span class="p">{</span>
+</span><span data-line="9">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span> <span class="s2">&quot;Inc.&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;headquartered&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;Cupertino&quot;</span><span class="p">],</span>
+</span><span data-line="10">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]]</span>
+</span><span data-line="11">    <span class="p">},</span>
+</span><span data-line="12">    <span class="p">{</span>
+</span><span data-line="13">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Steve&quot;</span><span class="p">,</span> <span class="s2">&quot;Jobs&quot;</span><span class="p">,</span> <span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;Apple&quot;</span><span class="p">],</span>
+</span><span data-line="14">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">]]</span>
+</span><span data-line="15">    <span class="p">}</span>
+</span><span data-line="16"><span class="p">]</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Train the model</span>
+</span><span data-line="19"><span class="n">trainer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">train_model</span><span class="p">(</span>
+</span><span data-line="20">    <span class="n">train_dataset</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>
+</span><span data-line="21">    <span class="n">eval_dataset</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>  <span class="c1"># Use separate eval data in practice</span>
+</span><span data-line="22">    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;./my_model&quot;</span><span class="p">,</span>
+</span><span data-line="23">    <span class="n">max_steps</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+</span><span data-line="24">    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">5e-5</span><span class="p">,</span>
+</span><span data-line="25">    <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="26"><span class="p">)</span>
+</span><span data-line="27">
+</span><span data-line="28"><span class="c1"># Save the trained model</span>
+</span><span data-line="29"><span class="n">trainer</span><span class="o">.</span><span class="n">save_model</span><span class="p">()</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="dataset-format">
+<h2>Dataset Format<a class="headerlink" href="#dataset-format" title="Link to this heading">¶</a></h2>
+<section id="basic-format">
+<h3>Basic Format<a class="headerlink" href="#basic-format" title="Link to this heading">¶</a></h3>
+<p>GLiNER expects training data as a list of dictionaries with the following structure:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>  <span class="c1"># List of tokens</span>
+</span><span data-line="3">    <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]]</span>  <span class="c1"># Entity annotations: [[start, end, label], ...]</span>
+</span><span data-line="4"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p><strong>Important Notes:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tokenized_text</span></code>: Pre-tokenized text as a list of tokens (words)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ner</span></code>: List of entity annotations where each annotation is <code class="docutils literal notranslate"><span class="pre">[start_idx,</span> <span class="pre">end_idx,</span> <span class="pre">entity_type]</span></code></p></li>
+<li><p>Indices are <strong>token-level</strong> (not character-level)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">start_idx</span></code> and <code class="docutils literal notranslate"><span class="pre">end_idx</span></code> are <strong>inclusive</strong> (both point to tokens in the entity span)</p></li>
+</ul>
+</section>
+<section id="basic-example">
+<h3>Basic Example<a class="headerlink" href="#basic-example" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span>
+</span><span data-line="3">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Barack&quot;</span><span class="p">,</span> <span class="s2">&quot;Obama&quot;</span><span class="p">,</span> <span class="s2">&quot;was&quot;</span><span class="p">,</span> <span class="s2">&quot;born&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;Hawaii&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+</span><span data-line="4">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="5">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span>      <span class="c1"># &quot;Barack Obama&quot; spans tokens 0-1</span>
+</span><span data-line="6">            <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>     <span class="c1"># &quot;Hawaii&quot; is token 5</span>
+</span><span data-line="7">        <span class="p">]</span>
+</span><span data-line="8">    <span class="p">},</span>
+</span><span data-line="9">    <span class="p">{</span>
+</span><span data-line="10">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Microsoft&quot;</span><span class="p">,</span> <span class="s2">&quot;was&quot;</span><span class="p">,</span> <span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;1975&quot;</span><span class="p">],</span>
+</span><span data-line="11">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="12">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>  <span class="c1"># &quot;Microsoft&quot; is token 0</span>
+</span><span data-line="13">            <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>           <span class="c1"># &quot;1975&quot; is token 4</span>
+</span><span data-line="14">        <span class="p">]</span>
+</span><span data-line="15">    <span class="p">}</span>
+</span><span data-line="16"><span class="p">]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="advanced-format-explicit-labels-and-negatives">
+<h3>Advanced Format: Explicit Labels and Negatives<a class="headerlink" href="#advanced-format-explicit-labels-and-negatives" title="Link to this heading">¶</a></h3>
+<p>You can improve training by explicitly defining:</p>
+<ol class="arabic simple">
+<li><p><strong>Positive labels</strong> (<code class="docutils literal notranslate"><span class="pre">ner_labels</span></code>): Entity types present in this example, recomened to specify for fixed label set use cases.</p></li>
+<li><p><strong>Negative labels</strong> (<code class="docutils literal notranslate"><span class="pre">ner_negatives</span></code>): Entity types to use as negative examples</p></li>
+</ol>
+<p>This gives you fine-grained control over the label sampling during training.</p>
+<section id="example-with-explicit-labels">
+<h4>Example with Explicit Labels<a class="headerlink" href="#example-with-explicit-labels" title="Link to this heading">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span>
+</span><span data-line="3">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span> <span class="s2">&quot;Inc.&quot;</span><span class="p">,</span> <span class="s2">&quot;hired&quot;</span><span class="p">,</span> <span class="s2">&quot;Tim&quot;</span><span class="p">,</span> <span class="s2">&quot;Cook&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;1998&quot;</span><span class="p">],</span>
+</span><span data-line="4">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="5">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>
+</span><span data-line="6">            <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="7">            <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="8">        <span class="p">],</span>
+</span><span data-line="9">        <span class="c1"># Explicitly define which labels are relevant for this example</span>
+</span><span data-line="10">        <span class="s2">&quot;ner_labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="11">        
+</span><span data-line="12">        <span class="c1"># Explicitly define negative examples to use</span>
+</span><span data-line="13">        <span class="s2">&quot;ner_negatives&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="s2">&quot;money&quot;</span><span class="p">]</span>
+</span><span data-line="14">    <span class="p">}</span>
+</span><span data-line="15"><span class="p">]</span>
+</span></pre></div>
+</div>
+<p><strong>Benefits:</strong></p>
+<ul class="simple">
+<li><p><strong>Better control</strong>: Explicitly specify which entity types to consider</p></li>
+<li><p><strong>Hard negatives</strong>: Include similar entity types as negatives (e.g., “person” as negative when “organization” is positive)</p></li>
+<li><p><strong>Curriculum learning</strong>: Start with easy negatives, gradually add harder ones</p></li>
+<li><p><strong>Domain adaptation</strong>: Focus on specific entity types relevant to your domain</p></li>
+</ul>
+</section>
+<section id="example-with-hard-negatives">
+<h4>Example with Hard Negatives<a class="headerlink" href="#example-with-hard-negatives" title="Link to this heading">¶</a></h4>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># Training example that teaches the model to distinguish between similar types</span>
+</span><span data-line="2"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="3">    <span class="p">{</span>
+</span><span data-line="4">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Google&quot;</span><span class="p">,</span> <span class="s2">&quot;CEO&quot;</span><span class="p">,</span> <span class="s2">&quot;Sundar&quot;</span><span class="p">,</span> <span class="s2">&quot;Pichai&quot;</span><span class="p">,</span> <span class="s2">&quot;announced&quot;</span><span class="p">,</span> <span class="s2">&quot;Pixel&quot;</span><span class="p">],</span>
+</span><span data-line="5">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="6">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>
+</span><span data-line="7">            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">],</span>
+</span><span data-line="8">            <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="9">            <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">]</span>
+</span><span data-line="10">        <span class="p">],</span>
+</span><span data-line="11">        <span class="s2">&quot;ner_labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">],</span>
+</span><span data-line="12">        
+</span><span data-line="13">        <span class="c1"># Use similar entity types as hard negatives</span>
+</span><span data-line="14">        <span class="s2">&quot;ner_negatives&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="15">            <span class="s2">&quot;company&quot;</span><span class="p">,</span>        <span class="c1"># Similar to &quot;organization&quot;</span>
+</span><span data-line="16">            <span class="s2">&quot;individual&quot;</span><span class="p">,</span>     <span class="c1"># Similar to &quot;person&quot;</span>
+</span><span data-line="17">            <span class="s2">&quot;job_title&quot;</span><span class="p">,</span>      <span class="c1"># Similar to &quot;position&quot;</span>
+</span><span data-line="18">            <span class="s2">&quot;brand&quot;</span>           <span class="c1"># Similar to &quot;product&quot;</span>
+</span><span data-line="19">        <span class="p">]</span>
+</span><span data-line="20">    <span class="p">}</span>
+</span><span data-line="21"><span class="p">]</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="relation-extraction-dataset-format">
+<h3>Relation Extraction Dataset Format<a class="headerlink" href="#relation-extraction-dataset-format" title="Link to this heading">¶</a></h3>
+<p>For relation extraction models (UniEncoderSpanRelex), include relation annotations:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span>
+</span><span data-line="3">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="s2">&quot;Smith&quot;</span><span class="p">,</span> <span class="s2">&quot;works&quot;</span><span class="p">,</span> <span class="s2">&quot;at&quot;</span><span class="p">,</span> <span class="s2">&quot;Microsoft&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;Seattle&quot;</span><span class="p">],</span>
+</span><span data-line="4">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="5">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="6">            <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>
+</span><span data-line="7">            <span class="p">[</span><span class="mi">6</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="8">        <span class="p">],</span>
+</span><span data-line="9">        <span class="c1"># Relations: [head_entity_idx, tail_entity_idx, relation_type]</span>
+</span><span data-line="10">        <span class="s2">&quot;relations&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="11">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;works_at&quot;</span><span class="p">],</span>      <span class="c1"># person 0 works_at organization 1</span>
+</span><span data-line="12">            <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">]</span>     <span class="c1"># organization 1 located_in location 2</span>
+</span><span data-line="13">        <span class="p">],</span>
+</span><span data-line="14">        <span class="c1"># Optional: explicit relation types</span>
+</span><span data-line="15">        <span class="s2">&quot;rel_labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_by&quot;</span><span class="p">],</span>
+</span><span data-line="16">        <span class="s2">&quot;rel_negatives&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;competitor_of&quot;</span><span class="p">,</span> <span class="s2">&quot;subsidiary_of&quot;</span><span class="p">]</span>
+</span><span data-line="17">    <span class="p">}</span>
+</span><span data-line="18"><span class="p">]</span>
+</span></pre></div>
+</div>
+<p><strong>Relation Indices:</strong></p>
+<ul class="simple">
+<li><p>Head and tail indices refer to the position in the <code class="docutils literal notranslate"><span class="pre">ner</span></code> list (not token positions)</p></li>
+<li><p>Ensure indices are valid (within bounds of the <code class="docutils literal notranslate"><span class="pre">ner</span></code> list)</p></li>
+<li><p>Relations should be ordered and consistent with entity ordering</p></li>
+</ul>
+</section>
+<section id="decoder-based-models-dataset-format">
+<h3>Decoder-Based Models Dataset Format<a class="headerlink" href="#decoder-based-models-dataset-format" title="Link to this heading">¶</a></h3>
+<p>For generative decoder models (UniEncoderSpanDecoder), the format is the same, but you can optionally train the decoder:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span>
+</span><span data-line="3">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Apple&quot;</span><span class="p">,</span> <span class="s2">&quot;released&quot;</span><span class="p">,</span> <span class="s2">&quot;iPhone&quot;</span><span class="p">,</span> <span class="s2">&quot;15&quot;</span><span class="p">],</span>
+</span><span data-line="4">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="5">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;company&quot;</span><span class="p">],</span>
+</span><span data-line="6">            <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">]</span>
+</span><span data-line="7">        <span class="p">],</span>
+</span><span data-line="8">        <span class="c1"># The model will learn to generate these labels</span>
+</span><span data-line="9">        <span class="s2">&quot;ner_labels&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;technology&quot;</span><span class="p">]</span>
+</span><span data-line="10">    <span class="p">}</span>
+</span><span data-line="11"><span class="p">]</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="training-configuration">
+<h2>Training Configuration<a class="headerlink" href="#training-configuration" title="Link to this heading">¶</a></h2>
+<section id="using-configuration-files">
+<h3>Using Configuration Files<a class="headerlink" href="#using-configuration-files" title="Link to this heading">¶</a></h3>
+<p>Create a YAML configuration file for reproducible training:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># config.yaml</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="nt">model</span><span class="p">:</span>
+</span><span data-line="4"><span class="w">  </span><span class="nt">model_name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;microsoft/deberta-v3-base&quot;</span>
+</span><span data-line="5"><span class="w">  </span><span class="nt">span_mode</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;markerV0&quot;</span>
+</span><span data-line="6"><span class="w">  </span><span class="nt">max_width</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">12</span>
+</span><span data-line="7"><span class="w">  </span><span class="nt">hidden_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">768</span>
+</span><span data-line="8"><span class="w">  </span><span class="nt">dropout</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+</span><span data-line="9"><span class="w">  </span><span class="nt">max_len</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">384</span>
+</span><span data-line="10"><span class="w">  </span><span class="nt">max_types</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">25</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="nt">training</span><span class="p">:</span>
+</span><span data-line="13"><span class="w">  </span><span class="c1"># Model checkpoint</span>
+</span><span data-line="14"><span class="w">  </span><span class="nt">prev_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># Set to model path for fine-tuning</span>
+</span><span data-line="15"><span class="w">  </span>
+</span><span data-line="16"><span class="w">  </span><span class="c1"># Training schedule</span>
+</span><span data-line="17"><span class="w">  </span><span class="nt">num_steps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+</span><span data-line="18"><span class="w">  </span><span class="nt">train_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+</span><span data-line="19"><span class="w">  </span><span class="nt">eval_every</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+</span><span data-line="20"><span class="w">  </span><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+</span><span data-line="21"><span class="w">  </span><span class="nt">scheduler_type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cosine&quot;</span>
+</span><span data-line="22"><span class="w">  </span>
+</span><span data-line="23"><span class="w">  </span><span class="c1"># Learning rates</span>
+</span><span data-line="24"><span class="w">  </span><span class="nt">lr_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1e-5</span><span class="w">      </span><span class="c1"># Learning rate for encoder</span>
+</span><span data-line="25"><span class="w">  </span><span class="nt">lr_others</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5e-5</span><span class="w">       </span><span class="c1"># Learning rate for other components</span>
+</span><span data-line="26"><span class="w">  </span><span class="nt">weight_decay_encoder</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="27"><span class="w">  </span><span class="nt">weight_decay_other</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+</span><span data-line="28"><span class="w">  </span><span class="nt">max_grad_norm</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</span><span data-line="29"><span class="w">  </span>
+</span><span data-line="30"><span class="w">  </span><span class="c1"># Loss configuration</span>
+</span><span data-line="31"><span class="w">  </span><span class="nt">loss_alpha</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span><span class="w">        </span><span class="c1"># Focal loss alpha (-1 disables)</span>
+</span><span data-line="32"><span class="w">  </span><span class="nt">loss_gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span><span class="w">         </span><span class="c1"># Focal loss gamma (0 disables)</span>
+</span><span data-line="33"><span class="w">  </span><span class="nt">loss_reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sum&quot;</span>
+</span><span data-line="34"><span class="w">  </span><span class="nt">negatives</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span><span class="w">        </span><span class="c1"># Negative sampling ratio</span>
+</span><span data-line="35"><span class="w">  </span><span class="nt">masking</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;none&quot;</span><span class="w">       </span><span class="c1"># Options: &quot;none&quot;, &quot;global&quot;, &quot;label&quot;, &quot;span&quot;</span>
+</span><span data-line="36"><span class="w">  </span>
+</span><span data-line="37"><span class="w">  </span><span class="c1"># Checkpointing</span>
+</span><span data-line="38"><span class="w">  </span><span class="nt">save_total_limit</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">3</span>
+</span><span data-line="39"><span class="w">  </span>
+</span><span data-line="40"><span class="w">  </span><span class="c1"># Component freezing (optional)</span>
+</span><span data-line="41"><span class="w">  </span><span class="nt">freeze_components</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">null</span><span class="w">  </span><span class="c1"># e.g., [&quot;text_encoder&quot;]</span>
+</span><span data-line="42">
+</span><span data-line="43"><span class="nt">data</span><span class="p">:</span>
+</span><span data-line="44"><span class="w">  </span><span class="nt">root_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;models&quot;</span>
+</span><span data-line="45"><span class="w">  </span><span class="nt">train_data</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/train.json&quot;</span>
+</span><span data-line="46"><span class="w">  </span><span class="nt">val_data_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;data/val.json&quot;</span>
+</span></pre></div>
+</div>
+</section>
+<section id="training-script">
+<h3>Training Script<a class="headerlink" href="#training-script" title="Link to this heading">¶</a></h3>
+<p>Save this as <code class="docutils literal notranslate"><span class="pre">train.py</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">argparse</span>
+</span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+</span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="5"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_config_as_namespace</span><span class="p">,</span> <span class="n">namespace_to_dict</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="k">def</span><span class="w"> </span><span class="nf">load_json_data</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Load JSON dataset.&quot;&quot;&quot;</span>
+</span><span data-line="9">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span><span data-line="10">        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="k">def</span><span class="w"> </span><span class="nf">build_model</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span> <span class="n">train_cfg</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="13"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build or load GLiNER model.&quot;&quot;&quot;</span>
+</span><span data-line="14">    <span class="n">prev_path</span> <span class="o">=</span> <span class="n">train_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;prev_path&quot;</span><span class="p">)</span>
+</span><span data-line="15">    
+</span><span data-line="16">    <span class="k">if</span> <span class="n">prev_path</span> <span class="ow">and</span> <span class="nb">str</span><span class="p">(</span><span class="n">prev_path</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;null&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+</span><span data-line="17">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading pretrained model from: </span><span class="si">{</span><span class="n">prev_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="18">        <span class="k">return</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">prev_path</span><span class="p">)</span>
+</span><span data-line="19">    
+</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Initializing model from config...&quot;</span><span class="p">)</span>
+</span><span data-line="21">    <span class="k">return</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">)</span>
+</span><span data-line="22">
+</span><span data-line="23"><span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">(</span><span class="n">cfg_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="24"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Main training function.&quot;&quot;&quot;</span>
+</span><span data-line="25">    <span class="c1"># Load config</span>
+</span><span data-line="26">    <span class="n">cfg</span> <span class="o">=</span> <span class="n">load_config_as_namespace</span><span class="p">(</span><span class="n">cfg_path</span><span class="p">)</span>
+</span><span data-line="27">    
+</span><span data-line="28">    <span class="c1"># Convert to dicts for model building</span>
+</span><span data-line="29">    <span class="n">model_cfg</span> <span class="o">=</span> <span class="n">namespace_to_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="p">)</span>
+</span><span data-line="30">    <span class="n">train_cfg</span> <span class="o">=</span> <span class="n">namespace_to_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="p">)</span>
+</span><span data-line="31">    
+</span><span data-line="32">    <span class="c1"># Setup output directory</span>
+</span><span data-line="33">    <span class="n">output_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">root_dir</span><span class="p">)</span>
+</span><span data-line="34">    <span class="n">output_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="35">    
+</span><span data-line="36">    <span class="c1"># Load datasets</span>
+</span><span data-line="37">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading training data from: </span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">train_data</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="38">    <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">load_json_data</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">train_data</span><span class="p">)</span>
+</span><span data-line="39">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Training samples: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">train_dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="40">    
+</span><span data-line="41">    <span class="n">eval_dataset</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="42">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="s2">&quot;val_data_dir&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">val_data_dir</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;none&quot;</span><span class="p">,</span> <span class="s2">&quot;null&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">):</span>
+</span><span data-line="43">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading validation data from: </span><span class="si">{</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">val_data_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="44">        <span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">load_json_data</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">val_data_dir</span><span class="p">)</span>
+</span><span data-line="45">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Validation samples: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">eval_dataset</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="46">    
+</span><span data-line="47">    <span class="c1"># Build model</span>
+</span><span data-line="48">    <span class="n">model</span> <span class="o">=</span> <span class="n">build_model</span><span class="p">(</span><span class="n">model_cfg</span><span class="p">,</span> <span class="n">train_cfg</span><span class="p">)</span>
+</span><span data-line="49">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model type: </span><span class="si">{</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="50">    
+</span><span data-line="51">    <span class="c1"># Get freeze components</span>
+</span><span data-line="52">    <span class="n">freeze_components</span> <span class="o">=</span> <span class="n">train_cfg</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;freeze_components&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="53">    <span class="k">if</span> <span class="n">freeze_components</span><span class="p">:</span>
+</span><span data-line="54">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Freezing components: </span><span class="si">{</span><span class="n">freeze_components</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="55">    
+</span><span data-line="56">    <span class="c1"># Train</span>
+</span><span data-line="57">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Starting training...&quot;</span><span class="p">)</span>
+</span><span data-line="58">    <span class="n">trainer</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">train_model</span><span class="p">(</span>
+</span><span data-line="59">        <span class="n">train_dataset</span><span class="o">=</span><span class="n">train_dataset</span><span class="p">,</span>
+</span><span data-line="60">        <span class="n">eval_dataset</span><span class="o">=</span><span class="n">eval_dataset</span><span class="p">,</span>
+</span><span data-line="61">        <span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">,</span>
+</span><span data-line="62">        
+</span><span data-line="63">        <span class="c1"># Schedule</span>
+</span><span data-line="64">        <span class="n">max_steps</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">num_steps</span><span class="p">,</span>
+</span><span data-line="65">        <span class="n">lr_scheduler_type</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">scheduler_type</span><span class="p">,</span>
+</span><span data-line="66">        <span class="n">warmup_ratio</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">warmup_ratio</span><span class="p">,</span>
+</span><span data-line="67">        
+</span><span data-line="68">        <span class="c1"># Batch &amp; optimization</span>
+</span><span data-line="69">        <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
+</span><span data-line="70">        <span class="n">per_device_eval_batch_size</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">train_batch_size</span><span class="p">,</span>
+</span><span data-line="71">        <span class="n">learning_rate</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">lr_encoder</span><span class="p">),</span>
+</span><span data-line="72">        <span class="n">others_lr</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">lr_others</span><span class="p">),</span>
+</span><span data-line="73">        <span class="n">weight_decay</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">weight_decay_encoder</span><span class="p">),</span>
+</span><span data-line="74">        <span class="n">others_weight_decay</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">weight_decay_other</span><span class="p">),</span>
+</span><span data-line="75">        <span class="n">max_grad_norm</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">max_grad_norm</span><span class="p">),</span>
+</span><span data-line="76">        
+</span><span data-line="77">        <span class="c1"># Loss</span>
+</span><span data-line="78">        <span class="n">focal_loss_alpha</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loss_alpha</span><span class="p">),</span>
+</span><span data-line="79">        <span class="n">focal_loss_gamma</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loss_gamma</span><span class="p">),</span>
+</span><span data-line="80">        <span class="n">focal_loss_prob_margin</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="p">,</span> <span class="s2">&quot;loss_prob_margin&quot;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)),</span>
+</span><span data-line="81">        <span class="n">loss_reduction</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">loss_reduction</span><span class="p">,</span>
+</span><span data-line="82">        <span class="n">negatives</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">negatives</span><span class="p">),</span>
+</span><span data-line="83">        <span class="n">masking</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">masking</span><span class="p">,</span>
+</span><span data-line="84">        
+</span><span data-line="85">        <span class="c1"># Logging &amp; saving</span>
+</span><span data-line="86">        <span class="n">save_steps</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">eval_every</span><span class="p">,</span>
+</span><span data-line="87">        <span class="n">logging_steps</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">eval_every</span><span class="p">,</span>
+</span><span data-line="88">        <span class="n">save_total_limit</span><span class="o">=</span><span class="n">cfg</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">save_total_limit</span><span class="p">,</span>
+</span><span data-line="89">        
+</span><span data-line="90">        <span class="c1"># Freezing</span>
+</span><span data-line="91">        <span class="n">freeze_components</span><span class="o">=</span><span class="n">freeze_components</span><span class="p">,</span>
+</span><span data-line="92">    <span class="p">)</span>
+</span><span data-line="93">    
+</span><span data-line="94">    <span class="n">trainer</span><span class="o">.</span><span class="n">save_model</span><span class="p">()</span>
+</span><span data-line="95">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">✓ Training complete! Model saved to </span><span class="si">{</span><span class="n">output_dir</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="96">
+</span><span data-line="97"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+</span><span data-line="98">    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Train GLiNER model&quot;</span><span class="p">)</span>
+</span><span data-line="99">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s2">&quot;--config&quot;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s2">&quot;configs/config.yaml&quot;</span><span class="p">,</span> 
+</span><span data-line="100">                       <span class="n">help</span><span class="o">=</span><span class="s2">&quot;Path to config file (YAML or JSON)&quot;</span><span class="p">)</span>
+</span><span data-line="101">    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+</span><span data-line="102">    
+</span><span data-line="103">    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">config</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Run training:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>train.py<span class="w"> </span>--config<span class="w"> </span>config.yaml
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="best-practices">
+<h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Start with a pretrained model</strong>: Fine-tuning is almost always better than training from scratch</p></li>
+<li><p><strong>Use validation data</strong>: Monitor overfitting with a separate validation set</p></li>
+<li><p><strong>Experiment with negative sampling</strong>: Try different <code class="docutils literal notranslate"><span class="pre">negatives</span></code> and <code class="docutils literal notranslate"><span class="pre">masking</span></code> strategies</p></li>
+<li><p><strong>Use focal loss for imbalanced data</strong>: Set <code class="docutils literal notranslate"><span class="pre">focal_loss_alpha</span></code> and <code class="docutils literal notranslate"><span class="pre">focal_loss_gamma</span></code></p></li>
+<li><p><strong>Freeze components for quick adaptation</strong>: Freeze encoder when fine-tuning on small datasets</p></li>
+<li><p><strong>Include hard negatives</strong>: Explicitly define similar entity types as negatives</p></li>
+<li><p><strong>Save multiple checkpoints</strong>: Set <code class="docutils literal notranslate"><span class="pre">save_total_limit</span></code> &gt; 1 to keep best models</p></li>
+<li><p><strong>Monitor training</strong>: Use TensorBoard or W&amp;B to track loss and metrics</p></li>
+<li><p><strong>Start small</strong>: Test your pipeline on a subset before full training</p></li>
+<li><p><strong>Validate data format</strong>: Ensure indices are correct and within bounds</p></li>
+</ol>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="configs.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">Components &amp; Configs</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="architectures.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">Architectures</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

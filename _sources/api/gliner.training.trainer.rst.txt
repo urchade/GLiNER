@@ -1,0 +1,7 @@
+gliner.training.trainer module
+==============================
+
+.. automodule:: gliner.training.trainer
+   :members:
+   :undoc-members:
+   :show-inheritance:

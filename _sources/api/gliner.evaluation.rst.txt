@@ -1,0 +1,17 @@
+gliner.evaluation package
+=========================
+
+.. automodule:: gliner.evaluation
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.evaluation.evaluate_ner
+   gliner.evaluation.evaluator
+   gliner.evaluation.utils

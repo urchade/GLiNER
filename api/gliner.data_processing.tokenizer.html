@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.data_processing.tokenizer module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.data_processing.utils module" href="gliner.data_processing.utils.html" /><link rel="prev" title="gliner.data_processing.processor module" href="gliner.data_processing.processor.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.data_processing.tokenizer module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase"><code class="docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.WhitespaceTokenSplitter"><code class="docutils literal notranslate"><span class="pre">WhitespaceTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.WhitespaceTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.SpaCyTokenSplitter"><code class="docutils literal notranslate"><span class="pre">SpaCyTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.SpaCyTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.MecabKoTokenSplitter"><code class="docutils literal notranslate"><span class="pre">MecabKoTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.MecabKoTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.JanomeJaTokenSplitter"><code class="docutils literal notranslate"><span class="pre">JanomeJaTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.JanomeJaTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.JiebaTokenSplitter"><code class="docutils literal notranslate"><span class="pre">JiebaTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.JiebaTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.CamelArabicSplitter"><code class="docutils literal notranslate"><span class="pre">CamelArabicSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.CamelArabicSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.HindiSplitter"><code class="docutils literal notranslate"><span class="pre">HindiSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.HindiSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.HanLPTokenSplitter"><code class="docutils literal notranslate"><span class="pre">HanLPTokenSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.HanLPTokenSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.MultiLangWordsSplitter"><code class="docutils literal notranslate"><span class="pre">MultiLangWordsSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.MultiLangWordsSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.StanzaWordsSplitter"><code class="docutils literal notranslate"><span class="pre">StanzaWordsSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.StanzaWordsSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.WordsSplitter"><code class="docutils literal notranslate"><span class="pre">WordsSplitter</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.data_processing.tokenizer.WordsSplitter.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.data_processing.html"><span itemprop="name">gliner.data_processing package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.data_processing.tokenizer module</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.data_processing.tokenizer">
+<span id="gliner-data-processing-tokenizer-module"></span><h1>gliner.data_processing.tokenizer module<a class="headerlink" href="#module-gliner.data_processing.tokenizer" title="Link to this heading">¶</a></h1>
+<p>Token splitter implementations for various languages and tokenization methods.</p>
+<p>This module provides multiple token splitter classes for different languages and
+tokenization strategies, including whitespace-based, language-specific, and
+universal multi-language splitters.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.TokenSplitterBase">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">TokenSplitterBase</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#TokenSplitterBase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for token splitters.</p>
+<p>This class provides the interface for all token splitter implementations.
+Subclasses should implement the __call__ method to yield tokens with their
+start and end positions.</p>
+<p>Initialize the token splitter.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.TokenSplitterBase.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#TokenSplitterBase.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.TokenSplitterBase.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the token splitter.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.WhitespaceTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">WhitespaceTokenSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#WhitespaceTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.WhitespaceTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Whitespace-based token splitter.</p>
+<p>Splits text based on whitespace boundaries, treating words and symbols
+as separate tokens. Supports hyphenated and underscored words.</p>
+<p>Initialize the whitespace token splitter with regex pattern.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.WhitespaceTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#WhitespaceTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.WhitespaceTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the whitespace token splitter with regex pattern.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.SpaCyTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">SpaCyTokenSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#SpaCyTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.SpaCyTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>spaCy-based token splitter.</p>
+<p>Uses spaCy’s language models for tokenization. Supports multiple languages
+through spaCy’s blank language models.</p>
+<p>Initialize the spaCy token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lang</strong> – Language code for spaCy model (default: ‘en’ for English).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ModuleNotFoundError</strong> – If spaCy is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.SpaCyTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#SpaCyTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.SpaCyTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the spaCy token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>lang</strong> – Language code for spaCy model (default: ‘en’ for English).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ModuleNotFoundError</strong> – If spaCy is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.MecabKoTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">MecabKoTokenSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#MecabKoTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.MecabKoTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>MeCab Korean token splitter.</p>
+<p>Uses python-mecab-ko for Korean language tokenization based on
+morphological analysis.</p>
+<p>Initialize the MeCab Korean token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If python-mecab-ko is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.MecabKoTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#MecabKoTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.MecabKoTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the MeCab Korean token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If python-mecab-ko is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.JanomeJaTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">JanomeJaTokenSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#JanomeJaTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.JanomeJaTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Janome Japanese token splitter.</p>
+<p>Uses Janome for Japanese language tokenization with morphological analysis.</p>
+<p>Initialize the Janome Japanese token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If janome is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.JanomeJaTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#JanomeJaTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.JanomeJaTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the Janome Japanese token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If janome is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.JiebaTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">JiebaTokenSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#JiebaTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.JiebaTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Jieba Chinese token splitter.</p>
+<p>Uses Jieba for Chinese language segmentation and tokenization.</p>
+<p>Initialize the Jieba Chinese token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If jieba is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.JiebaTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#JiebaTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.JiebaTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the Jieba Chinese token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If jieba is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.CamelArabicSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">CamelArabicSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#CamelArabicSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.CamelArabicSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>CAMeL Tools Arabic token splitter.</p>
+<p>Uses CAMeL Tools for Arabic language tokenization with support for
+Arabic-specific linguistic features.</p>
+<p>Initialize the CAMeL Tools Arabic token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If camel_tools is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.CamelArabicSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#CamelArabicSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.CamelArabicSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the CAMeL Tools Arabic token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If camel_tools is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.HindiSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">HindiSplitter</span></span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#HindiSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.HindiSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Indic NLP Hindi token splitter.</p>
+<p>Uses Indic NLP Library for Hindi language tokenization with support for
+Devanagari script.</p>
+<p>Initialize the Hindi token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If indicnlp is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.HindiSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#HindiSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.HindiSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the Hindi token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ModuleNotFoundError</strong> – If indicnlp is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.HanLPTokenSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">HanLPTokenSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FINE_ELECTRA_SMALL_ZH'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#HanLPTokenSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.HanLPTokenSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>HanLP Chinese token splitter.</p>
+<p>Uses HanLP for Chinese language tokenization with support for multiple
+pre-trained models.</p>
+<p>Initialize the HanLP token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_name</strong> – Name of the HanLP pre-trained model to use
+(default: ‘FINE_ELECTRA_SMALL_ZH’).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ModuleNotFoundError</strong> – If hanlp is not installed.</p></li>
+<li><p><strong>ValueError</strong> – If the specified model name is not available.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.HanLPTokenSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'FINE_ELECTRA_SMALL_ZH'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#HanLPTokenSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.HanLPTokenSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the HanLP token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_name</strong> – Name of the HanLP pre-trained model to use
+(default: ‘FINE_ELECTRA_SMALL_ZH’).</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>ModuleNotFoundError</strong> – If hanlp is not installed.</p></li>
+<li><p><strong>ValueError</strong> – If the specified model name is not available.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.MultiLangWordsSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">MultiLangWordsSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_spacy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#MultiLangWordsSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.MultiLangWordsSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Multi-language token splitter with automatic language detection.</p>
+<p>Automatically detects the input language and applies the appropriate
+language-specific tokenizer. Falls back to a universal splitter for
+unsupported languages.</p>
+<p>Initialize the multi-language token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logging</strong> – Whether to print language detection information
+(default: False).</p></li>
+<li><p><strong>use_spacy</strong> – Whether to use spaCy as the universal fallback splitter.
+If False, uses whitespace-based splitting (default: True).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ImportError</strong> – If langdetect is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.MultiLangWordsSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_spacy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#MultiLangWordsSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.MultiLangWordsSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the multi-language token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logging</strong> – Whether to print language detection information
+(default: False).</p></li>
+<li><p><strong>use_spacy</strong> – Whether to use spaCy as the universal fallback splitter.
+If False, uses whitespace-based splitting (default: True).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ImportError</strong> – If langdetect is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.StanzaWordsSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">StanzaWordsSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'en'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_on_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#StanzaWordsSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.StanzaWordsSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Stanza-based multi-language token splitter.</p>
+<p>Uses Stanford’s Stanza NLP library for tokenization with support for
+multiple languages. Automatically downloads language models when needed
+and falls back to a default language if detection fails.</p>
+<p>Initialize the Stanza token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_lang</strong> (<em>str</em>) – Default language code to use if detection fails
+(default: ‘en’).</p></li>
+<li><p><strong>download_on_missing</strong> (<em>bool</em>) – Whether to automatically download missing
+language models (default: True).</p></li>
+<li><p><strong>logging</strong> (<em>bool</em>) – Whether to print download and processing information
+(default: False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ModuleNotFoundError</strong> – If stanza or langdetect is not installed.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.StanzaWordsSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">default_lang</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'en'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">download_on_missing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#StanzaWordsSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.StanzaWordsSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the Stanza token splitter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>default_lang</strong> (<em>str</em>) – Default language code to use if detection fails
+(default: ‘en’).</p></li>
+<li><p><strong>download_on_missing</strong> (<em>bool</em>) – Whether to automatically download missing
+language models (default: True).</p></li>
+<li><p><strong>logging</strong> (<em>bool</em>) – Whether to print download and processing information
+(default: False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ModuleNotFoundError</strong> – If stanza or langdetect is not installed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.WordsSplitter">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.tokenizer.</span></span><span class="sig-name descname"><span class="pre">WordsSplitter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">splitter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'whitespace'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#WordsSplitter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.WordsSplitter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.tokenizer.TokenSplitterBase" title="gliner.data_processing.tokenizer.TokenSplitterBase"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenSplitterBase</span></code></a></p>
+<p>Universal token splitter with multiple backend options.</p>
+<p>Factory class that creates the appropriate token splitter based on the
+specified splitter type. Supports various language-specific and universal
+tokenization strategies.</p>
+<p>Initialize the words splitter with the specified backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>splitter_type</strong> – Type of splitter to use. Options are:
+- ‘universal’: Multi-language with auto-detection
+- ‘whitespace’: Simple whitespace-based splitting
+- ‘spacy’: spaCy-based tokenization
+- ‘mecab’: MeCab for Korean
+- ‘jieba’: Jieba for Chinese
+- ‘hanlp’: HanLP for Chinese
+- ‘janome’: Janome for Japanese
+- ‘camel’: CAMeL Tools for Arabic
+- ‘hindi’: Indic NLP for Hindi
+- ‘stanza’: Stanza multi-language tokenization
+Default is ‘whitespace’.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the specified splitter_type is not implemented.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.tokenizer.WordsSplitter.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">splitter_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'whitespace'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/tokenizer.html#WordsSplitter.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.tokenizer.WordsSplitter.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the words splitter with the specified backend.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>splitter_type</strong> – Type of splitter to use. Options are:
+- ‘universal’: Multi-language with auto-detection
+- ‘whitespace’: Simple whitespace-based splitting
+- ‘spacy’: spaCy-based tokenization
+- ‘mecab’: MeCab for Korean
+- ‘jieba’: Jieba for Chinese
+- ‘hanlp’: HanLP for Chinese
+- ‘janome’: Janome for Japanese
+- ‘camel’: CAMeL Tools for Arabic
+- ‘hindi’: Indic NLP for Hindi
+- ‘stanza’: Stanza multi-language tokenization
+Default is ‘whitespace’.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – If the specified splitter_type is not implemented.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.data_processing.processor.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.data_processing.processor module</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.data_processing.utils.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.data_processing.utils module</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

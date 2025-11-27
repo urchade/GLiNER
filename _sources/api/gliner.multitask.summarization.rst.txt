@@ -1,0 +1,7 @@
+gliner.multitask.summarization module
+=====================================
+
+.. automodule:: gliner.multitask.summarization
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.data_processing.utils module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.evaluation package" href="gliner.evaluation.html" /><link rel="prev" title="gliner.data_processing.tokenizer module" href="gliner.data_processing.tokenizer.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.data_processing.utils module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.data_processing.utils.pad_2d_tensor"><code class="docutils literal notranslate"><span class="pre">pad_2d_tensor()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.utils.get_negatives"><code class="docutils literal notranslate"><span class="pre">get_negatives()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.utils.prepare_word_mask"><code class="docutils literal notranslate"><span class="pre">prepare_word_mask()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.utils.make_mapping"><code class="docutils literal notranslate"><span class="pre">make_mapping()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.utils.prepare_span_idx"><code class="docutils literal notranslate"><span class="pre">prepare_span_idx()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="gliner.data_processing.html"><span itemprop="name">gliner.data_processing package</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.data_processing.utils module</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.data_processing.utils">
+<span id="gliner-data-processing-utils-module"></span><h1>gliner.data_processing.utils module<a class="headerlink" href="#module-gliner.data_processing.utils" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.data_processing.utils.pad_2d_tensor">
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">pad_2d_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#pad_2d_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.pad_2d_tensor" title="Link to this definition">¶</a></dt>
+<dd><p>Pad a list of 2D tensors to uniform dimensions.</p>
+<p>Takes a list of 2D tensors with potentially different shapes and pads them
+to match the maximum dimensions across all tensors. All tensors are padded
+with zeros to create a uniform rectangular shape, then stacked into a single
+3D tensor with a batch dimension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key_data</strong> – List of 2D tensors to pad. Each tensor can have different
+dimensions, but all must be 2D.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A 3D tensor of shape (batch_size, max_rows, max_cols) containing all
+input tensors padded and stacked along the batch dimension.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If the input list is empty.</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">tensor1</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]])</span>  <span class="c1"># 2x2</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">tensor2</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">([[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">]])</span>  <span class="c1"># 1x3</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">pad_2d_tensor</span><span class="p">([</span><span class="n">tensor1</span><span class="p">,</span> <span class="n">tensor2</span><span class="p">])</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">result</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="5"><span class="go">torch.Size([2, 2, 3])</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.data_processing.utils.get_negatives">
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">get_negatives</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_neg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ner'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#get_negatives"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.get_negatives" title="Link to this definition">¶</a></dt>
+<dd><p>Sample negative entity or relation types from a batch.</p>
+<p>Extracts all unique entity/relation types from a batch of examples and
+randomly samples a subset to use as negative types for contrastive learning.
+This helps the model learn to distinguish between similar but incorrect types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch_list</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em>) – List of example dictionaries. Each dictionary should contain
+the specified key with annotations in the format where the last element
+of each annotation tuple is the type label.</p></li>
+<li><p><strong>sampled_neg</strong> (<em>int</em>) – Maximum number of negative types to sample (default: 5).
+If fewer unique types exist, all will be returned.</p></li>
+<li><p><strong>key</strong> – Dictionary key to access annotations (default: “ner”). Common values
+are “ner” for entities or “relations” for relation types.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of randomly sampled type strings. Length will be min(sampled_neg,
+number of unique types in batch).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[str]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;ORG&quot;</span><span class="p">)]},</span> <span class="p">{</span><span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LOC&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">)]}]</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">negatives</span> <span class="o">=</span> <span class="n">get_negatives</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">sampled_neg</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">negatives</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span>
+</span><span data-line="4"><span class="go">True</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.data_processing.utils.prepare_word_mask">
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">prepare_word_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenized_inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skip_first_words</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#prepare_word_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.prepare_word_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Create word-level masks for subword tokenized sequences.</p>
+<p>Maps subword tokens back to their original word positions, enabling span
+extraction at the word level. Each subword token is assigned an integer
+indicating which word it belongs to (1-indexed), with special tokens and
+continuation subwords optionally masked as 0.</p>
+<p>This is essential for span-based NER where predictions are made at the word
+level but the model processes subword tokens. The mask allows the model to
+aggregate subword representations into word-level representations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>Sequence</em><em>[</em><em>Sequence</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Original text sequences as lists of words, one sequence per example.</p></li>
+<li><p><strong>tokenized_inputs</strong> – Tokenized output from a transformer tokenizer with a
+word_ids() method (e.g., from HuggingFace tokenizers).</p></li>
+<li><p><strong>skip_first_words</strong> (<em>Sequence</em><em>[</em><em>int</em><em>] </em><em>| </em><em>None</em>) – Optional number of words to skip at the beginning of
+each sequence (e.g., prompt words). Must have the same length as texts
+if provided. Skipped words are masked as 0.</p></li>
+<li><p><strong>token_level</strong> (<em>bool</em>) – If True, assign a unique mask value to every token of a word
+(enabling token-level granularity). If False, only the first subword
+token of each word gets a mask value; continuation tokens are masked
+as 0 (default: False).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>List of word mask lists, one per input sequence. Each mask list has the
+same length as the corresponding tokenized sequence. Values are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>0: Special tokens, skipped words, or continuation subwords</p></li>
+<li><p>1, 2, 3, …: Word indices (1-indexed) after skipping</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – If skip_first_words length doesn’t match texts length.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<em>List</em>[int]]</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span> <span class="s2">&quot;world&quot;</span><span class="p">]]</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assuming tokenizer splits &quot;Hello&quot; -&gt; [&quot;Hel&quot;, &quot;##lo&quot;]</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># and &quot;world&quot; -&gt; [&quot;world&quot;]</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">prepare_word_mask</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">tokenized_inputs</span><span class="p">)</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Result might be: [[0, 1, 0, 2, 0]]</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1">#                   [CLS, Hel, ##lo, world, SEP]</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.data_processing.utils.make_mapping">
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">make_mapping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">types</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#make_mapping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.make_mapping" title="Link to this definition">¶</a></dt>
+<dd><p>Create bidirectional mappings between type labels and integer IDs.</p>
+<p>Generates forward and reverse dictionaries for converting between string
+labels (e.g., entity or relation types) and integer IDs used in model training.
+Duplicate types are removed while preserving the order of first occurrence.
+IDs start from 1 (reserving 0 for no-label/padding).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>types</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of type label strings. May contain duplicates, which will
+be removed while preserving order.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>Forward mapping (Dict[str, int]): Maps type labels to integer IDs
+starting from 1</p></li>
+<li><p>Reverse mapping (Dict[int, str]): Maps integer IDs back to type labels</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PERSON&quot;</span><span class="p">,</span> <span class="s2">&quot;ORG&quot;</span><span class="p">,</span> <span class="s2">&quot;LOC&quot;</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">]</span>  <span class="c1"># &quot;PERSON&quot; duplicated</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">fwd</span><span class="p">,</span> <span class="n">rev</span> <span class="o">=</span> <span class="n">make_mapping</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">fwd</span>
+</span><span data-line="4"><span class="go">{&#39;PERSON&#39;: 1, &#39;ORG&#39;: 2, &#39;LOC&#39;: 3}</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">rev</span>
+</span><span data-line="6"><span class="go">{1: &#39;PERSON&#39;, 2: &#39;ORG&#39;, 3: &#39;LOC&#39;}</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.data_processing.utils.prepare_span_idx">
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">prepare_span_idx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#prepare_span_idx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.prepare_span_idx" title="Link to this definition">¶</a></dt>
+<dd><p>Generate all possible span indices for a sequence.</p>
+<p>Creates a list of all possible (start, end) span pairs for a sequence,
+where each span has a width (end - start) less than max_width. This is used
+in span-based NER models that enumerate and classify all possible spans.</p>
+<p>The spans follow these conventions:
+- Start index is inclusive
+- End index is inclusive (so span (i, i) is a single token)
+- Spans are generated in left-to-right order, with shorter spans first</p>
+<blockquote>
+<div><p>for each starting position</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_tokens</strong> – Length of the sequence (number of tokens).</p></li>
+<li><p><strong>max_width</strong> – Maximum span width to generate. A span of width w covers
+w+1 tokens (e.g., width 0 is a single token).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p>List of (start, end) tuples representing all valid spans. Each tuple
+contains:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>start: Starting token index (0-indexed, inclusive)</p></li>
+<li><p>end: Ending token index (0-indexed, inclusive)</p></li>
+</ul>
+</div></blockquote>
+</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span> <span class="o">=</span> <span class="n">prepare_span_idx</span><span class="p">(</span><span class="n">num_tokens</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span>
+</span><span data-line="3"><span class="go">[(0, 0), (0, 1), (1, 1), (1, 2), (2, 2), (2, 3)]</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 0) = &quot;The&quot;</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 1) = &quot;The cat&quot;</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 1) = &quot;cat&quot;</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 2) = &quot;cat sat&quot;</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 2) = &quot;sat&quot;</span>
+</span><span data-line="10"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 3) would be invalid (beyond sequence length)</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="gliner.data_processing.tokenizer.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">gliner.data_processing.tokenizer module</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="gliner.evaluation.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.evaluation package</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

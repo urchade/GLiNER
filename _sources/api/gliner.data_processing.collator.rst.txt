@@ -1,0 +1,7 @@
+gliner.data\_processing.collator module
+=======================================
+
+.. automodule:: gliner.data_processing.collator
+   :members:
+   :undoc-members:
+   :show-inheritance:

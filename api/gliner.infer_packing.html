@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.infer_packing module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.infer_packing module"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig"><code class="docutils literal notranslate"><span class="pre">InferencePackingConfig</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig.max_length"><code class="docutils literal notranslate">max_length</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig.sep_token_id"><code class="docutils literal notranslate">sep_token_id</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig.streams_per_batch"><code class="docutils literal notranslate">streams_per_batch</span></code></a></li>
+<li><a class="reference internal" href="#id0"><code class="docutils literal notranslate">max_length</span></code></a></li>
+<li><a class="reference internal" href="#id1"><code class="docutils literal notranslate">sep_token_id</span></code></a></li>
+<li><a class="reference internal" href="#id2"><code class="docutils literal notranslate">streams_per_batch</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch"><code class="docutils literal notranslate"><span class="pre">PackedBatch</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.input_ids"><code class="docutils literal notranslate">input_ids</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.attention_mask"><code class="docutils literal notranslate">attention_mask</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.pair_attention_mask"><code class="docutils literal notranslate">pair_attention_mask</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.segment_ids"><code class="docutils literal notranslate">segment_ids</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.map_out"><code class="docutils literal notranslate">map_out</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.offsets"><code class="docutils literal notranslate">offsets</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.lengths"><code class="docutils literal notranslate">lengths</span></code></a></li>
+<li><a class="reference internal" href="#id3"><code class="docutils literal notranslate">input_ids</span></code></a></li>
+<li><a class="reference internal" href="#id4"><code class="docutils literal notranslate">attention_mask</span></code></a></li>
+<li><a class="reference internal" href="#id5"><code class="docutils literal notranslate">pair_attention_mask</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate">segment_ids</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate">map_out</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate">offsets</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate">lengths</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.PackedBatch.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.infer_packing.block_diag_mask"><code class="docutils literal notranslate"><span class="pre">block_diag_mask()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.pack_requests"><code class="docutils literal notranslate"><span class="pre">pack_requests()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.infer_packing.unpack_spans"><code class="docutils literal notranslate"><span class="pre">unpack_spans()</span></code></a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.infer_packing module</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="module-gliner.infer_packing">
+<span id="gliner-infer-packing-module"></span><h1>gliner.infer_packing module<a class="headerlink" href="#module-gliner.infer_packing" title="Link to this heading">¶</a></h1>
+<p>Utilities for inference-time sequence packing.</p>
+<p>This module provides helpers to group many short sequences into a
+single (or a few) contiguous token streams in order to reduce the
+amount of padding the encoder needs to process.  Packed batches keep a
+block-diagonal attention mask so tokens from different original
+sequences cannot attend to each other.  After the encoder forward
+pass, results can be unpacked back to the original request ordering.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.infer_packing.InferencePackingConfig">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.infer_packing.</span></span><span class="sig-name descname"><span class="pre">InferencePackingConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep_token_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">streams_per_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/infer_packing.html#InferencePackingConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.infer_packing.InferencePackingConfig" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Configuration describing how sequences should be packed.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.InferencePackingConfig.max_length">
+<span class="sig-name descname"><span class="pre">max_length</span></span><a class="headerlink" href="#gliner.infer_packing.InferencePackingConfig.max_length" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum number of tokens allowed in a packed stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.InferencePackingConfig.sep_token_id">
+<span class="sig-name descname"><span class="pre">sep_token_id</span></span><a class="headerlink" href="#gliner.infer_packing.InferencePackingConfig.sep_token_id" title="Link to this definition">¶</a></dt>
+<dd><p>Optional separator token ID to insert between sequences.
+Currently not used in the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.InferencePackingConfig.streams_per_batch">
+<span class="sig-name descname"><span class="pre">streams_per_batch</span></span><a class="headerlink" href="#gliner.infer_packing.InferencePackingConfig.streams_per_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Number of streams to create per batch. Must be &gt;= 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id0">
+<span class="sig-name descname"><span class="pre">max_length</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id1">
+<span class="sig-name descname"><span class="pre">sep_token_id</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id1" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id2">
+<span class="sig-name descname"><span class="pre">streams_per_batch</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#id2" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.infer_packing.InferencePackingConfig.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">max_length</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sep_token_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">streams_per_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.infer_packing.InferencePackingConfig.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.infer_packing.</span></span><span class="sig-name descname"><span class="pre">PackedBatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair_attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/infer_packing.html#PackedBatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.infer_packing.PackedBatch" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Container describing a packed collection of requests.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.input_ids">
+<span class="sig-name descname"><span class="pre">input_ids</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.input_ids" title="Link to this definition">¶</a></dt>
+<dd><p>Tensor of shape (num_streams, max_len) containing packed token IDs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.LongTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.attention_mask">
+<span class="sig-name descname"><span class="pre">attention_mask</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.attention_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Tensor of shape (num_streams, max_len) with 1s for valid tokens
+and 0s for padding.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.LongTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.pair_attention_mask">
+<span class="sig-name descname"><span class="pre">pair_attention_mask</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.pair_attention_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Boolean tensor of shape (num_streams, max_len, max_len)
+representing block-diagonal attention mask.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.BoolTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.segment_ids">
+<span class="sig-name descname"><span class="pre">segment_ids</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.segment_ids" title="Link to this definition">¶</a></dt>
+<dd><p>Tensor of shape (num_streams, max_len) with unique IDs for each
+packed segment within a stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.LongTensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.map_out">
+<span class="sig-name descname"><span class="pre">map_out</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.map_out" title="Link to this definition">¶</a></dt>
+<dd><p>List of lists mapping each segment in each stream back to its
+original request index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.offsets">
+<span class="sig-name descname"><span class="pre">offsets</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.offsets" title="Link to this definition">¶</a></dt>
+<dd><p>List of lists containing the starting offset of each segment
+within each stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.lengths">
+<span class="sig-name descname"><span class="pre">lengths</span></span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.lengths" title="Link to this definition">¶</a></dt>
+<dd><p>List of lists containing the length of each segment within each stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>List[List[int]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id3">
+<span class="sig-name descname"><span class="pre">input_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span></em><a class="headerlink" href="#id3" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id4">
+<span class="sig-name descname"><span class="pre">attention_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span></em><a class="headerlink" href="#id4" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id5">
+<span class="sig-name descname"><span class="pre">pair_attention_mask</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">BoolTensor</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">segment_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">LongTensor</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">map_out</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">offsets</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">lengths</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">]</span></span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.infer_packing.PackedBatch.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair_attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">segment_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_out</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offsets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.infer_packing.PackedBatch.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.infer_packing.block_diag_mask">
+<span class="sig-prename descclassname"><span class="pre">gliner.infer_packing.</span></span><span class="sig-name descname"><span class="pre">block_diag_mask</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">segment_ids</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/infer_packing.html#block_diag_mask"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.infer_packing.block_diag_mask" title="Link to this definition">¶</a></dt>
+<dd><p>Construct a block diagonal mask from per-token segment ids.</p>
+<p>Creates a boolean attention mask where tokens can only attend to other tokens
+with the same segment ID. This prevents cross-contamination between different
+sequences packed into the same stream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>segment_ids</strong> (<em>LongTensor</em>) – Tensor of shape (batch_size, seq_len) containing segment IDs
+for each token position.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Boolean tensor of shape (batch_size, seq_len, seq_len) where mask[b, i, j]
+is True if tokens i and j belong to the same segment in batch b.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>BoolTensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.infer_packing.pack_requests">
+<span class="sig-prename descclassname"><span class="pre">gliner.infer_packing.</span></span><span class="sig-name descname"><span class="pre">pack_requests</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">requests</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cfg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pad_token_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/infer_packing.html#pack_requests"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.infer_packing.pack_requests" title="Link to this definition">¶</a></dt>
+<dd><p>Pack a collection of requests into one or more streams.</p>
+<p>Groups multiple short sequences into contiguous token streams to reduce padding
+overhead. Each request’s tokens are placed into streams using a first-fit
+strategy. A block-diagonal attention mask ensures tokens from different
+requests cannot attend to each other.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>requests</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of request dictionaries. Each must contain an ‘input_ids’
+key with a sequence of token IDs.</p></li>
+<li><p><strong>cfg</strong> (<a class="reference internal" href="#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a>) – Configuration specifying packing parameters (max_length, etc.).</p></li>
+<li><p><strong>pad_token_id</strong> (<em>int</em>) – Token ID to use for padding positions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>PackedBatch object containing packed tensors and metadata needed to
+unpack results back to original request ordering.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If requests list is empty or configuration is invalid.</p></li>
+<li><p><strong>KeyError</strong> – If any request is missing required ‘input_ids’ key.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#gliner.infer_packing.PackedBatch" title="gliner.infer_packing.PackedBatch"><em>PackedBatch</em></a></p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">requests</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2"><span class="gp">... </span>    <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]},</span>
+</span><span data-line="3"><span class="gp">... </span>    <span class="p">{</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]},</span>
+</span><span data-line="4"><span class="gp">... </span><span class="p">]</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="n">InferencePackingConfig</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="n">pack_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">cfg</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.infer_packing.unpack_spans">
+<span class="sig-prename descclassname"><span class="pre">gliner.infer_packing.</span></span><span class="sig-name descname"><span class="pre">unpack_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">per_token_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/infer_packing.html#unpack_spans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.infer_packing.unpack_spans" title="Link to this definition">¶</a></dt>
+<dd><p>Unpack encoder outputs back to the original request layout.</p>
+<p>Takes per-token outputs from a packed batch and redistributes them back to
+match the original request ordering. Handles requests that were split across
+multiple streams by concatenating their segments.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>per_token_outputs</strong> (<em>Any</em>) – Tensor or array of shape (num_streams, max_len, …)
+containing per-token outputs from the encoder.</p></li>
+<li><p><strong>packed</strong> (<a class="reference internal" href="#gliner.infer_packing.PackedBatch" title="gliner.infer_packing.PackedBatch"><em>PackedBatch</em></a>) – PackedBatch object containing metadata about how requests were
+packed (from pack_requests).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of tensors or arrays (one per original request) containing the
+unpacked outputs. If input was a NumPy array, outputs will be NumPy
+arrays; if PyTorch tensor, outputs will be PyTorch tensors.</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ValueError</strong> – If per_token_outputs is not at least 2-dimensional.</p></li>
+<li><p><strong>TypeError</strong> – If per_token_outputs is neither a PyTorch tensor nor NumPy array.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>List</em>[<em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

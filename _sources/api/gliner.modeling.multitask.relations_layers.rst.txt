@@ -1,0 +1,7 @@
+gliner.modeling.multitask.relations\_layers module
+==================================================
+
+.. automodule:: gliner.modeling.multitask.relations_layers
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,7 @@
+gliner.evaluation.utils module
+==============================
+
+.. automodule:: gliner.evaluation.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
