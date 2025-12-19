@@ -77,6 +77,14 @@ UEFA European Championship => competitions
 UEFA Nations League => competitions
 European Championship => competitions
 ```
+
+## 👨‍💻 Model Authors
+GLiNER was originally developed by:
+* [Urchade Zaratiana](urchade.github.io)
+* Nadi Tomeh
+* Pierre Holat
+* Thierry Charnois
+
 ## 🌟 Maintainers
 
 <div align="center">
@@ -96,12 +104,6 @@ European Championship => competitions
   </table>
 </div>
 
-## 👨‍💻 Model Authors
-GLiNER was originally developed by:
-* [Urchade Zaratiana](urchade.github.io)
-* Nadi Tomeh
-* Pierre Holat
-* Thierry Charnois
 
 ## 📚 Citations
 
