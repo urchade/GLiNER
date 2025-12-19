@@ -97,9 +97,8 @@ European Championship => competitions
 </div>
 
 ## 👨‍💻 Model Authors
-The model authors are:
-* [Urchade Zaratiana](https://huggingface.co/urchade)
-* [Ihor Stepanov](https://github.com/Ingvarstep)
+GLiNER was originally developed by:
+* [Urchade Zaratiana](urchade.github.io)
 * Nadi Tomeh
 * Pierre Holat
 * Thierry Charnois
