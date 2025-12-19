@@ -18,9 +18,6 @@ from transformers.trainer import (
 )
 from transformers.trainer_utils import set_seed
 
-if transformers.utils.is_apex_available():
-    from apex import amp
-
 if is_sagemaker_mp_enabled():
     from transformers.trainer_pt_utils import smp_forward_backward
 from torch.utils.data import Dataset, DataLoader
@@ -143,6 +140,8 @@ class Trainer(transformers.Trainer):
                 loss = loss.mean()  # Average on multi-gpu training
 
             if self.use_apex:
+                from apex import amp
+                
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:
