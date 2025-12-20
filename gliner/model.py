@@ -588,14 +588,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 model_id, revision, cache_dir, force_download, proxies, resume_download, token, local_files_only
             )
 
-        # Find model file
-        model_file = model_dir / "model.safetensors"
-        if not model_file.exists():
-            model_file = model_dir / "pytorch_model.bin"
-
-        if not model_file.exists():
-            raise FileNotFoundError(f"No model file found in {model_dir}")
-
         # Load config
         config_file = model_dir / "gliner_config.json"
         if not config_file.exists():
@@ -618,6 +610,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             tokenizer = cls._load_tokenizer(config, model_dir, cache_dir)
 
         if not load_onnx_model:
+            # Find model file
+            model_file = model_dir / "model.safetensors"
+            if not model_file.exists():
+                model_file = model_dir / "pytorch_model.bin"
+
+            if not model_file.exists():
+                raise FileNotFoundError(f"No model file found in {model_dir}")
+
             # Create model instance
             instance = cls(
                 config, tokenizer=tokenizer, backbone_from_pretrained=False, cache_dir=cache_dir, **model_kwargs
@@ -875,6 +875,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             onnx_path,
             opset,
         )
+
+        # Save Config file
+        self.config.to_json_file(save_dir / "gliner_config.json")
+        # Save Tokenizer file
+        self.data_processor.transformer_tokenizer.save_pretrained(save_dir)
 
         # Quantize if requested
         q_path = self._maybe_quantize_onnx(onnx_path, save_dir / quantized_filename, quantize)
