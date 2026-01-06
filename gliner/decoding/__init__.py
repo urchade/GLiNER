@@ -1,1 +1,1 @@
-from .decoder import SpanDecoder, TokenDecoder, SpanRelexDecoder, SpanGenerativeDecoder
+from .decoder import SpanDecoder, TokenDecoder, SpanRelexDecoder, SpanGenerativeDecoder, TokenRelexDecoder

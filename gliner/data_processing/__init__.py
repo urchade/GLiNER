@@ -15,5 +15,6 @@ from .processor import (
     UniEncoderTokenProcessor,
     UniEncoderSpanDecoderProcessor,
     RelationExtractionSpanProcessor,
+    RelationExtractionTokenProcessor
 )
 from .tokenizer import WordsSplitter

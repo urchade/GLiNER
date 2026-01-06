@@ -172,9 +172,7 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
             raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token_level'")
 
 
-class UniEncoderSpanRelexConfig(UniEncoderConfig):
-    """Configuration for uni-encoder span model with relation extraction."""
-
+class UniEncoderRelexConfig(UniEncoderConfig):
     def __init__(
         self,
         relations_layer: Optional[str] = None,
@@ -187,7 +185,7 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         relation_loss_coef=1.0,
         **kwargs,
     ):
-        """Initialize UniEncoderSpanRelexConfig.
+        """Initialize UniEncoderRelexConfig.
 
         Args:
             relations_layer (str, optional): Name of relations layer,
@@ -215,11 +213,26 @@ class UniEncoderSpanRelexConfig(UniEncoderConfig):
         self.span_loss_coef = span_loss_coef
         self.adjacency_loss_coef = adjacency_loss_coef
         self.relation_loss_coef = relation_loss_coef
+
+class UniEncoderSpanRelexConfig(UniEncoderRelexConfig):
+    """Configuration for uni-encoder span model with relation extraction."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
         self.model_type = "gliner_uni_encoder_span_relex"
         if self.span_mode == "token_level":
             raise ValueError("UniEncoderSpanRelexConfig requires span_mode != 'token_level'")
 
 
+class UniEncoderTokenRelexConfig(UniEncoderRelexConfig):
+    """Configuration for uni-encoder token-level model with relation extraction."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = "gliner_uni_encoder_token_relex"
+        self.span_mode = "token_level"
+
+        
 class BiEncoderConfig(BaseGLiNERConfig):
     """Base configuration for bi-encoder GLiNER models."""
 
@@ -302,7 +315,10 @@ class GLiNERConfig(BaseGLiNERConfig):
         elif self.labels_encoder:
             return "gliner_bi_encoder_span" if self.span_mode != "token-level" else "gliner_bi_encoder_token"
         elif self.relations_layer is not None:
-            return "gliner_uni_encoder_span_relex"
+            if self.span_mode == 'token-level':
+                return "gliner_uni_encoder_token_relex"
+            else:
+                return "gliner_uni_encoder_span_relex"
         elif self.span_mode == "token-level":
             return "gliner_uni_encoder_token"
         else:
@@ -319,6 +335,7 @@ CONFIG_MAPPING.update(
         "gliner_uni_encoder_token": UniEncoderTokenConfig,
         "gliner_uni_encoder_span_decoder": UniEncoderSpanDecoderConfig,
         "gliner_uni_encoder_span_relex": UniEncoderSpanRelexConfig,
+        "gliner_uni_encoder_token_relex": UniEncoderTokenRelexConfig,
         "gliner_bi_encoder": BiEncoderConfig,
         "gliner_bi_encoder_span": BiEncoderSpanConfig,
         "gliner_bi_encoder_token": BiEncoderTokenConfig,

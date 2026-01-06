@@ -560,6 +560,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
                 prompts_embedding, prompts_embedding_mask, target_C
             )
 
+        # Shape: (batch_size, seq_len, num_classes, 3), 3 - start, end, inside
         scores = self.scorer(words_embedding, prompts_embedding)
 
         loss = None
@@ -1628,16 +1629,17 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 - target_rep: Selected span representations of shape (B, E, D).
                 - target_mask: Mask for selected spans of shape (B, E).
         """
-        B, L, K, D = span_rep.shape
+        B = span_rep.size(0)
+        D = span_rep.size(-1)
 
-        span_rep_flat = span_rep.view(B, L * K, D)
-        span_mask_flat = span_mask.view(B, L * K)
+        span_rep_flat = span_rep.view(B, -1, D)
+        span_mask_flat = span_mask.view(B, -1)
 
         if span_labels is not None:
-            span_prob_flat = span_labels.max(dim=-1).values.view(B, L * K)
+            span_prob_flat = span_labels.max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat == 1).bool()
         else:
-            span_prob_flat = torch.sigmoid(span_scores).max(dim=-1).values.view(B, L * K)
+            span_prob_flat = torch.sigmoid(span_scores).max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat > threshold) & span_mask_flat.bool()
 
         if top_k is not None and top_k > 0:
@@ -1688,6 +1690,26 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         return target_rep, target_mask
 
+
+    def represent_spans(self, words_embeddings, words_mask, prompts_embeddings, 
+                            span_idx: Optional[torch.Tensor]=None,
+                            span_mask: Optional[torch.Tensor] = None,
+                            labels: Optional[torch.Tensor] = None,
+                            threshold: float = 0.5,
+                            ):
+
+        span_idx = span_idx * span_mask.unsqueeze(-1)
+        span_rep = self.span_rep_layer(words_embeddings, span_idx)
+        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embeddings)
+
+        if hasattr(self, "relations_rep_layer"):
+            target_span_rep, target_span_mask = self.select_span_target_embedding(
+                span_rep, scores, span_mask, labels, threshold
+            )
+        else:
+            target_span_rep, target_span_mask = None, None
+        return scores, target_span_rep, target_span_mask
+    
     def forward(
         self,
         input_ids: Optional[torch.FloatTensor] = None,
@@ -1746,30 +1768,29 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
 
-        span_idx = span_idx * span_mask.unsqueeze(-1)
-
-        span_rep = self.span_rep_layer(words_embedding, span_idx)
-
-        target_C = prompts_embedding.size(1)
-        if labels is not None:
-            target_C = max(target_C, labels.size(-1))
-
         prompts_embedding, prompts_embedding_mask = self._fit_length(
             prompts_embedding, prompts_embedding_mask, target_C
         )
 
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
         batch_size, _, embed_dim = prompts_embedding.shape
-        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
+
+        scores, target_span_rep, target_span_mask = self.represent_spans(words_embedding, mask, 
+                                                                         prompts_embedding, 
+                                                                         span_idx,
+                                                                         span_mask,
+                                                                         labels,
+                                                                         threshold
+                                                                         )
+        target_C = prompts_embedding.size(1)
+        if labels is not None:
+            target_C = max(target_C, labels.size(-1))
 
         pair_idx, pair_mask, pair_scores = None, None, None
         rel_prompts_embedding_mask = None
         pred_adj_matrix = None
 
         if hasattr(self, "relations_rep_layer"):
-            target_span_rep, target_span_mask = self.select_span_target_embedding(
-                span_rep, scores, span_mask, labels, threshold
-            )
             pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
 
             rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
@@ -1965,3 +1986,134 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             loss = masked_loss.sum()
 
         return loss
+
+
+class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
+    """Token-level NER model with relation extraction capabilities.
+
+    This model extends token-based NER to also extract relations between
+    identified entities, predicting both entity types and relation types
+    in a joint model.
+
+    Attributes:
+        relations_rep_layer (Optional[RelationsRepLayer]): Layer for computing
+            pairwise entity relations (adjacency matrix).
+        triples_score_layer (Optional[TriplesScoreLayer]): Layer for scoring
+            (head, relation, tail) triples.
+        pair_rep_layer (Optional[nn.Module]): Alternative layer for relation
+            scoring via concatenation.
+    """
+
+    def __init__(
+        self, config: Any, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]] = None
+    ) -> None:
+        """Initialize the span-based relation extraction model.
+
+        Args:
+            config: Model configuration object.
+            from_pretrained: Whether to load from pretrained weights.
+            cache_dir: Directory for caching pretrained models.
+        """
+        super().__init__(config, from_pretrained, cache_dir)
+        self.scorer = Scorer(config.hidden_size, config.dropout)
+
+
+    def extract_spans(
+        self,
+        scores: torch.Tensor,
+        labels: Optional[torch.Tensor] = None,
+        threshold: float = 0.5,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """
+        Extract entity spans from BIO-style token predictions.
+        
+        Args:
+            scores: (B, W, C, 3) - logits for [start, end, inside]
+            labels: Optional (B, W, C, 3) - ground truth labels
+            threshold: Confidence threshold (used when labels is None)
+            
+        Returns:
+            span_idx: (B, N, 2) - [start, end] indices, padded
+            span_mask: (B, N) - validity mask
+        """
+        B, W, C, _ = scores.shape
+        device = scores.device
+        
+        if labels is not None:
+            start_mask = labels[..., 0] > 0.5
+            end_mask = labels[..., 1] > 0.5
+            inside_mask = labels[..., 2] > 0.5
+        else:
+            probs = torch.sigmoid(scores)
+            start_mask = probs[..., 0] > threshold
+            end_mask = probs[..., 1] > threshold
+            inside_mask = probs[..., 2] > threshold
+
+        # Prepend zeros for cumsum indexing
+        inside_cumsum = torch.nn.functional.pad(
+            inside_mask.long().cumsum(dim=1), (0, 0, 1, 0)
+        )  # (B, W+1, C)
+        
+        spans_per_sample = []
+        
+        for b in range(B):
+            starts = start_mask[b].nonzero(as_tuple=False)
+            ends = end_mask[b].nonzero(as_tuple=False)
+            
+            if starts.size(0) == 0 or ends.size(0) == 0:
+                spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+                continue
+            
+            s_pos, s_cls = starts.T
+            e_pos, e_cls = ends.T
+            
+            # Find valid (start, end) pairs: same class & end >= start
+            valid = (s_cls[:, None] == e_cls) & (s_pos[:, None] <= e_pos)
+            si, ei = valid.nonzero(as_tuple=True)
+            
+            if si.size(0) == 0:
+                spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+                continue
+            
+            cs, ce, cc = s_pos[si], e_pos[ei], s_cls[si]
+            
+            # Validate: all inside positions must be marked
+            inside_cnt = inside_cumsum[b, ce + 1, cc] - inside_cumsum[b, cs, cc]
+            valid = inside_cnt == (ce - cs + 1)
+            
+            cs, ce = cs[valid], ce[valid]
+            
+            if cs.size(0) == 0:
+                spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+            else:
+                spans_per_sample.append(torch.stack([cs, ce], dim=1))
+        
+        # Pad to uniform size
+        max_spans = max(s.size(0) for s in spans_per_sample) if spans_per_sample else 0
+        max_spans = max(max_spans, 1)  # Ensure at least 1 to avoid empty tensor issues
+        
+        span_idx = torch.zeros(B, max_spans, 2, dtype=torch.long, device=device)
+        span_mask = torch.zeros(B, max_spans, dtype=torch.bool, device=device)
+        
+        for b, spans in enumerate(spans_per_sample):
+            n = spans.size(0)
+            if n > 0:
+                span_idx[b, :n] = spans
+                span_mask[b, :n] = True
+        
+        return span_idx, span_mask
+    
+
+    def represent_spans(self, words_embeddings, words_mask, prompts_embeddings, 
+                            span_idx: Optional[torch.Tensor]=None,
+                            span_mask: Optional[torch.Tensor] = None,
+                            labels: Optional[torch.Tensor] = None,
+                            threshold: float = 0.5,
+                            ):
+        scores = self.scorer(words_embeddings, prompts_embeddings)
+
+        span_idx, target_span_mask = self.extract_spans(scores, labels, threshold)
+        span_idx = span_idx * target_span_mask.unsqueeze(-1)
+        target_span_rep = self.span_rep_layer(words_embeddings, span_idx)
+
+        return scores, target_span_rep, target_span_mask

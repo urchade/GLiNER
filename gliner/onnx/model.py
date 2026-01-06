@@ -369,3 +369,51 @@ class UniEncoderSpanRelexORTModel(BaseORTModel):
             rel_mask=inference_output["rel_mask"],
         )
         return outputs
+
+class UniEncoderTokenRelexORTModel(BaseORTModel):
+    """ONNX Runtime model for uni-encoder token-level relation extraction.
+
+    Uses a single encoder to process text and perform both entity recognition
+    and relation extraction at the token level.
+    """
+
+    def forward(
+        self,
+        input_ids: torch.Tensor,
+        attention_mask: torch.Tensor,
+        words_mask: torch.Tensor,
+        text_lengths: torch.Tensor,
+        **kwargs,
+    ) -> Dict[str, Any]:
+        """Forward pass for span relation extraction model using ONNX inference.
+
+        Args:
+            input_ids: Tensor of shape (batch_size, seq_len) containing input token IDs.
+            attention_mask: Tensor of shape (batch_size, seq_len) with 1s for real
+                tokens and 0s for padding.
+            words_mask: Tensor of shape (batch_size, seq_len) indicating word boundaries.
+            text_lengths: Tensor of shape (batch_size,) containing the actual length
+                of each text sequence.
+            span_idx: Tensor containing indices of spans to classify.
+            span_mask: Tensor indicating which spans are valid (not padding).
+            **kwargs: Additional arguments (ignored).
+
+        Returns:
+            GLiNERRelexOutput containing logits for span classification, relation
+            indices, relation logits, and relation mask.
+        """
+        inputs = {
+            "input_ids": input_ids,
+            "attention_mask": attention_mask,
+            "words_mask": words_mask,
+            "text_lengths": text_lengths,
+        }
+        prepared_inputs = self.prepare_inputs(inputs)
+        inference_output = self.run_inference(prepared_inputs)
+        outputs = GLiNERRelexOutput(
+            logits=inference_output["logits"],
+            rel_idx=inference_output["rel_idx"],
+            rel_logits=inference_output["rel_logits"],
+            rel_mask=inference_output["rel_mask"],
+        )
+        return outputs

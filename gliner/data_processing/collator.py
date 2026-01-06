@@ -475,6 +475,16 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
         return {k: v for k, v in batch_dict.items() if v is not None}
 
 
+class RelationExtractionTokenDataCollator(RelationExtractionSpanDataCollator):
+    """Data collator for RelationExtractionTokenProcessor.
+
+    Handles joint entity and relation extraction at token level.
+    Produces both entity labels and relation adjacency matrices.
+
+    Required Processor: RelationExtractionTokenProcessor
+    """
+    pass
+
 class UniEncoderSpanDataCollator(SpanDataCollator):
     """
     Backward compatibility alias for SpanDataCollator with UniEncoderSpanProcessor.
