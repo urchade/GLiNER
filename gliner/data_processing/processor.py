@@ -126,6 +126,29 @@ class BaseProcessor(ABC):
         """
         pass
 
+    def sort_entities_and_relations(self, ner, relations=None):
+        if ner is not None and len(ner) > 0:
+            indexed_ner = list(enumerate(ner))
+            indexed_ner_sorted = sorted(indexed_ner, key=lambda x: (x[1][0], x[1][1]))
+
+            ner_sorted = [entity for _, entity in indexed_ner_sorted]
+
+            # Create mapping from old entity indices to new sorted indices
+            old_to_new_idx = {old_idx: new_idx for new_idx, (old_idx, _) in enumerate(indexed_ner_sorted)}
+
+            # Update relation indices to match new entity ordering
+            if relations is not None and len(relations) > 0:
+                updated_relations = []
+                for head_idx, tail_idx, rel_type in relations:
+                    if head_idx in old_to_new_idx and tail_idx in old_to_new_idx:
+                        new_head_idx = old_to_new_idx[head_idx]
+                        new_tail_idx = old_to_new_idx[tail_idx]
+                        updated_relations.append((new_head_idx, new_tail_idx, rel_type))
+                relations = sorted(updated_relations, key=lambda x: (x[0], x[1]))
+
+            ner = ner_sorted
+        return ner, relations
+    
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],
@@ -582,6 +605,52 @@ class UniEncoderTokenProcessor(BaseProcessor):
     labeled with BIO-style tags (Begin, Inside, Outside) for each entity type.
     """
 
+    def _generate_negative_spans(self, positive_spans, num_tokens, num_negatives, max_width=None):
+        """Generate random negative spans that don't overlap with positive spans.
+        
+        Args:
+            positive_spans: Set of (start, end) tuples representing positive entity spans.
+            num_tokens: Total number of tokens in the sequence.
+            num_negatives: Number of negative spans to generate.
+            max_width: Maximum width for negative spans. If None, uses config.max_width.
+            
+        Returns:
+            List of (start, end) tuples representing negative spans.
+        """
+        if max_width is None:
+            max_width = getattr(self.config, 'max_width', 10)
+        
+        negative_spans = []
+        attempts = 0
+        max_attempts = num_negatives * 20  # Limit attempts to avoid infinite loops
+        
+        while len(negative_spans) < num_negatives and attempts < max_attempts:
+            attempts += 1
+            
+            # Random start position
+            start = random.randint(0, num_tokens - 1)
+            
+            # Random width (1 to max_width)
+            width = random.randint(1, min(max_width, num_tokens - start))
+            end = start + width - 1
+            
+            # Check if this span overlaps with any positive span
+            span = (start, end)
+            if span in positive_spans:
+                continue
+                
+            # Check for overlap with positive spans
+            overlaps = False
+            for pos_start, pos_end in positive_spans:
+                if not (end < pos_start or start > pos_end):
+                    overlaps = True
+                    break
+            
+            if not overlaps and span not in negative_spans:
+                negative_spans.append(span)
+        
+        return negative_spans
+
     def preprocess_example(self, tokens, ner, classes_to_id):
         """Preprocess a single example for token-based prediction.
 
@@ -595,7 +664,8 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 - tokens: Token strings
                 - seq_length: Sequence length
                 - entities: Original NER annotations
-                - entities_id: Entity annotations with class IDs
+                - span_idx: Tensor of entity span indices (if represent_spans=True)
+                - span_label: Tensor of entity class IDs (if represent_spans=True)
 
         Warnings:
             UserWarning: If sequence length exceeds max_len (gets truncated).
@@ -610,13 +680,51 @@ class UniEncoderTokenProcessor(BaseProcessor):
             warnings.warn(f"Sentence of length {len(tokens)} has been truncated to {max_len}", stacklevel=2)
             tokens = tokens[:max_len]
 
-        # Generate entity IDs based on the NER spans provided and their classes
-        try:  # 'NoneType' object is not iterable
-            entities_id = [[i, j, classes_to_id[k]] for i, j, k in ner if k in classes_to_id]
-        except TypeError:
-            entities_id = []
+        num_tokens = len(tokens)
 
-        example = {"tokens": tokens, "seq_length": len(tokens), "entities": ner, "entities_id": entities_id}
+        # Create span representations if configured
+        if ner is not None and self.config.represent_spans:
+            span_idx_list = []
+            span_label_list = []
+            positive_spans = set()
+
+            # Add positive spans
+            for start, end, label in ner:
+                if label in classes_to_id and end < num_tokens:
+                    span_idx_list.append([start, end])
+                    span_label_list.append(classes_to_id[label])
+                    positive_spans.add((start, end))
+            
+            # Add negative spans
+            neg_spans_ratio = self.config.neg_spans_ratio
+            neg_spans_count = int(len(span_idx_list) * neg_spans_ratio)
+            
+            if neg_spans_count > 0 and num_tokens > 0:
+                max_width = getattr(self.config, 'max_width', 10)
+                negative_spans = self._generate_negative_spans(
+                    positive_spans, num_tokens, neg_spans_count, max_width
+                )
+                
+                for start, end in negative_spans:
+                    span_idx_list.append([start, end])
+                    span_label_list.append(0)  # 0 indicates negative/no entity
+            
+            if span_idx_list:
+                span_idx = torch.LongTensor(span_idx_list)
+                span_label = torch.LongTensor(span_label_list)
+            else:
+                span_idx = torch.zeros(0, 2, dtype=torch.long)
+                span_label = torch.zeros(0, dtype=torch.long)
+        else:
+            span_idx, span_label = None, None
+
+        example = {
+            "tokens": tokens, 
+            "seq_length": len(tokens), 
+            "entities": ner,
+            "span_idx": span_idx,
+            "span_label": span_label,
+        }
         return example
 
     def create_batch_dict(self, batch, class_to_ids, id_to_classes):
@@ -632,7 +740,9 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 - tokens: Token strings
                 - seq_length: Sequence lengths
                 - entities: Original NER annotations
-                - entities_id: Entity annotations with class IDs
+                - span_idx: Padded span indices (if available)
+                - span_label: Padded span labels (if available)
+                - span_mask: Mask for valid spans (if available)
                 - classes_to_id: Class mappings
                 - id_to_classes: Reverse class mappings
         """
@@ -640,17 +750,38 @@ class UniEncoderTokenProcessor(BaseProcessor):
         tokens = [el["tokens"] for el in batch]
         seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
         entities = [el["entities"] for el in batch]
-        entities_id = [el["entities_id"] for el in batch]
 
-        # Assemble and return the batch dictionary
+        # Assemble the base batch dictionary
         batch_dict = {
             "tokens": tokens,
             "seq_length": seq_length,
             "entities": entities,
-            "entities_id": entities_id,
             "classes_to_id": class_to_ids,
             "id_to_classes": id_to_classes,
         }
+
+        # Handle span representations if present
+        if batch[0]['span_idx'] is not None:
+            span_idx_list = [el["span_idx"] for el in batch]
+            span_label_list = [el["span_label"] for el in batch]
+            
+            batch_size = len(span_idx_list)
+            span_counts = [s.size(0) if s.numel() > 0 else 0 for s in span_idx_list]
+            max_spans = max(max(span_counts), 1)  # Ensure at least 1
+            
+            # Create span mask indicating valid spans
+            span_mask = torch.zeros(batch_size, max_spans, dtype=torch.bool)
+            for i, count in enumerate(span_counts):
+                if count > 0:
+                    span_mask[i, :count] = True
+            
+            # Pad span tensors
+            span_idx = pad_2d_tensor(span_idx_list, padding_value=0)
+            span_label = pad_sequence(span_label_list, batch_first=True, padding_value=-1)
+            
+            batch_dict["span_idx"] = span_idx
+            batch_dict["span_label"] = span_label
+            batch_dict["span_mask"] = span_mask
 
         return batch_dict
 
@@ -688,6 +819,50 @@ class UniEncoderTokenProcessor(BaseProcessor):
 
         return word_labels
 
+    def create_span_labels(self, batch):
+        """Create one-hot encoded labels for spans with negative sampling.
+        
+        Creates one-hot encoded labels for entity spans, converting 1-indexed class IDs
+        to 0-indexed format. Labels with class ID 0 (negative spans) or -1 (invalid spans)
+        are represented as all zeros in the one-hot encoding.
+
+        Args:
+            batch: Batch dictionary containing span_label, span_mask, and classes_to_id.
+
+        Returns:
+            Tensor of shape (batch_size, max_spans, num_classes) containing one-hot
+            encoded labels where:
+                - Positive spans: one-hot vector at position (class_id - 1)
+                - Negative/invalid spans: all zeros
+        """
+        batch_size = len(batch["tokens"])
+        span_label = batch["span_label"]  # (batch_size, max_spans)
+        span_mask = batch["span_mask"]    # (batch_size, max_spans)
+        
+        # Get maximum number of classes across all examples
+        if isinstance(batch["classes_to_id"], list):
+            num_classes = max([len(cid) for cid in batch["classes_to_id"]])
+        else:
+            num_classes = len(batch["classes_to_id"])
+        
+        max_spans = span_label.size(1)
+        
+        # Initialize one-hot labels (batch_size, max_spans, num_classes)
+        labels_one_hot = torch.zeros(batch_size, max_spans, num_classes, dtype=torch.float)
+        
+        for i in range(batch_size):
+            for j in range(max_spans):
+                if span_mask[i, j]:  # Valid span
+                    class_id = span_label[i, j].item()
+                    
+                    if class_id > 0:
+                        # Convert from 1-indexed to 0-indexed
+                        class_idx = class_id - 1
+                        if class_idx < num_classes:
+                            labels_one_hot[i, j, class_idx] = 1.0
+        
+        return labels_one_hot
+
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         """Tokenize inputs and prepare token-level labels for a batch.
 
@@ -704,8 +879,14 @@ class UniEncoderTokenProcessor(BaseProcessor):
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
+            
+            # Add span-level one-hot labels if spans are represented
+            if batch.get("span_idx") is not None:
+                span_labels = self.create_span_labels(batch)
+                tokenized_input["span_labels"] = span_labels
+                tokenized_input["span_idx"] = batch["span_idx"]
+                tokenized_input["span_mask"] = batch["span_mask"]
         return tokenized_input
-
 
 class BaseBiEncoderProcessor(BaseProcessor):
     """Base processor for bi-encoder architectures.
@@ -870,6 +1051,12 @@ class BiEncoderTokenProcessor(UniEncoderTokenProcessor, BaseBiEncoderProcessor):
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
 
+            # Add span-level one-hot labels if spans are represented
+            if batch.get("span_idx") is not None:
+                span_labels = self.create_span_labels(batch)
+                tokenized_input["span_labels"] = span_labels
+                tokenized_input["span_idx"] = batch["span_idx"]
+                tokenized_input["span_mask"] = batch["span_mask"]
         return tokenized_input
 
 
@@ -1222,29 +1409,6 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             ]
 
         return self.create_batch_dict(batch, class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes)
-
-    def sort_entities_and_relations(self, ner, relations):
-        if ner is not None and len(ner) > 0:
-            indexed_ner = list(enumerate(ner))
-            indexed_ner_sorted = sorted(indexed_ner, key=lambda x: (x[1][0], x[1][1]))
-
-            ner_sorted = [entity for _, entity in indexed_ner_sorted]
-
-            # Create mapping from old entity indices to new sorted indices
-            old_to_new_idx = {old_idx: new_idx for new_idx, (old_idx, _) in enumerate(indexed_ner_sorted)}
-
-            # Update relation indices to match new entity ordering
-            if relations is not None and len(relations) > 0:
-                updated_relations = []
-                for head_idx, tail_idx, rel_type in relations:
-                    if head_idx in old_to_new_idx and tail_idx in old_to_new_idx:
-                        new_head_idx = old_to_new_idx[head_idx]
-                        new_tail_idx = old_to_new_idx[tail_idx]
-                        updated_relations.append((new_head_idx, new_tail_idx, rel_type))
-                relations = sorted(updated_relations, key=lambda x: (x[0], x[1]))
-
-            ner = ner_sorted
-        return ner, relations
     
     def preprocess_example(self, tokens, ner, classes_to_id, relations, rel_classes_to_id):
         """Preprocess a single example for joint entity and relation extraction.

@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 
 import torch
 
@@ -294,3 +294,87 @@ def build_entity_pairs(
     tail_rep = span_rep[batch_idx, pair_idx[..., 1].clamp_min(0)]  # (B, N, D)
 
     return pair_idx, pair_mask, head_rep, tail_rep
+
+def extract_spans_from_tokens(
+    scores: torch.Tensor,
+    labels: Optional[torch.Tensor] = None,
+    threshold: float = 0.5,
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """
+    Extract entity spans from BIO-style token predictions.
+    
+    Args:
+        scores: (B, W, C, 3) - logits for [start, end, inside]
+        labels: Optional (B, W, C, 3) - ground truth labels
+        threshold: Confidence threshold (used when labels is None)
+        
+    Returns:
+        span_idx: (B, N, 2) - [start, end] indices, padded
+        span_mask: (B, N) - validity mask
+    """
+    B, W, C, _ = scores.shape
+    device = scores.device
+    
+    if labels is not None:
+        start_mask = labels[..., 0] > 0.5
+        end_mask = labels[..., 1] > 0.5
+        inside_mask = labels[..., 2] > 0.5
+    else:
+        probs = torch.sigmoid(scores)
+        start_mask = probs[..., 0] > threshold
+        end_mask = probs[..., 1] > threshold
+        inside_mask = probs[..., 2] > threshold
+
+    # Prepend zeros for cumsum indexing
+    inside_cumsum = torch.nn.functional.pad(
+        inside_mask.long().cumsum(dim=1), (0, 0, 1, 0)
+    )  # (B, W+1, C)
+    
+    spans_per_sample = []
+    
+    for b in range(B):
+        starts = start_mask[b].nonzero(as_tuple=False)
+        ends = end_mask[b].nonzero(as_tuple=False)
+        
+        if starts.size(0) == 0 or ends.size(0) == 0:
+            spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+            continue
+        
+        s_pos, s_cls = starts.T
+        e_pos, e_cls = ends.T
+        
+        # Find valid (start, end) pairs: same class & end >= start
+        valid = (s_cls[:, None] == e_cls) & (s_pos[:, None] <= e_pos)
+        si, ei = valid.nonzero(as_tuple=True)
+        
+        if si.size(0) == 0:
+            spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+            continue
+        
+        cs, ce, cc = s_pos[si], e_pos[ei], s_cls[si]
+        
+        # Validate: all inside positions must be marked
+        inside_cnt = inside_cumsum[b, ce + 1, cc] - inside_cumsum[b, cs, cc]
+        valid = inside_cnt == (ce - cs + 1)
+        
+        cs, ce = cs[valid], ce[valid]
+        
+        if cs.size(0) == 0:
+            spans_per_sample.append(torch.empty(0, 2, dtype=torch.long, device=device))
+        else:
+            spans_per_sample.append(torch.stack([cs, ce], dim=1))
+    
+    # Pad to uniform size
+    max_spans = max(s.size(0) for s in spans_per_sample) if spans_per_sample else 0
+    max_spans = max(max_spans, 1)  # Ensure at least 1 to avoid empty tensor issues
+    
+    span_idx = torch.zeros(B, max_spans, 2, dtype=torch.long, device=device)
+    span_mask = torch.zeros(B, max_spans, dtype=torch.bool, device=device)
+    
+    for b, spans in enumerate(spans_per_sample):
+        n = spans.size(0)
+        if n > 0:
+            span_idx[b, :n] = spans
+            span_mask[b, :n] = True
+    
+    return span_idx, span_mask

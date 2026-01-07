@@ -827,7 +827,7 @@ class TokenDecoder(BaseDecoder):
     Token-based decoder for sequence labeling tasks.
 
     Uses BIO-style tagging with separate start, end, and inside predictions
-    to identify entity spans.
+    to identify entity spans. Can also decode from span-level predictions.
     """
 
     def _get_indices_above_threshold(self, scores: torch.Tensor, threshold: float) -> List[torch.Tensor]:
@@ -889,53 +889,166 @@ class TokenDecoder(BaseDecoder):
                     span_i.append((st, ed, id_to_classes[cls_st + 1], spn_score))
         return span_i
 
-    def decode(
+    def _decode_from_spans(
         self,
         tokens: List[List[str]],
         id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        model_output: torch.Tensor,
+        span_logits: torch.Tensor,
+        span_idx: torch.Tensor,
+        span_mask: torch.Tensor,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        **kwargs,
     ) -> List[List[tuple]]:
         """
-        Decode token-level predictions to extract spans.
+        Decode from span-level predictions.
 
         Args:
             tokens (List[List[str]]): Tokenized input text for each sample in the batch.
             id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
                 class IDs to class names.
-            model_output (torch.Tensor): Raw logits from the model with shape ( B, L, C, 3),
-                where the first dimension represents [start, end, inside] predictions.
+            span_logits (torch.Tensor): Span classification logits with shape (B, S, C),
+                where B is batch size, S is max spans, C is number of classes.
+            span_idx (torch.Tensor): Span indices with shape (B, S, 2), containing
+                [start, end] positions for each span.
+            span_mask (torch.Tensor): Boolean mask with shape (B, S) indicating
+                valid spans.
             flat_ner (bool): Whether to enforce non-overlapping spans.
             threshold (float): Confidence threshold for predictions.
             multi_label (bool): Whether to allow multiple labels per span.
-            **kwargs: Additional keyword arguments (unused).
 
         Returns:
             List[List[tuple]]: For each sample, list of span tuples in format
                 (start, end, entity_type, None, score).
         """
-        model_output = model_output.permute(3, 0, 1, 2)
-        scores_start, scores_end, scores_inside = model_output
+        batch_size = span_logits.size(0)
         spans = []
 
-        for i, _ in enumerate(tokens):
+        # Apply sigmoid to get probabilities
+        span_probs = torch.sigmoid(span_logits)
+
+        for i in range(batch_size):
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
-            span_scores = self._calculate_span_score(
-                self._get_indices_above_threshold(scores_start[i], threshold),
-                self._get_indices_above_threshold(scores_end[i], threshold),
-                torch.sigmoid(scores_inside[i]),
-                torch.sigmoid(scores_start[i]),
-                torch.sigmoid(scores_end[i]),
-                id_to_class_i,
-                threshold,
-            )
+            span_scores = []
+
+            # Get valid spans for this sample
+            valid_mask = span_mask[i]
+            valid_indices = torch.where(valid_mask)[0]
+
+            for span_pos in valid_indices:
+                span_start = span_idx[i, span_pos, 0].item()
+                span_end = span_idx[i, span_pos, 1].item()
+                
+                # Get probabilities for all classes for this span
+                probs = span_probs[i, span_pos]
+                
+                # Find classes above threshold
+                class_indices = torch.where(probs > threshold)[0]
+                
+                for class_idx in class_indices:
+                    class_id = class_idx.item() + 1  # Convert to 1-indexed
+                    if class_id in id_to_class_i:
+                        entity_type = id_to_class_i[class_id]
+                        score = probs[class_idx].item()
+                        span_scores.append((span_start, span_end, entity_type, score))
+
+            # Apply greedy search to handle overlapping spans if needed
             span_i = self.greedy_search(span_scores, flat_ner, multi_label)
             spans.append(span_i)
-
         return spans
+
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: Optional[torch.Tensor] = None,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> List[List[tuple]]:
+        """
+        Decode predictions to extract spans.
+
+        Supports two decoding modes:
+        1. Token-level BIO decoding (default): Uses model_output with start/end/inside predictions
+        2. Span-level decoding: Uses span_logits, span_idx, and span_mask
+
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
+                class IDs to class names.
+            model_output (torch.Tensor, optional): Raw logits from the model with shape 
+                (B, L, C, 3), where the last dimension represents [start, end, inside] 
+                predictions. Used for token-level decoding.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            span_logits (torch.Tensor, optional): Span classification logits with shape 
+                (B, S, C). Used for span-level decoding.
+            span_idx (torch.Tensor, optional): Span indices with shape (B, S, 2).
+                Used for span-level decoding.
+            span_mask (torch.Tensor, optional): Boolean mask with shape (B, S).
+                Used for span-level decoding.
+            **kwargs: Additional keyword arguments (unused).
+
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples in format
+                (start, end, entity_type, None, score).
+
+        Raises:
+            ValueError: If neither model_output nor span-level inputs are provided,
+                or if span-level inputs are incomplete.
+        """
+        # Check if span-level decoding is requested
+        if span_logits is not None and span_idx is not None and span_mask is not None:
+            return self._decode_from_spans(
+                tokens=tokens,
+                id_to_classes=id_to_classes,
+                span_logits=span_logits,
+                span_idx=span_idx,
+                span_mask=span_mask,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+            )
+        
+        # Check if token-level decoding is requested
+        if model_output is not None:
+            model_output = model_output.permute(3, 0, 1, 2)
+            scores_start, scores_end, scores_inside = model_output
+            spans = []
+
+            for i, _ in enumerate(tokens):
+                id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+                span_scores = self._calculate_span_score(
+                    self._get_indices_above_threshold(scores_start[i], threshold),
+                    self._get_indices_above_threshold(scores_end[i], threshold),
+                    torch.sigmoid(scores_inside[i]),
+                    torch.sigmoid(scores_start[i]),
+                    torch.sigmoid(scores_end[i]),
+                    id_to_class_i,
+                    threshold,
+                )
+                span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+                spans.append(span_i)
+            return spans
+        
+        # Neither decoding mode has sufficient inputs
+        if span_logits is not None or span_idx is not None or span_mask is not None:
+            raise ValueError(
+                "For span-level decoding, all three parameters must be provided: "
+                "span_logits, span_idx, and span_mask"
+            )
+        
+        raise ValueError(
+            "Either model_output (for token-level decoding) or "
+            "(span_logits, span_idx, span_mask) (for span-level decoding) must be provided"
+        )
+    
 
 class TokenRelexDecoder(TokenDecoder):
     """Token-based decoder with relation extraction support.

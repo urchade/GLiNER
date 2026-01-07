@@ -119,10 +119,19 @@ class UniEncoderSpanConfig(UniEncoderConfig):
 class UniEncoderTokenConfig(UniEncoderConfig):
     """Configuration for uni-encoder token-based GLiNER model."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, 
+                represent_spans: bool = False, 
+                token_loss_coef=1.0,
+                span_loss_coef=1.0,
+                neg_spans_ratio=1.0,
+                **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_uni_encoder_token"
+        self.token_loss_coef = token_loss_coef
+        self.span_loss_coef = span_loss_coef
+        self.represent_spans = represent_spans
+        self.neg_spans_ratio=neg_spans_ratio
 
 
 class UniEncoderSpanDecoderConfig(UniEncoderConfig):
@@ -268,10 +277,19 @@ class BiEncoderSpanConfig(BiEncoderConfig):
 class BiEncoderTokenConfig(BiEncoderConfig):
     """Configuration for bi-encoder token-based GLiNER model."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, 
+                 represent_spans: bool = False, 
+                 token_loss_coef=1.0,
+                 span_loss_coef=1.0,
+                 neg_spans_ratio=1.0,
+                 **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_bi_encoder_token"
+        self.token_loss_coef = token_loss_coef
+        self.span_loss_coef = span_loss_coef
+        self.represent_spans = represent_spans
+        self.neg_spans_ratio=neg_spans_ratio
 
 
 class GLiNERConfig(BaseGLiNERConfig):

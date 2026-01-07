@@ -1206,7 +1206,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             )
 
             # Get predictions
-            model_logits = self.model(**model_inputs, threshold=threshold)[0]
+            model_output = self.model(**model_inputs, threshold=threshold)
+            model_logits = model_output[0]
             if not isinstance(model_logits, torch.Tensor):
                 model_logits = torch.from_numpy(model_logits)
 
@@ -1215,6 +1216,9 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 batch["tokens"],
                 batch["id_to_classes"],
                 model_logits,
+                span_idx=model_output.span_idx,
+                span_mask=model_output.span_mask,
+                span_logits=model_output.span_logits,
                 flat_ner=flat_ner,
                 threshold=threshold,
                 multi_label=multi_label,

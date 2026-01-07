@@ -35,6 +35,9 @@ class GLiNERBaseOutput(ModelOutput):
     prompts_embedding_mask: Optional[torch.LongTensor] = None
     words_embedding: Optional[torch.FloatTensor] = None
     mask: Optional[torch.LongTensor] = None
+    span_idx: Optional[torch.LongTensor] = None
+    span_mask: Optional[torch.Tensor] = None
+    span_logits: Optional[torch.FloatTensor] = None
 
 
 @dataclass
