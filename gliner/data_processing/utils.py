@@ -15,6 +15,7 @@ def pad_2d_tensor(key_data, padding_value=0.0):
     Args:
         key_data: List of 2D tensors to pad. Each tensor can have different
             dimensions, but all must be 2D.
+        padding_value: float, value used to fill pad elements.
 
     Returns:
         A 3D tensor of shape (batch_size, max_rows, max_cols) containing all
@@ -44,7 +45,9 @@ def pad_2d_tensor(key_data, padding_value=0.0):
         col_padding = max_cols - cols
 
         # Pad the tensor along both dimensions
-        padded_tensor = torch.nn.functional.pad(tensor, (0, col_padding, 0, row_padding), mode="constant", value=padding_value)
+        padded_tensor = torch.nn.functional.pad(
+            tensor, (0, col_padding, 0, row_padding), mode="constant", value=padding_value
+        )
         tensors.append(padded_tensor)
 
     # Stack the tensors into a single tensor along a new batch dimension
@@ -87,6 +90,7 @@ def get_negatives(batch_list: List[Dict], sampled_neg: int = 5, key="ner") -> Li
     element_types = list(element_types)
     selected_elements = random.sample(element_types, k=min(sampled_neg, len(element_types)))
     return selected_elements
+
 
 def prepare_word_mask(
     texts: Sequence[Sequence[str]],

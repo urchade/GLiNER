@@ -148,7 +148,7 @@ class BaseProcessor(ABC):
 
             ner = ner_sorted
         return ner, relations
-    
+
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],
@@ -459,7 +459,7 @@ class UniEncoderSpanProcessor(BaseProcessor):
         valid_span_mask = spans_idx[:, 1] > num_tokens - 1
         span_label = span_label.masked_fill(valid_span_mask, -1)
         return span_label, spans_idx
-    
+
     def preprocess_example(self, tokens, ner, classes_to_id):
         """Preprocess a single example for span-based prediction.
 
@@ -493,7 +493,7 @@ class UniEncoderSpanProcessor(BaseProcessor):
         num_tokens = len(tokens)
         spans_idx = prepare_span_idx(num_tokens, max_width)
 
-        span_label, spans_idx =  self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
+        span_label, spans_idx = self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
 
         return {
             "tokens": tokens,
@@ -607,48 +607,48 @@ class UniEncoderTokenProcessor(BaseProcessor):
 
     def _generate_negative_spans(self, positive_spans, num_tokens, num_negatives, max_width=None):
         """Generate random negative spans that don't overlap with positive spans.
-        
+
         Args:
             positive_spans: Set of (start, end) tuples representing positive entity spans.
             num_tokens: Total number of tokens in the sequence.
             num_negatives: Number of negative spans to generate.
             max_width: Maximum width for negative spans. If None, uses config.max_width.
-            
+
         Returns:
             List of (start, end) tuples representing negative spans.
         """
         if max_width is None:
-            max_width = getattr(self.config, 'max_width', 10)
-        
+            max_width = getattr(self.config, "max_width", 10)
+
         negative_spans = []
         attempts = 0
         max_attempts = num_negatives * 20  # Limit attempts to avoid infinite loops
-        
+
         while len(negative_spans) < num_negatives and attempts < max_attempts:
             attempts += 1
-            
+
             # Random start position
             start = random.randint(0, num_tokens - 1)
-            
+
             # Random width (1 to max_width)
             width = random.randint(1, min(max_width, num_tokens - start))
             end = start + width - 1
-            
+
             # Check if this span overlaps with any positive span
             span = (start, end)
             if span in positive_spans:
                 continue
-                
+
             # Check for overlap with positive spans
             overlaps = False
             for pos_start, pos_end in positive_spans:
                 if not (end < pos_start or start > pos_end):
                     overlaps = True
                     break
-            
+
             if not overlaps and span not in negative_spans:
                 negative_spans.append(span)
-        
+
         return negative_spans
 
     def preprocess_example(self, tokens, ner, classes_to_id):
@@ -694,21 +694,19 @@ class UniEncoderTokenProcessor(BaseProcessor):
                     span_idx_list.append([start, end])
                     span_label_list.append(classes_to_id[label])
                     positive_spans.add((start, end))
-            
+
             # Add negative spans
             neg_spans_ratio = self.config.neg_spans_ratio
             neg_spans_count = int(len(span_idx_list) * neg_spans_ratio)
-            
+
             if neg_spans_count > 0 and num_tokens > 0:
-                max_width = getattr(self.config, 'max_width', 10)
-                negative_spans = self._generate_negative_spans(
-                    positive_spans, num_tokens, neg_spans_count, max_width
-                )
-                
+                max_width = getattr(self.config, "max_width", 10)
+                negative_spans = self._generate_negative_spans(positive_spans, num_tokens, neg_spans_count, max_width)
+
                 for start, end in negative_spans:
                     span_idx_list.append([start, end])
                     span_label_list.append(0)  # 0 indicates negative/no entity
-            
+
             if span_idx_list:
                 span_idx = torch.LongTensor(span_idx_list)
                 span_label = torch.LongTensor(span_label_list)
@@ -719,8 +717,8 @@ class UniEncoderTokenProcessor(BaseProcessor):
             span_idx, span_label = None, None
 
         example = {
-            "tokens": tokens, 
-            "seq_length": len(tokens), 
+            "tokens": tokens,
+            "seq_length": len(tokens),
             "entities": ner,
             "span_idx": span_idx,
             "span_label": span_label,
@@ -761,24 +759,24 @@ class UniEncoderTokenProcessor(BaseProcessor):
         }
 
         # Handle span representations if present
-        if batch[0]['span_idx'] is not None:
+        if batch[0]["span_idx"] is not None:
             span_idx_list = [el["span_idx"] for el in batch]
             span_label_list = [el["span_label"] for el in batch]
-            
+
             batch_size = len(span_idx_list)
             span_counts = [s.size(0) if s.numel() > 0 else 0 for s in span_idx_list]
-            max_spans = max(max(span_counts), 1)  # Ensure at least 1
-            
+            max_spans = max(*span_counts, 1)  # Ensure at least 1
+
             # Create span mask indicating valid spans
             span_mask = torch.zeros(batch_size, max_spans, dtype=torch.bool)
             for i, count in enumerate(span_counts):
                 if count > 0:
                     span_mask[i, :count] = True
-            
+
             # Pad span tensors
             span_idx = pad_2d_tensor(span_idx_list, padding_value=0)
             span_label = pad_sequence(span_label_list, batch_first=True, padding_value=-1)
-            
+
             batch_dict["span_idx"] = span_idx
             batch_dict["span_label"] = span_label
             batch_dict["span_mask"] = span_mask
@@ -804,9 +802,9 @@ class UniEncoderTokenProcessor(BaseProcessor):
 
         word_labels = torch.zeros(batch_size, seq_len, num_classes, 3, dtype=torch.float)
 
-        for i, sentence_entities in enumerate(batch['entities']):
+        for i, sentence_entities in enumerate(batch["entities"]):
             for st, ed, sp_label in sentence_entities:
-                lbl = batch['classes_to_id'][i][sp_label]
+                lbl = batch["classes_to_id"][i][sp_label]
                 class_idx = lbl - 1  # Convert to 0-indexed
 
                 # skip entities that point beyond sequence length
@@ -821,7 +819,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
 
     def create_span_labels(self, batch):
         """Create one-hot encoded labels for spans with negative sampling.
-        
+
         Creates one-hot encoded labels for entity spans, converting 1-indexed class IDs
         to 0-indexed format. Labels with class ID 0 (negative spans) or -1 (invalid spans)
         are represented as all zeros in the one-hot encoding.
@@ -837,30 +835,30 @@ class UniEncoderTokenProcessor(BaseProcessor):
         """
         batch_size = len(batch["tokens"])
         span_label = batch["span_label"]  # (batch_size, max_spans)
-        span_mask = batch["span_mask"]    # (batch_size, max_spans)
-        
+        span_mask = batch["span_mask"]  # (batch_size, max_spans)
+
         # Get maximum number of classes across all examples
         if isinstance(batch["classes_to_id"], list):
             num_classes = max([len(cid) for cid in batch["classes_to_id"]])
         else:
             num_classes = len(batch["classes_to_id"])
-        
+
         max_spans = span_label.size(1)
-        
+
         # Initialize one-hot labels (batch_size, max_spans, num_classes)
         labels_one_hot = torch.zeros(batch_size, max_spans, num_classes, dtype=torch.float)
-        
+
         for i in range(batch_size):
             for j in range(max_spans):
                 if span_mask[i, j]:  # Valid span
                     class_id = span_label[i, j].item()
-                    
+
                     if class_id > 0:
                         # Convert from 1-indexed to 0-indexed
                         class_idx = class_id - 1
                         if class_idx < num_classes:
                             labels_one_hot[i, j, class_idx] = 1.0
-        
+
         return labels_one_hot
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
@@ -879,7 +877,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
-            
+
             # Add span-level one-hot labels if spans are represented
             if batch.get("span_idx") is not None:
                 span_labels = self.create_span_labels(batch)
@@ -887,6 +885,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 tokenized_input["span_idx"] = batch["span_idx"]
                 tokenized_input["span_mask"] = batch["span_mask"]
         return tokenized_input
+
 
 class BaseBiEncoderProcessor(BaseProcessor):
     """Base processor for bi-encoder architectures.
@@ -1098,7 +1097,7 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             Dictionary containing encoder and decoder tokenized inputs.
         """
         add_entities = True
-        if self.config.decoder_mode == 'prompt':
+        if self.config.decoder_mode == "prompt":
             add_entities = False
 
         input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank, add_entities=add_entities)
@@ -1185,15 +1184,15 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             labels_one_hot[valid_span_mask, :] = 0.0
             labels_one_hot = labels_one_hot[:, 1:]
             labels_batch.append(labels_one_hot)
-            
-            if self.config.decoder_mode == 'span':
+
+            if self.config.decoder_mode == "span":
                 # Collect decoder label strings in order
                 sorted_idxs = sorted(span_labels_dict.keys())
                 for idx in sorted_idxs:
                     decoder_label_strings.append(span_labels_dict[idx])
-            elif self.config.decoder_mode == 'prompt':
+            elif self.config.decoder_mode == "prompt":
                 decoder_label_strings.extend(list(classes_to_id))
-                
+
         labels_batch = pad_2d_tensor(labels_batch) if len(labels_batch) > 1 else labels_batch[0].unsqueeze(0)
 
         decoder_tokenized_input = None
@@ -1409,7 +1408,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             ]
 
         return self.create_batch_dict(batch, class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes)
-    
+
     def preprocess_example(self, tokens, ner, classes_to_id, relations, rel_classes_to_id):
         """Preprocess a single example for joint entity and relation extraction.
 
@@ -1452,7 +1451,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         ner, relations = self.sort_entities_and_relations(ner, relations)
 
         # Process entity labels
-        span_label, spans_idx =  self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
+        span_label, spans_idx = self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
 
         # Create entity span to index mapping
         span_to_idx = {(spans_idx[i, 0].item(), spans_idx[i, 1].item()): i for i in range(len(spans_idx))}
@@ -1537,7 +1536,6 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             "rel_class_to_ids": rel_class_to_ids,
             "rel_id_to_classes": rel_id_to_classes,
         }
-
 
     def create_relation_labels(self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=2.0):
         """Create relation labels with negative pair sampling.
@@ -1783,7 +1781,7 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
     def preprocess_example(self, tokens, ner, classes_to_id, relations=None, rel_classes_to_id=None):
         """Preprocess a single example for joint entity and relation extraction.
 
-        Processes both entity annotations (for token-level BIO tagging) and 
+        Processes both entity annotations (for token-level BIO tagging) and
         relation triplets, ensuring consistent indexing when entities are reordered.
 
         Args:
@@ -1823,7 +1821,7 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
         # Create entity index mapping (from sorted entity list index to entities_id index)
         entity_idx_mapping = {}
         valid_entity_idx = 0
-        
+
         if ner is not None:
             span_idx_list = []
             for ent_idx, (start, end, label) in enumerate(ner):
@@ -1846,9 +1844,7 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
                 head_idx, tail_idx, rel_type = rel
 
                 # Check if both entities are valid and relation type is known
-                if (head_idx in entity_idx_mapping and 
-                    tail_idx in entity_idx_mapping and 
-                    rel_type in rel_classes_to_id):
+                if head_idx in entity_idx_mapping and tail_idx in entity_idx_mapping and rel_type in rel_classes_to_id:
                     mapped_head = entity_idx_mapping[head_idx]
                     mapped_tail = entity_idx_mapping[tail_idx]
                     rel_idx_list.append([mapped_head, mapped_tail])
@@ -1861,7 +1857,6 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
         else:
             rel_idx = torch.zeros(0, 2, dtype=torch.long)
             rel_label = torch.zeros(0, dtype=torch.long)
-
 
         return {
             "tokens": tokens,
@@ -1892,18 +1887,18 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
         entities = [el["entities"] for el in batch]
         relations = [el["relations"] for el in batch]
 
-        if batch[0]['span_idx'] is not None:
+        if batch[0]["span_idx"] is not None:
             span_idx_list = [el["span_idx"] for el in batch]
-            
+
             batch_size = len(span_idx_list)
             span_counts = [s.size(0) if s.numel() > 0 else 0 for s in span_idx_list]
-            max_spans = max(max(span_counts), 1)  # Ensure at least 1
-            
+            max_spans = max(*span_counts, 1)  # Ensure at least 1
+
             span_mask = torch.zeros(batch_size, max_spans, dtype=torch.bool)
             for i, count in enumerate(span_counts):
                 if count > 0:
                     span_mask[i, :count] = True
-            
+
             span_idx = pad_2d_tensor(span_idx_list, padding_value=0)
         else:
             span_idx, span_mask = None, None
@@ -1926,7 +1921,6 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
             "rel_id_to_classes": rel_id_to_classes,
         }
 
-
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         """Tokenize inputs and prepare labels for joint entity-relation extraction.
 
@@ -1940,13 +1934,9 @@ class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtract
             Dictionary containing tokenized inputs, token-level entity labels,
             relation adjacency matrix, and relation labels.
         """
-
         # Use relation-aware tokenize_inputs from RelationExtractionSpanProcessor
         tokenized_input = self.tokenize_inputs(
-            batch["tokens"], 
-            batch["classes_to_id"], 
-            blank=None, 
-            relations=batch["rel_class_to_ids"]
+            batch["tokens"], batch["classes_to_id"], blank=None, relations=batch["rel_class_to_ids"]
         )
 
         if prepare_labels:

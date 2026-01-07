@@ -633,6 +633,7 @@ class ConvShareV2(nn.Module):
 
         return out
 
+
 class TokenMarker(nn.Module):
     """Marks and projects span endpoints using an MLP.
 
@@ -680,7 +681,8 @@ class TokenMarker(nn.Module):
         cat = torch.cat([start_span_rep, end_span_rep], dim=-1).relu()
 
         return self.out_project(cat)
-    
+
+
 class SpanRepLayer(nn.Module):
     """Factory class for various span representation approaches.
 
@@ -738,7 +740,7 @@ class SpanRepLayer(nn.Module):
             self.span_rep_layer = SpanConv(hidden_size, max_width, span_mode="conv_sum")
         elif span_mode == "conv_share":
             self.span_rep_layer = ConvShare(hidden_size, max_width)
-        elif span_mode == 'token_level':
+        elif span_mode == "token_level":
             self.span_rep_layer = TokenMarker(hidden_size, **kwargs)
         else:
             raise ValueError(f"Unknown span mode {span_mode}")

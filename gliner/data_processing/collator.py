@@ -483,7 +483,9 @@ class RelationExtractionTokenDataCollator(RelationExtractionSpanDataCollator):
 
     Required Processor: RelationExtractionTokenProcessor
     """
+
     pass
+
 
 class UniEncoderSpanDataCollator(SpanDataCollator):
     """

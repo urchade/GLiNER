@@ -233,7 +233,7 @@ class BaseUniEncoderModel(BaseModel):
         super().__init__(config, from_pretrained, cache_dir)
         self.token_rep_layer = Encoder(config, from_pretrained, cache_dir=cache_dir)
 
-        if self.config.num_rnn_layers>0:
+        if self.config.num_rnn_layers > 0:
             self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
 
         if config.post_fusion_schema:
@@ -443,7 +443,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             scores: Predicted scores of shape (B, L, K, C).
             labels: Ground truth labels of shape (B, L, K, C).
             prompts_embedding_mask: Mask for valid entity types of shape (B, C).
-            mask_label: Mask for valid spans of shape (B, L, K).
+            span_mask: Mask for valid spans of shape (B, L, K).
             alpha: Focal loss alpha parameter.
             gamma: Focal loss gamma parameter.
             prob_margin: Margin for probability adjustment.
@@ -513,34 +513,32 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         super().__init__(config, from_pretrained, cache_dir)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
-        if getattr(config, 'represent_spans', False):
+        if getattr(config, "represent_spans", False):
             self.span_rep_layer = SpanRepLayer(
                 span_mode=config.span_mode,
                 hidden_size=config.hidden_size,
-                max_width=getattr(config, 'max_width', 12),
+                max_width=getattr(config, "max_width", 12),
                 dropout=config.dropout,
             )
 
-    def get_span_logits(self, scores, span_idx, span_mask, 
-                        words_embedding, prompts_embedding, 
-                        labels, threshold):
+    def get_span_logits(self, scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold):
         span_logits = None
-        if getattr(self.config, 'represent_spans', False):
+        if getattr(self.config, "represent_spans", False):
             if span_idx is None:
                 span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
                 span_idx = span_idx * span_mask.unsqueeze(-1).long()
-            
+
             span_rep = self.span_rep_layer(words_embedding, span_idx)
             span_logits = torch.einsum("BND,BCD->BNC", span_rep, prompts_embedding)
         return span_logits, span_idx, span_mask
-    
+
     def forward(
         self,
         input_ids: Optional[torch.FloatTensor] = None,
         attention_mask: Optional[torch.LongTensor] = None,
         words_embedding: Optional[torch.FloatTensor] = None,
         mask: Optional[torch.LongTensor] = None,
-        span_idx: Optional[torch.Tensor]=None,
+        span_idx: Optional[torch.Tensor] = None,
         span_mask: Optional[torch.Tensor] = None,
         span_labels: Optional[torch.Tensor] = None,
         prompts_embedding: Optional[torch.FloatTensor] = None,
@@ -557,16 +555,22 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
             input_ids: Input token IDs of shape (B, L).
             attention_mask: Attention mask of shape (B, L).
             words_embedding: Pre-computed word embeddings of shape (B, W, D).
-            mask: Mask for words of shape (B, W).
+            mask: Mask for valid words of shape (B, W).
+            span_idx: Tensor containing span start/end indices of shape (B, S, 2),
+                where S is the number of spans.
+            span_mask: Boolean or integer mask indicating valid spans of shape (B, S).
+            span_labels: Ground truth span labels of shape (B, S, C).
             prompts_embedding: Pre-computed entity label embeddings of shape (B, C, D).
-            prompts_embedding_mask: Mask for prompts of shape (B, C).
-            words_mask: Word boundary mask.
-            text_lengths: Length of each text sequence.
-            labels: Ground truth labels of shape (B, W, C).
-            **kwargs: Additional arguments.
+            prompts_embedding_mask: Mask for prompts/entities of shape (B, C).
+            words_mask: Word boundary mask mapping tokens to words.
+            text_lengths: Length of each text sequence before padding, shape (B,).
+            labels: Ground truth token-level labels of shape (B, W, C).
+            threshold: Confidence threshold used for span selection.
+            **kwargs: Additional arguments passed to the encoder or loss functions
+                (e.g., ``packing_config``, ``pair_attention_mask``).
 
         Returns:
-            GLiNERBaseOutput containing logits, loss, and intermediate representations.
+            GLiNERBaseOutput containing logits, loss, embeddings, and span-level outputs.
         """
         encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
 
@@ -588,17 +592,18 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
 
         # Shape: (batch_size, seq_len, num_classes, 3), 3 - start, end, inside
         scores = self.scorer(words_embedding, prompts_embedding)
-        
-        span_logits, span_idx, span_mask = self.get_span_logits(scores, span_idx, span_mask, words_embedding, 
-                                                                        prompts_embedding, labels, threshold)
-        
+
+        span_logits, span_idx, span_mask = self.get_span_logits(
+            scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold
+        )
+
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
 
             if span_labels is not None:
                 span_loss = self.loss(span_logits, span_labels, prompts_embedding_mask, span_mask, **kwargs)
-                loss = self.config.token_loss_coef*loss + self.config.span_loss_coef*span_loss
+                loss = self.config.token_loss_coef * loss + self.config.span_loss_coef * span_loss
 
         output = GLiNERBaseOutput(
             logits=scores,
@@ -609,7 +614,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
             mask=mask,
             span_idx=span_idx,
             span_logits=span_logits,
-            span_mask=span_mask
+            span_mask=span_mask,
         )
         return output
 
@@ -627,24 +632,39 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         negatives: float = 1.0,
         **kwargs: Any,
     ) -> torch.Tensor:
-        """Compute token/span classification loss.
+        """Compute token- or span-level classification loss.
 
         Args:
-            scores: Predicted scores of shape (B, W, C, 3) for tokens or (B, N, C) for spans.
-            labels: Ground truth labels matching scores shape.
+            scores: Predicted scores. Shape is (B, W, C, 3) for token-level
+                classification (start, end, inside) or (B, N, C) for span-level
+                classification, where B is batch size, W is number of words,
+                N is number of spans, and C is number of entity types.
+            labels: Ground truth labels matching ``scores`` shape.
             prompts_embedding_mask: Mask for valid entity types of shape (B, C).
-            word_mask: Mask for valid tokens/spans of shape (B, W) or (B, N).
-            ...
+            word_mask: Mask for valid tokens or spans of shape (B, W) for
+                token-level loss or (B, N) for span-level loss.
+            alpha: Alpha parameter for focal loss. If negative, focal weighting
+                is disabled.
+            gamma: Gamma parameter for focal loss.
+            prob_margin: Margin applied to predicted probabilities.
+            label_smoothing: Amount of label smoothing applied to targets.
+            reduction: Reduction method applied to the final loss. One of
+                ``"none"``, ``"mean"``, or ``"sum"``.
+            negatives: Weighting factor for negative examples.
+            **kwargs: Additional unused keyword arguments for API compatibility.
+
+        Returns:
+            A scalar tensor representing the aggregated loss value.
         """
         all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
         # Base mask: (B, W/N, C)
         mask = word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)
-        
+
         # Only add extra dimension for 4D token-level scores (B, W, C, 3)
         if all_losses.dim() == 4:
             mask = mask.unsqueeze(-1)
-        
+
         all_losses = all_losses * mask
 
         if reduction == "mean":
@@ -988,7 +1008,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         labels_attention_mask: Optional[torch.LongTensor] = None,
         words_embedding: Optional[torch.FloatTensor] = None,
         mask: Optional[torch.LongTensor] = None,
-        span_idx: Optional[torch.Tensor]=None,
+        span_idx: Optional[torch.Tensor] = None,
         span_mask: Optional[torch.Tensor] = None,
         span_labels: Optional[torch.Tensor] = None,
         prompts_embedding: Optional[torch.FloatTensor] = None,
@@ -1009,6 +1029,10 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
             labels_attention_mask: Attention mask for labels.
             words_embedding: Pre-computed word embeddings.
             mask: Mask for words.
+            span_idx: Tensor containing span start/end indices of shape (B, S, 2),
+                where S is the number of spans.
+            span_mask: Boolean or integer mask indicating valid spans of shape (B, S).
+            span_labels: Ground truth span labels of shape (B, S, C).
             prompts_embedding: Pre-computed entity label embeddings.
             prompts_embedding_mask: Mask for prompts.
             words_mask: Word boundary mask.
@@ -1046,8 +1070,9 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
 
         scores = self.scorer(words_embedding, prompts_embedding)
 
-        span_logits, span_idx, span_mask = self.get_span_logits(scores, span_idx, span_mask, words_embedding, 
-                                                                        prompts_embedding, labels, threshold)
+        span_logits, span_idx, span_mask = self.get_span_logits(
+            scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold
+        )
 
         loss = None
         if labels is not None:
@@ -1055,7 +1080,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
 
             if span_labels is not None:
                 span_loss = self.loss(span_logits, span_labels, prompts_embedding_mask, span_mask, **kwargs)
-                loss = self.config.token_loss_coef*loss + self.config.span_loss_coef*span_loss
+                loss = self.config.token_loss_coef * loss + self.config.span_loss_coef * span_loss
 
         output = GLiNERBaseOutput(
             logits=scores,
@@ -1066,7 +1091,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
             mask=mask,
             span_idx=span_idx,
             span_logits=span_logits,
-            span_mask=span_mask
+            span_mask=span_mask,
         )
         return output
 
@@ -1689,14 +1714,16 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         return target_rep, target_mask
 
-
-    def represent_spans(self, words_embeddings, words_mask, prompts_embeddings, 
-                            span_idx: Optional[torch.Tensor]=None,
-                            span_mask: Optional[torch.Tensor] = None,
-                            labels: Optional[torch.Tensor] = None,
-                            threshold: float = 0.5,
-                            ):
-
+    def represent_spans(
+        self,
+        words_embeddings,
+        words_mask,
+        prompts_embeddings,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        labels: Optional[torch.Tensor] = None,
+        threshold: float = 0.5,
+    ):
         span_idx = span_idx * span_mask.unsqueeze(-1).long()
         span_rep = self.span_rep_layer(words_embeddings, span_idx)
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embeddings)
@@ -1708,7 +1735,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         else:
             target_span_rep, target_span_mask = None, None
         return scores, target_span_rep, target_span_mask
-    
+
     def forward(
         self,
         input_ids: Optional[torch.FloatTensor] = None,
@@ -1760,17 +1787,17 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 token_embeds, input_ids, attention_mask, text_lengths, words_mask
             )
         )
-        
+
         if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
 
-        if self.config.span_mode=='token_level':
+        if self.config.span_mode == "token_level":
             if labels is not None:
                 target_W = labels.shape[1]
                 target_C = max(prompts_embedding.size(1), labels.size(-2))
             else:
                 target_W = words_embedding.size(1)
-                target_C =  prompts_embedding.size(1)
+                target_C = prompts_embedding.size(1)
         else:
             target_W = span_idx.size(1) // self.config.max_width
             target_C = prompts_embedding.size(1)
@@ -1786,13 +1813,9 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
         batch_size, _, embed_dim = prompts_embedding.shape
 
-        scores, target_span_rep, target_span_mask = self.represent_spans(words_embedding, mask, 
-                                                                         prompts_embedding, 
-                                                                         span_idx,
-                                                                         span_mask,
-                                                                         labels,
-                                                                         threshold
-                                                                         )
+        scores, target_span_rep, target_span_mask = self.represent_spans(
+            words_embedding, mask, prompts_embedding, span_idx, span_mask, labels, threshold
+        )
 
         pair_idx, pair_mask, pair_scores = None, None, None
         rel_prompts_embedding_mask = None
@@ -2045,7 +2068,7 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
             scores: Predicted scores of shape (B, W, C).
             labels: Ground truth labels of shape (B, W, C).
             prompts_embedding_mask: Mask for valid entity types of shape (B, C).
-            mask: Mask for valid tokens of shape (B, W).
+            word_mask: Mask for valid tokens of shape (B, W).
             alpha: Focal loss alpha parameter.
             gamma: Focal loss gamma parameter.
             prob_margin: Margin for probability adjustment.
@@ -2073,15 +2096,19 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
             )
             loss = all_losses.sum()
         return loss
-    
-    def represent_spans(self, words_embeddings, words_mask, prompts_embeddings, 
-                            span_idx: Optional[torch.Tensor]=None,
-                            span_mask: Optional[torch.Tensor] = None,
-                            labels: Optional[torch.Tensor] = None,
-                            threshold: float = 0.5,
-                            ):
+
+    def represent_spans(
+        self,
+        words_embeddings,
+        words_mask,
+        prompts_embeddings,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        labels: Optional[torch.Tensor] = None,
+        threshold: float = 0.5,
+    ):
         scores = self.scorer(words_embeddings, prompts_embeddings)
-        
+
         if span_idx is None:
             span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
             span_idx = span_idx * span_mask.unsqueeze(-1).long()

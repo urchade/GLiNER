@@ -370,6 +370,7 @@ class UniEncoderSpanRelexORTModel(BaseORTModel):
         )
         return outputs
 
+
 class UniEncoderTokenRelexORTModel(BaseORTModel):
     """ONNX Runtime model for uni-encoder token-level relation extraction.
 

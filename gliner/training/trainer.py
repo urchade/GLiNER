@@ -141,7 +141,7 @@ class Trainer(transformers.Trainer):
 
             if self.use_apex:
                 from apex import amp
-                
+
                 with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                     scaled_loss.backward()
             else:

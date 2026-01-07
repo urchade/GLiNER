@@ -938,13 +938,13 @@ class TokenDecoder(BaseDecoder):
             for span_pos in valid_indices:
                 span_start = span_idx[i, span_pos, 0].item()
                 span_end = span_idx[i, span_pos, 1].item()
-                
+
                 # Get probabilities for all classes for this span
                 probs = span_probs[i, span_pos]
-                
+
                 # Find classes above threshold
                 class_indices = torch.where(probs > threshold)[0]
-                
+
                 for class_idx in class_indices:
                     class_id = class_idx.item() + 1  # Convert to 1-indexed
                     if class_id in id_to_class_i:
@@ -981,13 +981,13 @@ class TokenDecoder(BaseDecoder):
             tokens (List[List[str]]): Tokenized input text for each sample in the batch.
             id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
                 class IDs to class names.
-            model_output (torch.Tensor, optional): Raw logits from the model with shape 
-                (B, L, C, 3), where the last dimension represents [start, end, inside] 
+            model_output (torch.Tensor, optional): Raw logits from the model with shape
+                (B, L, C, 3), where the last dimension represents [start, end, inside]
                 predictions. Used for token-level decoding.
             flat_ner (bool): Whether to enforce non-overlapping spans.
             threshold (float): Confidence threshold for predictions.
             multi_label (bool): Whether to allow multiple labels per span.
-            span_logits (torch.Tensor, optional): Span classification logits with shape 
+            span_logits (torch.Tensor, optional): Span classification logits with shape
                 (B, S, C). Used for span-level decoding.
             span_idx (torch.Tensor, optional): Span indices with shape (B, S, 2).
                 Used for span-level decoding.
@@ -1015,7 +1015,7 @@ class TokenDecoder(BaseDecoder):
                 threshold=threshold,
                 multi_label=multi_label,
             )
-        
+
         # Check if token-level decoding is requested
         if model_output is not None:
             model_output = model_output.permute(3, 0, 1, 2)
@@ -1036,19 +1036,18 @@ class TokenDecoder(BaseDecoder):
                 span_i = self.greedy_search(span_scores, flat_ner, multi_label)
                 spans.append(span_i)
             return spans
-        
+
         # Neither decoding mode has sufficient inputs
         if span_logits is not None or span_idx is not None or span_mask is not None:
             raise ValueError(
-                "For span-level decoding, all three parameters must be provided: "
-                "span_logits, span_idx, and span_mask"
+                "For span-level decoding, all three parameters must be provided: span_logits, span_idx, and span_mask"
             )
-        
+
         raise ValueError(
             "Either model_output (for token-level decoding) or "
             "(span_logits, span_idx, span_mask) (for span-level decoding) must be provided"
         )
-    
+
 
 class TokenRelexDecoder(TokenDecoder):
     """Token-based decoder with relation extraction support.

@@ -34,7 +34,7 @@ from .config import (
     UniEncoderTokenRelexConfig,
     UniEncoderSpanDecoderConfig,
 )
-from .decoding import SpanDecoder, TokenDecoder, SpanRelexDecoder, SpanGenerativeDecoder, TokenRelexDecoder
+from .decoding import SpanDecoder, TokenDecoder, SpanRelexDecoder, TokenRelexDecoder, SpanGenerativeDecoder
 from .training import Trainer, TrainingArguments
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
@@ -44,7 +44,7 @@ from .onnx.model import (
     UniEncoderSpanORTModel,
     UniEncoderTokenORTModel,
     UniEncoderSpanRelexORTModel,
-    UniEncoderTokenRelexORTModel
+    UniEncoderTokenRelexORTModel,
 )
 from .decoding.trie import LabelsTrie
 from .infer_packing import InferencePackingConfig
@@ -66,7 +66,7 @@ from .data_processing import (
     UniEncoderTokenProcessor,
     UniEncoderSpanDecoderProcessor,
     RelationExtractionSpanProcessor,
-    RelationExtractionTokenProcessor
+    RelationExtractionTokenProcessor,
 )
 from .data_processing.collator import (
     BiEncoderSpanDataCollator,
@@ -75,7 +75,7 @@ from .data_processing.collator import (
     UniEncoderTokenDataCollator,
     UniEncoderSpanDecoderDataCollator,
     RelationExtractionSpanDataCollator,
-    RelationExtractionTokenDataCollator
+    RelationExtractionTokenDataCollator,
 )
 from .data_processing.tokenizer import WordsSplitter
 
@@ -2110,7 +2110,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             "2. Use PyTorch for inference with this model\n"
             "3. Implement a custom ONNX pipeline with separate encoder/decoder exports"
         )
-    
+
+
 class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     """GLiNER model for both entity recognition and relation extraction.
 
@@ -2427,13 +2428,13 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             - rel_f1: Relation extraction F1 score
         """
         self.eval()
-        
+
         if relation_threshold is None:
             relation_threshold = threshold
-        
+
         if adjacency_threshold is None:
             adjacency_threshold = threshold
-        
+
         # Create the dataset and data loader
         dataset = test_data
         collator = self.data_collator_class(
@@ -2446,9 +2447,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             return_rel_id_to_classes=True,
             prepare_labels=False,
         )
-        data_loader = torch.utils.data.DataLoader(
-            dataset, batch_size=batch_size, shuffle=False, collate_fn=collator
-        )
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
 
         all_entity_preds = []
         all_relation_preds = []
@@ -2462,9 +2461,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
             # Get model predictions
             model_inputs = batch.copy()
-            model_output = self.model(
-                **model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold
-            )
+            model_output = self.model(**model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold)
 
             # Extract logits and relation outputs
             model_logits = model_output.logits
@@ -2520,7 +2517,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         # Format data for relation evaluator: list of (entities, relations) tuples
         all_true_rel_data = list(zip(all_true_entities, all_true_relations))
         all_pred_rel_data = list(zip(all_entity_preds, all_relation_preds))
-        
+
         rel_evaluator = BaseRelexEvaluator(all_true_rel_data, all_pred_rel_data)
         rel_output, rel_f1 = rel_evaluator.evaluate()
 
@@ -2601,6 +2598,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 return out.logits, out.rel_idx, out.rel_logits, out.rel_mask
 
         return UniEncoderSpanRelexWrapper(core_model)
+
 
 class UniEncoderTokenRelexGLiNER(UniEncoderSpanRelexGLiNER):
     """GLiNER model for both entity recognition and relation extraction.
@@ -2683,7 +2681,8 @@ class UniEncoderTokenRelexGLiNER(UniEncoderSpanRelexGLiNER):
                 return out.logits, out.rel_idx, out.rel_logits, out.rel_mask
 
         return UniEncoderTokenRelexWrapper(core_model)
-    
+
+
 class GLiNER(nn.Module, PyTorchModelHubMixin):
     """Meta GLiNER class that automatically instantiates the appropriate GLiNER variant.
 
@@ -3071,7 +3070,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             "BiEncoderTokenGLiNER": "gliner_bi_encoder_token",
             "UniEncoderSpanDecoderGLiNER": "gliner_uni_encoder_span_decoder",
             "UniEncoderSpanRelexGLiNER": "gliner_uni_encoder_span_relex",
-            "UniEncoderTokenRelexGLiNER": "gliner_uni_encoder_token_relex"
+            "UniEncoderTokenRelexGLiNER": "gliner_uni_encoder_token_relex",
         }
 
         return type_mapping.get(class_name, "unknown")
