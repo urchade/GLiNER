@@ -426,7 +426,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         scores: torch.Tensor,
         labels: torch.Tensor,
         prompts_embedding_mask: torch.Tensor,
-        mask_label: torch.Tensor,
+        span_mask: torch.Tensor,
         alpha: float = -1.0,
         gamma: float = 0.0,
         prob_margin: float = 0.0,
@@ -471,9 +471,9 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
 
-        mask_label = mask_label.view(-1, 1)
+        span_mask = span_mask.view(-1, 1)
 
-        all_losses = all_losses * mask_label.float()
+        all_losses = all_losses * span_mask.float()
 
         if reduction == "mean":
             loss = all_losses.mean()
@@ -582,7 +582,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         scores: torch.Tensor,
         labels: torch.Tensor,
         prompts_embedding_mask: torch.Tensor,
-        mask: torch.Tensor,
+        word_mask: torch.Tensor,
         alpha: float = -1.0,
         gamma: float = 0.0,
         prob_margin: float = 0.0,
@@ -611,7 +611,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         """
         all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
-        all_losses = all_losses * (mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
+        all_losses = all_losses * (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
 
         if reduction == "mean":
             loss = all_losses.mean()
@@ -1698,7 +1698,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                             threshold: float = 0.5,
                             ):
 
-        span_idx = span_idx * span_mask.unsqueeze(-1)
+        span_idx = span_idx * span_mask.unsqueeze(-1).long()
         span_rep = self.span_rep_layer(words_embeddings, span_idx)
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embeddings)
 
@@ -1761,11 +1761,23 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 token_embeds, input_ids, attention_mask, text_lengths, words_mask
             )
         )
-
+        
         if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
 
-        target_W = span_idx.size(1) // self.config.max_width
+        if self.config.span_mode=='token_level':
+            if labels is not None:
+                target_W = labels.shape[1]
+                target_C = max(prompts_embedding.size(1), labels.size(-2))
+            else:
+                target_W = words_embedding.size(1)
+                target_C =  prompts_embedding.size(1)
+        else:
+            target_W = span_idx.size(1) // self.config.max_width
+            target_C = prompts_embedding.size(1)
+            if labels is not None:
+                target_C = max(target_C, labels.size(-1))
+
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
 
         prompts_embedding, prompts_embedding_mask = self._fit_length(
@@ -1782,9 +1794,6 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                                                                          labels,
                                                                          threshold
                                                                          )
-        target_C = prompts_embedding.size(1)
-        if labels is not None:
-            target_C = max(target_C, labels.size(-1))
 
         pair_idx, pair_mask, pair_scores = None, None, None
         rel_prompts_embedding_mask = None
@@ -1833,7 +1842,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask=span_mask, word_mask=mask, **kwargs)
 
             if adj_matrix is not None and rel_matrix is not None and hasattr(self, "relations_rep_layer"):
                 adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
@@ -2104,6 +2113,55 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
         return span_idx, span_mask
     
 
+    def loss(
+        self,
+        scores: torch.Tensor,
+        labels: torch.Tensor,
+        prompts_embedding_mask: torch.Tensor,
+        word_mask: torch.Tensor,
+        alpha: float = -1.0,
+        gamma: float = 0.0,
+        prob_margin: float = 0.0,
+        label_smoothing: float = 0.0,
+        reduction: str = "sum",
+        negatives: float = 1.0,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Compute token classification loss.
+
+        Args:
+            scores: Predicted scores of shape (B, W, C).
+            labels: Ground truth labels of shape (B, W, C).
+            prompts_embedding_mask: Mask for valid entity types of shape (B, C).
+            mask: Mask for valid tokens of shape (B, W).
+            alpha: Focal loss alpha parameter.
+            gamma: Focal loss gamma parameter.
+            prob_margin: Margin for probability adjustment.
+            label_smoothing: Label smoothing factor.
+            reduction: Loss reduction method ('sum' or 'mean').
+            negatives: Negative sampling probability.
+            **kwargs: Additional arguments.
+
+        Returns:
+            Scalar loss tensor.
+        """
+        all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
+
+        all_losses = all_losses * (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
+
+        if reduction == "mean":
+            loss = all_losses.mean()
+        elif reduction == "sum":
+            loss = all_losses.sum()
+        else:
+            warnings.warn(
+                f"Invalid Value for config 'loss_reduction': '{reduction}' \n Supported reduction modes:"
+                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.",
+                stacklevel=2,
+            )
+            loss = all_losses.sum()
+        return loss
+    
     def represent_spans(self, words_embeddings, words_mask, prompts_embeddings, 
                             span_idx: Optional[torch.Tensor]=None,
                             span_mask: Optional[torch.Tensor] = None,
@@ -2111,9 +2169,10 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
                             threshold: float = 0.5,
                             ):
         scores = self.scorer(words_embeddings, prompts_embeddings)
-
-        span_idx, target_span_mask = self.extract_spans(scores, labels, threshold)
-        span_idx = span_idx * target_span_mask.unsqueeze(-1)
+        
+        if span_idx is None:
+            span_idx, span_mask = self.extract_spans(scores, labels, threshold)
+            span_idx = span_idx * span_mask.unsqueeze(-1).long()
         target_span_rep = self.span_rep_layer(words_embeddings, span_idx)
 
-        return scores, target_span_rep, target_span_mask
+        return scores, target_span_rep, span_mask

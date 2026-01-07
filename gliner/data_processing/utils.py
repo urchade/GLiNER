@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple, Optional, Sequence
 import torch
 
 
-def pad_2d_tensor(key_data):
+def pad_2d_tensor(key_data, padding_value=0.0):
     """Pad a list of 2D tensors to uniform dimensions.
 
     Takes a list of 2D tensors with potentially different shapes and pads them
@@ -44,7 +44,7 @@ def pad_2d_tensor(key_data):
         col_padding = max_cols - cols
 
         # Pad the tensor along both dimensions
-        padded_tensor = torch.nn.functional.pad(tensor, (0, col_padding, 0, row_padding), mode="constant", value=0)
+        padded_tensor = torch.nn.functional.pad(tensor, (0, col_padding, 0, row_padding), mode="constant", value=padding_value)
         tensors.append(padded_tensor)
 
     # Stack the tensors into a single tensor along a new batch dimension

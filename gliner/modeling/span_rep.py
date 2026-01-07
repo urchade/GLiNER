@@ -633,7 +633,54 @@ class ConvShareV2(nn.Module):
 
         return out
 
+class TokenMarker(nn.Module):
+    """Marks and projects span endpoints using an MLP.
 
+    A cleaner version of SpanMarker using the create_projection_layer utility.
+
+    Attributes:
+        max_width (int): Maximum span width to represent.
+        project_start (nn.Module): MLP for projecting start positions.
+        project_end (nn.Module): MLP for projecting end positions.
+        out_project (nn.Module): Final projection layer.
+    """
+
+    def __init__(self, hidden_size: int, dropout: float = 0.4):
+        """Initialize the SpanMarkerV0 layer.
+
+        Args:
+            hidden_size (int): Dimension of the hidden representations.
+            max_width (int): Maximum span width to represent.
+            dropout (float, optional): Dropout rate. Defaults to 0.4.
+        """
+        super().__init__()
+        self.project_start = create_projection_layer(hidden_size, dropout)
+        self.project_end = create_projection_layer(hidden_size, dropout)
+
+        self.out_project = create_projection_layer(hidden_size * 2, dropout, hidden_size)
+
+    def forward(self, h: torch.Tensor, span_idx: torch.Tensor) -> torch.Tensor:
+        """Compute span representations using start and end markers.
+
+        Args:
+            h (torch.Tensor): Token representations of shape [B, L, D].
+            span_idx (torch.Tensor): Span indices of shape [B, *, 2].
+
+        Returns:
+            torch.Tensor: Span representations of shape [B, L, max_width, D].
+        """
+        B, L, D = h.size()
+        num_spans = span_idx.size(1)
+        start_rep = self.project_start(h)
+        end_rep = self.project_end(h)
+
+        start_span_rep = extract_elements(start_rep, span_idx[:, :, 0])
+        end_span_rep = extract_elements(end_rep, span_idx[:, :, 1])
+
+        cat = torch.cat([start_span_rep, end_span_rep], dim=-1).relu()
+
+        return self.out_project(cat)
+    
 class SpanRepLayer(nn.Module):
     """Factory class for various span representation approaches.
 
@@ -691,6 +738,8 @@ class SpanRepLayer(nn.Module):
             self.span_rep_layer = SpanConv(hidden_size, max_width, span_mode="conv_sum")
         elif span_mode == "conv_share":
             self.span_rep_layer = ConvShare(hidden_size, max_width)
+        elif span_mode == 'token_level':
+            self.span_rep_layer = TokenMarker(hidden_size, **kwargs)
         else:
             raise ValueError(f"Unknown span mode {span_mode}")
 

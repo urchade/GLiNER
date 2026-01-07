@@ -992,7 +992,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         save_total_limit: int = 10,
         logging_steps: int = 10,
         use_cpu: bool = False,
-        bf16: bool = True,
+        bf16: bool = False,
         dataloader_num_workers: int = 1,
         report_to: str = "none",
         **kwargs,
