@@ -33,8 +33,16 @@ from .config import (
     UniEncoderSpanRelexConfig,
     UniEncoderTokenRelexConfig,
     UniEncoderSpanDecoderConfig,
+    UniEncoderTokenDecoderConfig
 )
-from .decoding import SpanDecoder, TokenDecoder, SpanRelexDecoder, TokenRelexDecoder, SpanGenerativeDecoder
+from .decoding import (
+                       SpanDecoder, 
+                       TokenDecoder, 
+                       SpanRelexDecoder, 
+                       TokenRelexDecoder, 
+                       SpanGenerativeDecoder, 
+                       TokenGenerativeDecoder
+                       )
 from .training import Trainer, TrainingArguments
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
@@ -57,6 +65,7 @@ from .modeling.base import (
     UniEncoderSpanRelexModel,
     UniEncoderTokenRelexModel,
     UniEncoderSpanDecoderModel,
+    UniEncoderTokenDecoderModel
 )
 from .data_processing import (
     BaseProcessor,
@@ -65,6 +74,7 @@ from .data_processing import (
     UniEncoderSpanProcessor,
     UniEncoderTokenProcessor,
     UniEncoderSpanDecoderProcessor,
+    UniEncoderTokenDecoderProcessor,
     RelationExtractionSpanProcessor,
     RelationExtractionTokenProcessor,
 )
@@ -74,6 +84,7 @@ from .data_processing.collator import (
     UniEncoderSpanDataCollator,
     UniEncoderTokenDataCollator,
     UniEncoderSpanDecoderDataCollator,
+    UniEncoderTokenDecoderDataCollator,
     RelationExtractionSpanDataCollator,
     RelationExtractionTokenDataCollator,
 )
@@ -2112,6 +2123,21 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         )
 
 
+class UniEncoderTokenDecoderGLiNER(UniEncoderSpanDecoderGLiNER):
+    """GLiNER model with token-based encoding and label decoding capabilities.
+
+    Combines token-level BIO tagging with a decoder that generates entity type
+    labels autoregressively.
+    """
+
+    config_class = UniEncoderTokenDecoderConfig
+    model_class = UniEncoderTokenDecoderModel
+    ort_model_class = None
+    data_processor_class = UniEncoderTokenDecoderProcessor
+    data_collator_class = UniEncoderTokenDecoderDataCollator
+    decoder_class = TokenGenerativeDecoder
+
+    
 class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     """GLiNER model for both entity recognition and relation extraction.
 
@@ -2759,20 +2785,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
 
     @staticmethod
     def _get_gliner_class(config: GLiNERConfig):
-        """Determine the appropriate GLiNER class based on configuration.
-
-        Args:
-            config: GLiNER configuration object.
-
-        Returns:
-            The appropriate GLiNER class type.
-        """
+        """Determine the appropriate GLiNER class based on configuration."""
         is_token_level = config.span_mode == "token_level"
         has_labels_encoder = config.labels_encoder is not None
         has_labels_decoder = config.labels_decoder is not None
         has_relations = config.relations_layer is not None
-
-        # Priority order: relations > decoder > bi-encoder > token vs span
 
         if has_relations:
             if is_token_level:
@@ -2787,6 +2804,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                     "Using decoder model (labels_encoder will be ignored).",
                     stacklevel=2,
                 )
+            if is_token_level:
+                return UniEncoderTokenDecoderGLiNER
             return UniEncoderSpanDecoderGLiNER
 
         if has_labels_encoder:
@@ -2795,7 +2814,6 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             else:
                 return BiEncoderSpanGLiNER
 
-        # Default: uni-encoder
         if is_token_level:
             return UniEncoderTokenGLiNER
         else:

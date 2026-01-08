@@ -4,7 +4,9 @@ from .collator import (
     UniEncoderSpanDataCollator,
     UniEncoderTokenDataCollator,
     UniEncoderSpanDecoderDataCollator,
+    UniEncoderTokenDecoderDataCollator,
     RelationExtractionSpanDataCollator,
+    RelationExtractionTokenDataCollator
 )
 from .processor import (
     BaseProcessor,
@@ -14,6 +16,7 @@ from .processor import (
     UniEncoderSpanProcessor,
     UniEncoderTokenProcessor,
     UniEncoderSpanDecoderProcessor,
+    UniEncoderTokenDecoderProcessor,
     RelationExtractionSpanProcessor,
     RelationExtractionTokenProcessor,
 )

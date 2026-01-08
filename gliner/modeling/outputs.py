@@ -71,7 +71,6 @@ class GLiNERDecoderOutput(GLiNERBaseOutput):
     decoder_embedding_mask: Optional[torch.LongTensor] = None
     decoder_span_idx: Optional[torch.LongTensor] = None
 
-
 @dataclass
 class GLiNERRelexOutput(GLiNERBaseOutput):
     """Output class for GLiNER models with relation extraction.

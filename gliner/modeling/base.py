@@ -521,16 +521,24 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
                 dropout=config.dropout,
             )
 
-    def get_span_logits(self, scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold):
-        span_logits = None
-        if getattr(self.config, "represent_spans", False):
-            if span_idx is None:
-                span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
-                span_idx = span_idx * span_mask.unsqueeze(-1).long()
+    def get_span_representations(self, scores, span_idx, span_mask, words_embedding, labels, threshold):
+        if span_idx is None:
+            span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
+            span_idx = span_idx * span_mask.unsqueeze(-1).long()
 
+        if getattr(self.config, "represent_spans", False):
             span_rep = self.span_rep_layer(words_embedding, span_idx)
-            span_logits = torch.einsum("BND,BCD->BNC", span_rep, prompts_embedding)
-        return span_logits, span_idx, span_mask
+        else:
+            span_rep = words_embedding[span_idx[:,:, 0]] +  words_embedding[span_idx[:,:, 1]]
+
+            # span_rep = torch.zeros(B, S, D, device=words_embedding.device, dtype=words_embedding.dtype)
+            # for b in range(B):
+            #     for s in range(S):
+            #         if span_mask[b, s]:
+            #             start, end = span_idx[b, s]
+            #             span_rep[b, s] = words_embedding[b, start:end+1].mean(dim=0)
+
+        return span_rep, span_idx, span_mask
 
     def forward(
         self,
@@ -593,10 +601,13 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         # Shape: (batch_size, seq_len, num_classes, 3), 3 - start, end, inside
         scores = self.scorer(words_embedding, prompts_embedding)
 
-        span_logits, span_idx, span_mask = self.get_span_logits(
-            scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold
-        )
-
+        if getattr(self.config, "represent_spans", False):
+            span_rep, span_idx, span_mask = self.get_span_representations(
+                scores, span_idx, span_mask, words_embedding, labels, threshold
+            )
+            span_logits = torch.einsum("BND,BCD->BNC", span_rep, prompts_embedding)
+        else:
+            span_logits, span_idx, span_mask  = None, None, None
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, mask, **kwargs)
@@ -1070,9 +1081,13 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
 
         scores = self.scorer(words_embedding, prompts_embedding)
 
-        span_logits, span_idx, span_mask = self.get_span_logits(
-            scores, span_idx, span_mask, words_embedding, prompts_embedding, labels, threshold
-        )
+        if getattr(self.config, "represent_spans", False):
+            span_rep, span_idx, span_mask = self.get_span_representations(
+                scores, span_idx, span_mask, words_embedding, labels, threshold
+            )
+            span_logits = torch.einsum("BND,BCD->BNC", span_rep, prompts_embedding)
+        else:
+            span_logits, span_idx, span_mask = None, None, None
 
         loss = None
         if labels is not None:
@@ -1119,6 +1134,9 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             cache_dir: Directory for caching pretrained models.
         """
         super().__init__(config, from_pretrained, cache_dir)
+        self.__init_decoder__(config, from_pretrained, cache_dir)
+
+    def __init_decoder__(self, config, from_pretrained, cache_dir):
         self.decoder = Decoder(config, from_pretrained, cache_dir=cache_dir)
         if self.config.hidden_size != self.decoder.decoder_hidden_size:
             self._enc2dec_proj = create_projection_layer(
@@ -1585,6 +1603,356 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
 
         return loss
 
+
+class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderModel):
+    """Token-based NER model with encoder-decoder architecture.
+    
+    This model combines token-level BIO-style classification with a decoder
+    that generates entity type labels autoregressively, enabling more flexible
+    prediction strategies for token-level NER tasks.
+    
+    Inherits from:
+        - UniEncoderTokenModel: Token-level BIO tagging for entities
+        - UniEncoderSpanDecoderModel: Encoder-decoder architecture and decoder utilities
+    
+    Attributes:
+        scorer (Scorer): Scoring layer for computing token-label compatibility.
+        decoder (Decoder): Decoder module for label generation.
+        span_rep_layer (SpanRepLayer): Layer for computing span representations (if represent_spans=True).
+        _enc2dec_proj (Optional[nn.Module]): Projection layer if encoder and decoder
+            dimensions differ.
+    """
+    
+    def __init__(
+        self, config: Any, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]] = None
+    ) -> None:
+        """Initialize the token-level encoder-decoder model.
+        
+        Args:
+            config: Model configuration object.
+            from_pretrained: Whether to load from pretrained weights.
+            cache_dir: Directory for caching pretrained models.
+        """
+        # Initialize through UniEncoderTokenModel's chain to get scorer
+        super().__init__(config, from_pretrained, cache_dir)
+        self.__init_decoder__(config, from_pretrained, cache_dir)
+
+    
+    def select_token_decoder_embedding(
+        self,
+        prompts_embedding: torch.Tensor,
+        prompts_embedding_mask: torch.Tensor,
+        span_logits: Optional[torch.Tensor] = None,
+        span_rep: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        span_labels: Optional[torch.Tensor] = None, 
+        decoder_text_embeds: Optional[torch.Tensor] = None,
+        decoder_words_mask: Optional[torch.Tensor] = None,
+        top_k: Optional[int] = None,
+    ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        """Select entity embeddings for decoder input based on token predictions or labels.
+        
+        This method extracts entity spans from token-level predictions and prepares
+        their representations for the decoder. It can operate in two modes:
+        1. "prompt" mode: Uses entity type embeddings as decoder input.
+        2. "span" mode: Uses contextualized tokens within each detected span as decoder input.
+        
+        Args:
+            prompts_embedding: Entity type embeddings of shape (B, C, D).
+            prompts_embedding_mask: Mask for prompts of shape (B, C).
+            words_embedding: Word-level embeddings of shape (B, W, D).
+            token_scores: Token classification scores of shape (B, W, C, 3).
+            word_mask: Mask for valid words of shape (B, W).
+            span_rep: Span representations (B, S, D).
+            span_idx: Pre-computed span indices of shape (B, S, 2).
+            span_mask: Pre-computed span mask of shape (B, S).
+            decoder_text_embeds: Text embeddings for span mode of shape (B, T, D).
+            decoder_words_mask: Word position mask of shape (B, T).
+            labels: Ground truth token-level labels of shape (B, W, C, 3).
+            threshold: Confidence threshold for selecting spans.
+            top_k: Optional limit on number of spans to select.
+        
+        Returns:
+            Tuple containing:
+                - span_rep_kept: Selected span embeddings for decoder of shape (B, S, T, D)
+                  or None if no valid spans.
+                - span_msk: Mask for selected spans of shape (B, S, T) or None.
+                - span_sel_idx: Original indices of selected spans of shape (B, S) or None.
+        """
+        if self.config.decoder_mode == "prompt":
+            return self.select_decoder_embedding(prompts_embedding, prompts_embedding_mask)[:3]
+        
+        span_scores = torch.sigmoid(span_logits)
+
+        # Flatten span representations for selection
+        B = span_rep.size(0)
+        
+        if span_labels is not None:
+            # During training: select spans where any class is positive (label == 1)
+            span_prob = span_labels.max(-1).values  # (B, S)
+            keep = (span_prob == 1) & span_mask.bool()
+        else:
+            # During inference: use predicted scores
+            span_scores = torch.sigmoid(span_logits).max(-1).values  # (B, S)
+            keep = (span_scores > 0.5) & span_mask.bool
+
+        if top_k:
+            sel_scores = span_scores.masked_fill(~keep, -1.0)
+            top_idx = sel_scores.topk(k=min(top_k, sel_scores.size(1)), dim=1).indices
+            keep.zero_()
+            keep.scatter_(1, top_idx, True)
+
+        # Pack valid spans
+        span_rep_kept, span_msk, span_sel_idx = self.select_decoder_embedding(span_rep, keep.long())
+        
+        if hasattr(self, "_enc2dec_proj"):
+            span_rep_kept = self._enc2dec_proj(span_rep_kept)
+        
+        span_rep_kept = span_rep_kept.unsqueeze(2)
+        span_msk = span_msk.unsqueeze(-1)
+        
+        if decoder_text_embeds is None or decoder_words_mask is None:
+            return span_rep_kept, span_msk, span_sel_idx
+        
+        if span_rep_kept.numel() == 0:
+            return None, None, None
+        
+        decoder_text_embeds = decoder_text_embeds.to(dtype=span_rep_kept.dtype)
+        
+        # Build span representations with context tokens
+        S_kept = span_rep_kept.shape[1]
+        dec_D = span_rep_kept.shape[-1]
+        
+        # Get actual span boundaries from selected indices
+        batch_indices = torch.arange(B, device=span_idx.device).unsqueeze(1).expand(B, S_kept)
+        selected_spans = span_idx[batch_indices, span_sel_idx]  # (B, S_kept, 2)
+        
+        span_start = selected_spans[:, :, 0]  # (B, S_kept)
+        span_end = selected_spans[:, :, 1]    # (B, S_kept)
+        
+        # Determine which decoder tokens belong to each span
+        token_in_span = (decoder_words_mask.unsqueeze(1) >= span_start.unsqueeze(-1)) & (
+            decoder_words_mask.unsqueeze(1) <= span_end.unsqueeze(-1)
+        )
+        
+        tokens_per_span = token_in_span.sum(-1)
+        max_tokens = int(tokens_per_span.max())
+        
+        span_rep_new = span_rep_kept.new_zeros(B, S_kept, max_tokens + 1, dec_D)
+        span_rep_mask = torch.zeros(B, S_kept, max_tokens + 1, dtype=torch.bool, device=decoder_text_embeds.device)
+        
+        left_offset = (max_tokens + 1 - tokens_per_span).clamp(min=0)
+        pos_in_span = (token_in_span.cumsum(-1) - 1).masked_fill(~token_in_span, 0)
+        pos_in_span = pos_in_span + left_offset.unsqueeze(-1)
+        
+        b_idx, s_idx, tok_idx = torch.where(token_in_span)
+        span_rep_new[b_idx, s_idx, pos_in_span[b_idx, s_idx, tok_idx]] = decoder_text_embeds[b_idx, tok_idx]
+        span_rep_mask[b_idx, s_idx, pos_in_span[b_idx, s_idx, tok_idx]] = True
+        
+        kept_pos = (left_offset - 1).clamp(min=0)
+        
+        b_flat = torch.arange(B, device=decoder_text_embeds.device).view(-1, 1).expand(B, S_kept).reshape(-1)
+        s_flat = torch.arange(S_kept, device=decoder_text_embeds.device).view(1, -1).expand(B, S_kept).reshape(-1)
+        t_flat = kept_pos.reshape(-1)
+        
+        span_rep_new[b_flat, s_flat, t_flat] = span_rep_kept.reshape(-1, dec_D)
+        span_rep_mask[b_flat, s_flat, t_flat] = True
+        span_rep_mask = span_rep_mask & span_msk.bool()
+        
+        return span_rep_new, span_rep_mask, span_sel_idx
+    
+    def forward(
+        self,
+        input_ids: Optional[torch.FloatTensor] = None,
+        attention_mask: Optional[torch.LongTensor] = None,
+        decoder_input_ids: Optional[torch.FloatTensor] = None,
+        decoder_attention_mask: Optional[torch.LongTensor] = None,
+        decoder_labels_ids: Optional[torch.FloatTensor] = None,
+        decoder_labels_mask: Optional[torch.LongTensor] = None,
+        decoder_words_mask: Optional[torch.LongTensor] = None,
+        words_embedding: Optional[torch.FloatTensor] = None,
+        mask: Optional[torch.LongTensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        span_labels: Optional[torch.Tensor] = None,
+        prompts_embedding: Optional[torch.FloatTensor] = None,
+        prompts_embedding_mask: Optional[torch.LongTensor] = None,
+        words_mask: Optional[torch.LongTensor] = None,
+        text_lengths: Optional[torch.Tensor] = None,
+        labels: Optional[torch.FloatTensor] = None,
+        decoder_labels: Optional[torch.FloatTensor] = None,
+        threshold: Optional[float] = 0.5,
+        **kwargs: Any,
+    ) -> GLiNERDecoderOutput:
+        """Forward pass through the token-level encoder-decoder model.
+        
+        Args:
+            input_ids: Input token IDs of shape (B, L).
+            attention_mask: Attention mask of shape (B, L).
+            decoder_input_ids: Decoder input IDs for span mode.
+            decoder_attention_mask: Decoder attention mask.
+            decoder_labels_ids: Label token IDs for decoding of shape (M, L).
+            decoder_labels_mask: Mask for decoder labels of shape (M, L).
+            decoder_words_mask: Word position mask for span mode.
+            words_embedding: Pre-computed word embeddings.
+            mask: Mask for words.
+            span_idx: Pre-computed span indices of shape (B, S, 2).
+            span_mask: Pre-computed span mask of shape (B, S).
+            span_labels: Ground truth span labels of shape (B, S, C).
+            prompts_embedding: Pre-computed entity type embeddings.
+            prompts_embedding_mask: Mask for prompts.
+            words_mask: Word boundary mask.
+            text_lengths: Length of each text sequence.
+            labels: Ground truth token-level labels of shape (B, W, C, 3).
+            decoder_labels: Ground truth decoder labels of shape (M, L).
+            threshold: Confidence threshold for span selection.
+            **kwargs: Additional arguments.
+        
+        Returns:
+            GLiNERDecoderOutput containing logits, losses, and decoder information.
+        """
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        
+        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+            input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
+        )
+        
+        if labels is not None:
+            target_W = labels.shape[1]
+            words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
+            
+            target_C = prompts_embedding.size(1)
+            target_C = max(target_C, labels.size(-2))
+            
+            prompts_embedding, prompts_embedding_mask = self._fit_length(
+                prompts_embedding, prompts_embedding_mask, target_C
+            )
+        
+        # Token-level classification: (B, W, C, 3)
+        scores = self.scorer(words_embedding, prompts_embedding)
+        
+        # Get span representations and logits if represent_spans is enabled
+        span_rep, span_idx, span_mask = self.get_span_representations(
+            scores, span_idx, span_mask, words_embedding, labels, threshold
+        )
+        span_logits = torch.einsum("BND,BCD->BNC", span_rep, prompts_embedding)
+
+        # Decoder processing
+        decoder_embedding = decoder_mask = decoder_loss = decoder_span_idx = None
+        if hasattr(self, "decoder"):
+            if self.config.decoder_mode == "span":
+                decoder_text_embeds = self.decoder.ids_to_embeds(decoder_input_ids)
+            else:
+                decoder_text_embeds = None
+            
+            decoder_embedding, decoder_mask, decoder_span_idx = self.select_token_decoder_embedding(
+                prompts_embedding,
+                prompts_embedding_mask,
+                span_logits=span_logits,
+                span_rep=span_rep,
+                span_idx=span_idx,
+                span_mask=span_mask,
+                span_labels=span_labels,
+                decoder_text_embeds=decoder_text_embeds,
+                decoder_words_mask=decoder_words_mask,
+            )
+            
+            if decoder_labels is not None:
+                decoder_loss, _ = self.decode_labels(
+                    decoder_embedding, decoder_mask, decoder_labels_ids, decoder_labels_mask, decoder_labels
+                )
+        
+        # Compute loss
+        loss = None
+        if labels is not None:
+            loss = self.loss(
+                scores, labels, prompts_embedding_mask, mask, 
+                span_logits=span_logits, span_labels=span_labels, span_mask=span_mask,
+                decoder_loss=decoder_loss, **kwargs
+            )
+        
+        output = GLiNERDecoderOutput(
+            logits=scores,
+            loss=loss,
+            decoder_loss=decoder_loss,
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            decoder_embedding=decoder_embedding,
+            decoder_embedding_mask=decoder_mask,
+            decoder_span_idx=decoder_span_idx,
+            words_embedding=words_embedding,
+            mask=mask,
+            span_idx=span_idx,
+            span_logits=span_logits,
+            span_mask=span_mask,
+        )
+        return output
+    
+    def loss(
+        self,
+        scores: torch.Tensor,
+        labels: torch.Tensor,
+        prompts_embedding_mask: torch.Tensor,
+        word_mask: torch.Tensor,
+        alpha: float = -1.0,
+        gamma: float = 0.0,
+        prob_margin: float = 0.0,
+        label_smoothing: float = 0.0,
+        reduction: str = "sum",
+        negatives: float = 1.0,
+        span_logits: Optional[torch.Tensor] = None,
+        span_labels: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        decoder_loss: Optional[torch.Tensor] = None,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Compute combined loss for token classification, spans, and decoder.
+        
+        Args:
+            scores: Predicted token scores of shape (B, W, C, 3).
+            labels: Ground truth token labels of shape (B, W, C, 3).
+            prompts_embedding_mask: Mask for valid entity types of shape (B, C).
+            word_mask: Mask for valid words of shape (B, W).
+            alpha: Focal loss alpha parameter.
+            gamma: Focal loss gamma parameter.
+            prob_margin: Margin for probability adjustment.
+            label_smoothing: Label smoothing factor.
+            reduction: Loss reduction method ('sum' or 'mean').
+            negatives: Negative sampling probability.
+            span_logits: Optional span logits of shape (B, S, C).
+            span_labels: Optional span labels of shape (B, S, C).
+            span_mask: Optional span mask of shape (B, S).
+            decoder_loss: Optional decoder loss to combine.
+            **kwargs: Additional arguments.
+        
+        Returns:
+            Scalar combined loss tensor.
+        """
+        # Token-level loss (use parent's loss function)
+        token_loss = UniEncoderTokenModel.loss(
+            self, scores, labels, prompts_embedding_mask, word_mask,
+            alpha, gamma, prob_margin, label_smoothing, reduction, negatives, **kwargs
+        )
+        
+        # Combine with span loss if available
+        if span_logits is not None and span_labels is not None and span_mask is not None:
+            span_loss = UniEncoderTokenModel.loss(
+                self, span_logits, span_labels, prompts_embedding_mask, span_mask,
+                alpha, gamma, prob_margin, label_smoothing, reduction, negatives, **kwargs
+            )
+            token_loss = self.config.token_loss_coef * token_loss + self.config.span_loss_coef * span_loss
+        
+        # Combine with decoder loss if available
+        if decoder_loss is not None:
+            total_loss = (
+                decoder_loss * self.config.decoder_loss_coef + 
+                token_loss * getattr(self.config, 'token_loss_coef', 1.0)
+            )
+            return total_loss
+        
+        return token_loss
+    
 
 class UniEncoderSpanRelexModel(UniEncoderSpanModel):
     """Span-based NER model with relation extraction capabilities.

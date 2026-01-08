@@ -517,6 +517,14 @@ class UniEncoderSpanDecoderDataCollator(SpanDataCollator):
     pass
 
 
+class UniEncoderTokenDecoderDataCollator(UniEncoderSpanDecoderDataCollator):
+    """
+    Backward compatibility alias for UniEncoderTokenDecoderDataCollator with UniEncoderSpanDecoderDataCollator.
+    """
+
+    pass
+
+
 class UniEncoderTokenDataCollator(TokenDataCollator):
     """
     Backward compatibility alias for TokenDataCollator with UniEncoderTokenProcessor.

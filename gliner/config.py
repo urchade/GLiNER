@@ -174,8 +174,19 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.decoder_loss_coef = decoder_loss_coef
         self.span_loss_coef = span_loss_coef
         self.model_type = "gliner_uni_encoder_span_decoder"
-        if self.span_mode == "token_level":
-            raise ValueError("UniEncoderSpanDecoderConfig requires span_mode != 'token_level'")
+
+
+class UniEncoderTokenDecoderConfig(UniEncoderSpanDecoderConfig):
+    def __init__(
+        self, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.span_mode = "token_level"
+        self.model_type = "gliner_encoder_token_decoder"
+        self.token_loss_coef = token_loss_coef
+        self.span_loss_coef = span_loss_coef
+        self.represent_spans = True
+        self.neg_spans_ratio = neg_spans_ratio
 
 
 class UniEncoderRelexConfig(UniEncoderConfig):
@@ -347,6 +358,7 @@ CONFIG_MAPPING.update(
         "gliner_uni_encoder_span": UniEncoderSpanConfig,
         "gliner_uni_encoder_token": UniEncoderTokenConfig,
         "gliner_uni_encoder_span_decoder": UniEncoderSpanDecoderConfig,
+        "gliner_uni_encoder_token_decoder": UniEncoderTokenDecoderConfig,
         "gliner_uni_encoder_span_relex": UniEncoderSpanRelexConfig,
         "gliner_uni_encoder_token_relex": UniEncoderTokenRelexConfig,
         "gliner_bi_encoder": BiEncoderConfig,

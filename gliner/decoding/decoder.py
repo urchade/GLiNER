@@ -560,7 +560,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             multi_label=multi_label,
         )
 
-
+    
 class SpanRelexDecoder(BaseSpanDecoder):
     """Span decoder with relation extraction support.
 
@@ -1260,3 +1260,174 @@ class TokenRelexDecoder(TokenDecoder):
             )
 
         return spans, relations
+
+
+class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
+    """Token-based decoder with generative label support.
+
+    Extends the token decoder to support generated labels from an encoder-decoder
+    architecture. Supports two decoder modes:
+    - 'prompt': Generated labels replace the original class names
+    - 'span': Generated labels are added as additional fields to each span
+
+    Returns spans in format: (start, end, entity_type, generated_entity_type, score)
+    """
+
+    def decode_generative(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        gen_labels: List[str],
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+    ) -> List[List[tuple]]:
+        """Decode model output with generated labels.
+
+        Handles both 'prompt' and 'span' decoder modes:
+        - prompt mode: Generated labels replace class names in id_to_classes
+        - span mode: Generated labels are added to span tuples via span_label_map
+
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
+                class IDs to class names.
+            model_output (torch.Tensor): Raw logits from the model with shape (B, W, C, 3).
+            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.
+            sel_idx (Optional[torch.LongTensor]): Tensor of shape (B, M) with selected
+                span indices. Required for span mode, unused for prompt mode.
+            num_gen_sequences (int): Number of label sequences generated per span.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for span predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            span_logits (torch.Tensor, optional): Span classification logits.
+            span_idx (torch.Tensor, optional): Span indices.
+            span_mask (torch.Tensor, optional): Span mask.
+
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples with generated labels.
+        """
+        B = model_output.size(0)
+
+        # Handle prompt mode: update id_to_classes with generated labels
+        if self.config.decoder_mode == "prompt":
+            id_to_classes = self._update_id_to_classes_with_generated(id_to_classes, gen_labels, B)
+            span_label_maps = [{} for _ in range(B)]
+
+        # Handle span mode: build span_label_map from sel_idx and gen_labels
+        elif self.config.decoder_mode == "span":
+            if sel_idx is not None:
+                span_label_maps = self._build_span_label_map_for_batch(sel_idx, gen_labels, num_gen_sequences)
+            else:
+                span_label_maps = [{} for _ in range(B)]
+        else:
+            span_label_maps = [{} for _ in range(B)]
+
+
+        batch_size = span_logits.size(0)
+        spans = []
+
+        span_probs = torch.sigmoid(span_logits)
+
+        for i in range(batch_size):
+            id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            span_label_map_i = span_label_maps[i]
+            span_scores = []
+
+            valid_mask = span_mask[i]
+            valid_indices = torch.where(valid_mask)[0]
+
+            for span_pos in valid_indices:
+                span_start = span_idx[i, span_pos, 0].item()
+                span_end = span_idx[i, span_pos, 1].item()
+
+                probs = span_probs[i, span_pos]
+                class_indices = torch.where(probs > threshold)[0]
+
+                for class_idx in class_indices:
+                    class_id = class_idx.item() + 1
+                    if class_id in id_to_class_i:
+                        entity_type = id_to_class_i[class_id]
+                        score = probs[class_idx].item()
+                        gen_label = span_label_map_i.get(span_pos.item())
+                        span_scores.append((span_start, span_end, entity_type, gen_label, score))
+
+            span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+            spans.append(span_i)
+
+        return spans
+
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: Optional[torch.Tensor] = None,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        gen_labels: Optional[List[str]] = None,
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> List[List[tuple]]:
+        """Decode model output, with optional generative label support.
+
+        If gen_labels are provided and decoder has a labels_decoder, uses generative
+        decoding. Otherwise falls back to standard token decoding.
+
+        Args:
+            tokens: Tokenized input text.
+            id_to_classes: Class ID to name mapping.
+            model_output: Token-level logits (B, W, C, 3).
+            flat_ner: Whether to enforce non-overlapping spans.
+            threshold: Confidence threshold.
+            multi_label: Allow multiple labels per span.
+            gen_labels: Generated labels from decoder.
+            sel_idx: Selected span indices for span mode.
+            num_gen_sequences: Number of sequences per span.
+            span_logits: Span classification logits.
+            span_idx: Span indices.
+            span_mask: Span mask.
+            **kwargs: Additional arguments.
+
+        Returns:
+            List of span tuples, with generated labels if available.
+        """
+        # Use generative decoding if labels_decoder is configured and gen_labels provided
+        if self.config.labels_decoder is not None and gen_labels is not None:
+            return self.decode_generative(
+                tokens=tokens,
+                id_to_classes=id_to_classes,
+                model_output=model_output,
+                gen_labels=gen_labels,
+                sel_idx=sel_idx,
+                num_gen_sequences=num_gen_sequences,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+                span_logits=span_logits,
+                span_idx=span_idx,
+                span_mask=span_mask,
+            )
+
+        # Fall back to standard decoding without generative labels
+        return super().decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            span_logits=span_logits,
+            span_idx=span_idx,
+            span_mask=span_mask,
+        )

@@ -7,5 +7,7 @@ from .base import (
     UniEncoderSpanModel,
     UniEncoderTokenModel,
     UniEncoderSpanRelexModel,
+    UniEncoderTokenRelexModel,
     UniEncoderSpanDecoderModel,
+    UniEncoderTokenDecoderModel
 )
