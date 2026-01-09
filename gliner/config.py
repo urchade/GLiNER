@@ -177,9 +177,7 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
 
 
 class UniEncoderTokenDecoderConfig(UniEncoderSpanDecoderConfig):
-    def __init__(
-        self, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs
-    ):
+    def __init__(self, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_encoder_token_decoder"

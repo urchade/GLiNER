@@ -560,7 +560,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             multi_label=multi_label,
         )
 
-    
+
 class SpanRelexDecoder(BaseSpanDecoder):
     """Span decoder with relation extraction support.
 
@@ -1328,7 +1328,6 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
                 span_label_maps = [{} for _ in range(B)]
         else:
             span_label_maps = [{} for _ in range(B)]
-
 
         batch_size = span_logits.size(0)
         spans = []

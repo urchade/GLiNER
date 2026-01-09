@@ -9,5 +9,5 @@ from .base import (
     UniEncoderSpanRelexModel,
     UniEncoderTokenRelexModel,
     UniEncoderSpanDecoderModel,
-    UniEncoderTokenDecoderModel
+    UniEncoderTokenDecoderModel,
 )

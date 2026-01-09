@@ -33,16 +33,16 @@ from .config import (
     UniEncoderSpanRelexConfig,
     UniEncoderTokenRelexConfig,
     UniEncoderSpanDecoderConfig,
-    UniEncoderTokenDecoderConfig
+    UniEncoderTokenDecoderConfig,
 )
 from .decoding import (
-                       SpanDecoder, 
-                       TokenDecoder, 
-                       SpanRelexDecoder, 
-                       TokenRelexDecoder, 
-                       SpanGenerativeDecoder, 
-                       TokenGenerativeDecoder
-                       )
+    SpanDecoder,
+    TokenDecoder,
+    SpanRelexDecoder,
+    TokenRelexDecoder,
+    SpanGenerativeDecoder,
+    TokenGenerativeDecoder,
+)
 from .training import Trainer, TrainingArguments
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
@@ -65,7 +65,7 @@ from .modeling.base import (
     UniEncoderSpanRelexModel,
     UniEncoderTokenRelexModel,
     UniEncoderSpanDecoderModel,
-    UniEncoderTokenDecoderModel
+    UniEncoderTokenDecoderModel,
 )
 from .data_processing import (
     BaseProcessor,
@@ -74,8 +74,8 @@ from .data_processing import (
     UniEncoderSpanProcessor,
     UniEncoderTokenProcessor,
     UniEncoderSpanDecoderProcessor,
-    UniEncoderTokenDecoderProcessor,
     RelationExtractionSpanProcessor,
+    UniEncoderTokenDecoderProcessor,
     RelationExtractionTokenProcessor,
 )
 from .data_processing.collator import (
@@ -84,8 +84,8 @@ from .data_processing.collator import (
     UniEncoderSpanDataCollator,
     UniEncoderTokenDataCollator,
     UniEncoderSpanDecoderDataCollator,
-    UniEncoderTokenDecoderDataCollator,
     RelationExtractionSpanDataCollator,
+    UniEncoderTokenDecoderDataCollator,
     RelationExtractionTokenDataCollator,
 )
 from .data_processing.tokenizer import WordsSplitter
@@ -2137,7 +2137,7 @@ class UniEncoderTokenDecoderGLiNER(UniEncoderSpanDecoderGLiNER):
     data_collator_class = UniEncoderTokenDecoderDataCollator
     decoder_class = TokenGenerativeDecoder
 
-    
+
 class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     """GLiNER model for both entity recognition and relation extraction.
 
