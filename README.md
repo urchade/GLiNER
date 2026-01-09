@@ -93,7 +93,7 @@ GLiNER was originally developed by:
       <td align="center">
         <strong>Urchade Zaratiana</strong><br>
         <em>Member of technical staff at Fastino</em><br>
-        <a href="https://www.linkedin.com/in/urchade-zaratiana/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
+        <a href="https://www.linkedin.com/in/urchade-zaratiana-36ba9814b/"><img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" alt="LinkedIn" /></a>
       </td>
       <td align="center">
         <strong>Ihor Stepanov</strong><br>
