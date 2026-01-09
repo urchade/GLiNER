@@ -48,7 +48,7 @@ def main(cfg_path: str):
     # Build model
     model = build_model(model_cfg, train_cfg)
     print(f"Model type: {model.__class__.__name__}")
-
+    
     # Get freeze components
     freeze_components = train_cfg.get("freeze_components", None)
     if freeze_components:
@@ -56,7 +56,7 @@ def main(cfg_path: str):
 
     # Train
     print("\nStarting training...")
-    trainer = model.train_model(
+    model.train_model(
         train_dataset=train_dataset,
         eval_dataset=eval_dataset,
         output_dir="models",
@@ -87,7 +87,6 @@ def main(cfg_path: str):
         freeze_components=freeze_components,
     )
 
-    trainer.save_model()
     print(f"\n✓ Training complete! Model saved to {output_dir}")
 
 
