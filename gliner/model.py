@@ -3060,6 +3060,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 "description": "Span-based NER with label generation decoder",
                 "config": {"span_mode": "span_level", "labels_decoder": "required", "relations_layer": None},
             },
+            "gliner_uni_encoder_token_decoder": {
+                "class": UniEncoderTokenDecoderGLiNER,
+                "description": "Token-level NER with label generation decoder",
+                "config": {"span_mode": "token_level", "labels_decoder": "required", "relations_layer": None},
+            },
             "gliner_uni_encoder_span_relex": {
                 "class": UniEncoderSpanRelexGLiNER,
                 "description": "Joint entity and relation extraction with single encoder",
@@ -3087,6 +3092,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             "BiEncoderSpanGLiNER": "gliner_bi_encoder_span",
             "BiEncoderTokenGLiNER": "gliner_bi_encoder_token",
             "UniEncoderSpanDecoderGLiNER": "gliner_uni_encoder_span_decoder",
+            "UniEncoderTokenDecoderGLiNER": "gliner_uni_encoder_token_decoder",
             "UniEncoderSpanRelexGLiNER": "gliner_uni_encoder_span_relex",
             "UniEncoderTokenRelexGLiNER": "gliner_uni_encoder_token_relex",
         }

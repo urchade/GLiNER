@@ -7,6 +7,7 @@ model:
   hidden_size: 768
   dropout: 0.3
   fine_tune: true
+  represent_spans: false
   subtoken_pooling: first
   fuse_layers: false
   post_fusion_schema: null  # e.g., "l2l-l2t-t2t"

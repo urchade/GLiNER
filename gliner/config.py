@@ -35,6 +35,10 @@ class BaseGLiNERConfig(PretrainedConfig):
         ent_token: str = "<<ENT>>",
         sep_token: str = "<<SEP>>",
         _attn_implementation: Optional[str] = None,
+        token_loss_coef: float = 1.0,
+        span_loss_coef: float = 1.0,
+        represent_spans: bool = False,
+        neg_spans_ratio: float = 1.0,
         **kwargs,
     ):
         """Initialize BaseGLiNERConfig.
@@ -64,6 +68,10 @@ class BaseGLiNERConfig(PretrainedConfig):
             ent_token (str, optional): Entity marker token. Defaults to "<<ENT>>".
             sep_token (str, optional): Separator token. Defaults to "<<SEP>>".
             _attn_implementation (str, optional): Attention implementation. Defaults to None.
+            token_loss_coef (float, optional): Token loss coefficient. Defaults to 1.0.
+            span_loss_coef (float, optional): Span loss coefficient. Defaults to 1.0.
+            represent_spans (bool, optional): Whether to represent spans. Defaults to False.
+            neg_spans_ratio (float, optional): Ratio of negative spans. Defaults to 1.0.
             **kwargs: Additional keyword arguments passed to parent class.
         """
         super().__init__(**kwargs)
@@ -96,6 +104,10 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.ent_token = ent_token
         self.sep_token = sep_token
         self._attn_implementation = _attn_implementation
+        self.token_loss_coef = token_loss_coef
+        self.span_loss_coef = span_loss_coef
+        self.represent_spans = represent_spans
+        self.neg_spans_ratio = neg_spans_ratio
 
 
 class UniEncoderConfig(BaseGLiNERConfig):
@@ -119,16 +131,10 @@ class UniEncoderSpanConfig(UniEncoderConfig):
 class UniEncoderTokenConfig(UniEncoderConfig):
     """Configuration for uni-encoder token-based GLiNER model."""
 
-    def __init__(
-        self, represent_spans: bool = False, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs
-    ):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_uni_encoder_token"
-        self.token_loss_coef = token_loss_coef
-        self.span_loss_coef = span_loss_coef
-        self.represent_spans = represent_spans
-        self.neg_spans_ratio = neg_spans_ratio
 
 
 class UniEncoderSpanDecoderConfig(UniEncoderConfig):
@@ -142,7 +148,6 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         blank_entity_prob: float = 0.1,
         labels_decoder_config: Optional[dict] = None,
         decoder_loss_coef=0.5,
-        span_loss_coef=0.5,
         **kwargs,
     ):
         """Initialize UniEncoderSpanDecoderConfig.
@@ -154,7 +159,6 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
             blank_entity_prob (float, optional): Probability of blank entities. Defaults to 0.1.
             labels_decoder_config (dict, optional): Decoder config dict. Defaults to None.
             decoder_loss_coef (float, optional): Decoder loss coefficient. Defaults to 0.5.
-            span_loss_coef (float, optional): Span loss coefficient. Defaults to 0.5.
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 
         Raises:
@@ -172,19 +176,15 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
         self.decoder_mode = decoder_mode  # 'prompt' or 'span'
         self.full_decoder_context = full_decoder_context
         self.decoder_loss_coef = decoder_loss_coef
-        self.span_loss_coef = span_loss_coef
         self.model_type = "gliner_uni_encoder_span_decoder"
 
 
 class UniEncoderTokenDecoderConfig(UniEncoderSpanDecoderConfig):
-    def __init__(self, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_encoder_token_decoder"
-        self.token_loss_coef = token_loss_coef
-        self.span_loss_coef = span_loss_coef
-        self.represent_spans = True
-        self.neg_spans_ratio = neg_spans_ratio
+        self.represent_spans = True  # hardcoded to True for token decoder
 
 
 class UniEncoderRelexConfig(UniEncoderConfig):
@@ -195,7 +195,6 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         embed_rel_token: bool = True,
         rel_token_index: int = -1,
         rel_token: str = "<<REL>>",
-        span_loss_coef=1.0,
         adjacency_loss_coef=1.0,
         relation_loss_coef=1.0,
         **kwargs,
@@ -210,7 +209,6 @@ class UniEncoderRelexConfig(UniEncoderConfig):
             embed_rel_token (bool, optional): Whether to embed relation tokens. Defaults to True.
             rel_token_index (int, optional): Index of relation token. Defaults to -1.
             rel_token (str, optional): Relation marker token. Defaults to "<<REL>>".
-            span_loss_coef (float, optional): Span representaton loss coefficient. Defaults to 1.0.
             adjacency_loss_coef (float, optional): Adjacency modeling loss coefficient. Defaults to 1.0.
             relation_loss_coef (float, optional): Relation representaton loss coefficient. Defaults to 1.0.
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
@@ -225,7 +223,6 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         self.embed_rel_token = embed_rel_token
         self.rel_token_index = rel_token_index
         self.rel_token = rel_token
-        self.span_loss_coef = span_loss_coef
         self.adjacency_loss_coef = adjacency_loss_coef
         self.relation_loss_coef = relation_loss_coef
 
@@ -284,16 +281,10 @@ class BiEncoderSpanConfig(BiEncoderConfig):
 class BiEncoderTokenConfig(BiEncoderConfig):
     """Configuration for bi-encoder token-based GLiNER model."""
 
-    def __init__(
-        self, represent_spans: bool = False, token_loss_coef=1.0, span_loss_coef=1.0, neg_spans_ratio=1.0, **kwargs
-    ):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.span_mode = "token_level"
         self.model_type = "gliner_bi_encoder_token"
-        self.token_loss_coef = token_loss_coef
-        self.span_loss_coef = span_loss_coef
-        self.represent_spans = represent_spans
-        self.neg_spans_ratio = neg_spans_ratio
 
 
 class GLiNERConfig(BaseGLiNERConfig):
@@ -333,7 +324,10 @@ class GLiNERConfig(BaseGLiNERConfig):
     def model_type(self):
         """Auto-detect model type based on configuration."""
         if self.labels_decoder:
-            return "gliner_uni_encoder_span_decoder"
+            if self.span_mode == 'token-level':
+                return "gliner_uni_encoder_token_decoder"
+            else:
+                return "gliner_uni_encoder_span_decoder"
         elif self.labels_encoder:
             return "gliner_bi_encoder_span" if self.span_mode != "token-level" else "gliner_bi_encoder_token"
         elif self.relations_layer is not None:
