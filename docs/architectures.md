@@ -21,7 +21,9 @@ The GLiNER framework now supports multiple architecture variants, each optimized
 | **BiEncoderSpan** | Separate encoders for text & labels | Span-level | Pre-compute label embeddings, handles 100+ entity types | Many entity types, production deployment |
 | **BiEncoderToken** | Separate encoders for text & labels | Token-level | Combines bi-encoder efficiency with token-level prediction | Long entities with many types |
 | **UniEncoderSpanDecoder** | Single encoder + generative decoder | Span-level with generation | Generates entity labels, open vocabulary | Open-domain NER, label discovery |
+| **UniEncoderTokenDecoder** | Single encoder + generative decoder | Token-level with generation | Token-level detection + label generation | Long entities with open vocabulary |
 | **UniEncoderSpanRelex** | Single encoder + relation layers | Span-level + relations | Joint entity and relation extraction | Knowledge graph construction, IE |
+| **UniEncoderTokenRelex** | Single encoder + relation layers | Token-level + relations | Token-level entities with relation extraction | Long entities with relations |
 
 The framework automatically selects the appropriate architecture based on your model configuration, providing a unified API across all variants.
 
@@ -243,6 +245,95 @@ for entity in entities[0]:
         print(f"  Generated: {entity['generated_labels']}")
 ```
 
+## GLiNER Token-Level with Generative Decoder (UniEncoderTokenDecoder)
+
+The UniEncoderTokenDecoder architecture combines token-level BIO tagging with a generative decoder, offering the best of both worlds: the ability to handle long entity spans (from token-level prediction) and open-vocabulary entity typing (from the generative decoder).
+
+### Architecture Overview
+
+The architecture extends UniEncoderToken with decoder capabilities:
+1. **Token Encoder**: Standard GLiNER token-based encoder with BIO tagging for entity boundary detection
+2. **Span Representation Layer**: Converts detected token sequences into span representations
+3. **Generative Decoder**: GPT-2 or similar decoder that generates entity type labels for detected spans
+
+### Key Differences from UniEncoderSpanDecoder
+
+| Aspect | UniEncoderSpanDecoder | UniEncoderTokenDecoder |
+|--------|----------------------|------------------------|
+| Entity Detection | Span enumeration (max width 12) | Token-level BIO tagging |
+| Long Entities | Limited by max span width | No length limitation |
+| Computation | O(n × max_width) spans | O(n) tokens |
+| Best For | Standard NER entities | Long-form extraction + label generation |
+
+### Architecture Details
+
+**Token-Level Detection**:
+- Uses the Scorer module to compute token-label compatibility scores
+- Produces three logits per token per class: start, inside, end (BIO-style)
+- Entities are extracted by finding contiguous sequences of positive predictions
+
+**Span Representation**:
+- Detected token sequences are converted to span representations
+- Optional `represent_spans` mode uses a dedicated SpanRepLayer for richer representations
+- Span representations are then fed to the decoder for label generation
+
+**Training Objective**:
+- Multi-component loss:
+  - Token classification loss (`token_loss_coef`)
+  - Span classification loss (`span_loss_coef`)
+  - Decoder generation loss (`decoder_loss_coef`)
+
+### Configuration
+
+```python
+from gliner import GLiNERConfig
+
+config = GLiNERConfig(
+    model_name="microsoft/deberta-v3-small",
+    span_mode="token_level",
+    labels_decoder="gpt2",  # Enables decoder
+    decoder_mode="span",    # or "prompt"
+    token_loss_coef=1.0,
+    span_loss_coef=1.0,
+    decoder_loss_coef=0.5,
+    represent_spans=True,   # Use SpanRepLayer for span representations
+)
+```
+
+### Use Cases
+
+- **Long entity extraction with open vocabulary**: Extract multi-sentence entities while generating appropriate labels
+- **Extractive summarization with typing**: Identify summary-worthy spans and label their semantic type
+- **Document-level entity typing**: Handle entities that span multiple clauses or sentences
+- **Flexible entity annotation**: Combine precise boundary detection with descriptive type generation
+
+### Example Usage
+
+```python
+from gliner import GLiNER
+
+# Load a token-level decoder model
+model = GLiNER.from_pretrained("knowledgator/gliner-token-decoder-v1.0")
+
+text = """The Paris Agreement, adopted in December 2015 at the 21st Conference 
+of the Parties to the United Nations Framework Convention on Climate Change, 
+represents a landmark international accord on climate action."""
+
+# Extract long entities with generated labels
+entities = model.inference(
+    [text],
+    labels=["entity"],
+    gen_constraints=["agreement", "organization", "event", "topic"],
+    num_gen_sequences=1
+)
+
+for entity in entities[0]:
+    print(f"Entity: {entity['text'][:50]}...")
+    print(f"  Label: {entity['label']}")
+    if 'generated_labels' in entity:
+        print(f"  Generated: {entity['generated_labels']}")
+```
+
 ## GLiNER for Relation Extraction (UniEncoderSpanRelex)
 
 The UniEncoderSpanRelex architecture extends GLiNER to perform joint entity and relation extraction, enabling the model to identify both entities and the relationships between them in a single forward pass.
@@ -361,6 +452,108 @@ for relation in relations[0]:
 }
 ```
 
+## GLiNER Token-Level for Relation Extraction (UniEncoderTokenRelex)
+
+The UniEncoderTokenRelex architecture combines token-level entity detection with relation extraction capabilities, enabling joint extraction of long-form entities and their relationships.
+
+### Architecture Overview
+
+The architecture extends UniEncoderToken with relation extraction components:
+
+1. **Token Encoder**: Standard GLiNER token-based encoder with BIO tagging
+2. **Span Representation Layer**: Converts detected token sequences into entity representations
+3. **Relation Representation Layer**: Computes pairwise entity representations and adjacency predictions
+4. **Relation Classification Layer**: Classifies relation types between entity pairs
+
+### Key Differences from UniEncoderSpanRelex
+
+| Aspect | UniEncoderSpanRelex | UniEncoderTokenRelex |
+|--------|---------------------|----------------------|
+| Entity Detection | Span enumeration | Token-level BIO tagging |
+| Long Entities | Limited by max span width | No length limitation |
+| Entity Boundaries | Explicit span indices | Derived from token predictions |
+| Best For | Standard entity-relation extraction | Long entities with relations |
+
+### Architecture Details
+
+**Entity Detection**:
+- Uses the Scorer module for token-level classification (start, inside, end)
+- Entity spans are extracted from contiguous positive predictions
+- No maximum span width limitation
+
+**Relation Extraction**:
+- Same relation layers as UniEncoderSpanRelex
+- Relations computed between entity representations derived from token sequences
+- Supports both concatenation and triple scoring methods
+
+**Training Objective**:
+- Multi-component loss:
+  - Token classification loss (for entity boundaries)
+  - Adjacency loss (for entity pair connectivity)
+  - Relation classification loss (for relation types)
+
+### Configuration
+
+```python
+from gliner import GLiNERConfig
+
+config = GLiNERConfig(
+    model_name="microsoft/deberta-v3-small",
+    span_mode="token_level",
+    relations_layer="biaffine",  # or "concat"
+    triples_layer="TransE",      # Optional: for triple scoring
+    span_loss_coef=1.0,
+    adjacency_loss_coef=1.0,
+    relation_loss_coef=1.0,
+)
+```
+
+### Use Cases
+
+- **Scientific IE**: Extract long entity mentions (chemical compounds, gene names) and their relationships
+- **Legal Document Analysis**: Identify parties, clauses, and their legal relationships
+- **Medical Record Processing**: Extract symptoms, treatments, and their clinical relationships
+- **News Event Extraction**: Identify event participants and their roles across long descriptions
+
+### Example Usage
+
+```python
+from gliner import GLiNER
+
+# Load a token-level relation extraction model
+model = GLiNER.from_pretrained("knowledgator/gliner-token-relex-v1.0")
+
+text = """The Phase III clinical trial conducted by Pfizer and BioNTech 
+demonstrated that the BNT162b2 vaccine achieved 95% efficacy against 
+COVID-19 in participants without prior infection."""
+
+# Define entity and relation types
+entity_labels = ["organization", "vaccine", "disease", "metric"]
+relation_labels = ["developed_by", "effective_against", "measured_as"]
+
+# Extract entities and relations
+entities, relations = model.inference(
+    [text],
+    labels=entity_labels,
+    relations=relation_labels,
+    threshold=0.5,
+    relation_threshold=0.5
+)
+
+# Display results
+print("Entities:")
+for entity in entities[0]:
+    print(f"  {entity['text']} ({entity['label']})")
+
+print("\nRelations:")
+for relation in relations[0]:
+    print(f"  {relation['head']['text']} --[{relation['relation']}]--> {relation['tail']['text']}")
+```
+
+### Output Format
+
+Same as UniEncoderSpanRelex - entities and relations are returned in identical formats, ensuring API consistency across architectures.
+
 ## Choosing the Right Architecture
 
 Here's a quick guide to selecting the appropriate GLiNER architecture:
@@ -372,8 +565,35 @@ Here's a quick guide to selecting the appropriate GLiNER architecture:
 | Many entity types (50-200+) | BiEncoderSpan or BiEncoderToken | Pre-compute labels, handles many types |
 | Production with fixed schema | BiEncoder variants | Cache label embeddings for speed |
 | Open-domain, unknown types | UniEncoderSpanDecoder | Generate labels on-the-fly |
+| Long entities + open vocabulary | UniEncoderTokenDecoder | Token-level detection with label generation |
 | Knowledge graph extraction | UniEncoderSpanRelex | Joint entity and relation extraction |
+| Long entities with relations | UniEncoderTokenRelex | Token-level entities with relation extraction |
 | Both long entities + many types | BiEncoderToken | Combines both advantages |
+
+### Decision Flowchart
+
+```
+Start
+  │
+  ├─ Need relation extraction?
+  │   ├─ Yes: Long entities expected?
+  │   │   ├─ Yes → UniEncoderTokenRelex
+  │   │   └─ No → UniEncoderSpanRelex
+  │   │
+  │   └─ No: Need open vocabulary labels?
+  │       ├─ Yes: Long entities expected?
+  │       │   ├─ Yes → UniEncoderTokenDecoder
+  │       │   └─ No → UniEncoderSpanDecoder
+  │       │
+  │       └─ No: Many entity types (>30)?
+  │           ├─ Yes: Long entities expected?
+  │           │   ├─ Yes → BiEncoderToken
+  │           │   └─ No → BiEncoderSpan
+  │           │
+  │           └─ No: Long entities expected?
+  │               ├─ Yes → UniEncoderToken
+  │               └─ No → UniEncoderSpan
+```
 
 ## References
 - The Intro section is based on the [Shahrukh Khan](https://www.linkedin.com/in/shahrukhx01/) article [Illustrated GLINER](https://medium.com/@shahrukhx01/illustrated-gliner-e6971e4c8c52) and placed into documentation with consent of the author.

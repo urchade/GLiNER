@@ -203,6 +203,7 @@ class BaseRelexEvaluator(BaseEvaluator):
         The input format expects entity indices rather than entity spans directly.
         Entity spans are looked up from the entity list using these indices.
     """
+
     def get_ground_truth(self, ents, rels):
         """Extract ground truth relations in evaluation format.
 

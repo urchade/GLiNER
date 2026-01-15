@@ -8,6 +8,7 @@ model:
   fine_tune: true
   subtoken_pooling: first
   fuse_layers: false
+  represent_spans: false
   post_fusion_schema: null  # e.g., "l2l-l2t-t2t"
   span_mode: markerV0  # Options: token_level | markerV0
   max_types: 100

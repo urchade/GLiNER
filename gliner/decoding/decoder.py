@@ -827,7 +827,7 @@ class TokenDecoder(BaseDecoder):
     Token-based decoder for sequence labeling tasks.
 
     Uses BIO-style tagging with separate start, end, and inside predictions
-    to identify entity spans.
+    to identify entity spans. Can also decode from span-level predictions.
     """
 
     def _get_indices_above_threshold(self, scores: torch.Tensor, threshold: float) -> List[torch.Tensor]:
@@ -889,50 +889,544 @@ class TokenDecoder(BaseDecoder):
                     span_i.append((st, ed, id_to_classes[cls_st + 1], spn_score))
         return span_i
 
-    def decode(
+    def _decode_from_spans(
         self,
         tokens: List[List[str]],
         id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        model_output: torch.Tensor,
+        span_logits: torch.Tensor,
+        span_idx: torch.Tensor,
+        span_mask: torch.Tensor,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        **kwargs,
     ) -> List[List[tuple]]:
         """
-        Decode token-level predictions to extract spans.
+        Decode from span-level predictions.
 
         Args:
             tokens (List[List[str]]): Tokenized input text for each sample in the batch.
             id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
                 class IDs to class names.
-            model_output (torch.Tensor): Raw logits from the model with shape ( B, L, C, 3),
-                where the first dimension represents [start, end, inside] predictions.
+            span_logits (torch.Tensor): Span classification logits with shape (B, S, C),
+                where B is batch size, S is max spans, C is number of classes.
+            span_idx (torch.Tensor): Span indices with shape (B, S, 2), containing
+                [start, end] positions for each span.
+            span_mask (torch.Tensor): Boolean mask with shape (B, S) indicating
+                valid spans.
             flat_ner (bool): Whether to enforce non-overlapping spans.
             threshold (float): Confidence threshold for predictions.
             multi_label (bool): Whether to allow multiple labels per span.
-            **kwargs: Additional keyword arguments (unused).
 
         Returns:
             List[List[tuple]]: For each sample, list of span tuples in format
                 (start, end, entity_type, None, score).
         """
-        model_output = model_output.permute(3, 0, 1, 2)
-        scores_start, scores_end, scores_inside = model_output
+        batch_size = span_logits.size(0)
         spans = []
 
-        for i, _ in enumerate(tokens):
+        # Apply sigmoid to get probabilities
+        span_probs = torch.sigmoid(span_logits)
+
+        for i in range(batch_size):
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
-            span_scores = self._calculate_span_score(
-                self._get_indices_above_threshold(scores_start[i], threshold),
-                self._get_indices_above_threshold(scores_end[i], threshold),
-                torch.sigmoid(scores_inside[i]),
-                torch.sigmoid(scores_start[i]),
-                torch.sigmoid(scores_end[i]),
-                id_to_class_i,
-                threshold,
+            span_scores = []
+
+            # Get valid spans for this sample
+            valid_mask = span_mask[i]
+            valid_indices = torch.where(valid_mask)[0]
+
+            for span_pos in valid_indices:
+                span_start = span_idx[i, span_pos, 0].item()
+                span_end = span_idx[i, span_pos, 1].item()
+
+                # Get probabilities for all classes for this span
+                probs = span_probs[i, span_pos]
+
+                # Find classes above threshold
+                class_indices = torch.where(probs > threshold)[0]
+
+                for class_idx in class_indices:
+                    class_id = class_idx.item() + 1  # Convert to 1-indexed
+                    if class_id in id_to_class_i:
+                        entity_type = id_to_class_i[class_id]
+                        score = probs[class_idx].item()
+                        span_scores.append((span_start, span_end, entity_type, score))
+
+            # Apply greedy search to handle overlapping spans if needed
+            span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+            spans.append(span_i)
+        return spans
+
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: Optional[torch.Tensor] = None,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> List[List[tuple]]:
+        """
+        Decode predictions to extract spans.
+
+        Supports two decoding modes:
+        1. Token-level BIO decoding (default): Uses model_output with start/end/inside predictions
+        2. Span-level decoding: Uses span_logits, span_idx, and span_mask
+
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
+                class IDs to class names.
+            model_output (torch.Tensor, optional): Raw logits from the model with shape
+                (B, L, C, 3), where the last dimension represents [start, end, inside]
+                predictions. Used for token-level decoding.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            span_logits (torch.Tensor, optional): Span classification logits with shape
+                (B, S, C). Used for span-level decoding.
+            span_idx (torch.Tensor, optional): Span indices with shape (B, S, 2).
+                Used for span-level decoding.
+            span_mask (torch.Tensor, optional): Boolean mask with shape (B, S).
+                Used for span-level decoding.
+            **kwargs: Additional keyword arguments (unused).
+
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples in format
+                (start, end, entity_type, None, score).
+
+        Raises:
+            ValueError: If neither model_output nor span-level inputs are provided,
+                or if span-level inputs are incomplete.
+        """
+        # Check if span-level decoding is requested
+        if span_logits is not None and span_idx is not None and span_mask is not None:
+            return self._decode_from_spans(
+                tokens=tokens,
+                id_to_classes=id_to_classes,
+                span_logits=span_logits,
+                span_idx=span_idx,
+                span_mask=span_mask,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
             )
+
+        # Check if token-level decoding is requested
+        if model_output is not None:
+            model_output = model_output.permute(3, 0, 1, 2)
+            scores_start, scores_end, scores_inside = model_output
+            spans = []
+
+            for i, _ in enumerate(tokens):
+                id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+                span_scores = self._calculate_span_score(
+                    self._get_indices_above_threshold(scores_start[i], threshold),
+                    self._get_indices_above_threshold(scores_end[i], threshold),
+                    torch.sigmoid(scores_inside[i]),
+                    torch.sigmoid(scores_start[i]),
+                    torch.sigmoid(scores_end[i]),
+                    id_to_class_i,
+                    threshold,
+                )
+                span_i = self.greedy_search(span_scores, flat_ner, multi_label)
+                spans.append(span_i)
+            return spans
+
+        # Neither decoding mode has sufficient inputs
+        if span_logits is not None or span_idx is not None or span_mask is not None:
+            raise ValueError(
+                "For span-level decoding, all three parameters must be provided: span_logits, span_idx, and span_mask"
+            )
+
+        raise ValueError(
+            "Either model_output (for token-level decoding) or "
+            "(span_logits, span_idx, span_mask) (for span-level decoding) must be provided"
+        )
+
+
+class TokenRelexDecoder(TokenDecoder):
+    """Token-based decoder with relation extraction support.
+
+    Extends the token-based BIO decoder to decode both entity spans and the relations
+    between them. Entity spans are extracted first using BIO-style tagging logic,
+    then relations are decoded by identifying pairs of entities and their
+    relationship types based on model predictions.
+
+    The decoder supports:
+    - Entity span extraction via BIO tagging with confidence thresholding
+    - Relation extraction between detected entities
+    - Flexible entity and relation label mappings (per-sample or global)
+    - Optional flat NER (non-overlapping entities)
+    - Multi-label entity classification
+    """
+
+    def _decode_relations(
+        self,
+        spans: List[List[tuple]],
+        rel_idx: Optional[torch.Tensor],
+        rel_logits: Optional[torch.Tensor],
+        rel_mask: Optional[torch.Tensor],
+        rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        threshold: float,
+        batch_size: int,
+    ) -> List[List[tuple]]:
+        """Decode relations between detected entity spans.
+
+        Extracts relation predictions from model outputs and maps them to pairs
+        of detected entity spans. For each potential relation, checks if both
+        head and tail entities exist in the decoded spans and if the relation
+        confidence exceeds the threshold.
+
+        Args:
+            spans: List of entity spans for each sample in the batch.
+                Each sample contains a list of tuples: (start, end, entity_type, score).
+            rel_idx: Tensor of shape (batch_size, num_relations, 2) containing
+                indices of head and tail entities for each potential relation.
+                None if no relations to decode.
+            rel_logits: Tensor of shape (batch_size, num_relations, num_relation_classes)
+                containing logits for relation classifications. None if no relations.
+            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)
+                indicating which relations are valid (True) vs. padding (False).
+                If None, all relations are considered valid.
+            rel_id_to_classes: Mapping from relation class IDs to relation names.
+                Can be either:
+                - Dict: Single mapping used for all samples
+                - List[Dict]: Per-sample mappings for different relation schemas
+                Class IDs are 1-indexed (0 reserved for "no relation" or padding).
+            threshold: Minimum confidence score (after sigmoid) for a relation
+                to be included in the output. Must be in range [0, 1].
+            batch_size: Number of samples in the batch.
+
+        Returns:
+            List of relation lists, one per sample. Each relation is a tuple:
+            (head_idx, relation_label, tail_idx, score) where:
+            - head_idx: Index into the sample's spans list for the head entity
+            - relation_label: String name of the relation type
+            - tail_idx: Index into the sample's spans list for the tail entity
+            - score: Confidence score for this relation (float, 0-1 range)
+        """
+        relations = [[] for _ in range(batch_size)]
+
+        # Check if relation outputs are available
+        if rel_idx is None or rel_logits is None:
+            return relations
+
+        # Get or create relation mask
+        if rel_mask is None:
+            rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
+
+        rel_probs = torch.sigmoid(rel_logits)
+
+        # Decode relations for each sample
+        for i in range(batch_size):
+            rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+
+            # Process each potential relation
+            for j in range(rel_idx.size(1)):
+                # Skip if masked out
+                if not rel_mask[i, j]:
+                    continue
+
+                head_idx = rel_idx[i, j, 0].item()
+                tail_idx = rel_idx[i, j, 1].item()
+
+                # Skip invalid indices
+                if head_idx < 0 or tail_idx < 0:
+                    continue
+
+                # Skip if either span was removed by greedy search
+                if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
+                    continue
+
+                # Check each relation class
+                for c, p in enumerate(rel_probs[i, j]):
+                    prob = p.item()
+
+                    # Skip low confidence predictions
+                    if prob <= threshold:
+                        continue
+
+                    # Skip if class ID not in mapping (c + 1 because 0 is padding)
+                    if (c + 1) not in rel_id_to_class_i:
+                        continue
+
+                    rel_label = rel_id_to_class_i[c + 1]
+                    relations[i].append((head_idx, rel_label, tail_idx, prob))
+
+        return relations
+
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        rel_idx: Optional[torch.Tensor] = None,
+        rel_logits: Optional[torch.Tensor] = None,
+        rel_mask: Optional[torch.Tensor] = None,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        relation_threshold: float = 0.5,
+        multi_label: bool = False,
+        rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
+        **kwargs,
+    ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
+        """Decode model output to extract entities and relations.
+
+        Main decoding method that extracts both entity spans and relations from
+        model outputs. First decodes entity spans using BIO-style token tagging,
+        then decodes relations between the detected entities.
+
+        Args:
+            tokens: Tokenized input text for each sample in the batch.
+                Each sample is a list of token strings.
+            id_to_classes: Mapping from entity class IDs to entity type names.
+                Can be either:
+                - Dict: Single mapping used for all samples (global entity schema)
+                - List[Dict]: Per-sample mappings for different entity schemas
+                Class IDs are 1-indexed (0 is reserved for padding).
+            model_output: Model output tensor with shape (B, L, C, 3) where the last
+                dimension contains [start, end, inside] predictions for BIO tagging.
+            rel_idx: Optional tensor of shape (batch_size, num_relations, 2) containing
+                head and tail entity indices for each potential relation.
+            rel_logits: Optional tensor of shape (batch_size, num_relations, num_relation_classes)
+                containing relation classification logits.
+            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)
+                indicating valid relations. If None, all relations are considered valid.
+            flat_ner: If True, applies greedy filtering to ensure non-overlapping
+                entity spans. If False, allows overlapping entities. Defaults to False.
+            threshold: Minimum confidence score (0-1) for entity predictions
+                to be included in the output. Defaults to 0.5.
+            relation_threshold: Minimum confidence score (0-1) for relation
+                predictions to be included in the output. Defaults to 0.5.
+            multi_label: If True, allows multiple entity types per span. If False,
+                only the highest-scoring entity type per span is kept. Defaults to False.
+            rel_id_to_classes: Optional mapping from relation class IDs to relation names.
+                If None, relation decoding is skipped and empty relation lists are returned.
+                Can be either a single Dict or List[Dict] for per-sample mappings.
+                Class IDs are 1-indexed.
+            **kwargs: Additional keyword arguments passed to the parent class decode method.
+
+        Returns:
+            Tuple of (spans, relations) where:
+            - spans: List of entity span lists, one per sample. Each entity span is
+              a tuple: (start, end, entity_type, score)
+            - relations: List of relation lists, one per sample. Each relation is
+              a tuple: (head_idx, relation_label, tail_idx, score) where head_idx
+              and tail_idx are indices into the corresponding sample's spans list.
+
+        Examples:
+            >>> decoder = TokenRelexDecoder(config)
+            >>> tokens = [["John", "works", "at", "Microsoft"]]
+            >>> id_to_classes = {1: "PERSON", 2: "ORG"}
+            >>> rel_id_to_classes = {1: "works_at"}
+            >>> spans, relations = decoder.decode(
+            ...     tokens=tokens,
+            ...     id_to_classes=id_to_classes,
+            ...     model_output=output,
+            ...     rel_id_to_classes=rel_id_to_classes,
+            ...     threshold=0.5,
+            ... )
+            >>> # spans[0] might be: [(0, 0, "PERSON", 0.9), (3, 3, "ORG", 0.85)]
+            >>> # relations[0] might be: [(0, "works_at", 1, 0.8)]
+        """
+        # Decode entity spans using parent class BIO-style logic
+        spans = super().decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            **kwargs,
+        )
+
+        # Decode relations if requested
+        relations = [[] for _ in range(len(tokens))]
+
+        if rel_id_to_classes is not None:
+            relations = self._decode_relations(
+                spans=spans,
+                rel_idx=rel_idx,
+                rel_logits=rel_logits,
+                rel_mask=rel_mask,
+                rel_id_to_classes=rel_id_to_classes,
+                threshold=relation_threshold,
+                batch_size=len(tokens),
+            )
+
+        return spans, relations
+
+
+class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
+    """Token-based decoder with generative label support.
+
+    Extends the token decoder to support generated labels from an encoder-decoder
+    architecture. Supports two decoder modes:
+    - 'prompt': Generated labels replace the original class names
+    - 'span': Generated labels are added as additional fields to each span
+
+    Returns spans in format: (start, end, entity_type, generated_entity_type, score)
+    """
+
+    def decode_generative(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: torch.Tensor,
+        gen_labels: List[str],
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+    ) -> List[List[tuple]]:
+        """Decode model output with generated labels.
+
+        Handles both 'prompt' and 'span' decoder modes:
+        - prompt mode: Generated labels replace class names in id_to_classes
+        - span mode: Generated labels are added to span tuples via span_label_map
+
+        Args:
+            tokens (List[List[str]]): Tokenized input text for each sample in the batch.
+            id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from
+                class IDs to class names.
+            model_output (torch.Tensor): Raw logits from the model with shape (B, W, C, 3).
+            gen_labels (List[str]): Generated labels from the decoder, flattened across batch.
+            sel_idx (Optional[torch.LongTensor]): Tensor of shape (B, M) with selected
+                span indices. Required for span mode, unused for prompt mode.
+            num_gen_sequences (int): Number of label sequences generated per span.
+            flat_ner (bool): Whether to enforce non-overlapping spans.
+            threshold (float): Confidence threshold for span predictions.
+            multi_label (bool): Whether to allow multiple labels per span.
+            span_logits (torch.Tensor, optional): Span classification logits.
+            span_idx (torch.Tensor, optional): Span indices.
+            span_mask (torch.Tensor, optional): Span mask.
+
+        Returns:
+            List[List[tuple]]: For each sample, list of span tuples with generated labels.
+        """
+        B = model_output.size(0)
+
+        # Handle prompt mode: update id_to_classes with generated labels
+        if self.config.decoder_mode == "prompt":
+            id_to_classes = self._update_id_to_classes_with_generated(id_to_classes, gen_labels, B)
+            span_label_maps = [{} for _ in range(B)]
+
+        # Handle span mode: build span_label_map from sel_idx and gen_labels
+        elif self.config.decoder_mode == "span":
+            if sel_idx is not None:
+                span_label_maps = self._build_span_label_map_for_batch(sel_idx, gen_labels, num_gen_sequences)
+            else:
+                span_label_maps = [{} for _ in range(B)]
+        else:
+            span_label_maps = [{} for _ in range(B)]
+
+        batch_size = span_logits.size(0)
+        spans = []
+
+        span_probs = torch.sigmoid(span_logits)
+
+        for i in range(batch_size):
+            id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            span_label_map_i = span_label_maps[i]
+            span_scores = []
+
+            valid_mask = span_mask[i]
+            valid_indices = torch.where(valid_mask)[0]
+
+            for span_pos in valid_indices:
+                span_start = span_idx[i, span_pos, 0].item()
+                span_end = span_idx[i, span_pos, 1].item()
+
+                probs = span_probs[i, span_pos]
+                class_indices = torch.where(probs > threshold)[0]
+
+                for class_idx in class_indices:
+                    class_id = class_idx.item() + 1
+                    if class_id in id_to_class_i:
+                        entity_type = id_to_class_i[class_id]
+                        score = probs[class_idx].item()
+                        gen_label = span_label_map_i.get(span_pos.item())
+                        span_scores.append((span_start, span_end, entity_type, gen_label, score))
+
             span_i = self.greedy_search(span_scores, flat_ner, multi_label)
             spans.append(span_i)
 
         return spans
+
+    def decode(
+        self,
+        tokens: List[List[str]],
+        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        model_output: Optional[torch.Tensor] = None,
+        flat_ner: bool = False,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        gen_labels: Optional[List[str]] = None,
+        sel_idx: Optional[torch.LongTensor] = None,
+        num_gen_sequences: int = 1,
+        span_logits: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.Tensor] = None,
+        span_mask: Optional[torch.Tensor] = None,
+        **kwargs,
+    ) -> List[List[tuple]]:
+        """Decode model output, with optional generative label support.
+
+        If gen_labels are provided and decoder has a labels_decoder, uses generative
+        decoding. Otherwise falls back to standard token decoding.
+
+        Args:
+            tokens: Tokenized input text.
+            id_to_classes: Class ID to name mapping.
+            model_output: Token-level logits (B, W, C, 3).
+            flat_ner: Whether to enforce non-overlapping spans.
+            threshold: Confidence threshold.
+            multi_label: Allow multiple labels per span.
+            gen_labels: Generated labels from decoder.
+            sel_idx: Selected span indices for span mode.
+            num_gen_sequences: Number of sequences per span.
+            span_logits: Span classification logits.
+            span_idx: Span indices.
+            span_mask: Span mask.
+            **kwargs: Additional arguments.
+
+        Returns:
+            List of span tuples, with generated labels if available.
+        """
+        # Use generative decoding if labels_decoder is configured and gen_labels provided
+        if self.config.labels_decoder is not None and gen_labels is not None:
+            return self.decode_generative(
+                tokens=tokens,
+                id_to_classes=id_to_classes,
+                model_output=model_output,
+                gen_labels=gen_labels,
+                sel_idx=sel_idx,
+                num_gen_sequences=num_gen_sequences,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+                span_logits=span_logits,
+                span_idx=span_idx,
+                span_mask=span_mask,
+            )
+
+        # Fall back to standard decoding without generative labels
+        return super().decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            span_logits=span_logits,
+            span_idx=span_idx,
+            span_mask=span_mask,
+        )

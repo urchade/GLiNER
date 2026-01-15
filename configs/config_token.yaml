@@ -8,6 +8,7 @@ model:
   fine_tune: true
   subtoken_pooling: first
   fuse_layers: false
+  represent_spans: false
   post_fusion_schema: null  # e.g., "l2l-l2t-t2t"
   span_mode: token_level  # Options: token_level | markerV0
   max_types: 100
@@ -17,7 +18,7 @@ model:
 data:
   # Directory Paths
   root_dir: gliner_logs
-  train_data: "data.json"
+  train_data: "data/data.json"
   val_data_dir: "none"  # Set to validation data path or "none"
 
 training:
@@ -27,7 +28,7 @@ training:
   # Training Parameters
   num_steps: 15000
   train_batch_size: 8
-  eval_every: 500
+  eval_every: 10
   warmup_ratio: 0.05
   scheduler_type: "cosine"  # Options: linear, cosine, constant
   

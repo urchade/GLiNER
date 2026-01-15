@@ -35,8 +35,8 @@ class BaseProcessor(ABC):
             self.words_splitter = WordsSplitter(splitter_type=config.words_splitter_type)
         else:
             self.words_splitter = words_splitter
-        self.ent_token = config.ent_token
-        self.sep_token = config.sep_token
+        self.ent_token = getattr(config, "ent_token", "[ENT]")
+        self.sep_token = getattr(config, "sep_token", "[SEP]")
 
         # Check if the tokenizer has unk_token and pad_token
         self._check_and_set_special_tokens(self.transformer_tokenizer)
@@ -125,6 +125,29 @@ class BaseProcessor(ABC):
             NotImplementedError: Must be implemented by subclasses.
         """
         pass
+
+    def sort_entities_and_relations(self, ner, relations=None):
+        if ner is not None and len(ner) > 0:
+            indexed_ner = list(enumerate(ner))
+            indexed_ner_sorted = sorted(indexed_ner, key=lambda x: (x[1][0], x[1][1]))
+
+            ner_sorted = [entity for _, entity in indexed_ner_sorted]
+
+            # Create mapping from old entity indices to new sorted indices
+            old_to_new_idx = {old_idx: new_idx for new_idx, (old_idx, _) in enumerate(indexed_ner_sorted)}
+
+            # Update relation indices to match new entity ordering
+            if relations is not None and len(relations) > 0:
+                updated_relations = []
+                for head_idx, tail_idx, rel_type in relations:
+                    if head_idx in old_to_new_idx and tail_idx in old_to_new_idx:
+                        new_head_idx = old_to_new_idx[head_idx]
+                        new_tail_idx = old_to_new_idx[tail_idx]
+                        updated_relations.append((new_head_idx, new_tail_idx, rel_type))
+                relations = sorted(updated_relations, key=lambda x: (x[0], x[1]))
+
+            ner = ner_sorted
+        return ner, relations
 
     def prepare_inputs(
         self,
@@ -429,6 +452,14 @@ class UniEncoderSpanProcessor(BaseProcessor):
     predict entity types for all possible spans up to a maximum width.
     """
 
+    def prepare_span_labels(self, ner, classes_to_id, num_tokens, spans_idx):
+        dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
+        span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
+        spans_idx = torch.LongTensor(spans_idx)
+        valid_span_mask = spans_idx[:, 1] > num_tokens - 1
+        span_label = span_label.masked_fill(valid_span_mask, -1)
+        return span_label, spans_idx
+
     def preprocess_example(self, tokens, ner, classes_to_id):
         """Preprocess a single example for span-based prediction.
 
@@ -461,11 +492,8 @@ class UniEncoderSpanProcessor(BaseProcessor):
             tokens = tokens[:max_len]
         num_tokens = len(tokens)
         spans_idx = prepare_span_idx(num_tokens, max_width)
-        dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
-        span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
-        spans_idx = torch.LongTensor(spans_idx)
-        valid_span_mask = spans_idx[:, 1] > num_tokens - 1
-        span_label = span_label.masked_fill(valid_span_mask, -1)
+
+        span_label, spans_idx = self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
 
         return {
             "tokens": tokens,
@@ -577,6 +605,87 @@ class UniEncoderTokenProcessor(BaseProcessor):
     labeled with BIO-style tags (Begin, Inside, Outside) for each entity type.
     """
 
+    def _generate_negative_spans(self, positive_spans, num_tokens, num_negatives, max_width=None):
+        """Generate random negative spans that don't overlap with positive spans.
+
+        Args:
+            positive_spans: Set of (start, end) tuples representing positive entity spans.
+            num_tokens: Total number of tokens in the sequence.
+            num_negatives: Number of negative spans to generate.
+            max_width: Maximum width for negative spans. If None, uses config.max_width.
+
+        Returns:
+            List of (start, end) tuples representing negative spans.
+        """
+        if max_width is None:
+            max_width = getattr(self.config, "max_width", 10)
+
+        negative_spans = []
+        attempts = 0
+        max_attempts = num_negatives * 20  # Limit attempts to avoid infinite loops
+
+        while len(negative_spans) < num_negatives and attempts < max_attempts:
+            attempts += 1
+
+            # Random start position
+            start = random.randint(0, num_tokens - 1)
+
+            # Random width (1 to max_width)
+            width = random.randint(1, min(max_width, num_tokens - start))
+            end = start + width - 1
+
+            # Check if this span overlaps with any positive span
+            span = (start, end)
+            if span in positive_spans:
+                continue
+
+            # Check for overlap with positive spans
+            overlaps = False
+            for pos_start, pos_end in positive_spans:
+                if not (end < pos_start or start > pos_end):
+                    overlaps = True
+                    break
+
+            if not overlaps and span not in negative_spans:
+                negative_spans.append(span)
+
+        return negative_spans
+
+    def prepare_span_idx(self, ner, classes_to_id, num_tokens):
+        if ner is not None and self.config.represent_spans:
+            span_idx_list = []
+            span_label_list = []
+            positive_spans = set()
+
+            # Add positive spans
+            for start, end, label in ner:
+                if label in classes_to_id and end < num_tokens:
+                    span_idx_list.append([start, end])
+                    span_label_list.append(classes_to_id[label])
+                    positive_spans.add((start, end))
+
+            # Add negative spans
+            neg_spans_ratio = self.config.neg_spans_ratio
+            neg_spans_count = int(len(span_idx_list) * neg_spans_ratio)
+
+            if neg_spans_count > 0 and num_tokens > 0:
+                max_width = getattr(self.config, "max_width", 10)
+                negative_spans = self._generate_negative_spans(positive_spans, num_tokens, neg_spans_count, max_width)
+
+                for start, end in negative_spans:
+                    span_idx_list.append([start, end])
+                    span_label_list.append(0)  # 0 indicates negative/no entity
+
+            if span_idx_list:
+                span_idx = torch.LongTensor(span_idx_list)
+                span_label = torch.LongTensor(span_label_list)
+            else:
+                span_idx = torch.zeros(0, 2, dtype=torch.long)
+                span_label = torch.zeros(0, dtype=torch.long)
+        else:
+            span_idx, span_label = None, None
+        return span_idx, span_label
+
     def preprocess_example(self, tokens, ner, classes_to_id):
         """Preprocess a single example for token-based prediction.
 
@@ -590,7 +699,8 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 - tokens: Token strings
                 - seq_length: Sequence length
                 - entities: Original NER annotations
-                - entities_id: Entity annotations with class IDs
+                - span_idx: Tensor of entity span indices (if represent_spans=True)
+                - span_label: Tensor of entity class IDs (if represent_spans=True)
 
         Warnings:
             UserWarning: If sequence length exceeds max_len (gets truncated).
@@ -605,13 +715,17 @@ class UniEncoderTokenProcessor(BaseProcessor):
             warnings.warn(f"Sentence of length {len(tokens)} has been truncated to {max_len}", stacklevel=2)
             tokens = tokens[:max_len]
 
-        # Generate entity IDs based on the NER spans provided and their classes
-        try:  # 'NoneType' object is not iterable
-            entities_id = [[i, j, classes_to_id[k]] for i, j, k in ner if k in classes_to_id]
-        except TypeError:
-            entities_id = []
+        num_tokens = len(tokens)
 
-        example = {"tokens": tokens, "seq_length": len(tokens), "entities": ner, "entities_id": entities_id}
+        span_idx, span_label = self.prepare_span_idx(ner, classes_to_id, num_tokens)
+
+        example = {
+            "tokens": tokens,
+            "seq_length": len(tokens),
+            "entities": ner,
+            "span_idx": span_idx,
+            "span_label": span_label,
+        }
         return example
 
     def create_batch_dict(self, batch, class_to_ids, id_to_classes):
@@ -627,7 +741,9 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 - tokens: Token strings
                 - seq_length: Sequence lengths
                 - entities: Original NER annotations
-                - entities_id: Entity annotations with class IDs
+                - span_idx: Padded span indices (if available)
+                - span_label: Padded span labels (if available)
+                - span_mask: Mask for valid spans (if available)
                 - classes_to_id: Class mappings
                 - id_to_classes: Reverse class mappings
         """
@@ -635,41 +751,64 @@ class UniEncoderTokenProcessor(BaseProcessor):
         tokens = [el["tokens"] for el in batch]
         seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
         entities = [el["entities"] for el in batch]
-        entities_id = [el["entities_id"] for el in batch]
 
-        # Assemble and return the batch dictionary
+        # Assemble the base batch dictionary
         batch_dict = {
             "tokens": tokens,
             "seq_length": seq_length,
             "entities": entities,
-            "entities_id": entities_id,
             "classes_to_id": class_to_ids,
             "id_to_classes": id_to_classes,
         }
 
+        # Handle span representations if present
+        if batch[0]["span_idx"] is not None:
+            span_idx_list = [el["span_idx"] for el in batch]
+            span_label_list = [el["span_label"] for el in batch]
+
+            batch_size = len(span_idx_list)
+            span_counts = [s.size(0) if s.numel() > 0 else 0 for s in span_idx_list]
+            max_spans = max(*span_counts, 1)  # Ensure at least 1
+
+            # Create span mask indicating valid spans
+            span_mask = torch.zeros(batch_size, max_spans, dtype=torch.bool)
+            for i, count in enumerate(span_counts):
+                if count > 0:
+                    span_mask[i, :count] = True
+
+            # Pad span tensors
+            span_idx = pad_2d_tensor(span_idx_list, padding_value=0)
+            span_label = pad_sequence(span_label_list, batch_first=True, padding_value=-1)
+
+            batch_dict["span_idx"] = span_idx
+            batch_dict["span_label"] = span_label
+            batch_dict["span_mask"] = span_mask
+
         return batch_dict
 
-    def create_labels(self, entities_id, batch_size, seq_len, num_classes):
+    def create_labels(self, batch):
         """Create token-level labels with begin/inside/end markers.
 
         Creates labels indicating which tokens are at the start, end, or inside
         of entity spans for each entity type.
 
         Args:
-            entities_id: List of entity annotations with class IDs for each example.
-            batch_size: Size of the batch.
-            seq_len: Maximum sequence length in batch.
-            num_classes: Number of entity classes.
+            batch: List[Any] batch of data
 
         Returns:
             Tensor of shape (batch_size, seq_len, num_classes, 3) where the last
             dimension contains [start_marker, end_marker, inside_marker].
         """
+        batch_size = len(batch["tokens"])
+        seq_len = batch["seq_length"].max().item()
+        num_classes = max([len(cid) for cid in batch["classes_to_id"]])
+
         word_labels = torch.zeros(batch_size, seq_len, num_classes, 3, dtype=torch.float)
 
-        for i, sentence_entities in enumerate(entities_id):
+        for i, sentence_entities in enumerate(batch["entities"]):
             for st, ed, sp_label in sentence_entities:
-                class_idx = sp_label - 1  # Convert to 0-indexed
+                lbl = batch["classes_to_id"][i][sp_label]
+                class_idx = lbl - 1  # Convert to 0-indexed
 
                 # skip entities that point beyond sequence length
                 if st >= seq_len or ed >= seq_len:
@@ -680,6 +819,50 @@ class UniEncoderTokenProcessor(BaseProcessor):
                 word_labels[i, st : ed + 1, class_idx, 2] = 1  # inside tokens (inclusive)
 
         return word_labels
+
+    def create_span_labels(self, batch):
+        """Create one-hot encoded labels for spans with negative sampling.
+
+        Creates one-hot encoded labels for entity spans, converting 1-indexed class IDs
+        to 0-indexed format. Labels with class ID 0 (negative spans) or -1 (invalid spans)
+        are represented as all zeros in the one-hot encoding.
+
+        Args:
+            batch: Batch dictionary containing span_label, span_mask, and classes_to_id.
+
+        Returns:
+            Tensor of shape (batch_size, max_spans, num_classes) containing one-hot
+            encoded labels where:
+                - Positive spans: one-hot vector at position (class_id - 1)
+                - Negative/invalid spans: all zeros
+        """
+        batch_size = len(batch["tokens"])
+        span_label = batch["span_label"]  # (batch_size, max_spans)
+        span_mask = batch["span_mask"]  # (batch_size, max_spans)
+
+        # Get maximum number of classes across all examples
+        if isinstance(batch["classes_to_id"], list):
+            num_classes = max([len(cid) for cid in batch["classes_to_id"]])
+        else:
+            num_classes = len(batch["classes_to_id"])
+
+        max_spans = span_label.size(1)
+
+        # Initialize one-hot labels (batch_size, max_spans, num_classes)
+        labels_one_hot = torch.zeros(batch_size, max_spans, num_classes, dtype=torch.float)
+
+        for i in range(batch_size):
+            for j in range(max_spans):
+                if span_mask[i, j]:  # Valid span
+                    class_id = span_label[i, j].item()
+
+                    if class_id > 0:
+                        # Convert from 1-indexed to 0-indexed
+                        class_idx = class_id - 1
+                        if class_idx < num_classes:
+                            labels_one_hot[i, j, class_idx] = 1.0
+
+        return labels_one_hot
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
         """Tokenize inputs and prepare token-level labels for a batch.
@@ -693,15 +876,17 @@ class UniEncoderTokenProcessor(BaseProcessor):
         Returns:
             Dictionary containing tokenized inputs and optionally labels.
         """
-        batch_size = len(batch["tokens"])
-        seq_len = batch["seq_length"].max()
-        num_classes = max([len(cid) for cid in batch["classes_to_id"]])
-
         tokenized_input = self.tokenize_inputs(batch["tokens"], batch["classes_to_id"])
-
         if prepare_labels:
-            labels = self.create_labels(batch["entities_id"], batch_size, seq_len, num_classes)
+            labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
+
+            # Add span-level one-hot labels if spans are represented
+            if batch.get("span_idx") is not None:
+                span_labels = self.create_span_labels(batch)
+                tokenized_input["span_labels"] = span_labels
+                tokenized_input["span_idx"] = batch["span_idx"]
+                tokenized_input["span_mask"] = batch["span_mask"]
         return tokenized_input
 
 
@@ -861,16 +1046,19 @@ class BiEncoderTokenProcessor(UniEncoderTokenProcessor, BaseBiEncoderProcessor):
                 entities = list(batch["classes_to_id"][0])
         else:
             entities = None
-        batch_size = len(batch["tokens"])
-        seq_len = batch["seq_length"].max()
-        num_classes = len(entities)
 
         tokenized_input = self.tokenize_inputs(batch["tokens"], entities)
 
         if prepare_labels:
-            labels = self.create_labels(batch["entities_id"], batch_size, seq_len, num_classes)
+            labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
 
+            # Add span-level one-hot labels if spans are represented
+            if batch.get("span_idx") is not None:
+                span_labels = self.create_span_labels(batch)
+                tokenized_input["span_labels"] = span_labels
+                tokenized_input["span_idx"] = batch["span_idx"]
+                tokenized_input["span_mask"] = batch["span_mask"]
         return tokenized_input
 
 
@@ -912,7 +1100,7 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             Dictionary containing encoder and decoder tokenized inputs.
         """
         add_entities = True
-        if self.config.decoder_mode == 'prompt':
+        if self.config.decoder_mode == "prompt":
             add_entities = False
 
         input_texts, prompt_lengths = self.prepare_inputs(texts, entities, blank=blank, add_entities=add_entities)
@@ -947,6 +1135,20 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
                 tokenized_inputs["decoder_words_mask"] = torch.tensor(decoder_words_masks)
 
         return tokenized_inputs
+
+    def prepare_decoder_labels(self, decoder_label_strings):
+        if not decoder_label_strings:
+            decoder_label_strings = ["other"]
+
+        decoder_tokenized_input = self.decoder_tokenizer(
+            decoder_label_strings, return_tensors="pt", truncation=True, padding="longest", add_special_tokens=True
+        )
+        decoder_input_ids = decoder_tokenized_input["input_ids"]
+        decoder_attention_mask = decoder_tokenized_input["attention_mask"]
+        decoder_labels = decoder_input_ids.clone()
+        decoder_labels.masked_fill(~decoder_attention_mask.bool(), -100)
+        decoder_tokenized_input["labels"] = decoder_labels
+        return decoder_tokenized_input
 
     def create_labels(self, batch, blank=None):
         """Create labels for both span classification and decoder generation.
@@ -999,30 +1201,18 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             labels_one_hot[valid_span_mask, :] = 0.0
             labels_one_hot = labels_one_hot[:, 1:]
             labels_batch.append(labels_one_hot)
-            
-            if self.config.decoder_mode == 'span':
+
+            if self.config.decoder_mode == "span":
                 # Collect decoder label strings in order
                 sorted_idxs = sorted(span_labels_dict.keys())
                 for idx in sorted_idxs:
                     decoder_label_strings.append(span_labels_dict[idx])
-            elif self.config.decoder_mode == 'prompt':
+            elif self.config.decoder_mode == "prompt":
                 decoder_label_strings.extend(list(classes_to_id))
-                
+
         labels_batch = pad_2d_tensor(labels_batch) if len(labels_batch) > 1 else labels_batch[0].unsqueeze(0)
 
-        decoder_tokenized_input = None
-
-        if not decoder_label_strings:
-            decoder_label_strings = ["other"]
-
-        decoder_tokenized_input = self.decoder_tokenizer(
-            decoder_label_strings, return_tensors="pt", truncation=True, padding="longest", add_special_tokens=True
-        )
-        decoder_input_ids = decoder_tokenized_input["input_ids"]
-        decoder_attention_mask = decoder_tokenized_input["attention_mask"]
-        decoder_labels = decoder_input_ids.clone()
-        decoder_labels.masked_fill(~decoder_attention_mask.bool(), -100)
-        decoder_tokenized_input["labels"] = decoder_labels
+        decoder_tokenized_input = self.prepare_decoder_labels(decoder_label_strings)
         return labels_batch, decoder_tokenized_input
 
     def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
@@ -1047,6 +1237,157 @@ class UniEncoderSpanDecoderProcessor(UniEncoderSpanProcessor):
             labels, decoder_tokenized_input = self.create_labels(batch, blank=blank)
             tokenized_input["labels"] = labels
 
+            if decoder_tokenized_input is not None:
+                tokenized_input["decoder_labels_ids"] = decoder_tokenized_input["input_ids"]
+                tokenized_input["decoder_labels_mask"] = decoder_tokenized_input["attention_mask"]
+                tokenized_input["decoder_labels"] = decoder_tokenized_input["labels"]
+
+        return tokenized_input
+
+
+class UniEncoderTokenDecoderProcessor(UniEncoderSpanDecoderProcessor, UniEncoderTokenProcessor):
+    """Processor for token-based NER with encoder-decoder architecture.
+
+    This processor combines token-level BIO-style classification with a decoder
+    that generates entity type labels autoregressively, enabling more flexible
+    prediction strategies for token-level NER tasks.
+
+    Inherits from:
+        - UniEncoderSpanDecoderProcessor: Encoder-decoder architecture and decoder utilities
+        - UniEncoderTokenProcessor: Token-level BIO tagging for entities
+    """
+
+    def __init__(self, config, tokenizer, words_splitter, decoder_tokenizer):
+        """Initialize the token-level encoder-decoder processor.
+
+        Args:
+            config: Configuration object.
+            tokenizer: Transformer tokenizer for encoding.
+            words_splitter: Word-level tokenizer/splitter.
+            decoder_tokenizer: Separate tokenizer for decoder (label generation).
+        """
+        # Initialize BaseProcessor through UniEncoderSpanDecoderProcessor's chain
+        super().__init__(config, tokenizer, words_splitter, decoder_tokenizer)
+
+    def preprocess_example(self, tokens, ner, classes_to_id):
+        """Preprocess a single example for token-level encoder-decoder prediction.
+
+        Uses token-level preprocessing from UniEncoderTokenProcessor while
+        preparing for decoder-based label generation.
+
+        Args:
+            tokens: List of token strings.
+            ner: List of NER annotations as (start, end, label) tuples.
+            classes_to_id: Mapping from class labels to integer IDs.
+
+        Returns:
+            Dictionary containing:
+                - tokens: Token strings
+                - seq_length: Sequence length
+                - entities: Original NER annotations
+                - span_idx: Tensor of entity span indices (if represent_spans=True)
+                - span_label: Tensor of entity class IDs (if represent_spans=True)
+
+        Warnings:
+            UserWarning: If sequence length exceeds max_len (gets truncated).
+        """
+        # Use token processor's preprocessing
+        return UniEncoderTokenProcessor.preprocess_example(self, tokens, ner, classes_to_id)
+
+    def create_batch_dict(self, batch, class_to_ids, id_to_classes):
+        """Create a batch dictionary from preprocessed token examples.
+
+        Args:
+            batch: List of preprocessed example dictionaries.
+            class_to_ids: List of class-to-ID mappings.
+            id_to_classes: List of ID-to-class mappings.
+
+        Returns:
+            Dictionary containing all batch data for token-level encoder-decoder
+            processing.
+        """
+        # Use token processor's batch dict creation
+        return UniEncoderTokenProcessor.create_batch_dict(self, batch, class_to_ids, id_to_classes)
+
+    def create_labels(self, batch, blank=None):
+        """Create labels for both token classification and decoder generation.
+
+        Creates both token-level BIO labels and decoder generation labels for
+        entity types.
+
+        Args:
+            batch: Batch dictionary containing tokens, entities, and class mappings.
+            blank: Optional blank entity token for zero-shot scenarios.
+
+        Returns:
+            Tuple containing:
+                - Token-level labels (BIO-style, shape: [batch_size, seq_len, num_classes, 3])
+                - Decoder generation labels (tokenized entity types) or None
+        """
+        # Create token-level labels
+        token_labels = UniEncoderTokenProcessor.create_labels(self, batch)
+
+        # Create decoder labels
+        decoder_label_strings = []
+
+        for i in range(len(batch["tokens"])):
+            tokens = batch["tokens"][i]
+            classes_to_id = batch["classes_to_id"][i]
+            ner = batch["entities"][i]
+
+            num_tokens = len(tokens)
+            if self.config.decoder_mode == "span":
+                # Collect entity labels in order of appearance
+                sorted_entities = sorted(ner, key=lambda x: (x[0], x[1])) if ner else []
+                for start, end, label in sorted_entities:
+                    if label in classes_to_id and end < num_tokens:
+                        decoder_label_strings.append(label)
+            elif self.config.decoder_mode == "prompt":
+                # Use all entity types as decoder labels
+                decoder_label_strings.extend(list(classes_to_id))
+
+        decoder_tokenized_input = self.prepare_decoder_labels(decoder_label_strings)
+
+        return token_labels, decoder_tokenized_input
+
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
+        """Tokenize inputs and prepare labels for token-level encoder-decoder training.
+
+        Combines token-level input processing with decoder inputs and prepares
+        both token-level BIO labels and decoder generation labels.
+
+        Args:
+            batch: Batch dictionary with tokens and class mappings.
+            prepare_labels: Whether to prepare labels.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Dictionary containing encoder inputs, decoder inputs, token-level labels,
+            and decoder labels.
+        """
+        blank = None
+        if random.uniform(0, 1) < self.config.blank_entity_prob and prepare_labels:
+            blank = "entity"
+
+        # Use span decoder's tokenize_inputs for encoder-decoder tokenization
+        tokenized_input = UniEncoderSpanDecoderProcessor.tokenize_inputs(
+            self, batch["tokens"], batch["classes_to_id"], blank
+        )
+
+        if prepare_labels:
+            # Create both token-level and decoder labels
+            token_labels, decoder_tokenized_input = self.create_labels(batch, blank=blank)
+            tokenized_input["labels"] = token_labels
+
+            # Add span-level one-hot labels if spans are represented
+            if batch.get("span_idx") is not None:
+                span_labels = self.create_span_labels(batch)
+                tokenized_input["span_labels"] = span_labels
+                tokenized_input["span_idx"] = batch["span_idx"]
+                tokenized_input["span_mask"] = batch["span_mask"]
+
+            # Add decoder labels
             if decoder_tokenized_input is not None:
                 tokenized_input["decoder_labels_ids"] = decoder_tokenized_input["input_ids"]
                 tokenized_input["decoder_labels_mask"] = decoder_tokenized_input["attention_mask"]
@@ -1263,31 +1604,10 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         num_tokens = len(tokens)
         spans_idx = prepare_span_idx(num_tokens, max_width)
 
-        if ner is not None and len(ner) > 0:
-            indexed_ner = list(enumerate(ner))
-            indexed_ner_sorted = sorted(indexed_ner, key=lambda x: (x[1][0], x[1][1]))
-
-            ner_sorted = [entity for _, entity in indexed_ner_sorted]
-
-            old_to_new_idx = {old_idx: new_idx for new_idx, (old_idx, _) in enumerate(indexed_ner_sorted)}
-
-            if relations is not None and len(relations) > 0:
-                updated_relations = []
-                for head_idx, tail_idx, rel_type in relations:
-                    if head_idx in old_to_new_idx and tail_idx in old_to_new_idx:
-                        new_head_idx = old_to_new_idx[head_idx]
-                        new_tail_idx = old_to_new_idx[tail_idx]
-                        updated_relations.append((new_head_idx, new_tail_idx, rel_type))
-                relations = sorted(updated_relations, key=lambda x: (x[0], x[1]))
-
-            ner = ner_sorted
+        ner, relations = self.sort_entities_and_relations(ner, relations)
 
         # Process entity labels
-        dict_lab = self.get_dict(ner, classes_to_id) if ner else defaultdict(int)
-        span_label = torch.LongTensor([dict_lab[i] for i in spans_idx])
-        spans_idx = torch.LongTensor(spans_idx)
-        valid_span_mask = spans_idx[:, 1] > num_tokens - 1
-        span_label = span_label.masked_fill(valid_span_mask, -1)
+        span_label, spans_idx = self.prepare_span_labels(ner, classes_to_id, num_tokens, spans_idx)
 
         # Create entity span to index mapping
         span_to_idx = {(spans_idx[i, 0].item(), spans_idx[i, 1].item()): i for i in range(len(spans_idx))}
@@ -1376,41 +1696,38 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
     def create_relation_labels(self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=2.0):
         """Create relation labels with negative pair sampling.
 
-        Generates training labels for relation extraction including both positive
-        relation pairs and carefully sampled negative pairs for contrastive learning.
+        Overrides the span-based version to work with token-level entity representations.
+        Uses entities_id count instead of span_label for entity counting.
 
         Args:
             batch: Batch dictionary containing entities and relations.
-            add_reversed_negatives: If True, add reversed direction pairs as
-                negatives (h,t) -> (t,h). These are important hard negatives
-                for learning relation directionality.
-            add_random_negatives: If True, add random entity pairs as negatives
-                to provide additional training signal.
-            negative_ratio: Ratio of negative to positive pairs. For example,
-                2.0 means twice as many negatives as positives.
+            add_reversed_negatives: If True, add reversed direction pairs as negatives.
+            add_random_negatives: If True, add random entity pairs as negatives.
+            negative_ratio: Ratio of negative to positive pairs.
 
         Returns:
             Tuple containing:
-                - adj_matrix: Adjacency matrix indicating which entity pairs
-                  to consider (shape: [B, max_entities, max_entities])
-                - rel_matrix: Multi-hot encoded relation labels for each pair
-                  (shape: [B, max_pairs, num_relation_classes])
+                - adj_matrix: Adjacency matrix (shape: [B, max_entities, max_entities])
+                - rel_matrix: Multi-hot relation labels (shape: [B, max_pairs, num_relation_classes])
         """
         B = len(batch["tokens"])
-        entity_label = batch["span_label"]
+        span_mask = batch["span_mask"]
 
-        batch_ents = torch.sum(entity_label > 0, dim=-1)
-        max_En = torch.max(batch_ents).item()
+        # Count entities per sample (differs from span-based which uses span_label)
+        batch_ents = span_mask.long().squeeze(-1).sum(-1)
+        max_En = max(batch_ents.max().item(), 1)
 
         rel_class_to_ids = batch["rel_class_to_ids"]
         if isinstance(rel_class_to_ids, list):
-            C = max(len(r) for r in rel_class_to_ids)
+            C = max((len(r) for r in rel_class_to_ids), default=0)
         else:
-            C = len(rel_class_to_ids)
+            C = len(rel_class_to_ids) if rel_class_to_ids else 0
+
+        if C == 0:
+            return torch.zeros(B, max_En, max_En, dtype=torch.float), torch.zeros(B, 1, 1, dtype=torch.float)
 
         adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
 
-        # Collect all pairs (positive + negative) and their relations
         all_pairs_info = []
         max_total_pairs = 0
 
@@ -1419,7 +1736,6 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             rel_idx_i = batch["rel_idx"][i]
             rel_label_i = batch["rel_label"][i]
 
-            # Dictionary to group relations by entity pair
             pair_to_relations = {}
             positive_pairs = set()
 
@@ -1434,35 +1750,25 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                         positive_pairs.add(pair_key)
                         if pair_key not in pair_to_relations:
                             pair_to_relations[pair_key] = []
-                        class_id = rel_label_i[k].item()
-                        pair_to_relations[pair_key].append(class_id)
+                        pair_to_relations[pair_key].append(rel_label_i[k].item())
 
             # Generate negative pairs
             negative_pairs = set()
             num_positives = len(positive_pairs)
             target_negatives = int(num_positives * negative_ratio)
 
-            # 1. Add reversed pairs as negatives (most important!)
             if add_reversed_negatives:
                 for e1, e2 in positive_pairs:
                     reversed_pair = (e2, e1)
-                    # Only add if reversed pair is NOT also a positive relation
                     if reversed_pair not in positive_pairs:
                         negative_pairs.add(reversed_pair)
 
-            # 2. Add random negative pairs if needed
-            if add_random_negatives and len(negative_pairs) < target_negatives:
-                # Get entity span positions for proximity-based sampling
-                entities = batch["entities"][i]
-                entity_positions = [(ent[0], ent[1]) for ent in entities] if entities else []
-
+            if add_random_negatives and N > 1 and len(negative_pairs) < target_negatives:
                 attempts = 0
-                max_attempts = target_negatives * 10  # Avoid infinite loop
+                max_attempts = target_negatives * 10
 
                 while len(negative_pairs) < target_negatives and attempts < max_attempts:
                     attempts += 1
-
-                    # Sample two different entities
                     e1 = random.randint(0, N - 1)
                     e2 = random.randint(0, N - 1)
 
@@ -1470,62 +1776,35 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                         continue
 
                     pair = (e1, e2)
-
-                    # Skip if already positive or already in negatives
                     if pair in positive_pairs or pair in negative_pairs:
                         continue
 
-                    # Optional: bias towards nearby entities (hard negatives)
-                    if entity_positions and len(entity_positions) > e1 and len(entity_positions) > e2:
-                        pos1 = entity_positions[e1]
-                        pos2 = entity_positions[e2]
-                        distance = abs(pos1[0] - pos2[1])  # Distance between entities
-
-                        # Sample with probability inversely proportional to distance
-                        # (closer entities are harder negatives)
-                        if distance > 10 and random.random() < 0.5:
-                            continue  # Skip some far pairs
-
                     negative_pairs.add(pair)
 
-            # Combine all pairs (positives + negatives) and sort
             all_pairs = sorted(list(positive_pairs) + list(negative_pairs))
-
-            # Store pair info: pair, is_positive, relations
-            pair_info = []
-            for pair in all_pairs:
-                is_positive = pair in positive_pairs
-                relations = pair_to_relations.get(pair, [])
-                pair_info.append((pair, is_positive, relations))
+            pair_info = [(pair, pair in positive_pairs, pair_to_relations.get(pair, [])) for pair in all_pairs]
 
             all_pairs_info.append(pair_info)
             max_total_pairs = max(max_total_pairs, len(all_pairs))
 
-        # Create matrices
+        max_total_pairs = max(max_total_pairs, 1)
+
         rel_matrix = torch.zeros(B, max_total_pairs, C, dtype=torch.float)
-        pair_type_mask = torch.zeros(B, max_total_pairs, dtype=torch.long)  # 1=positive, 0=negative
 
         for i in range(B):
             N = batch_ents[i].item()
             pair_info = all_pairs_info[i]
-
-            adj = torch.zeros(N, N)
+            adj = torch.zeros(max(N, 1), max(N, 1))
 
             for pair_idx, (pair, is_positive, relations) in enumerate(pair_info):
                 e1, e2 = pair
-
-                # Set adjacency (1.0 for both positive and negative pairs)
                 adj[e1, e2] = 1.0
 
-                # Mark pair type
-                pair_type_mask[i, pair_idx] = 1 if is_positive else 0
-
                 if is_positive:
-                    # Create multi-hot vector for positive pairs
                     for class_id in relations:
                         rel_matrix[i, pair_idx, class_id - 1] = 1.0
 
-            adj_matrix[i, :N, :N] = adj
+            adj_matrix[i, :N, :N] = adj[:N, :N]
 
         return adj_matrix, rel_matrix
 
@@ -1625,6 +1904,203 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
 
+            adj_matrix, rel_matrix = self.create_relation_labels(batch)
+            tokenized_input["adj_matrix"] = adj_matrix
+            tokenized_input["rel_matrix"] = rel_matrix
+
+        return tokenized_input
+
+
+class RelationExtractionTokenProcessor(UniEncoderTokenProcessor, RelationExtractionSpanProcessor):
+    """Processor for joint entity and relation extraction using token-level NER.
+
+    Extends token-based NER processing to additionally handle relation extraction
+    between entity pairs, supporting end-to-end joint training with BIO-style
+    entity tagging.
+
+    Inherits from:
+        - UniEncoderTokenProcessor: Token-level BIO tagging for entities
+        - RelationExtractionSpanProcessor: Relation extraction utilities
+    """
+
+    def __init__(self, config, tokenizer, words_splitter):
+        """Initialize the relation extraction token processor.
+
+        Args:
+            config: Configuration object.
+            tokenizer: Transformer tokenizer.
+            words_splitter: Word-level tokenizer/splitter.
+        """
+        UniEncoderTokenProcessor.__init__(self, config, tokenizer, words_splitter)
+        self.rel_token = config.rel_token
+
+    def preprocess_example(self, tokens, ner, classes_to_id, relations=None, rel_classes_to_id=None):
+        """Preprocess a single example for joint entity and relation extraction.
+
+        Processes both entity annotations (for token-level BIO tagging) and
+        relation triplets, ensuring consistent indexing when entities are reordered.
+
+        Args:
+            tokens: List of token strings.
+            ner: List of entity annotations as (start, end, label) tuples.
+            classes_to_id: Mapping from entity class labels to integer IDs.
+            relations: List of relation annotations as (head_idx, tail_idx, rel_type) tuples.
+            rel_classes_to_id: Mapping from relation class labels to integer IDs.
+
+        Returns:
+            Dictionary containing:
+                - tokens: Token strings
+                - seq_length: Sequence length
+                - entities: Original entity annotations
+                - entities_id: Entity annotations with class IDs
+                - relations: Original relation annotations
+                - rel_idx: Tensor of relation head/tail entity indices
+                - rel_label: Tensor of relation type labels
+
+        Warnings:
+            UserWarning: If sequence length exceeds max_len (gets truncated).
+        """
+        # Handle empty token list
+        if len(tokens) == 0:
+            tokens = ["[PAD]"]
+
+        # Truncate if necessary
+        max_len = self.config.max_len
+        if len(tokens) > max_len:
+            warnings.warn(f"Sentence of length {len(tokens)} has been truncated to {max_len}", stacklevel=2)
+            tokens = tokens[:max_len]
+
+        num_tokens = len(tokens)
+
+        ner, relations = self.sort_entities_and_relations(ner, relations)
+
+        # Create entity index mapping (from sorted entity list index to entities_id index)
+        entity_idx_mapping = {}
+        valid_entity_idx = 0
+
+        if ner is not None:
+            span_idx_list = []
+            for ent_idx, (start, end, label) in enumerate(ner):
+                if label in classes_to_id and end < num_tokens:
+                    span_idx_list.append([start, end])
+                    entity_idx_mapping[ent_idx] = valid_entity_idx
+                    valid_entity_idx += 1
+            if span_idx_list:
+                span_idx = torch.LongTensor(span_idx_list)
+            else:
+                span_idx = torch.zeros(0, 2, dtype=torch.long)
+        else:
+            span_idx = None
+        # Process relations
+        rel_idx_list = []
+        rel_label_list = []
+
+        if relations is not None and rel_classes_to_id is not None:
+            for rel in relations:
+                head_idx, tail_idx, rel_type = rel
+
+                # Check if both entities are valid and relation type is known
+                if head_idx in entity_idx_mapping and tail_idx in entity_idx_mapping and rel_type in rel_classes_to_id:
+                    mapped_head = entity_idx_mapping[head_idx]
+                    mapped_tail = entity_idx_mapping[tail_idx]
+                    rel_idx_list.append([mapped_head, mapped_tail])
+                    rel_label_list.append(rel_classes_to_id[rel_type])
+
+        # Convert to tensors
+        if rel_idx_list:
+            rel_idx = torch.LongTensor(rel_idx_list)
+            rel_label = torch.LongTensor(rel_label_list)
+        else:
+            rel_idx = torch.zeros(0, 2, dtype=torch.long)
+            rel_label = torch.zeros(0, dtype=torch.long)
+
+        return {
+            "tokens": tokens,
+            "seq_length": num_tokens,
+            "entities": ner,
+            "span_idx": span_idx,
+            "relations": relations,
+            "rel_idx": rel_idx,
+            "rel_label": rel_label,
+        }
+
+    def create_batch_dict(self, batch, class_to_ids, id_to_classes, rel_class_to_ids=None, rel_id_to_classes=None):
+        """Create a batch dictionary from preprocessed relation extraction examples.
+
+        Args:
+            batch: List of preprocessed example dictionaries.
+            class_to_ids: List of entity class-to-ID mappings.
+            id_to_classes: List of entity ID-to-class mappings.
+            rel_class_to_ids: List of relation class-to-ID mappings.
+            rel_id_to_classes: List of relation ID-to-class mappings.
+
+        Returns:
+            Dictionary containing all batch data for joint entity and relation
+            extraction with token-level entity labels.
+        """
+        tokens = [el["tokens"] for el in batch]
+        seq_length = torch.LongTensor([el["seq_length"] for el in batch]).unsqueeze(-1)
+        entities = [el["entities"] for el in batch]
+        relations = [el["relations"] for el in batch]
+
+        if batch[0]["span_idx"] is not None:
+            span_idx_list = [el["span_idx"] for el in batch]
+
+            batch_size = len(span_idx_list)
+            span_counts = [s.size(0) if s.numel() > 0 else 0 for s in span_idx_list]
+            max_spans = max(*span_counts, 1)  # Ensure at least 1
+
+            span_mask = torch.zeros(batch_size, max_spans, dtype=torch.bool)
+            for i, count in enumerate(span_counts):
+                if count > 0:
+                    span_mask[i, :count] = True
+
+            span_idx = pad_2d_tensor(span_idx_list, padding_value=0)
+        else:
+            span_idx, span_mask = None, None
+
+        rel_idx = pad_sequence([el["rel_idx"] for el in batch], batch_first=True, padding_value=0)
+        rel_label = pad_sequence([el["rel_label"] for el in batch], batch_first=True, padding_value=0)
+
+        return {
+            "tokens": tokens,
+            "seq_length": seq_length,
+            "entities": entities,
+            "span_idx": span_idx,
+            "span_mask": span_mask,
+            "relations": relations,
+            "rel_idx": rel_idx,
+            "rel_label": rel_label,
+            "classes_to_id": class_to_ids,
+            "id_to_classes": id_to_classes,
+            "rel_class_to_ids": rel_class_to_ids,
+            "rel_id_to_classes": rel_id_to_classes,
+        }
+
+    def tokenize_and_prepare_labels(self, batch, prepare_labels, *args, **kwargs):
+        """Tokenize inputs and prepare labels for joint entity-relation extraction.
+
+        Args:
+            batch: Batch dictionary with tokens, entities, relations, and class mappings.
+            prepare_labels: Whether to prepare labels.
+            *args: Variable length argument list.
+            **kwargs: Arbitrary keyword arguments.
+
+        Returns:
+            Dictionary containing tokenized inputs, token-level entity labels,
+            relation adjacency matrix, and relation labels.
+        """
+        # Use relation-aware tokenize_inputs from RelationExtractionSpanProcessor
+        tokenized_input = self.tokenize_inputs(
+            batch["tokens"], batch["classes_to_id"], blank=None, relations=batch["rel_class_to_ids"]
+        )
+
+        if prepare_labels:
+            # Create token-level BIO labels (from UniEncoderTokenProcessor)
+            labels = self.create_labels(batch)
+            tokenized_input["labels"] = labels
+
+            # Create relation labels (overridden method)
             adj_matrix, rel_matrix = self.create_relation_labels(batch)
             tokenized_input["adj_matrix"] = adj_matrix
             tokenized_input["rel_matrix"] = rel_matrix
