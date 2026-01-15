@@ -173,7 +173,7 @@ data-aria-dark="Switch to auto color mode">
 <span id="gliner-data-processing-utils-module"></span><h1>gliner.data_processing.utils module<a class="headerlink" href="#module-gliner.data_processing.utils" title="Link to this heading">¶</a></h1>
 <dl class="py function">
 <dt class="sig sig-object py" id="gliner.data_processing.utils.pad_2d_tensor">
-<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">pad_2d_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#pad_2d_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.pad_2d_tensor" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">gliner.data_processing.utils.</span></span><span class="sig-name descname"><span class="pre">pad_2d_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key_data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding_value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/utils.html#pad_2d_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.utils.pad_2d_tensor" title="Link to this definition">¶</a></dt>
 <dd><p>Pad a list of 2D tensors to uniform dimensions.</p>
 <p>Takes a list of 2D tensors with potentially different shapes and pads them
 to match the maximum dimensions across all tensors. All tensors are padded
@@ -181,8 +181,11 @@ with zeros to create a uniform rectangular shape, then stacked into a single
 3D tensor with a batch dimension.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>key_data</strong> – List of 2D tensors to pad. Each tensor can have different
-dimensions, but all must be 2D.</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key_data</strong> – List of 2D tensors to pad. Each tensor can have different
+dimensions, but all must be 2D.</p></li>
+<li><p><strong>padding_value</strong> – float, value used to fill pad elements.</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A 3D tensor of shape (batch_size, max_rows, max_cols) containing all

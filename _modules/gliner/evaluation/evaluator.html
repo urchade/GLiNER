@@ -397,87 +397,88 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="203"><span class="sd">        The input format expects entity indices rather than entity spans directly.</span>
 </span><span data-line="204"><span class="sd">        Entity spans are looked up from the entity list using these indices.</span>
 </span><span data-line="205"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="206">
 <div class="viewcode-block" id="BaseRelexEvaluator.get_ground_truth">
 <a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.get_ground_truth">[docs]</a>
-</span><span data-line="206">    <span class="k">def</span><span class="w"> </span><span class="nf">get_ground_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
-</span><span data-line="207"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract ground truth relations in evaluation format.</span>
-</span><span data-line="208">
-</span><span data-line="209"><span class="sd">        Args:</span>
-</span><span data-line="210"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
-</span><span data-line="211"><span class="sd">            rels: List of relation tuples in format (head_idx, tail_idx, rel_label)</span>
-</span><span data-line="212"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
-</span><span data-line="213">
-</span><span data-line="214"><span class="sd">        Returns:</span>
-</span><span data-line="215"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
-</span><span data-line="216"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
-</span><span data-line="217"><span class="sd">            are tail entity boundaries.</span>
-</span><span data-line="218"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="219">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="220">        <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
-</span><span data-line="221">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
-</span><span data-line="222">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
-</span><span data-line="223">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
-</span><span data-line="224">        <span class="k">return</span> <span class="n">all_rels</span></div>
+</span><span data-line="207">    <span class="k">def</span><span class="w"> </span><span class="nf">get_ground_truth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+</span><span data-line="208"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract ground truth relations in evaluation format.</span>
+</span><span data-line="209">
+</span><span data-line="210"><span class="sd">        Args:</span>
+</span><span data-line="211"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
+</span><span data-line="212"><span class="sd">            rels: List of relation tuples in format (head_idx, tail_idx, rel_label)</span>
+</span><span data-line="213"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
+</span><span data-line="214">
+</span><span data-line="215"><span class="sd">        Returns:</span>
+</span><span data-line="216"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
+</span><span data-line="217"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
+</span><span data-line="218"><span class="sd">            are tail entity boundaries.</span>
+</span><span data-line="219"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="220">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="221">        <span class="k">for</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">lab</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
+</span><span data-line="222">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+</span><span data-line="223">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+</span><span data-line="224">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+</span><span data-line="225">        <span class="k">return</span> <span class="n">all_rels</span></div>
 
-</span><span data-line="225">
+</span><span data-line="226">
 <div class="viewcode-block" id="BaseRelexEvaluator.get_predictions">
 <a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.get_predictions">[docs]</a>
-</span><span data-line="226">    <span class="k">def</span><span class="w"> </span><span class="nf">get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
-</span><span data-line="227"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract predicted relations in evaluation format.</span>
-</span><span data-line="228">
-</span><span data-line="229"><span class="sd">        Args:</span>
-</span><span data-line="230"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
-</span><span data-line="231"><span class="sd">            rels: List of predicted relation tuples in format (head_idx, rel_label, tail_idx)</span>
-</span><span data-line="232"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
-</span><span data-line="233">
-</span><span data-line="234"><span class="sd">        Returns:</span>
-</span><span data-line="235"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
-</span><span data-line="236"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
-</span><span data-line="237"><span class="sd">            are tail entity boundaries.</span>
-</span><span data-line="238">
-</span><span data-line="239"><span class="sd">        Note:</span>
-</span><span data-line="240"><span class="sd">            The order of elements in predicted relations is (head_idx, rel_label, tail_idx),</span>
-</span><span data-line="241"><span class="sd">            which differs from ground truth format (head_idx, tail_idx, rel_label).</span>
-</span><span data-line="242"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="243">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="244">        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
-</span><span data-line="245">            <span class="n">h</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="246">            <span class="n">lab</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-</span><span data-line="247">            <span class="n">t</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-</span><span data-line="248">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
-</span><span data-line="249">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
-</span><span data-line="250">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
-</span><span data-line="251">        <span class="k">return</span> <span class="n">all_rels</span></div>
+</span><span data-line="227">    <span class="k">def</span><span class="w"> </span><span class="nf">get_predictions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ents</span><span class="p">,</span> <span class="n">rels</span><span class="p">):</span>
+</span><span data-line="228"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract predicted relations in evaluation format.</span>
+</span><span data-line="229">
+</span><span data-line="230"><span class="sd">        Args:</span>
+</span><span data-line="231"><span class="sd">            ents: List of entity tuples in format (start, end, label).</span>
+</span><span data-line="232"><span class="sd">            rels: List of predicted relation tuples in format (head_idx, rel_label, tail_idx)</span>
+</span><span data-line="233"><span class="sd">                where head_idx and tail_idx are indices into the ents list.</span>
+</span><span data-line="234">
+</span><span data-line="235"><span class="sd">        Returns:</span>
+</span><span data-line="236"><span class="sd">            List of relations in format [[rel_label, (h_start, h_end, t_start, t_end)], ...]</span>
+</span><span data-line="237"><span class="sd">            where h_start, h_end are head entity boundaries and t_start, t_end</span>
+</span><span data-line="238"><span class="sd">            are tail entity boundaries.</span>
+</span><span data-line="239">
+</span><span data-line="240"><span class="sd">        Note:</span>
+</span><span data-line="241"><span class="sd">            The order of elements in predicted relations is (head_idx, rel_label, tail_idx),</span>
+</span><span data-line="242"><span class="sd">            which differs from ground truth format (head_idx, tail_idx, rel_label).</span>
+</span><span data-line="243"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="244">        <span class="n">all_rels</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="245">        <span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">rels</span><span class="p">:</span>
+</span><span data-line="246">            <span class="n">h</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="247">            <span class="n">lab</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="248">            <span class="n">t</span> <span class="o">=</span> <span class="n">rel</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+</span><span data-line="249">            <span class="n">h_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">h</span><span class="p">]</span>
+</span><span data-line="250">            <span class="n">t_ent</span> <span class="o">=</span> <span class="n">ents</span><span class="p">[</span><span class="n">t</span><span class="p">]</span>
+</span><span data-line="251">            <span class="n">all_rels</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">lab</span><span class="p">,</span> <span class="p">(</span><span class="n">h_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">h_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">t_ent</span><span class="p">[</span><span class="mi">1</span><span class="p">])])</span>
+</span><span data-line="252">        <span class="k">return</span> <span class="n">all_rels</span></div>
 
-</span><span data-line="252">
+</span><span data-line="253">
 <div class="viewcode-block" id="BaseRelexEvaluator.transform_data">
 <a class="viewcode-back" href="../../../api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseRelexEvaluator.transform_data">[docs]</a>
-</span><span data-line="253">    <span class="k">def</span><span class="w"> </span><span class="nf">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="254"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform relation extraction data into evaluation format.</span>
-</span><span data-line="255">
-</span><span data-line="256"><span class="sd">        Converts both ground truth and predicted relations from their original</span>
-</span><span data-line="257"><span class="sd">        format into the standardized format required by compute_prf().</span>
-</span><span data-line="258">
-</span><span data-line="259"><span class="sd">        Returns:</span>
-</span><span data-line="260"><span class="sd">            Tuple of (all_true_rel, all_outs_rel) where:</span>
-</span><span data-line="261"><span class="sd">            - all_true_rel: List of ground truth relation lists, one per sample</span>
-</span><span data-line="262"><span class="sd">            - all_outs_rel: List of predicted relation lists, one per sample</span>
-</span><span data-line="263"><span class="sd">            Each relation is in format [rel_label, (h_start, h_end, t_start, t_end)]</span>
-</span><span data-line="264">
-</span><span data-line="265"><span class="sd">        Note:</span>
-</span><span data-line="266"><span class="sd">            The input format (self.all_true and self.all_outs) is expected to</span>
-</span><span data-line="267"><span class="sd">            contain tuples of (entities, relations) for each sample.</span>
-</span><span data-line="268"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="269">        <span class="n">all_true_rel</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="270">        <span class="n">all_outs_rel</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="271">        <span class="k">for</span> <span class="n">true_item</span><span class="p">,</span> <span class="n">pred_item</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_outs</span><span class="p">):</span>
-</span><span data-line="272">            <span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span> <span class="o">=</span> <span class="n">true_item</span>
-</span><span data-line="273">            <span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span> <span class="o">=</span> <span class="n">pred_item</span>
-</span><span data-line="274">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ground_truth</span><span class="p">(</span><span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span><span class="p">)</span>
-</span><span data-line="275">            <span class="n">all_true_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span><span data-line="276">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_predictions</span><span class="p">(</span><span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span><span class="p">)</span>
-</span><span data-line="277">            <span class="n">all_outs_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-</span><span data-line="278">        <span class="k">return</span> <span class="n">all_true_rel</span><span class="p">,</span> <span class="n">all_outs_rel</span></div>
+</span><span data-line="254">    <span class="k">def</span><span class="w"> </span><span class="nf">transform_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="255"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Transform relation extraction data into evaluation format.</span>
+</span><span data-line="256">
+</span><span data-line="257"><span class="sd">        Converts both ground truth and predicted relations from their original</span>
+</span><span data-line="258"><span class="sd">        format into the standardized format required by compute_prf().</span>
+</span><span data-line="259">
+</span><span data-line="260"><span class="sd">        Returns:</span>
+</span><span data-line="261"><span class="sd">            Tuple of (all_true_rel, all_outs_rel) where:</span>
+</span><span data-line="262"><span class="sd">            - all_true_rel: List of ground truth relation lists, one per sample</span>
+</span><span data-line="263"><span class="sd">            - all_outs_rel: List of predicted relation lists, one per sample</span>
+</span><span data-line="264"><span class="sd">            Each relation is in format [rel_label, (h_start, h_end, t_start, t_end)]</span>
+</span><span data-line="265">
+</span><span data-line="266"><span class="sd">        Note:</span>
+</span><span data-line="267"><span class="sd">            The input format (self.all_true and self.all_outs) is expected to</span>
+</span><span data-line="268"><span class="sd">            contain tuples of (entities, relations) for each sample.</span>
+</span><span data-line="269"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="270">        <span class="n">all_true_rel</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="271">        <span class="n">all_outs_rel</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="272">        <span class="k">for</span> <span class="n">true_item</span><span class="p">,</span> <span class="n">pred_item</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_true</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_outs</span><span class="p">):</span>
+</span><span data-line="273">            <span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span> <span class="o">=</span> <span class="n">true_item</span>
+</span><span data-line="274">            <span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span> <span class="o">=</span> <span class="n">pred_item</span>
+</span><span data-line="275">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_ground_truth</span><span class="p">(</span><span class="n">true_ent</span><span class="p">,</span> <span class="n">true_rel</span><span class="p">)</span>
+</span><span data-line="276">            <span class="n">all_true_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="277">            <span class="n">e</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_predictions</span><span class="p">(</span><span class="n">pred_ent</span><span class="p">,</span> <span class="n">pred_rel</span><span class="p">)</span>
+</span><span data-line="278">            <span class="n">all_outs_rel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+</span><span data-line="279">        <span class="k">return</span> <span class="n">all_true_rel</span><span class="p">,</span> <span class="n">all_outs_rel</span></div>
 </div>
 
 </span></pre></div>

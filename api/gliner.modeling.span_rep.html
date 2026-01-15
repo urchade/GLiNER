@@ -216,6 +216,15 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.span_rep.ConvShareV2.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker"><code class="docutils literal notranslate"><span class="pre">TokenMarker</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.max_width"><code class="docutils literal notranslate">max_width</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.project_start"><code class="docutils literal notranslate">project_start</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.project_end"><code class="docutils literal notranslate">project_end</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.out_project"><code class="docutils literal notranslate">out_project</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.span_rep.TokenMarker.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gliner.modeling.span_rep.SpanRepLayer"><code class="docutils literal notranslate"><span class="pre">SpanRepLayer</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.modeling.span_rep.SpanRepLayer.span_rep_layer"><code class="docutils literal notranslate">span_rep_layer</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.span_rep.SpanRepLayer.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
@@ -1186,6 +1195,103 @@ token embedding, then projects to produce the final representation.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>x</strong> (<em>torch.Tensor</em>) – Input tensor of shape [B, L, D].</p></li>
 <li><p><strong>*args</strong> – Additional arguments (unused).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Span representations of shape [B, L, max_width, D].</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.span_rep.</span></span><span class="sig-name descname"><span class="pre">TokenMarker</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/span_rep.html#TokenMarker"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Marks and projects span endpoints using an MLP.</p>
+<p>A cleaner version of SpanMarker using the create_projection_layer utility.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.max_width">
+<span class="sig-name descname"><span class="pre">max_width</span></span><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.max_width" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum span width to represent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.project_start">
+<span class="sig-name descname"><span class="pre">project_start</span></span><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.project_start" title="Link to this definition">¶</a></dt>
+<dd><p>MLP for projecting start positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.project_end">
+<span class="sig-name descname"><span class="pre">project_end</span></span><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.project_end" title="Link to this definition">¶</a></dt>
+<dd><p>MLP for projecting end positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.out_project">
+<span class="sig-name descname"><span class="pre">out_project</span></span><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.out_project" title="Link to this definition">¶</a></dt>
+<dd><p>Final projection layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the SpanMarkerV0 layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<em>int</em>) – Dimension of the hidden representations.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em>) – Maximum span width to represent.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout rate. Defaults to 0.4.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">hidden_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/span_rep.html#TokenMarker.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the SpanMarkerV0 layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>hidden_size</strong> (<em>int</em>) – Dimension of the hidden representations.</p></li>
+<li><p><strong>max_width</strong> (<em>int</em>) – Maximum span width to represent.</p></li>
+<li><p><strong>dropout</strong> (<em>float</em><em>, </em><em>optional</em>) – Dropout rate. Defaults to 0.4.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.span_rep.TokenMarker.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/span_rep.html#TokenMarker.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.span_rep.TokenMarker.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Compute span representations using start and end markers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>h</strong> (<em>torch.Tensor</em>) – Token representations of shape [B, L, D].</p></li>
+<li><p><strong>span_idx</strong> (<em>torch.Tensor</em>) – Span indices of shape [B, <a href="#id5"><span class="problematic" id="id6">*</span></a>, 2].</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

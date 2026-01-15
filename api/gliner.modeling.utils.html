@@ -134,6 +134,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.utils.extract_prompt_features"><code class="docutils literal notranslate"><span class="pre">extract_prompt_features()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.utils.extract_prompt_features_and_word_embeddings"><code class="docutils literal notranslate"><span class="pre">extract_prompt_features_and_word_embeddings()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.utils.build_entity_pairs"><code class="docutils literal notranslate"><span class="pre">build_entity_pairs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.utils.extract_spans_from_tokens"><code class="docutils literal notranslate"><span class="pre">extract_spans_from_tokens()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -349,6 +350,28 @@ Shape: (batch_size, max_pairs, embed_dim)</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.modeling.utils.extract_spans_from_tokens">
+<span class="sig-prename descclassname"><span class="pre">gliner.modeling.utils.</span></span><span class="sig-name descname"><span class="pre">extract_spans_from_tokens</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/utils.html#extract_spans_from_tokens"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.utils.extract_spans_from_tokens" title="Link to this definition">¶</a></dt>
+<dd><p>Extract entity spans from BIO-style token predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scores</strong> (<em>Tensor</em>) – (B, W, C, 3) - logits for [start, end, inside]</p></li>
+<li><p><strong>labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional (B, W, C, 3) - ground truth labels</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold (used when labels is None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(B, N, 2) - [start, end] indices, padded
+span_mask: (B, N) - validity mask</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>span_idx</p>
 </dd>
 </dl>
 </dd></dl>

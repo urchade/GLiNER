@@ -161,6 +161,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenModel</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel.scorer"><code class="docutils literal notranslate">scorer</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel.get_span_representations"><code class="docutils literal notranslate">get_span_representations()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
 </ul>
@@ -186,7 +187,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.base.BiEncoderTokenModel.scorer"><code class="docutils literal notranslate">scorer</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BiEncoderTokenModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BiEncoderTokenModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.modeling.base.BiEncoderTokenModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanDecoderModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderModel</span></code></a><ul>
@@ -202,6 +202,17 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanDecoderModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderModel</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.scorer"><code class="docutils literal notranslate">scorer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.decoder"><code class="docutils literal notranslate">decoder</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.span_rep_layer"><code class="docutils literal notranslate">span_rep_layer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel._enc2dec_proj"><code class="docutils literal notranslate">_enc2dec_proj</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.select_token_decoder_embedding"><code class="docutils literal notranslate">select_token_decoder_embedding()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexModel</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.relations_rep_layer"><code class="docutils literal notranslate">relations_rep_layer</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.triples_score_layer"><code class="docutils literal notranslate">triples_score_layer</span></code></a></li>
@@ -209,9 +220,19 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.select_span_target_embedding"><code class="docutils literal notranslate">select_span_target_embedding()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.select_target_embedding"><code class="docutils literal notranslate">select_target_embedding()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.represent_spans"><code class="docutils literal notranslate">represent_spans()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.adj_loss"><code class="docutils literal notranslate">adj_loss()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel.rel_loss"><code class="docutils literal notranslate">rel_loss()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexModel</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.relations_rep_layer"><code class="docutils literal notranslate">relations_rep_layer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.triples_score_layer"><code class="docutils literal notranslate">triples_score_layer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.pair_rep_layer"><code class="docutils literal notranslate">pair_rep_layer</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenRelexModel.represent_spans"><code class="docutils literal notranslate">represent_spans()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -570,7 +591,7 @@ entity type embeddings.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderSpanModel.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanModel.loss" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanModel.loss" title="Link to this definition">¶</a></dt>
 <dd><p>Compute span classification loss.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -578,7 +599,7 @@ entity type embeddings.</p>
 <li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted scores of shape (B, L, K, C).</p></li>
 <li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth labels of shape (B, L, K, C).</p></li>
 <li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for valid entity types of shape (B, C).</p></li>
-<li><p><strong>mask_label</strong> (<em>Tensor</em>) – Mask for valid spans of shape (B, L, K).</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em>) – Mask for valid spans of shape (B, L, K).</p></li>
 <li><p><strong>alpha</strong> (<em>float</em>) – Focal loss alpha parameter.</p></li>
 <li><p><strong>gamma</strong> (<em>float</em>) – Focal loss gamma parameter.</p></li>
 <li><p><strong>prob_margin</strong> (<em>float</em>) – Margin for probability adjustment.</p></li>
@@ -643,8 +664,13 @@ entity type embeddings.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenModel.get_span_representations">
+<span class="sig-name descname"><span class="pre">get_span_representations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenModel.get_span_representations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenModel.get_span_representations" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenModel.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenModel.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenModel.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Forward pass through the token-based model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -652,17 +678,23 @@ entity type embeddings.</p>
 <li><p><strong>input_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Input token IDs of shape (B, L).</p></li>
 <li><p><strong>attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Attention mask of shape (B, L).</p></li>
 <li><p><strong>words_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed word embeddings of shape (B, W, D).</p></li>
-<li><p><strong>mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for words of shape (B, W).</p></li>
+<li><p><strong>mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for valid words of shape (B, W).</p></li>
+<li><p><strong>span_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Tensor containing span start/end indices of shape (B, S, 2),
+where S is the number of spans.</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Boolean or integer mask indicating valid spans of shape (B, S).</p></li>
+<li><p><strong>span_labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Ground truth span labels of shape (B, S, C).</p></li>
 <li><p><strong>prompts_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed entity label embeddings of shape (B, C, D).</p></li>
-<li><p><strong>prompts_embedding_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for prompts of shape (B, C).</p></li>
-<li><p><strong>words_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Word boundary mask.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Length of each text sequence.</p></li>
-<li><p><strong>labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Ground truth labels of shape (B, W, C).</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
+<li><p><strong>prompts_embedding_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for prompts/entities of shape (B, C).</p></li>
+<li><p><strong>words_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Word boundary mask mapping tokens to words.</p></li>
+<li><p><strong>text_lengths</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Length of each text sequence before padding, shape (B,).</p></li>
+<li><p><strong>labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Ground truth token-level labels of shape (B, W, C).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold used for span selection.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments passed to the encoder or loss functions
+(e.g., <code class="docutils literal notranslate"><span class="pre">packing_config</span></code>, <code class="docutils literal notranslate"><span class="pre">pair_attention_mask</span></code>).</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>GLiNERBaseOutput containing logits, loss, and intermediate representations.</p>
+<dd class="field-even"><p>GLiNERBaseOutput containing logits, loss, embeddings, and span-level outputs.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERBaseOutput" title="gliner.modeling.outputs.GLiNERBaseOutput"><em>GLiNERBaseOutput</em></a></p>
@@ -672,26 +704,32 @@ entity type embeddings.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenModel.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenModel.loss" title="Link to this definition">¶</a></dt>
-<dd><p>Compute token classification loss.</p>
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenModel.loss" title="Link to this definition">¶</a></dt>
+<dd><p>Compute token- or span-level classification loss.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted scores of shape (B, W, C).</p></li>
-<li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth labels of shape (B, W, C).</p></li>
+<li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted scores. Shape is (B, W, C, 3) for token-level
+classification (start, end, inside) or (B, N, C) for span-level
+classification, where B is batch size, W is number of words,
+N is number of spans, and C is number of entity types.</p></li>
+<li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth labels matching <code class="docutils literal notranslate"><span class="pre">scores</span></code> shape.</p></li>
 <li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for valid entity types of shape (B, C).</p></li>
-<li><p><strong>mask</strong> (<em>Tensor</em>) – Mask for valid tokens of shape (B, W).</p></li>
-<li><p><strong>alpha</strong> (<em>float</em>) – Focal loss alpha parameter.</p></li>
-<li><p><strong>gamma</strong> (<em>float</em>) – Focal loss gamma parameter.</p></li>
-<li><p><strong>prob_margin</strong> (<em>float</em>) – Margin for probability adjustment.</p></li>
-<li><p><strong>label_smoothing</strong> (<em>float</em>) – Label smoothing factor.</p></li>
-<li><p><strong>reduction</strong> (<em>str</em>) – Loss reduction method (‘sum’ or ‘mean’).</p></li>
-<li><p><strong>negatives</strong> (<em>float</em>) – Negative sampling probability.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
+<li><p><strong>word_mask</strong> (<em>Tensor</em>) – Mask for valid tokens or spans of shape (B, W) for
+token-level loss or (B, N) for span-level loss.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Alpha parameter for focal loss. If negative, focal weighting
+is disabled.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Gamma parameter for focal loss.</p></li>
+<li><p><strong>prob_margin</strong> (<em>float</em>) – Margin applied to predicted probabilities.</p></li>
+<li><p><strong>label_smoothing</strong> (<em>float</em>) – Amount of label smoothing applied to targets.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – Reduction method applied to the final loss. One of
+<code class="docutils literal notranslate"><span class="pre">&quot;none&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;mean&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;sum&quot;</span></code>.</p></li>
+<li><p><strong>negatives</strong> (<em>float</em>) – Weighting factor for negative examples.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional unused keyword arguments for API compatibility.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Scalar loss tensor.</p>
+<dd class="field-even"><p>A scalar tensor representing the aggregated loss value.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em></p>
@@ -945,7 +983,7 @@ allowing independent encoding before fusion.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="gliner.modeling.base.BiEncoderTokenModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.base.</span></span><span class="sig-name descname"><span class="pre">BiEncoderTokenModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BiEncoderTokenModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BiEncoderTokenModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.base.BaseBiEncoderModel" title="gliner.modeling.base.BaseBiEncoderModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBiEncoderModel</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.base.BaseBiEncoderModel" title="gliner.modeling.base.BaseBiEncoderModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBiEncoderModel</span></code></a>, <a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel" title="gliner.modeling.base.UniEncoderTokenModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenModel</span></code></a></p>
 <p>Token-based NER model using bi-encoder architecture.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.modeling.base.BiEncoderTokenModel.scorer">
@@ -985,7 +1023,7 @@ allowing independent encoding before fusion.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.BiEncoderTokenModel.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_embeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BiEncoderTokenModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BiEncoderTokenModel.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_embeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels_attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BiEncoderTokenModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BiEncoderTokenModel.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Forward pass through the bi-encoder token model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -997,11 +1035,16 @@ allowing independent encoding before fusion.</p>
 <li><p><strong>labels_attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Attention mask for labels.</p></li>
 <li><p><strong>words_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed word embeddings.</p></li>
 <li><p><strong>mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for words.</p></li>
+<li><p><strong>span_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Tensor containing span start/end indices of shape (B, S, 2),
+where S is the number of spans.</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Boolean or integer mask indicating valid spans of shape (B, S).</p></li>
+<li><p><strong>span_labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Ground truth span labels of shape (B, S, C).</p></li>
 <li><p><strong>prompts_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed entity label embeddings.</p></li>
 <li><p><strong>prompts_embedding_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for prompts.</p></li>
 <li><p><strong>words_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Word boundary mask.</p></li>
 <li><p><strong>text_lengths</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Length of each text sequence.</p></li>
 <li><p><strong>labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Ground truth labels of shape (B, W, C).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>None</em>) – float value for filtering spans.</p></li>
 <li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
 </ul>
 </dd>
@@ -1010,35 +1053,6 @@ allowing independent encoding before fusion.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERBaseOutput" title="gliner.modeling.outputs.GLiNERBaseOutput"><em>GLiNERBaseOutput</em></a></p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.modeling.base.BiEncoderTokenModel.loss">
-<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BiEncoderTokenModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BiEncoderTokenModel.loss" title="Link to this definition">¶</a></dt>
-<dd><p>Compute token classification loss for bi-encoder.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted scores of shape (B, W, C).</p></li>
-<li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth labels of shape (B, W, C).</p></li>
-<li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for valid entity types of shape (B, C).</p></li>
-<li><p><strong>mask</strong> (<em>Tensor</em>) – Mask for valid tokens of shape (B, W).</p></li>
-<li><p><strong>alpha</strong> (<em>float</em>) – Focal loss alpha parameter.</p></li>
-<li><p><strong>gamma</strong> (<em>float</em>) – Focal loss gamma parameter.</p></li>
-<li><p><strong>prob_margin</strong> (<em>float</em>) – Margin for probability adjustment.</p></li>
-<li><p><strong>label_smoothing</strong> (<em>float</em>) – Label smoothing factor.</p></li>
-<li><p><strong>reduction</strong> (<em>str</em>) – Loss reduction method (‘sum’ or ‘mean’).</p></li>
-<li><p><strong>negatives</strong> (<em>float</em>) – Negative sampling probability.</p></li>
-<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Scalar loss tensor.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tensor</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1319,6 +1333,207 @@ or None if no valid spans.</p></li>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.base.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenDecoderModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenDecoderModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.base.UniEncoderTokenModel" title="gliner.modeling.base.UniEncoderTokenModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenModel</span></code></a>, <a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanDecoderModel" title="gliner.modeling.base.UniEncoderSpanDecoderModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderModel</span></code></a></p>
+<p>Token-based NER model with encoder-decoder architecture.</p>
+<p>This model combines token-level BIO-style classification with a decoder
+that generates entity type labels autoregressively, enabling more flexible
+prediction strategies for token-level NER tasks.</p>
+<dl class="simple">
+<dt>Inherits from:</dt><dd><ul class="simple">
+<li><p>UniEncoderTokenModel: Token-level BIO tagging for entities</p></li>
+<li><p>UniEncoderSpanDecoderModel: Encoder-decoder architecture and decoder utilities</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.scorer">
+<span class="sig-name descname"><span class="pre">scorer</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.scorer" title="Link to this definition">¶</a></dt>
+<dd><p>Scoring layer for computing token-label compatibility.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.scorers.html#gliner.modeling.scorers.Scorer" title="gliner.modeling.scorers.Scorer">Scorer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.decoder">
+<span class="sig-name descname"><span class="pre">decoder</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.decoder" title="Link to this definition">¶</a></dt>
+<dd><p>Decoder module for label generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder" title="gliner.modeling.decoder.Decoder">Decoder</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.span_rep_layer">
+<span class="sig-name descname"><span class="pre">span_rep_layer</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.span_rep_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Layer for computing span representations (if represent_spans=True).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer" title="gliner.modeling.span_rep.SpanRepLayer">SpanRepLayer</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel._enc2dec_proj">
+<span class="sig-name descname"><span class="pre">_enc2dec_proj</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel._enc2dec_proj" title="Link to this definition">¶</a></dt>
+<dd><p>Projection layer if encoder and decoder
+dimensions differ.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[nn.Module]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the token-level encoder-decoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>Any</em>) – Model configuration object.</p></li>
+<li><p><strong>from_pretrained</strong> (<em>bool</em>) – Whether to load from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory for caching pretrained models.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenDecoderModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the token-level encoder-decoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>Any</em>) – Model configuration object.</p></li>
+<li><p><strong>from_pretrained</strong> (<em>bool</em>) – Whether to load from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory for caching pretrained models.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.select_token_decoder_embedding">
+<span class="sig-name descname"><span class="pre">select_token_decoder_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_rep</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_text_embeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenDecoderModel.select_token_decoder_embedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.select_token_decoder_embedding" title="Link to this definition">¶</a></dt>
+<dd><p>Select entity embeddings for decoder input based on token predictions or labels.</p>
+<p>This method extracts entity spans from token-level predictions and prepares
+their representations for the decoder. It can operate in two modes:
+1. “prompt” mode: Uses entity type embeddings as decoder input.
+2. “span” mode: Uses contextualized tokens within each detected span as decoder input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prompts_embedding</strong> (<em>Tensor</em>) – Entity type embeddings of shape (B, C, D).</p></li>
+<li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for prompts of shape (B, C).</p></li>
+<li><p><strong>words_embedding</strong> – Word-level embeddings of shape (B, W, D).</p></li>
+<li><p><strong>token_scores</strong> – Token classification scores of shape (B, W, C, 3).</p></li>
+<li><p><strong>word_mask</strong> – Mask for valid words of shape (B, W).</p></li>
+<li><p><strong>span_logits</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Span-level classification logits of shape (B, S, C),</p></li>
+<li><p><strong>span_rep</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Span representations (B, S, D).</p></li>
+<li><p><strong>span_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Pre-computed span indices of shape (B, S, 2).</p></li>
+<li><p><strong>span_labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Ground truth span labels of shape (B, S, C)</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Pre-computed span mask of shape (B, S).</p></li>
+<li><p><strong>decoder_text_embeds</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Text embeddings for span mode of shape (B, T, D).</p></li>
+<li><p><strong>decoder_words_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Word position mask of shape (B, T).</p></li>
+<li><p><strong>labels</strong> – Ground truth token-level labels of shape (B, W, C, 3).</p></li>
+<li><p><strong>threshold</strong> – Confidence threshold for selecting spans.</p></li>
+<li><p><strong>top_k</strong> (<em>int</em><em> | </em><em>None</em>) – Optional limit on number of spans to select.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>span_rep_kept: Selected span embeddings for decoder of shape (B, S, T, D)
+or None if no valid spans.</p></li>
+<li><p>span_msk: Mask for selected spans of shape (B, S, T) or None.</p></li>
+<li><p>span_sel_idx: Original indices of selected spans of shape (B, S) or None.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_labels_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_labels_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenDecoderModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass through the token-level encoder-decoder model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Input token IDs of shape (B, L).</p></li>
+<li><p><strong>attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Attention mask of shape (B, L).</p></li>
+<li><p><strong>decoder_input_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Decoder input IDs for span mode.</p></li>
+<li><p><strong>decoder_attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Decoder attention mask.</p></li>
+<li><p><strong>decoder_labels_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Label token IDs for decoding of shape (M, L).</p></li>
+<li><p><strong>decoder_labels_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for decoder labels of shape (M, L).</p></li>
+<li><p><strong>decoder_words_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Word position mask for span mode.</p></li>
+<li><p><strong>words_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed word embeddings.</p></li>
+<li><p><strong>mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for words.</p></li>
+<li><p><strong>span_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Pre-computed span indices of shape (B, S, 2).</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Pre-computed span mask of shape (B, S).</p></li>
+<li><p><strong>span_labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Ground truth span labels of shape (B, S, C).</p></li>
+<li><p><strong>prompts_embedding</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Pre-computed entity type embeddings.</p></li>
+<li><p><strong>prompts_embedding_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Mask for prompts.</p></li>
+<li><p><strong>words_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Word boundary mask.</p></li>
+<li><p><strong>text_lengths</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Length of each text sequence.</p></li>
+<li><p><strong>labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Ground truth token-level labels of shape (B, W, C, 3).</p></li>
+<li><p><strong>decoder_labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Ground truth decoder labels of shape (M, L).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for span selection.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GLiNERDecoderOutput containing logits, losses, and decoder information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERDecoderOutput" title="gliner.modeling.outputs.GLiNERDecoderOutput"><em>GLiNERDecoderOutput</em></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenDecoderModel.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoder_loss</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenDecoderModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenDecoderModel.loss" title="Link to this definition">¶</a></dt>
+<dd><p>Compute combined loss for token classification, spans, and decoder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted token scores of shape (B, W, C, 3).</p></li>
+<li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth token labels of shape (B, W, C, 3).</p></li>
+<li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for valid entity types of shape (B, C).</p></li>
+<li><p><strong>word_mask</strong> (<em>Tensor</em>) – Mask for valid words of shape (B, W).</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Focal loss alpha parameter.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Focal loss gamma parameter.</p></li>
+<li><p><strong>prob_margin</strong> (<em>float</em>) – Margin for probability adjustment.</p></li>
+<li><p><strong>label_smoothing</strong> (<em>float</em>) – Label smoothing factor.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – Loss reduction method (‘sum’ or ‘mean’).</p></li>
+<li><p><strong>negatives</strong> (<em>float</em>) – Negative sampling probability.</p></li>
+<li><p><strong>span_logits</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional span logits of shape (B, S, C).</p></li>
+<li><p><strong>span_labels</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional span labels of shape (B, S, C).</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional span mask of shape (B, S).</p></li>
+<li><p><strong>decoder_loss</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional decoder loss to combine.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scalar combined loss tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderSpanRelexModel">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.base.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanRelexModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanRelexModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanRelexModel" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanModel" title="gliner.modeling.base.UniEncoderSpanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanModel</span></code></a></p>
@@ -1442,6 +1657,13 @@ keeping only high-confidence or positive entity spans for relation modeling.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderSpanRelexModel.represent_spans">
+<span class="sig-name descname"><span class="pre">represent_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanRelexModel.represent_spans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanRelexModel.represent_spans" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderSpanRelexModel.forward">
 <span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adj_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_matrix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanRelexModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanRelexModel.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Forward pass through the relation extraction model.</p>
@@ -1531,6 +1753,113 @@ keeping only high-confidence or positive entity spans for relation modeling.</p>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tensor</em></p>
 </dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.modeling.base.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenRelexModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenRelexModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.modeling.base.UniEncoderSpanRelexModel" title="gliner.modeling.base.UniEncoderSpanRelexModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanRelexModel</span></code></a></p>
+<p>Token-level NER model with relation extraction capabilities.</p>
+<p>This model extends token-based NER to also extract relations between
+identified entities, predicting both entity types and relation types
+in a joint model.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.relations_rep_layer">
+<span class="sig-name descname"><span class="pre">relations_rep_layer</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.relations_rep_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Layer for computing
+pairwise entity relations (adjacency matrix).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="gliner.modeling.multitask.relations_layers.html#gliner.modeling.multitask.relations_layers.RelationsRepLayer" title="gliner.modeling.multitask.relations_layers.RelationsRepLayer">RelationsRepLayer</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.triples_score_layer">
+<span class="sig-name descname"><span class="pre">triples_score_layer</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.triples_score_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Layer for scoring
+(head, relation, tail) triples.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[<a class="reference internal" href="gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer" title="gliner.modeling.multitask.triples_layers.TriplesScoreLayer">TriplesScoreLayer</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.pair_rep_layer">
+<span class="sig-name descname"><span class="pre">pair_rep_layer</span></span><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.pair_rep_layer" title="Link to this definition">¶</a></dt>
+<dd><p>Alternative layer for relation
+scoring via concatenation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Optional[nn.Module]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Initialize the span-based relation extraction model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>Any</em>) – Model configuration object.</p></li>
+<li><p><strong>from_pretrained</strong> (<em>bool</em>) – Whether to load from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory for caching pretrained models.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">from_pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenRelexModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the span-based relation extraction model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> (<em>Any</em>) – Model configuration object.</p></li>
+<li><p><strong>from_pretrained</strong> (<em>bool</em>) – Whether to load from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory for caching pretrained models.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.loss">
+<span class="sig-name descname"><span class="pre">loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embedding_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">word_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenRelexModel.loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.loss" title="Link to this definition">¶</a></dt>
+<dd><p>Compute token classification loss.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>scores</strong> (<em>Tensor</em>) – Predicted scores of shape (B, W, C).</p></li>
+<li><p><strong>labels</strong> (<em>Tensor</em>) – Ground truth labels of shape (B, W, C).</p></li>
+<li><p><strong>prompts_embedding_mask</strong> (<em>Tensor</em>) – Mask for valid entity types of shape (B, C).</p></li>
+<li><p><strong>word_mask</strong> (<em>Tensor</em>) – Mask for valid tokens of shape (B, W).</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Focal loss alpha parameter.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Focal loss gamma parameter.</p></li>
+<li><p><strong>prob_margin</strong> (<em>float</em>) – Margin for probability adjustment.</p></li>
+<li><p><strong>label_smoothing</strong> (<em>float</em>) – Label smoothing factor.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – Loss reduction method (‘sum’ or ‘mean’).</p></li>
+<li><p><strong>negatives</strong> (<em>float</em>) – Negative sampling probability.</p></li>
+<li><p><strong>**kwargs</strong> (<em>Any</em>) – Additional arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Scalar loss tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderTokenRelexModel.represent_spans">
+<span class="sig-name descname"><span class="pre">represent_spans</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">words_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prompts_embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderTokenRelexModel.represent_spans"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderTokenRelexModel.represent_spans" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
 </dl>
 </dd></dl>
 

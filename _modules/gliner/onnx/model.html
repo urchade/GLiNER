@@ -579,6 +579,61 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="371">        <span class="k">return</span> <span class="n">outputs</span></div>
 </div>
 
+</span><span data-line="372">
+</span><span data-line="373">
+<div class="viewcode-block" id="UniEncoderTokenRelexORTModel">
+<a class="viewcode-back" href="../../../api/gliner.onnx.model.html#gliner.onnx.model.UniEncoderTokenRelexORTModel">[docs]</a>
+</span><span data-line="374"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenRelexORTModel</span><span class="p">(</span><span class="n">BaseORTModel</span><span class="p">):</span>
+</span><span data-line="375"><span class="w">    </span><span class="sd">&quot;&quot;&quot;ONNX Runtime model for uni-encoder token-level relation extraction.</span>
+</span><span data-line="376">
+</span><span data-line="377"><span class="sd">    Uses a single encoder to process text and perform both entity recognition</span>
+</span><span data-line="378"><span class="sd">    and relation extraction at the token level.</span>
+</span><span data-line="379"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="380">
+<div class="viewcode-block" id="UniEncoderTokenRelexORTModel.forward">
+<a class="viewcode-back" href="../../../api/gliner.onnx.model.html#gliner.onnx.model.UniEncoderTokenRelexORTModel.forward">[docs]</a>
+</span><span data-line="381">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+</span><span data-line="382">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="383">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="384">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="385">        <span class="n">words_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="386">        <span class="n">text_lengths</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="387">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="388">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="389"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass for span relation extraction model using ONNX inference.</span>
+</span><span data-line="390">
+</span><span data-line="391"><span class="sd">        Args:</span>
+</span><span data-line="392"><span class="sd">            input_ids: Tensor of shape (batch_size, seq_len) containing input token IDs.</span>
+</span><span data-line="393"><span class="sd">            attention_mask: Tensor of shape (batch_size, seq_len) with 1s for real</span>
+</span><span data-line="394"><span class="sd">                tokens and 0s for padding.</span>
+</span><span data-line="395"><span class="sd">            words_mask: Tensor of shape (batch_size, seq_len) indicating word boundaries.</span>
+</span><span data-line="396"><span class="sd">            text_lengths: Tensor of shape (batch_size,) containing the actual length</span>
+</span><span data-line="397"><span class="sd">                of each text sequence.</span>
+</span><span data-line="398"><span class="sd">            span_idx: Tensor containing indices of spans to classify.</span>
+</span><span data-line="399"><span class="sd">            span_mask: Tensor indicating which spans are valid (not padding).</span>
+</span><span data-line="400"><span class="sd">            **kwargs: Additional arguments (ignored).</span>
+</span><span data-line="401">
+</span><span data-line="402"><span class="sd">        Returns:</span>
+</span><span data-line="403"><span class="sd">            GLiNERRelexOutput containing logits for span classification, relation</span>
+</span><span data-line="404"><span class="sd">            indices, relation logits, and relation mask.</span>
+</span><span data-line="405"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="406">        <span class="n">inputs</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="407">            <span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="408">            <span class="s2">&quot;attention_mask&quot;</span><span class="p">:</span> <span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="409">            <span class="s2">&quot;words_mask&quot;</span><span class="p">:</span> <span class="n">words_mask</span><span class="p">,</span>
+</span><span data-line="410">            <span class="s2">&quot;text_lengths&quot;</span><span class="p">:</span> <span class="n">text_lengths</span><span class="p">,</span>
+</span><span data-line="411">        <span class="p">}</span>
+</span><span data-line="412">        <span class="n">prepared_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_inputs</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+</span><span data-line="413">        <span class="n">inference_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">run_inference</span><span class="p">(</span><span class="n">prepared_inputs</span><span class="p">)</span>
+</span><span data-line="414">        <span class="n">outputs</span> <span class="o">=</span> <span class="n">GLiNERRelexOutput</span><span class="p">(</span>
+</span><span data-line="415">            <span class="n">logits</span><span class="o">=</span><span class="n">inference_output</span><span class="p">[</span><span class="s2">&quot;logits&quot;</span><span class="p">],</span>
+</span><span data-line="416">            <span class="n">rel_idx</span><span class="o">=</span><span class="n">inference_output</span><span class="p">[</span><span class="s2">&quot;rel_idx&quot;</span><span class="p">],</span>
+</span><span data-line="417">            <span class="n">rel_logits</span><span class="o">=</span><span class="n">inference_output</span><span class="p">[</span><span class="s2">&quot;rel_logits&quot;</span><span class="p">],</span>
+</span><span data-line="418">            <span class="n">rel_mask</span><span class="o">=</span><span class="n">inference_output</span><span class="p">[</span><span class="s2">&quot;rel_mask&quot;</span><span class="p">],</span>
+</span><span data-line="419">        <span class="p">)</span>
+</span><span data-line="420">        <span class="k">return</span> <span class="n">outputs</span></div>
+</div>
+
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

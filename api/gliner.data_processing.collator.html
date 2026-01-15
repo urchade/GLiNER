@@ -151,9 +151,11 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.data_processing.collator.RelationExtractionSpanDataCollator.collate_batch"><code class="docutils literal notranslate">collate_batch()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#gliner.data_processing.collator.RelationExtractionTokenDataCollator"><code class="docutils literal notranslate"><span class="pre">RelationExtractionTokenDataCollator</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.collator.UniEncoderSpanDataCollator"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDataCollator</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.collator.BiEncoderSpanDataCollator"><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanDataCollator</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.collator.UniEncoderSpanDecoderDataCollator"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderDataCollator</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderDataCollator</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.collator.UniEncoderTokenDataCollator"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenDataCollator</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.collator.BiEncoderTokenDataCollator"><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenDataCollator</span></code></a></li>
 </ul>
@@ -488,6 +490,31 @@ Produces both entity labels and relation adjacency matrices.</p>
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.collator.RelationExtractionTokenDataCollator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.collator.</span></span><span class="sig-name descname"><span class="pre">RelationExtractionTokenDataCollator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_processor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/collator.html#RelationExtractionTokenDataCollator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.collator.RelationExtractionTokenDataCollator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.collator.RelationExtractionSpanDataCollator" title="gliner.data_processing.collator.RelationExtractionSpanDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationExtractionSpanDataCollator</span></code></a></p>
+<p>Data collator for RelationExtractionTokenProcessor.</p>
+<p>Handles joint entity and relation extraction at token level.
+Produces both entity labels and relation adjacency matrices.</p>
+<p>Required Processor: RelationExtractionTokenProcessor</p>
+<p>Initialize RelationExtraction span collator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>data_processor</strong> (<a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.RelationExtractionSpanProcessor" title="gliner.data_processing.processor.RelationExtractionSpanProcessor"><em>RelationExtractionSpanProcessor</em></a><em> | </em><em>None</em>) – RelationExtractionSpanProcessor instance.</p></li>
+<li><p><strong>return_tokens</strong> (<em>bool</em>) – Whether to return tokenized text.</p></li>
+<li><p><strong>return_id_to_classes</strong> (<em>bool</em>) – Whether to return entity class mappings.</p></li>
+<li><p><strong>return_entities</strong> (<em>bool</em>) – Whether to return entity annotations.</p></li>
+<li><p><strong>return_rel_id_to_classes</strong> (<em>bool</em>) – Whether to return relation class mappings.</p></li>
+<li><p><strong>return_relations</strong> (<em>bool</em>) – Whether to return relation annotations.</p></li>
+<li><p><strong>prepare_labels</strong> (<em>bool</em>) – Whether to prepare training labels.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="gliner.data_processing.collator.UniEncoderSpanDataCollator">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.collator.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanDataCollator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_processor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/collator.html#UniEncoderSpanDataCollator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.collator.UniEncoderSpanDataCollator" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.collator.SpanDataCollator" title="gliner.data_processing.collator.SpanDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanDataCollator</span></code></a></p>
@@ -537,6 +564,27 @@ Produces both entity labels and relation adjacency matrices.</p>
 <dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.collator.SpanDataCollator" title="gliner.data_processing.collator.SpanDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanDataCollator</span></code></a></p>
 <p>Backward compatibility alias for SpanDataCollator with EncoderDecoderSpanProcessor.</p>
 <p>Use SpanDataCollator directly for new code.</p>
+<p>Initialize unified span collator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Configuration object.</p></li>
+<li><p><strong>data_processor</strong> (<a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderSpanProcessor" title="gliner.data_processing.processor.UniEncoderSpanProcessor"><em>UniEncoderSpanProcessor</em></a><em> | </em><a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.BiEncoderSpanProcessor" title="gliner.data_processing.processor.BiEncoderSpanProcessor"><em>BiEncoderSpanProcessor</em></a><em> | </em><a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderSpanDecoderProcessor" title="gliner.data_processing.processor.UniEncoderSpanDecoderProcessor"><em>UniEncoderSpanDecoderProcessor</em></a><em> | </em><em>None</em>) – Span processor instance (Uni/Bi/EncoderDecoder).</p></li>
+<li><p><strong>return_tokens</strong> (<em>bool</em>) – Whether to return tokenized text.</p></li>
+<li><p><strong>return_id_to_classes</strong> (<em>bool</em>) – Whether to return class mappings.</p></li>
+<li><p><strong>return_entities</strong> (<em>bool</em>) – Whether to return entity annotations.</p></li>
+<li><p><strong>prepare_labels</strong> (<em>bool</em>) – Whether to prepare training labels.</p></li>
+<li><p><strong>prepare_entities</strong> (<em>bool</em>) – Whether to encode entity types (BiEncoder only).</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.data_processing.collator.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenDecoderDataCollator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_processor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_tokens</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prepare_entities</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/collator.html#UniEncoderTokenDecoderDataCollator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.data_processing.collator.UniEncoderSpanDecoderDataCollator" title="gliner.data_processing.collator.UniEncoderSpanDecoderDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderDataCollator</span></code></a></p>
+<p>Backward compatibility alias for UniEncoderTokenDecoderDataCollator with UniEncoderSpanDecoderDataCollator.</p>
 <p>Initialize unified span collator.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

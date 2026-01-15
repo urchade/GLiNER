@@ -901,85 +901,145 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="635">
 </span><span data-line="636">
+<div class="viewcode-block" id="TokenMarker">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.TokenMarker">[docs]</a>
+</span><span data-line="637"><span class="k">class</span><span class="w"> </span><span class="nc">TokenMarker</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="638"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Marks and projects span endpoints using an MLP.</span>
+</span><span data-line="639">
+</span><span data-line="640"><span class="sd">    A cleaner version of SpanMarker using the create_projection_layer utility.</span>
+</span><span data-line="641">
+</span><span data-line="642"><span class="sd">    Attributes:</span>
+</span><span data-line="643"><span class="sd">        max_width (int): Maximum span width to represent.</span>
+</span><span data-line="644"><span class="sd">        project_start (nn.Module): MLP for projecting start positions.</span>
+</span><span data-line="645"><span class="sd">        project_end (nn.Module): MLP for projecting end positions.</span>
+</span><span data-line="646"><span class="sd">        out_project (nn.Module): Final projection layer.</span>
+</span><span data-line="647"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="648">
+<div class="viewcode-block" id="TokenMarker.__init__">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.TokenMarker.__init__">[docs]</a>
+</span><span data-line="649">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.4</span><span class="p">):</span>
+</span><span data-line="650"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanMarkerV0 layer.</span>
+</span><span data-line="651">
+</span><span data-line="652"><span class="sd">        Args:</span>
+</span><span data-line="653"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="654"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="655"><span class="sd">            dropout (float, optional): Dropout rate. Defaults to 0.4.</span>
+</span><span data-line="656"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="657">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="658">        <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="659">        <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
+</span><span data-line="660">
+</span><span data-line="661">        <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span> <span class="o">=</span> <span class="n">create_projection_layer</span><span class="p">(</span><span class="n">hidden_size</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span></div>
+
+</span><span data-line="662">
+<div class="viewcode-block" id="TokenMarker.forward">
+<a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.TokenMarker.forward">[docs]</a>
+</span><span data-line="663">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="664"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute span representations using start and end markers.</span>
+</span><span data-line="665">
+</span><span data-line="666"><span class="sd">        Args:</span>
+</span><span data-line="667"><span class="sd">            h (torch.Tensor): Token representations of shape [B, L, D].</span>
+</span><span data-line="668"><span class="sd">            span_idx (torch.Tensor): Span indices of shape [B, *, 2].</span>
+</span><span data-line="669">
+</span><span data-line="670"><span class="sd">        Returns:</span>
+</span><span data-line="671"><span class="sd">            torch.Tensor: Span representations of shape [B, L, max_width, D].</span>
+</span><span data-line="672"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="673">        <span class="n">B</span><span class="p">,</span> <span class="n">L</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="674">        <span class="n">num_spans</span> <span class="o">=</span> <span class="n">span_idx</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="675">        <span class="n">start_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_start</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="676">        <span class="n">end_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">project_end</span><span class="p">(</span><span class="n">h</span><span class="p">)</span>
+</span><span data-line="677">
+</span><span data-line="678">        <span class="n">start_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">start_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">])</span>
+</span><span data-line="679">        <span class="n">end_span_rep</span> <span class="o">=</span> <span class="n">extract_elements</span><span class="p">(</span><span class="n">end_rep</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">])</span>
+</span><span data-line="680">
+</span><span data-line="681">        <span class="n">cat</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">start_span_rep</span><span class="p">,</span> <span class="n">end_span_rep</span><span class="p">],</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">relu</span><span class="p">()</span>
+</span><span data-line="682">
+</span><span data-line="683">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">out_project</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span></div>
+</div>
+
+</span><span data-line="684">
+</span><span data-line="685">
 <div class="viewcode-block" id="SpanRepLayer">
 <a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer">[docs]</a>
-</span><span data-line="637"><span class="k">class</span><span class="w"> </span><span class="nc">SpanRepLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="638"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory class for various span representation approaches.</span>
-</span><span data-line="639">
-</span><span data-line="640"><span class="sd">    This class provides a unified interface to instantiate different span</span>
-</span><span data-line="641"><span class="sd">    representation methods based on the specified mode.</span>
-</span><span data-line="642">
-</span><span data-line="643"><span class="sd">    Attributes:</span>
-</span><span data-line="644"><span class="sd">        span_rep_layer (nn.Module): The underlying span representation layer.</span>
-</span><span data-line="645"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="646">
+</span><span data-line="686"><span class="k">class</span><span class="w"> </span><span class="nc">SpanRepLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+</span><span data-line="687"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Factory class for various span representation approaches.</span>
+</span><span data-line="688">
+</span><span data-line="689"><span class="sd">    This class provides a unified interface to instantiate different span</span>
+</span><span data-line="690"><span class="sd">    representation methods based on the specified mode.</span>
+</span><span data-line="691">
+</span><span data-line="692"><span class="sd">    Attributes:</span>
+</span><span data-line="693"><span class="sd">        span_rep_layer (nn.Module): The underlying span representation layer.</span>
+</span><span data-line="694"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="695">
 <div class="viewcode-block" id="SpanRepLayer.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer.__init__">[docs]</a>
-</span><span data-line="647">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="648"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanRepLayer with the specified mode.</span>
-</span><span data-line="649">
-</span><span data-line="650"><span class="sd">        Args:</span>
-</span><span data-line="651"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
-</span><span data-line="652"><span class="sd">            max_width (int): Maximum span width to represent.</span>
-</span><span data-line="653"><span class="sd">            span_mode (str): Type of span representation to use. Options:</span>
-</span><span data-line="654"><span class="sd">                - &#39;marker&#39;: SpanMarker</span>
-</span><span data-line="655"><span class="sd">                - &#39;markerV0&#39;: SpanMarkerV0</span>
-</span><span data-line="656"><span class="sd">                - &#39;markerV1&#39;: SpanMarkerV1</span>
-</span><span data-line="657"><span class="sd">                - &#39;query&#39;: SpanQuery</span>
-</span><span data-line="658"><span class="sd">                - &#39;mlp&#39;: SpanMLP</span>
-</span><span data-line="659"><span class="sd">                - &#39;cat&#39;: SpanCAT</span>
-</span><span data-line="660"><span class="sd">                - &#39;conv_conv&#39;: SpanConv with convolution</span>
-</span><span data-line="661"><span class="sd">                - &#39;conv_max&#39;: SpanConv with max pooling</span>
-</span><span data-line="662"><span class="sd">                - &#39;conv_mean&#39;: SpanConv with mean pooling</span>
-</span><span data-line="663"><span class="sd">                - &#39;conv_sum&#39;: SpanConv with sum pooling</span>
-</span><span data-line="664"><span class="sd">                - &#39;conv_share&#39;: ConvShare</span>
-</span><span data-line="665"><span class="sd">            **kwargs: Additional arguments passed to the span representation layer.</span>
-</span><span data-line="666">
-</span><span data-line="667"><span class="sd">        Raises:</span>
-</span><span data-line="668"><span class="sd">            ValueError: If an unknown span_mode is provided.</span>
-</span><span data-line="669"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="670">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-</span><span data-line="671">
-</span><span data-line="672">        <span class="k">if</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span>
-</span><span data-line="673">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarker</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="674">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV0&quot;</span><span class="p">:</span>
-</span><span data-line="675">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV0</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="676">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV1&quot;</span><span class="p">:</span>
-</span><span data-line="677">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV1</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="678">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;query&quot;</span><span class="p">:</span>
-</span><span data-line="679">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanQuery</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="680">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;mlp&quot;</span><span class="p">:</span>
-</span><span data-line="681">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMLP</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
-</span><span data-line="682">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;cat&quot;</span><span class="p">:</span>
-</span><span data-line="683">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanCAT</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
-</span><span data-line="684">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_conv&quot;</span><span class="p">:</span>
-</span><span data-line="685">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_conv&quot;</span><span class="p">)</span>
-</span><span data-line="686">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_max&quot;</span><span class="p">:</span>
-</span><span data-line="687">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_max&quot;</span><span class="p">)</span>
-</span><span data-line="688">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_mean&quot;</span><span class="p">:</span>
-</span><span data-line="689">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_mean&quot;</span><span class="p">)</span>
-</span><span data-line="690">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_sum&quot;</span><span class="p">:</span>
-</span><span data-line="691">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_sum&quot;</span><span class="p">)</span>
-</span><span data-line="692">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_share&quot;</span><span class="p">:</span>
-</span><span data-line="693">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">ConvShare</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
-</span><span data-line="694">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="695">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown span mode </span><span class="si">{</span><span class="n">span_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</span><span data-line="696">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="697"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the SpanRepLayer with the specified mode.</span>
+</span><span data-line="698">
+</span><span data-line="699"><span class="sd">        Args:</span>
+</span><span data-line="700"><span class="sd">            hidden_size (int): Dimension of the hidden representations.</span>
+</span><span data-line="701"><span class="sd">            max_width (int): Maximum span width to represent.</span>
+</span><span data-line="702"><span class="sd">            span_mode (str): Type of span representation to use. Options:</span>
+</span><span data-line="703"><span class="sd">                - &#39;marker&#39;: SpanMarker</span>
+</span><span data-line="704"><span class="sd">                - &#39;markerV0&#39;: SpanMarkerV0</span>
+</span><span data-line="705"><span class="sd">                - &#39;markerV1&#39;: SpanMarkerV1</span>
+</span><span data-line="706"><span class="sd">                - &#39;query&#39;: SpanQuery</span>
+</span><span data-line="707"><span class="sd">                - &#39;mlp&#39;: SpanMLP</span>
+</span><span data-line="708"><span class="sd">                - &#39;cat&#39;: SpanCAT</span>
+</span><span data-line="709"><span class="sd">                - &#39;conv_conv&#39;: SpanConv with convolution</span>
+</span><span data-line="710"><span class="sd">                - &#39;conv_max&#39;: SpanConv with max pooling</span>
+</span><span data-line="711"><span class="sd">                - &#39;conv_mean&#39;: SpanConv with mean pooling</span>
+</span><span data-line="712"><span class="sd">                - &#39;conv_sum&#39;: SpanConv with sum pooling</span>
+</span><span data-line="713"><span class="sd">                - &#39;conv_share&#39;: ConvShare</span>
+</span><span data-line="714"><span class="sd">            **kwargs: Additional arguments passed to the span representation layer.</span>
+</span><span data-line="715">
+</span><span data-line="716"><span class="sd">        Raises:</span>
+</span><span data-line="717"><span class="sd">            ValueError: If an unknown span_mode is provided.</span>
+</span><span data-line="718"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="719">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+</span><span data-line="720">
+</span><span data-line="721">        <span class="k">if</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;marker&quot;</span><span class="p">:</span>
+</span><span data-line="722">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarker</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="723">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV0&quot;</span><span class="p">:</span>
+</span><span data-line="724">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV0</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="725">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;markerV1&quot;</span><span class="p">:</span>
+</span><span data-line="726">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMarkerV1</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="727">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;query&quot;</span><span class="p">:</span>
+</span><span data-line="728">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanQuery</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">trainable</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="729">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;mlp&quot;</span><span class="p">:</span>
+</span><span data-line="730">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanMLP</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="731">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;cat&quot;</span><span class="p">:</span>
+</span><span data-line="732">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanCAT</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="733">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_conv&quot;</span><span class="p">:</span>
+</span><span data-line="734">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_conv&quot;</span><span class="p">)</span>
+</span><span data-line="735">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_max&quot;</span><span class="p">:</span>
+</span><span data-line="736">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_max&quot;</span><span class="p">)</span>
+</span><span data-line="737">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_mean&quot;</span><span class="p">:</span>
+</span><span data-line="738">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_mean&quot;</span><span class="p">)</span>
+</span><span data-line="739">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_sum&quot;</span><span class="p">:</span>
+</span><span data-line="740">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">SpanConv</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">,</span> <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;conv_sum&quot;</span><span class="p">)</span>
+</span><span data-line="741">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;conv_share&quot;</span><span class="p">:</span>
+</span><span data-line="742">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">ConvShare</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span>
+</span><span data-line="743">        <span class="k">elif</span> <span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="744">            <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span> <span class="o">=</span> <span class="n">TokenMarker</span><span class="p">(</span><span class="n">hidden_size</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="745">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="746">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown span mode </span><span class="si">{</span><span class="n">span_mode</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
-</span><span data-line="696">
+</span><span data-line="747">
 <div class="viewcode-block" id="SpanRepLayer.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.span_rep.html#gliner.modeling.span_rep.SpanRepLayer.forward">[docs]</a>
-</span><span data-line="697">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
-</span><span data-line="698"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the selected span representation layer.</span>
-</span><span data-line="699">
-</span><span data-line="700"><span class="sd">        Args:</span>
-</span><span data-line="701"><span class="sd">            x (torch.Tensor): Input tensor, typically of shape [B, L, D].</span>
-</span><span data-line="702"><span class="sd">            *args: Additional arguments passed to the underlying layer.</span>
-</span><span data-line="703">
-</span><span data-line="704"><span class="sd">        Returns:</span>
-</span><span data-line="705"><span class="sd">            torch.Tensor: Span representations, typically of shape</span>
-</span><span data-line="706"><span class="sd">                [B, L, max_width, D].</span>
-</span><span data-line="707"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="708">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+</span><span data-line="748">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+</span><span data-line="749"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the selected span representation layer.</span>
+</span><span data-line="750">
+</span><span data-line="751"><span class="sd">        Args:</span>
+</span><span data-line="752"><span class="sd">            x (torch.Tensor): Input tensor, typically of shape [B, L, D].</span>
+</span><span data-line="753"><span class="sd">            *args: Additional arguments passed to the underlying layer.</span>
+</span><span data-line="754">
+</span><span data-line="755"><span class="sd">        Returns:</span>
+</span><span data-line="756"><span class="sd">            torch.Tensor: Span representations, typically of shape</span>
+</span><span data-line="757"><span class="sd">                [B, L, max_width, D].</span>
+</span><span data-line="758"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="759">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
 </div>
 
 </span></pre></div>

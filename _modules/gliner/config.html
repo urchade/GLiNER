@@ -204,351 +204,403 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="35">        <span class="n">ent_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;&lt;ENT&gt;&gt;&quot;</span><span class="p">,</span>
 </span><span data-line="36">        <span class="n">sep_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;&lt;SEP&gt;&gt;&quot;</span><span class="p">,</span>
 </span><span data-line="37">        <span class="n">_attn_implementation</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="38">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span data-line="39">    <span class="p">):</span>
-</span><span data-line="40"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize BaseGLiNERConfig.</span>
-</span><span data-line="41">
-</span><span data-line="42"><span class="sd">        Args:</span>
-</span><span data-line="43"><span class="sd">            model_name (str, optional): Name of the pretrained encoder model.</span>
-</span><span data-line="44"><span class="sd">                Defaults to &quot;microsoft/deberta-v3-small&quot;.</span>
-</span><span data-line="45"><span class="sd">            name (str, optional): Name identifier for the GLiNER model. Defaults to &quot;gliner&quot;.</span>
-</span><span data-line="46"><span class="sd">            max_width (int, optional): Maximum span width for entity detection. Defaults to 12.</span>
-</span><span data-line="47"><span class="sd">            hidden_size (int, optional): Dimension of hidden representations. Defaults to 512.</span>
-</span><span data-line="48"><span class="sd">            dropout (float, optional): Dropout probability. Defaults to 0.4.</span>
-</span><span data-line="49"><span class="sd">            fine_tune (bool, optional): Whether to fine-tune the encoder. Defaults to True.</span>
-</span><span data-line="50"><span class="sd">            subtoken_pooling (str, optional): Subtoken pooling strategy. Defaults to &quot;first&quot;.</span>
-</span><span data-line="51"><span class="sd">            span_mode (str, optional): Span representation mode. Defaults to &quot;markerV0&quot;.</span>
-</span><span data-line="52"><span class="sd">            post_fusion_schema (str, optional): Post-fusion processing schema. Defaults to &#39;&#39;.</span>
-</span><span data-line="53"><span class="sd">            num_post_fusion_layers (int, optional): Number of post-fusion layers. Defaults to 1.</span>
-</span><span data-line="54"><span class="sd">            vocab_size (int, optional): Vocabulary size. Defaults to -1.</span>
-</span><span data-line="55"><span class="sd">            max_neg_type_ratio (int, optional): Max ratio of negative to positive types. Defaults to 1.</span>
-</span><span data-line="56"><span class="sd">            max_types (int, optional): Maximum number of entity types. Defaults to 25.</span>
-</span><span data-line="57"><span class="sd">            max_len (int, optional): Maximum sequence length. Defaults to 384.</span>
-</span><span data-line="58"><span class="sd">            words_splitter_type (str, optional): Word splitter type. Defaults to &quot;whitespace&quot;.</span>
-</span><span data-line="59"><span class="sd">            num_rnn_layers (int, optional): Number of LSTM layers, if less then 1, then LSTM is not used.</span>
-</span><span data-line="60"><span class="sd">            fuse_layers (bool, optional): Whether to fuse layers. Defaults to False.</span>
-</span><span data-line="61"><span class="sd">            embed_ent_token (bool, optional): Whether to embed entity tokens. Defaults to True.</span>
-</span><span data-line="62"><span class="sd">            class_token_index (int, optional): Index of class token. Defaults to -1.</span>
-</span><span data-line="63"><span class="sd">            encoder_config (dict, optional): Encoder configuration dict. Defaults to None.</span>
-</span><span data-line="64"><span class="sd">            ent_token (str, optional): Entity marker token. Defaults to &quot;&lt;&lt;ENT&gt;&gt;&quot;.</span>
-</span><span data-line="65"><span class="sd">            sep_token (str, optional): Separator token. Defaults to &quot;&lt;&lt;SEP&gt;&gt;&quot;.</span>
-</span><span data-line="66"><span class="sd">            _attn_implementation (str, optional): Attention implementation. Defaults to None.</span>
-</span><span data-line="67"><span class="sd">            **kwargs: Additional keyword arguments passed to parent class.</span>
-</span><span data-line="68"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="69">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="70">
-</span><span data-line="71">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">encoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="72">            <span class="n">encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;deberta-v2&quot;</span><span class="p">)</span>
-</span><span data-line="73">
-</span><span data-line="74">            <span class="n">encoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">encoder_config</span><span class="p">)</span>
-</span><span data-line="75">        <span class="bp">self</span><span class="o">.</span><span class="n">encoder_config</span> <span class="o">=</span> <span class="n">encoder_config</span>
-</span><span data-line="76">
-</span><span data-line="77">        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
-</span><span data-line="78">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-</span><span data-line="79">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
-</span><span data-line="80">        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">=</span> <span class="n">hidden_size</span>
-</span><span data-line="81">        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
-</span><span data-line="82">        <span class="bp">self</span><span class="o">.</span><span class="n">fine_tune</span> <span class="o">=</span> <span class="n">fine_tune</span>
-</span><span data-line="83">        <span class="bp">self</span><span class="o">.</span><span class="n">subtoken_pooling</span> <span class="o">=</span> <span class="n">subtoken_pooling</span>
-</span><span data-line="84">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="n">span_mode</span>
-</span><span data-line="85">        <span class="bp">self</span><span class="o">.</span><span class="n">post_fusion_schema</span> <span class="o">=</span> <span class="n">post_fusion_schema</span>
-</span><span data-line="86">        <span class="bp">self</span><span class="o">.</span><span class="n">num_post_fusion_layers</span> <span class="o">=</span> <span class="n">num_post_fusion_layers</span>
-</span><span data-line="87">        <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">vocab_size</span>
-</span><span data-line="88">        <span class="bp">self</span><span class="o">.</span><span class="n">max_neg_type_ratio</span> <span class="o">=</span> <span class="n">max_neg_type_ratio</span>
-</span><span data-line="89">        <span class="bp">self</span><span class="o">.</span><span class="n">max_types</span> <span class="o">=</span> <span class="n">max_types</span>
-</span><span data-line="90">        <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span> <span class="o">=</span> <span class="n">max_len</span>
-</span><span data-line="91">        <span class="bp">self</span><span class="o">.</span><span class="n">words_splitter_type</span> <span class="o">=</span> <span class="n">words_splitter_type</span>
-</span><span data-line="92">        <span class="bp">self</span><span class="o">.</span><span class="n">num_rnn_layers</span> <span class="o">=</span> <span class="n">num_rnn_layers</span>
-</span><span data-line="93">        <span class="bp">self</span><span class="o">.</span><span class="n">fuse_layers</span> <span class="o">=</span> <span class="n">fuse_layers</span>
-</span><span data-line="94">        <span class="bp">self</span><span class="o">.</span><span class="n">class_token_index</span> <span class="o">=</span> <span class="n">class_token_index</span>
-</span><span data-line="95">        <span class="bp">self</span><span class="o">.</span><span class="n">embed_ent_token</span> <span class="o">=</span> <span class="n">embed_ent_token</span>
-</span><span data-line="96">        <span class="bp">self</span><span class="o">.</span><span class="n">ent_token</span> <span class="o">=</span> <span class="n">ent_token</span>
-</span><span data-line="97">        <span class="bp">self</span><span class="o">.</span><span class="n">sep_token</span> <span class="o">=</span> <span class="n">sep_token</span>
-</span><span data-line="98">        <span class="bp">self</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="n">_attn_implementation</span></div>
+</span><span data-line="38">        <span class="n">token_loss_coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="39">        <span class="n">span_loss_coef</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="40">        <span class="n">represent_spans</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="41">        <span class="n">neg_spans_ratio</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="42">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="43">    <span class="p">):</span>
+</span><span data-line="44"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize BaseGLiNERConfig.</span>
+</span><span data-line="45">
+</span><span data-line="46"><span class="sd">        Args:</span>
+</span><span data-line="47"><span class="sd">            model_name (str, optional): Name of the pretrained encoder model.</span>
+</span><span data-line="48"><span class="sd">                Defaults to &quot;microsoft/deberta-v3-small&quot;.</span>
+</span><span data-line="49"><span class="sd">            name (str, optional): Name identifier for the GLiNER model. Defaults to &quot;gliner&quot;.</span>
+</span><span data-line="50"><span class="sd">            max_width (int, optional): Maximum span width for entity detection. Defaults to 12.</span>
+</span><span data-line="51"><span class="sd">            hidden_size (int, optional): Dimension of hidden representations. Defaults to 512.</span>
+</span><span data-line="52"><span class="sd">            dropout (float, optional): Dropout probability. Defaults to 0.4.</span>
+</span><span data-line="53"><span class="sd">            fine_tune (bool, optional): Whether to fine-tune the encoder. Defaults to True.</span>
+</span><span data-line="54"><span class="sd">            subtoken_pooling (str, optional): Subtoken pooling strategy. Defaults to &quot;first&quot;.</span>
+</span><span data-line="55"><span class="sd">            span_mode (str, optional): Span representation mode. Defaults to &quot;markerV0&quot;.</span>
+</span><span data-line="56"><span class="sd">            post_fusion_schema (str, optional): Post-fusion processing schema. Defaults to &#39;&#39;.</span>
+</span><span data-line="57"><span class="sd">            num_post_fusion_layers (int, optional): Number of post-fusion layers. Defaults to 1.</span>
+</span><span data-line="58"><span class="sd">            vocab_size (int, optional): Vocabulary size. Defaults to -1.</span>
+</span><span data-line="59"><span class="sd">            max_neg_type_ratio (int, optional): Max ratio of negative to positive types. Defaults to 1.</span>
+</span><span data-line="60"><span class="sd">            max_types (int, optional): Maximum number of entity types. Defaults to 25.</span>
+</span><span data-line="61"><span class="sd">            max_len (int, optional): Maximum sequence length. Defaults to 384.</span>
+</span><span data-line="62"><span class="sd">            words_splitter_type (str, optional): Word splitter type. Defaults to &quot;whitespace&quot;.</span>
+</span><span data-line="63"><span class="sd">            num_rnn_layers (int, optional): Number of LSTM layers, if less then 1, then LSTM is not used.</span>
+</span><span data-line="64"><span class="sd">            fuse_layers (bool, optional): Whether to fuse layers. Defaults to False.</span>
+</span><span data-line="65"><span class="sd">            embed_ent_token (bool, optional): Whether to embed entity tokens. Defaults to True.</span>
+</span><span data-line="66"><span class="sd">            class_token_index (int, optional): Index of class token. Defaults to -1.</span>
+</span><span data-line="67"><span class="sd">            encoder_config (dict, optional): Encoder configuration dict. Defaults to None.</span>
+</span><span data-line="68"><span class="sd">            ent_token (str, optional): Entity marker token. Defaults to &quot;&lt;&lt;ENT&gt;&gt;&quot;.</span>
+</span><span data-line="69"><span class="sd">            sep_token (str, optional): Separator token. Defaults to &quot;&lt;&lt;SEP&gt;&gt;&quot;.</span>
+</span><span data-line="70"><span class="sd">            _attn_implementation (str, optional): Attention implementation. Defaults to None.</span>
+</span><span data-line="71"><span class="sd">            token_loss_coef (float, optional): Token loss coefficient. Defaults to 1.0.</span>
+</span><span data-line="72"><span class="sd">            span_loss_coef (float, optional): Span loss coefficient. Defaults to 1.0.</span>
+</span><span data-line="73"><span class="sd">            represent_spans (bool, optional): Whether to represent spans. Defaults to False.</span>
+</span><span data-line="74"><span class="sd">            neg_spans_ratio (float, optional): Ratio of negative spans. Defaults to 1.0.</span>
+</span><span data-line="75"><span class="sd">            **kwargs: Additional keyword arguments passed to parent class.</span>
+</span><span data-line="76"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="77">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="78">
+</span><span data-line="79">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">encoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="80">            <span class="n">encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">encoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;deberta-v2&quot;</span><span class="p">)</span>
+</span><span data-line="81">
+</span><span data-line="82">            <span class="n">encoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">encoder_config</span><span class="p">)</span>
+</span><span data-line="83">        <span class="bp">self</span><span class="o">.</span><span class="n">encoder_config</span> <span class="o">=</span> <span class="n">encoder_config</span>
+</span><span data-line="84">
+</span><span data-line="85">        <span class="bp">self</span><span class="o">.</span><span class="n">model_name</span> <span class="o">=</span> <span class="n">model_name</span>
+</span><span data-line="86">        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+</span><span data-line="87">        <span class="bp">self</span><span class="o">.</span><span class="n">max_width</span> <span class="o">=</span> <span class="n">max_width</span>
+</span><span data-line="88">        <span class="bp">self</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">=</span> <span class="n">hidden_size</span>
+</span><span data-line="89">        <span class="bp">self</span><span class="o">.</span><span class="n">dropout</span> <span class="o">=</span> <span class="n">dropout</span>
+</span><span data-line="90">        <span class="bp">self</span><span class="o">.</span><span class="n">fine_tune</span> <span class="o">=</span> <span class="n">fine_tune</span>
+</span><span data-line="91">        <span class="bp">self</span><span class="o">.</span><span class="n">subtoken_pooling</span> <span class="o">=</span> <span class="n">subtoken_pooling</span>
+</span><span data-line="92">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="n">span_mode</span>
+</span><span data-line="93">        <span class="bp">self</span><span class="o">.</span><span class="n">post_fusion_schema</span> <span class="o">=</span> <span class="n">post_fusion_schema</span>
+</span><span data-line="94">        <span class="bp">self</span><span class="o">.</span><span class="n">num_post_fusion_layers</span> <span class="o">=</span> <span class="n">num_post_fusion_layers</span>
+</span><span data-line="95">        <span class="bp">self</span><span class="o">.</span><span class="n">vocab_size</span> <span class="o">=</span> <span class="n">vocab_size</span>
+</span><span data-line="96">        <span class="bp">self</span><span class="o">.</span><span class="n">max_neg_type_ratio</span> <span class="o">=</span> <span class="n">max_neg_type_ratio</span>
+</span><span data-line="97">        <span class="bp">self</span><span class="o">.</span><span class="n">max_types</span> <span class="o">=</span> <span class="n">max_types</span>
+</span><span data-line="98">        <span class="bp">self</span><span class="o">.</span><span class="n">max_len</span> <span class="o">=</span> <span class="n">max_len</span>
+</span><span data-line="99">        <span class="bp">self</span><span class="o">.</span><span class="n">words_splitter_type</span> <span class="o">=</span> <span class="n">words_splitter_type</span>
+</span><span data-line="100">        <span class="bp">self</span><span class="o">.</span><span class="n">num_rnn_layers</span> <span class="o">=</span> <span class="n">num_rnn_layers</span>
+</span><span data-line="101">        <span class="bp">self</span><span class="o">.</span><span class="n">fuse_layers</span> <span class="o">=</span> <span class="n">fuse_layers</span>
+</span><span data-line="102">        <span class="bp">self</span><span class="o">.</span><span class="n">class_token_index</span> <span class="o">=</span> <span class="n">class_token_index</span>
+</span><span data-line="103">        <span class="bp">self</span><span class="o">.</span><span class="n">embed_ent_token</span> <span class="o">=</span> <span class="n">embed_ent_token</span>
+</span><span data-line="104">        <span class="bp">self</span><span class="o">.</span><span class="n">ent_token</span> <span class="o">=</span> <span class="n">ent_token</span>
+</span><span data-line="105">        <span class="bp">self</span><span class="o">.</span><span class="n">sep_token</span> <span class="o">=</span> <span class="n">sep_token</span>
+</span><span data-line="106">        <span class="bp">self</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="n">_attn_implementation</span>
+</span><span data-line="107">        <span class="bp">self</span><span class="o">.</span><span class="n">token_loss_coef</span> <span class="o">=</span> <span class="n">token_loss_coef</span>
+</span><span data-line="108">        <span class="bp">self</span><span class="o">.</span><span class="n">span_loss_coef</span> <span class="o">=</span> <span class="n">span_loss_coef</span>
+</span><span data-line="109">        <span class="bp">self</span><span class="o">.</span><span class="n">represent_spans</span> <span class="o">=</span> <span class="n">represent_spans</span>
+</span><span data-line="110">        <span class="bp">self</span><span class="o">.</span><span class="n">neg_spans_ratio</span> <span class="o">=</span> <span class="n">neg_spans_ratio</span></div>
 </div>
 
-</span><span data-line="99">
-</span><span data-line="100">
+</span><span data-line="111">
+</span><span data-line="112">
 <div class="viewcode-block" id="UniEncoderConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderConfig">[docs]</a>
-</span><span data-line="101"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
-</span><span data-line="102"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base configuration for uni-encoder GLiNER models.&quot;&quot;&quot;</span>
-</span><span data-line="103">
+</span><span data-line="113"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
+</span><span data-line="114"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base configuration for uni-encoder GLiNER models.&quot;&quot;&quot;</span>
+</span><span data-line="115">
 <div class="viewcode-block" id="UniEncoderConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderConfig.__init__">[docs]</a>
-</span><span data-line="104">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="105">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</span><span data-line="116">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="117">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
-</span><span data-line="106">
-</span><span data-line="107">
+</span><span data-line="118">
+</span><span data-line="119">
 <div class="viewcode-block" id="UniEncoderSpanConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanConfig">[docs]</a>
-</span><span data-line="108"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
-</span><span data-line="109"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span-based GLiNER model.&quot;&quot;&quot;</span>
-</span><span data-line="110">
+</span><span data-line="120"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
+</span><span data-line="121"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span-based GLiNER model.&quot;&quot;&quot;</span>
+</span><span data-line="122">
 <div class="viewcode-block" id="UniEncoderSpanConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanConfig.__init__">[docs]</a>
-</span><span data-line="111">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="112">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="113">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
-</span><span data-line="114">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UniEncoderSpanConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span>
-</span><span data-line="115">
-</span><span data-line="116">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span&quot;</span></div>
+</span><span data-line="123">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="124">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="125">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="126">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UniEncoderSpanConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span>
+</span><span data-line="127">
+</span><span data-line="128">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span&quot;</span></div>
 </div>
 
-</span><span data-line="117">
-</span><span data-line="118">
+</span><span data-line="129">
+</span><span data-line="130">
 <div class="viewcode-block" id="UniEncoderTokenConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenConfig">[docs]</a>
-</span><span data-line="119"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
-</span><span data-line="120"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder token-based GLiNER model.&quot;&quot;&quot;</span>
-</span><span data-line="121">
+</span><span data-line="131"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
+</span><span data-line="132"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder token-based GLiNER model.&quot;&quot;&quot;</span>
+</span><span data-line="133">
 <div class="viewcode-block" id="UniEncoderTokenConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenConfig.__init__">[docs]</a>
-</span><span data-line="122">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="123">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="124">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span>
-</span><span data-line="125">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_token&quot;</span></div>
+</span><span data-line="134">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="135">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="136">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span>
+</span><span data-line="137">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_token&quot;</span></div>
 </div>
 
-</span><span data-line="126">
-</span><span data-line="127">
+</span><span data-line="138">
+</span><span data-line="139">
 <div class="viewcode-block" id="UniEncoderSpanDecoderConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanDecoderConfig">[docs]</a>
-</span><span data-line="128"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
-</span><span data-line="129"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span model with decoder for label generation.&quot;&quot;&quot;</span>
-</span><span data-line="130">
+</span><span data-line="140"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
+</span><span data-line="141"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span model with decoder for label generation.&quot;&quot;&quot;</span>
+</span><span data-line="142">
 <div class="viewcode-block" id="UniEncoderSpanDecoderConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanDecoderConfig.__init__">[docs]</a>
-</span><span data-line="131">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="132">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="133">        <span class="n">labels_decoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="134">        <span class="n">decoder_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="135">        <span class="n">full_decoder_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="136">        <span class="n">blank_entity_prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
-</span><span data-line="137">        <span class="n">labels_decoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="138">        <span class="n">decoder_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="139">        <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="140">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span data-line="141">    <span class="p">):</span>
-</span><span data-line="142"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize UniEncoderSpanDecoderConfig.</span>
-</span><span data-line="143">
-</span><span data-line="144"><span class="sd">        Args:</span>
-</span><span data-line="145"><span class="sd">            labels_decoder (str, optional): Name/path of the decoder model. Defaults to None.</span>
-</span><span data-line="146"><span class="sd">            decoder_mode (str, optional): Mode for decoder (&#39;prompt&#39; or &#39;span&#39;). Defaults to None.</span>
-</span><span data-line="147"><span class="sd">            full_decoder_context (bool, optional): Use full context in decoder. Defaults to True.</span>
-</span><span data-line="148"><span class="sd">            blank_entity_prob (float, optional): Probability of blank entities. Defaults to 0.1.</span>
-</span><span data-line="149"><span class="sd">            labels_decoder_config (dict, optional): Decoder config dict. Defaults to None.</span>
-</span><span data-line="150"><span class="sd">            decoder_loss_coef (float, optional): Decoder loss coefficient. Defaults to 0.5.</span>
-</span><span data-line="151"><span class="sd">            span_loss_coef (float, optional): Span loss coefficient. Defaults to 0.5.</span>
-</span><span data-line="152"><span class="sd">            **kwargs: Additional keyword arguments passed to UniEncoderConfig.</span>
-</span><span data-line="153">
-</span><span data-line="154"><span class="sd">        Raises:</span>
-</span><span data-line="155"><span class="sd">            ValueError: If span_mode is &#39;token-level&#39;, which is incompatible with this config.</span>
-</span><span data-line="156"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="157">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="158">
-</span><span data-line="159">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels_decoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="160">            <span class="n">labels_decoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels_decoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
-</span><span data-line="161">
-</span><span data-line="162">            <span class="n">labels_decoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">labels_decoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">labels_decoder_config</span><span class="p">)</span>
-</span><span data-line="163">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder_config</span> <span class="o">=</span> <span class="n">labels_decoder_config</span>
-</span><span data-line="164">        <span class="bp">self</span><span class="o">.</span><span class="n">blank_entity_prob</span> <span class="o">=</span> <span class="n">blank_entity_prob</span>
-</span><span data-line="165">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="o">=</span> <span class="n">labels_decoder</span>
-</span><span data-line="166">        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_mode</span> <span class="o">=</span> <span class="n">decoder_mode</span>  <span class="c1"># &#39;prompt&#39; or &#39;span&#39;</span>
-</span><span data-line="167">        <span class="bp">self</span><span class="o">.</span><span class="n">full_decoder_context</span> <span class="o">=</span> <span class="n">full_decoder_context</span>
-</span><span data-line="168">        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_loss_coef</span> <span class="o">=</span> <span class="n">decoder_loss_coef</span>
-</span><span data-line="169">        <span class="bp">self</span><span class="o">.</span><span class="n">span_loss_coef</span> <span class="o">=</span> <span class="n">span_loss_coef</span>
-</span><span data-line="170">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span>
-</span><span data-line="171">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
-</span><span data-line="172">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UniEncoderSpanDecoderConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span></div>
+</span><span data-line="143">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="144">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="145">        <span class="n">labels_decoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="146">        <span class="n">decoder_mode</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="147">        <span class="n">full_decoder_context</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="148">        <span class="n">blank_entity_prob</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.1</span><span class="p">,</span>
+</span><span data-line="149">        <span class="n">labels_decoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="150">        <span class="n">decoder_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="151">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="152">    <span class="p">):</span>
+</span><span data-line="153"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize UniEncoderSpanDecoderConfig.</span>
+</span><span data-line="154">
+</span><span data-line="155"><span class="sd">        Args:</span>
+</span><span data-line="156"><span class="sd">            labels_decoder (str, optional): Name/path of the decoder model. Defaults to None.</span>
+</span><span data-line="157"><span class="sd">            decoder_mode (str, optional): Mode for decoder (&#39;prompt&#39; or &#39;span&#39;). Defaults to None.</span>
+</span><span data-line="158"><span class="sd">            full_decoder_context (bool, optional): Use full context in decoder. Defaults to True.</span>
+</span><span data-line="159"><span class="sd">            blank_entity_prob (float, optional): Probability of blank entities. Defaults to 0.1.</span>
+</span><span data-line="160"><span class="sd">            labels_decoder_config (dict, optional): Decoder config dict. Defaults to None.</span>
+</span><span data-line="161"><span class="sd">            decoder_loss_coef (float, optional): Decoder loss coefficient. Defaults to 0.5.</span>
+</span><span data-line="162"><span class="sd">            **kwargs: Additional keyword arguments passed to UniEncoderConfig.</span>
+</span><span data-line="163">
+</span><span data-line="164"><span class="sd">        Raises:</span>
+</span><span data-line="165"><span class="sd">            ValueError: If span_mode is &#39;token-level&#39;, which is incompatible with this config.</span>
+</span><span data-line="166"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="167">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="168">
+</span><span data-line="169">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels_decoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="170">            <span class="n">labels_decoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels_decoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;gpt2&quot;</span><span class="p">)</span>
+</span><span data-line="171">
+</span><span data-line="172">            <span class="n">labels_decoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">labels_decoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">labels_decoder_config</span><span class="p">)</span>
+</span><span data-line="173">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder_config</span> <span class="o">=</span> <span class="n">labels_decoder_config</span>
+</span><span data-line="174">        <span class="bp">self</span><span class="o">.</span><span class="n">blank_entity_prob</span> <span class="o">=</span> <span class="n">blank_entity_prob</span>
+</span><span data-line="175">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="o">=</span> <span class="n">labels_decoder</span>
+</span><span data-line="176">        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_mode</span> <span class="o">=</span> <span class="n">decoder_mode</span>  <span class="c1"># &#39;prompt&#39; or &#39;span&#39;</span>
+</span><span data-line="177">        <span class="bp">self</span><span class="o">.</span><span class="n">full_decoder_context</span> <span class="o">=</span> <span class="n">full_decoder_context</span>
+</span><span data-line="178">        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_loss_coef</span> <span class="o">=</span> <span class="n">decoder_loss_coef</span>
+</span><span data-line="179">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span></div>
 </div>
 
-</span><span data-line="173">
-</span><span data-line="174">
+</span><span data-line="180">
+</span><span data-line="181">
+<div class="viewcode-block" id="UniEncoderTokenDecoderConfig">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenDecoderConfig">[docs]</a>
+</span><span data-line="182"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDecoderConfig</span><span class="p">(</span><span class="n">UniEncoderSpanDecoderConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="UniEncoderTokenDecoderConfig.__init__">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenDecoderConfig.__init__">[docs]</a>
+</span><span data-line="183">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="184">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="185">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span>
+</span><span data-line="186">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_encoder_token_decoder&quot;</span>
+</span><span data-line="187">        <span class="bp">self</span><span class="o">.</span><span class="n">represent_spans</span> <span class="o">=</span> <span class="kc">True</span>  <span class="c1"># hardcoded to True for token decoder</span></div>
+</div>
+
+</span><span data-line="188">
+</span><span data-line="189">
+<div class="viewcode-block" id="UniEncoderRelexConfig">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderRelexConfig">[docs]</a>
+</span><span data-line="190"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderRelexConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
+<div class="viewcode-block" id="UniEncoderRelexConfig.__init__">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderRelexConfig.__init__">[docs]</a>
+</span><span data-line="191">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="192">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="193">        <span class="n">relations_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="194">        <span class="n">triples_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="195">        <span class="n">embed_rel_token</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="196">        <span class="n">rel_token_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+</span><span data-line="197">        <span class="n">rel_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;&lt;REL&gt;&gt;&quot;</span><span class="p">,</span>
+</span><span data-line="198">        <span class="n">adjacency_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="199">        <span class="n">relation_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="200">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="201">    <span class="p">):</span>
+</span><span data-line="202"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize UniEncoderRelexConfig.</span>
+</span><span data-line="203">
+</span><span data-line="204"><span class="sd">        Args:</span>
+</span><span data-line="205"><span class="sd">            relations_layer (str, optional): Name of relations layer,</span>
+</span><span data-line="206"><span class="sd">                see gliner.modeling.multitask.relations_layers.py. Defaults to None.</span>
+</span><span data-line="207"><span class="sd">            triples_layer (str, optional): Name of triples layer,</span>
+</span><span data-line="208"><span class="sd">                see gliner.modeling.multitask.triples_layers.py. Defaults to None.</span>
+</span><span data-line="209"><span class="sd">            embed_rel_token (bool, optional): Whether to embed relation tokens. Defaults to True.</span>
+</span><span data-line="210"><span class="sd">            rel_token_index (int, optional): Index of relation token. Defaults to -1.</span>
+</span><span data-line="211"><span class="sd">            rel_token (str, optional): Relation marker token. Defaults to &quot;&lt;&lt;REL&gt;&gt;&quot;.</span>
+</span><span data-line="212"><span class="sd">            adjacency_loss_coef (float, optional): Adjacency modeling loss coefficient. Defaults to 1.0.</span>
+</span><span data-line="213"><span class="sd">            relation_loss_coef (float, optional): Relation representaton loss coefficient. Defaults to 1.0.</span>
+</span><span data-line="214"><span class="sd">            **kwargs: Additional keyword arguments passed to UniEncoderConfig.</span>
+</span><span data-line="215">
+</span><span data-line="216"><span class="sd">        Raises:</span>
+</span><span data-line="217"><span class="sd">            ValueError: If span_mode is &#39;token_level&#39;, which is incompatible with this config.</span>
+</span><span data-line="218"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="219">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="220">
+</span><span data-line="221">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span>
+</span><span data-line="222">        <span class="bp">self</span><span class="o">.</span><span class="n">triples_layer</span> <span class="o">=</span> <span class="n">triples_layer</span>
+</span><span data-line="223">        <span class="bp">self</span><span class="o">.</span><span class="n">embed_rel_token</span> <span class="o">=</span> <span class="n">embed_rel_token</span>
+</span><span data-line="224">        <span class="bp">self</span><span class="o">.</span><span class="n">rel_token_index</span> <span class="o">=</span> <span class="n">rel_token_index</span>
+</span><span data-line="225">        <span class="bp">self</span><span class="o">.</span><span class="n">rel_token</span> <span class="o">=</span> <span class="n">rel_token</span>
+</span><span data-line="226">        <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_loss_coef</span> <span class="o">=</span> <span class="n">adjacency_loss_coef</span>
+</span><span data-line="227">        <span class="bp">self</span><span class="o">.</span><span class="n">relation_loss_coef</span> <span class="o">=</span> <span class="n">relation_loss_coef</span></div>
+</div>
+
+</span><span data-line="228">
+</span><span data-line="229">
 <div class="viewcode-block" id="UniEncoderSpanRelexConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanRelexConfig">[docs]</a>
-</span><span data-line="175"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanRelexConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
-</span><span data-line="176"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span model with relation extraction.&quot;&quot;&quot;</span>
-</span><span data-line="177">
+</span><span data-line="230"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanRelexConfig</span><span class="p">(</span><span class="n">UniEncoderRelexConfig</span><span class="p">):</span>
+</span><span data-line="231"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder span model with relation extraction.&quot;&quot;&quot;</span>
+</span><span data-line="232">
 <div class="viewcode-block" id="UniEncoderSpanRelexConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanRelexConfig.__init__">[docs]</a>
-</span><span data-line="178">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="179">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="180">        <span class="n">relations_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="181">        <span class="n">triples_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="182">        <span class="n">embed_rel_token</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="183">        <span class="n">rel_token_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-</span><span data-line="184">        <span class="n">rel_token</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&lt;&lt;REL&gt;&gt;&quot;</span><span class="p">,</span>
-</span><span data-line="185">        <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="186">        <span class="n">adjacency_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="187">        <span class="n">relation_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="188">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span data-line="189">    <span class="p">):</span>
-</span><span data-line="190"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize UniEncoderSpanRelexConfig.</span>
-</span><span data-line="191">
-</span><span data-line="192"><span class="sd">        Args:</span>
-</span><span data-line="193"><span class="sd">            relations_layer (str, optional): Name of relations layer,</span>
-</span><span data-line="194"><span class="sd">                see gliner.modeling.multitask.relations_layers.py. Defaults to None.</span>
-</span><span data-line="195"><span class="sd">            triples_layer (str, optional): Name of triples layer,</span>
-</span><span data-line="196"><span class="sd">                see gliner.modeling.multitask.triples_layers.py. Defaults to None.</span>
-</span><span data-line="197"><span class="sd">            embed_rel_token (bool, optional): Whether to embed relation tokens. Defaults to True.</span>
-</span><span data-line="198"><span class="sd">            rel_token_index (int, optional): Index of relation token. Defaults to -1.</span>
-</span><span data-line="199"><span class="sd">            rel_token (str, optional): Relation marker token. Defaults to &quot;&lt;&lt;REL&gt;&gt;&quot;.</span>
-</span><span data-line="200"><span class="sd">            span_loss_coef (float, optional): Span representaton loss coefficient. Defaults to 1.0.</span>
-</span><span data-line="201"><span class="sd">            adjacency_loss_coef (float, optional): Adjacency modeling loss coefficient. Defaults to 1.0.</span>
-</span><span data-line="202"><span class="sd">            relation_loss_coef (float, optional): Relation representaton loss coefficient. Defaults to 1.0.</span>
-</span><span data-line="203"><span class="sd">            **kwargs: Additional keyword arguments passed to UniEncoderConfig.</span>
-</span><span data-line="204">
-</span><span data-line="205"><span class="sd">        Raises:</span>
-</span><span data-line="206"><span class="sd">            ValueError: If span_mode is &#39;token_level&#39;, which is incompatible with this config.</span>
-</span><span data-line="207"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="208">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="209">
-</span><span data-line="210">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span>
-</span><span data-line="211">        <span class="bp">self</span><span class="o">.</span><span class="n">triples_layer</span> <span class="o">=</span> <span class="n">triples_layer</span>
-</span><span data-line="212">        <span class="bp">self</span><span class="o">.</span><span class="n">embed_rel_token</span> <span class="o">=</span> <span class="n">embed_rel_token</span>
-</span><span data-line="213">        <span class="bp">self</span><span class="o">.</span><span class="n">rel_token_index</span> <span class="o">=</span> <span class="n">rel_token_index</span>
-</span><span data-line="214">        <span class="bp">self</span><span class="o">.</span><span class="n">rel_token</span> <span class="o">=</span> <span class="n">rel_token</span>
-</span><span data-line="215">        <span class="bp">self</span><span class="o">.</span><span class="n">span_loss_coef</span> <span class="o">=</span> <span class="n">span_loss_coef</span>
-</span><span data-line="216">        <span class="bp">self</span><span class="o">.</span><span class="n">adjacency_loss_coef</span> <span class="o">=</span> <span class="n">adjacency_loss_coef</span>
-</span><span data-line="217">        <span class="bp">self</span><span class="o">.</span><span class="n">relation_loss_coef</span> <span class="o">=</span> <span class="n">relation_loss_coef</span>
-</span><span data-line="218">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span>
-</span><span data-line="219">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
-</span><span data-line="220">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UniEncoderSpanRelexConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span></div>
+</span><span data-line="233">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="234">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="235">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span>
+</span><span data-line="236">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="237">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;UniEncoderSpanRelexConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span></div>
 </div>
 
-</span><span data-line="221">
-</span><span data-line="222">
+</span><span data-line="238">
+</span><span data-line="239">
+<div class="viewcode-block" id="UniEncoderTokenRelexConfig">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenRelexConfig">[docs]</a>
+</span><span data-line="240"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenRelexConfig</span><span class="p">(</span><span class="n">UniEncoderRelexConfig</span><span class="p">):</span>
+</span><span data-line="241"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for uni-encoder token-level model with relation extraction.&quot;&quot;&quot;</span>
+</span><span data-line="242">
+<div class="viewcode-block" id="UniEncoderTokenRelexConfig.__init__">
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenRelexConfig.__init__">[docs]</a>
+</span><span data-line="243">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="244">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="245">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_uni_encoder_token_relex&quot;</span>
+</span><span data-line="246">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span></div>
+</div>
+
+</span><span data-line="247">
+</span><span data-line="248">
 <div class="viewcode-block" id="BiEncoderConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderConfig">[docs]</a>
-</span><span data-line="223"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
-</span><span data-line="224"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base configuration for bi-encoder GLiNER models.&quot;&quot;&quot;</span>
-</span><span data-line="225">
+</span><span data-line="249"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
+</span><span data-line="250"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base configuration for bi-encoder GLiNER models.&quot;&quot;&quot;</span>
+</span><span data-line="251">
 <div class="viewcode-block" id="BiEncoderConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderConfig.__init__">[docs]</a>
-</span><span data-line="226">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels_encoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="227"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize BiEncoderConfig.</span>
-</span><span data-line="228">
-</span><span data-line="229"><span class="sd">        Args:</span>
-</span><span data-line="230"><span class="sd">            labels_encoder (str, optional): Name/path of labels encoder model. Defaults to None.</span>
-</span><span data-line="231"><span class="sd">            labels_encoder_config (dict, optional): Labels encoder config dict. Defaults to None.</span>
-</span><span data-line="232"><span class="sd">            **kwargs: Additional keyword arguments passed to BaseGLiNERConfig.</span>
-</span><span data-line="233"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="234">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="235">
-</span><span data-line="236">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels_encoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-</span><span data-line="237">            <span class="n">labels_encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels_encoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;deberta-v2&quot;</span><span class="p">)</span>
-</span><span data-line="238">
-</span><span data-line="239">            <span class="n">labels_encoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">labels_encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">labels_encoder_config</span><span class="p">)</span>
-</span><span data-line="240">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder_config</span> <span class="o">=</span> <span class="n">labels_encoder_config</span>
-</span><span data-line="241">
-</span><span data-line="242">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">labels_encoder</span></div>
+</span><span data-line="252">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels_encoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="253"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize BiEncoderConfig.</span>
+</span><span data-line="254">
+</span><span data-line="255"><span class="sd">        Args:</span>
+</span><span data-line="256"><span class="sd">            labels_encoder (str, optional): Name/path of labels encoder model. Defaults to None.</span>
+</span><span data-line="257"><span class="sd">            labels_encoder_config (dict, optional): Labels encoder config dict. Defaults to None.</span>
+</span><span data-line="258"><span class="sd">            **kwargs: Additional keyword arguments passed to BaseGLiNERConfig.</span>
+</span><span data-line="259"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="260">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="261">
+</span><span data-line="262">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">labels_encoder_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+</span><span data-line="263">            <span class="n">labels_encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">labels_encoder_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;deberta-v2&quot;</span><span class="p">)</span>
+</span><span data-line="264">
+</span><span data-line="265">            <span class="n">labels_encoder_config</span> <span class="o">=</span> <span class="n">CONFIG_MAPPING</span><span class="p">[</span><span class="n">labels_encoder_config</span><span class="p">[</span><span class="s2">&quot;model_type&quot;</span><span class="p">]](</span><span class="o">**</span><span class="n">labels_encoder_config</span><span class="p">)</span>
+</span><span data-line="266">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder_config</span> <span class="o">=</span> <span class="n">labels_encoder_config</span>
+</span><span data-line="267">
+</span><span data-line="268">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">labels_encoder</span></div>
 </div>
 
-</span><span data-line="243">
-</span><span data-line="244">
+</span><span data-line="269">
+</span><span data-line="270">
 <div class="viewcode-block" id="BiEncoderSpanConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderSpanConfig">[docs]</a>
-</span><span data-line="245"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
-</span><span data-line="246"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for bi-encoder span-based GLiNER model.&quot;&quot;&quot;</span>
-</span><span data-line="247">
+</span><span data-line="271"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
+</span><span data-line="272"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for bi-encoder span-based GLiNER model.&quot;&quot;&quot;</span>
+</span><span data-line="273">
 <div class="viewcode-block" id="BiEncoderSpanConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderSpanConfig.__init__">[docs]</a>
-</span><span data-line="248">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="249">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="250">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
-</span><span data-line="251">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;BiEncoderSpanConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span>
-</span><span data-line="252">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_bi_encoder_span&quot;</span></div>
+</span><span data-line="274">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="275">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="276">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="277">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;BiEncoderSpanConfig requires span_mode != &#39;token_level&#39;&quot;</span><span class="p">)</span>
+</span><span data-line="278">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_bi_encoder_span&quot;</span></div>
 </div>
 
-</span><span data-line="253">
-</span><span data-line="254">
+</span><span data-line="279">
+</span><span data-line="280">
 <div class="viewcode-block" id="BiEncoderTokenConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderTokenConfig">[docs]</a>
-</span><span data-line="255"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
-</span><span data-line="256"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for bi-encoder token-based GLiNER model.&quot;&quot;&quot;</span>
-</span><span data-line="257">
+</span><span data-line="281"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
+</span><span data-line="282"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for bi-encoder token-based GLiNER model.&quot;&quot;&quot;</span>
+</span><span data-line="283">
 <div class="viewcode-block" id="BiEncoderTokenConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderTokenConfig.__init__">[docs]</a>
-</span><span data-line="258">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="259">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="260">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span>
-</span><span data-line="261">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_bi_encoder_token&quot;</span></div>
+</span><span data-line="284">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span data-line="285">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="286">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">&quot;token_level&quot;</span>
+</span><span data-line="287">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;gliner_bi_encoder_token&quot;</span></div>
 </div>
 
-</span><span data-line="262">
-</span><span data-line="263">
+</span><span data-line="288">
+</span><span data-line="289">
 <div class="viewcode-block" id="GLiNERConfig">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.GLiNERConfig">[docs]</a>
-</span><span data-line="264"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
-</span><span data-line="265"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy configuration class that auto-detects model type.</span>
-</span><span data-line="266">
-</span><span data-line="267"><span class="sd">    This class provides backward compatibility by automatically determining the</span>
-</span><span data-line="268"><span class="sd">    appropriate model type based on the provided configuration parameters.</span>
-</span><span data-line="269">
-</span><span data-line="270"><span class="sd">    Attributes:</span>
-</span><span data-line="271"><span class="sd">        labels_encoder (str): Name of the encoder for entity labels (bi-encoder).</span>
-</span><span data-line="272"><span class="sd">        labels_decoder (str): Name of the decoder for label generation.</span>
-</span><span data-line="273"><span class="sd">        relations_layer (str): Layer configuration for relation extraction.</span>
-</span><span data-line="274"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="275">
+</span><span data-line="290"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
+</span><span data-line="291"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy configuration class that auto-detects model type.</span>
+</span><span data-line="292">
+</span><span data-line="293"><span class="sd">    This class provides backward compatibility by automatically determining the</span>
+</span><span data-line="294"><span class="sd">    appropriate model type based on the provided configuration parameters.</span>
+</span><span data-line="295">
+</span><span data-line="296"><span class="sd">    Attributes:</span>
+</span><span data-line="297"><span class="sd">        labels_encoder (str): Name of the encoder for entity labels (bi-encoder).</span>
+</span><span data-line="298"><span class="sd">        labels_decoder (str): Name of the decoder for label generation.</span>
+</span><span data-line="299"><span class="sd">        relations_layer (str): Layer configuration for relation extraction.</span>
+</span><span data-line="300"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="301">
 <div class="viewcode-block" id="GLiNERConfig.__init__">
 <a class="viewcode-back" href="../../api/gliner.config.html#gliner.GLiNERConfig.__init__">[docs]</a>
-</span><span data-line="276">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="277">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="278">        <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="279">        <span class="n">labels_decoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="280">        <span class="n">relations_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="281">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span data-line="282">    <span class="p">):</span>
-</span><span data-line="283"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize GLiNERConfig.</span>
-</span><span data-line="284">
-</span><span data-line="285"><span class="sd">        Args:</span>
-</span><span data-line="286"><span class="sd">            labels_encoder (str, optional): Labels encoder for bi-encoder models. Defaults to None.</span>
-</span><span data-line="287"><span class="sd">            labels_decoder (str, optional): Decoder for label generation. Defaults to None.</span>
-</span><span data-line="288"><span class="sd">            relations_layer (str, optional): Relations layer for relation extraction. Defaults to None.</span>
-</span><span data-line="289"><span class="sd">            **kwargs: Additional keyword arguments passed to BaseGLiNERConfig.</span>
-</span><span data-line="290"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="291">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="292">
-</span><span data-line="293">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">labels_encoder</span>
-</span><span data-line="294">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="o">=</span> <span class="n">labels_decoder</span>
-</span><span data-line="295">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span></div>
-
-</span><span data-line="296">
-</span><span data-line="297">    <span class="nd">@property</span>
-</span><span data-line="298">    <span class="k">def</span><span class="w"> </span><span class="nf">model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="299"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Auto-detect model type based on configuration.&quot;&quot;&quot;</span>
-</span><span data-line="300">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span><span class="p">:</span>
-</span><span data-line="301">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span>
-</span><span data-line="302">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">:</span>
-</span><span data-line="303">            <span class="k">return</span> <span class="s2">&quot;gliner_bi_encoder_span&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">!=</span> <span class="s2">&quot;token-level&quot;</span> <span class="k">else</span> <span class="s2">&quot;gliner_bi_encoder_token&quot;</span>
-</span><span data-line="304">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="305">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span>
-</span><span data-line="306">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token-level&quot;</span><span class="p">:</span>
-</span><span data-line="307">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_token&quot;</span>
-</span><span data-line="308">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="309">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span&quot;</span></div>
-
+</span><span data-line="302">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="303">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="304">        <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="305">        <span class="n">labels_decoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="306">        <span class="n">relations_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="307">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="308">    <span class="p">):</span>
+</span><span data-line="309"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize GLiNERConfig.</span>
 </span><span data-line="310">
-</span><span data-line="311">
-</span><span data-line="312"><span class="c1"># Register all configurations</span>
-</span><span data-line="313"><span class="n">CONFIG_MAPPING</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
-</span><span data-line="314">    <span class="p">{</span>
-</span><span data-line="315">        <span class="s2">&quot;gliner&quot;</span><span class="p">:</span> <span class="n">GLiNERConfig</span><span class="p">,</span>
-</span><span data-line="316">        <span class="s2">&quot;gliner_base&quot;</span><span class="p">:</span> <span class="n">BaseGLiNERConfig</span><span class="p">,</span>
-</span><span data-line="317">        <span class="s2">&quot;gliner_uni_encoder&quot;</span><span class="p">:</span> <span class="n">UniEncoderConfig</span><span class="p">,</span>
-</span><span data-line="318">        <span class="s2">&quot;gliner_uni_encoder_span&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanConfig</span><span class="p">,</span>
-</span><span data-line="319">        <span class="s2">&quot;gliner_uni_encoder_token&quot;</span><span class="p">:</span> <span class="n">UniEncoderTokenConfig</span><span class="p">,</span>
-</span><span data-line="320">        <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanDecoderConfig</span><span class="p">,</span>
-</span><span data-line="321">        <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanRelexConfig</span><span class="p">,</span>
-</span><span data-line="322">        <span class="s2">&quot;gliner_bi_encoder&quot;</span><span class="p">:</span> <span class="n">BiEncoderConfig</span><span class="p">,</span>
-</span><span data-line="323">        <span class="s2">&quot;gliner_bi_encoder_span&quot;</span><span class="p">:</span> <span class="n">BiEncoderSpanConfig</span><span class="p">,</span>
-</span><span data-line="324">        <span class="s2">&quot;gliner_bi_encoder_token&quot;</span><span class="p">:</span> <span class="n">BiEncoderTokenConfig</span><span class="p">,</span>
-</span><span data-line="325">    <span class="p">}</span>
-</span><span data-line="326"><span class="p">)</span>
+</span><span data-line="311"><span class="sd">        Args:</span>
+</span><span data-line="312"><span class="sd">            labels_encoder (str, optional): Labels encoder for bi-encoder models. Defaults to None.</span>
+</span><span data-line="313"><span class="sd">            labels_decoder (str, optional): Decoder for label generation. Defaults to None.</span>
+</span><span data-line="314"><span class="sd">            relations_layer (str, optional): Relations layer for relation extraction. Defaults to None.</span>
+</span><span data-line="315"><span class="sd">            **kwargs: Additional keyword arguments passed to BaseGLiNERConfig.</span>
+</span><span data-line="316"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="317">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="318">
+</span><span data-line="319">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">labels_encoder</span>
+</span><span data-line="320">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="o">=</span> <span class="n">labels_decoder</span>
+</span><span data-line="321">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span></div>
+
+</span><span data-line="322">
+</span><span data-line="323">    <span class="nd">@property</span>
+</span><span data-line="324">    <span class="k">def</span><span class="w"> </span><span class="nf">model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="325"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Auto-detect model type based on configuration.&quot;&quot;&quot;</span>
+</span><span data-line="326">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span><span class="p">:</span>
+</span><span data-line="327">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s1">&#39;token-level&#39;</span><span class="p">:</span>
+</span><span data-line="328">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_token_decoder&quot;</span>
+</span><span data-line="329">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="330">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span>
+</span><span data-line="331">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">:</span>
+</span><span data-line="332">            <span class="k">return</span> <span class="s2">&quot;gliner_bi_encoder_span&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">!=</span> <span class="s2">&quot;token-level&quot;</span> <span class="k">else</span> <span class="s2">&quot;gliner_bi_encoder_token&quot;</span>
+</span><span data-line="333">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="334">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token-level&quot;</span><span class="p">:</span>
+</span><span data-line="335">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_token_relex&quot;</span>
+</span><span data-line="336">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="337">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span>
+</span><span data-line="338">        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token-level&quot;</span><span class="p">:</span>
+</span><span data-line="339">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_token&quot;</span>
+</span><span data-line="340">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="341">            <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span&quot;</span></div>
+
+</span><span data-line="342">
+</span><span data-line="343">
+</span><span data-line="344"><span class="c1"># Register all configurations</span>
+</span><span data-line="345"><span class="n">CONFIG_MAPPING</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+</span><span data-line="346">    <span class="p">{</span>
+</span><span data-line="347">        <span class="s2">&quot;gliner&quot;</span><span class="p">:</span> <span class="n">GLiNERConfig</span><span class="p">,</span>
+</span><span data-line="348">        <span class="s2">&quot;gliner_base&quot;</span><span class="p">:</span> <span class="n">BaseGLiNERConfig</span><span class="p">,</span>
+</span><span data-line="349">        <span class="s2">&quot;gliner_uni_encoder&quot;</span><span class="p">:</span> <span class="n">UniEncoderConfig</span><span class="p">,</span>
+</span><span data-line="350">        <span class="s2">&quot;gliner_uni_encoder_span&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanConfig</span><span class="p">,</span>
+</span><span data-line="351">        <span class="s2">&quot;gliner_uni_encoder_token&quot;</span><span class="p">:</span> <span class="n">UniEncoderTokenConfig</span><span class="p">,</span>
+</span><span data-line="352">        <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanDecoderConfig</span><span class="p">,</span>
+</span><span data-line="353">        <span class="s2">&quot;gliner_uni_encoder_token_decoder&quot;</span><span class="p">:</span> <span class="n">UniEncoderTokenDecoderConfig</span><span class="p">,</span>
+</span><span data-line="354">        <span class="s2">&quot;gliner_uni_encoder_span_relex&quot;</span><span class="p">:</span> <span class="n">UniEncoderSpanRelexConfig</span><span class="p">,</span>
+</span><span data-line="355">        <span class="s2">&quot;gliner_uni_encoder_token_relex&quot;</span><span class="p">:</span> <span class="n">UniEncoderTokenRelexConfig</span><span class="p">,</span>
+</span><span data-line="356">        <span class="s2">&quot;gliner_bi_encoder&quot;</span><span class="p">:</span> <span class="n">BiEncoderConfig</span><span class="p">,</span>
+</span><span data-line="357">        <span class="s2">&quot;gliner_bi_encoder_span&quot;</span><span class="p">:</span> <span class="n">BiEncoderSpanConfig</span><span class="p">,</span>
+</span><span data-line="358">        <span class="s2">&quot;gliner_bi_encoder_token&quot;</span><span class="p">:</span> <span class="n">BiEncoderTokenConfig</span><span class="p">,</span>
+</span><span data-line="359">    <span class="p">}</span>
+</span><span data-line="360"><span class="p">)</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

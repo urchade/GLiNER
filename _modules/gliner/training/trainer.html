@@ -316,7 +316,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="141">
 </span><span data-line="142">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_apex</span><span class="p">:</span>
 </span><span data-line="143">                <span class="kn">from</span><span class="w"> </span><span class="nn">apex</span><span class="w"> </span><span class="kn">import</span> <span class="n">amp</span>
-</span><span data-line="144">                
+</span><span data-line="144">
 </span><span data-line="145">                <span class="k">with</span> <span class="n">amp</span><span class="o">.</span><span class="n">scale_loss</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">)</span> <span class="k">as</span> <span class="n">scaled_loss</span><span class="p">:</span>
 </span><span data-line="146">                    <span class="n">scaled_loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
 </span><span data-line="147">            <span class="k">else</span><span class="p">:</span>

@@ -679,68 +679,94 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="476">
 </span><span data-line="477">
+<div class="viewcode-block" id="RelationExtractionTokenDataCollator">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.RelationExtractionTokenDataCollator">[docs]</a>
+</span><span data-line="478"><span class="k">class</span><span class="w"> </span><span class="nc">RelationExtractionTokenDataCollator</span><span class="p">(</span><span class="n">RelationExtractionSpanDataCollator</span><span class="p">):</span>
+</span><span data-line="479"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Data collator for RelationExtractionTokenProcessor.</span>
+</span><span data-line="480">
+</span><span data-line="481"><span class="sd">    Handles joint entity and relation extraction at token level.</span>
+</span><span data-line="482"><span class="sd">    Produces both entity labels and relation adjacency matrices.</span>
+</span><span data-line="483">
+</span><span data-line="484"><span class="sd">    Required Processor: RelationExtractionTokenProcessor</span>
+</span><span data-line="485"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="486">
+</span><span data-line="487">    <span class="k">pass</span></div>
+
+</span><span data-line="488">
+</span><span data-line="489">
 <div class="viewcode-block" id="UniEncoderSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderSpanDataCollator">[docs]</a>
-</span><span data-line="478"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="479"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span data-line="480"><span class="sd">    Backward compatibility alias for SpanDataCollator with UniEncoderSpanProcessor.</span>
-</span><span data-line="481">
-</span><span data-line="482"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="483"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="484">
-</span><span data-line="485">    <span class="k">pass</span></div>
+</span><span data-line="490"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
+</span><span data-line="491"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="492"><span class="sd">    Backward compatibility alias for SpanDataCollator with UniEncoderSpanProcessor.</span>
+</span><span data-line="493">
+</span><span data-line="494"><span class="sd">    Use SpanDataCollator directly for new code.</span>
+</span><span data-line="495"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="496">
+</span><span data-line="497">    <span class="k">pass</span></div>
 
-</span><span data-line="486">
-</span><span data-line="487">
+</span><span data-line="498">
+</span><span data-line="499">
 <div class="viewcode-block" id="BiEncoderSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BiEncoderSpanDataCollator">[docs]</a>
-</span><span data-line="488"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="489"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span data-line="490"><span class="sd">    Backward compatibility alias for SpanDataCollator with BiEncoderSpanProcessor.</span>
-</span><span data-line="491">
-</span><span data-line="492"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="493"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="494">
-</span><span data-line="495">    <span class="k">pass</span></div>
+</span><span data-line="500"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
+</span><span data-line="501"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="502"><span class="sd">    Backward compatibility alias for SpanDataCollator with BiEncoderSpanProcessor.</span>
+</span><span data-line="503">
+</span><span data-line="504"><span class="sd">    Use SpanDataCollator directly for new code.</span>
+</span><span data-line="505"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="506">
+</span><span data-line="507">    <span class="k">pass</span></div>
 
-</span><span data-line="496">
-</span><span data-line="497">
+</span><span data-line="508">
+</span><span data-line="509">
 <div class="viewcode-block" id="UniEncoderSpanDecoderDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderSpanDecoderDataCollator">[docs]</a>
-</span><span data-line="498"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="499"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span data-line="500"><span class="sd">    Backward compatibility alias for SpanDataCollator with EncoderDecoderSpanProcessor.</span>
-</span><span data-line="501">
-</span><span data-line="502"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="503"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="504">
-</span><span data-line="505">    <span class="k">pass</span></div>
-
-</span><span data-line="506">
-</span><span data-line="507">
-<div class="viewcode-block" id="UniEncoderTokenDataCollator">
-<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDataCollator">[docs]</a>
-</span><span data-line="508"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
-</span><span data-line="509"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span data-line="510"><span class="sd">    Backward compatibility alias for TokenDataCollator with UniEncoderTokenProcessor.</span>
-</span><span data-line="511">
-</span><span data-line="512"><span class="sd">    Use TokenDataCollator directly for new code.</span>
-</span><span data-line="513"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="514">
-</span><span data-line="515">    <span class="k">pass</span></div>
-
+</span><span data-line="510"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
+</span><span data-line="511"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="512"><span class="sd">    Backward compatibility alias for SpanDataCollator with EncoderDecoderSpanProcessor.</span>
+</span><span data-line="513">
+</span><span data-line="514"><span class="sd">    Use SpanDataCollator directly for new code.</span>
+</span><span data-line="515"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span data-line="516">
-</span><span data-line="517">
-<div class="viewcode-block" id="BiEncoderTokenDataCollator">
-<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BiEncoderTokenDataCollator">[docs]</a>
-</span><span data-line="518"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
-</span><span data-line="519"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-</span><span data-line="520"><span class="sd">    Backward compatibility alias for TokenDataCollator with BiEncoderTokenProcessor.</span>
-</span><span data-line="521">
-</span><span data-line="522"><span class="sd">    Use TokenDataCollator directly for new code.</span>
+</span><span data-line="517">    <span class="k">pass</span></div>
+
+</span><span data-line="518">
+</span><span data-line="519">
+<div class="viewcode-block" id="UniEncoderTokenDecoderDataCollator">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator">[docs]</a>
+</span><span data-line="520"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDecoderDataCollator</span><span class="p">(</span><span class="n">UniEncoderSpanDecoderDataCollator</span><span class="p">):</span>
+</span><span data-line="521"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="522"><span class="sd">    Backward compatibility alias for UniEncoderTokenDecoderDataCollator with UniEncoderSpanDecoderDataCollator.</span>
 </span><span data-line="523"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span data-line="524">
 </span><span data-line="525">    <span class="k">pass</span></div>
+
+</span><span data-line="526">
+</span><span data-line="527">
+<div class="viewcode-block" id="UniEncoderTokenDataCollator">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDataCollator">[docs]</a>
+</span><span data-line="528"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
+</span><span data-line="529"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="530"><span class="sd">    Backward compatibility alias for TokenDataCollator with UniEncoderTokenProcessor.</span>
+</span><span data-line="531">
+</span><span data-line="532"><span class="sd">    Use TokenDataCollator directly for new code.</span>
+</span><span data-line="533"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="534">
+</span><span data-line="535">    <span class="k">pass</span></div>
+
+</span><span data-line="536">
+</span><span data-line="537">
+<div class="viewcode-block" id="BiEncoderTokenDataCollator">
+<a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BiEncoderTokenDataCollator">[docs]</a>
+</span><span data-line="538"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
+</span><span data-line="539"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="540"><span class="sd">    Backward compatibility alias for TokenDataCollator with BiEncoderTokenProcessor.</span>
+</span><span data-line="541">
+</span><span data-line="542"><span class="sd">    Use TokenDataCollator directly for new code.</span>
+</span><span data-line="543"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="544">
+</span><span data-line="545">    <span class="k">pass</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">

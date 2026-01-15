@@ -223,6 +223,15 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.export_to_onnx"><code class="docutils literal notranslate">export_to_onnx()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderGLiNER</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
@@ -233,6 +242,15 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.set_class_indices"><code class="docutils literal notranslate">set_class_indices()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.inference"><code class="docutils literal notranslate">inference()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.evaluate"><code class="docutils literal notranslate">evaluate()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexGLiNER</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.model.GLiNER"><code class="docutils literal notranslate"><span class="pre">GLiNER</span></code></a><ul>
@@ -574,7 +592,7 @@ layers are always randomly initialized.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.model.BaseGLiNER.create_training_args">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_training_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_train_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_eval_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_total_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseGLiNER.create_training_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseGLiNER.create_training_args" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_training_args</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">learning_rate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">others_weight_decay</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">focal_loss_prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'sum'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masking</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_train_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">per_device_eval_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_grad_norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">save_total_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logging_steps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_cpu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bf16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataloader_num_workers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">report_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseGLiNER.create_training_args"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseGLiNER.create_training_args" title="Link to this definition">¶</a></dt>
 <dd><p>Create training arguments with sensible defaults.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1284,6 +1302,64 @@ the instance-level configuration set via configure_inference_packing is used.</p
 </dd></dl>
 
 <dl class="py class">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.model.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenDecoderGLiNER</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderTokenDecoderGLiNER"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER" title="gliner.model.UniEncoderSpanDecoderGLiNER"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderGLiNER</span></code></a></p>
+<p>GLiNER model with token-based encoding and label decoding capabilities.</p>
+<p>Combines token-level BIO tagging with a decoder that generates entity type
+labels autoregressively.</p>
+<p>Initialize a BaseGLiNER model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Model configuration object.</p></li>
+<li><p><strong>model</strong> – Pre-initialized model instance. If None, creates a new model.</p></li>
+<li><p><strong>tokenizer</strong> – Pre-initialized tokenizer. If None, creates a new tokenizer.</p></li>
+<li><p><strong>data_processor</strong> – Pre-initialized data processor. If None, creates a new processor.</p></li>
+<li><p><strong>backbone_from_pretrained</strong> – Whether to load the backbone from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> – Directory for caching downloaded models.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to model creation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.config_class">
+<span class="sig-name descname"><span class="pre">config_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.config_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.config.html#gliner.config.UniEncoderTokenDecoderConfig" title="gliner.config.UniEncoderTokenDecoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderConfig</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.model_class">
+<span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.model_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenDecoderModel" title="gliner.modeling.base.UniEncoderTokenDecoderModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class">
+<span class="sig-name descname"><span class="pre">ort_model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class">
+<span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderTokenDecoderProcessor" title="gliner.data_processing.processor.UniEncoderTokenDecoderProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderProcessor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.data_collator_class">
+<span class="sig-name descname"><span class="pre">data_collator_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_collator_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator" title="gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderDataCollator</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.decoder_class">
+<span class="sig-name descname"><span class="pre">decoder_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.decoder_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.decoding.decoder.html#gliner.decoding.decoder.TokenGenerativeDecoder" title="gliner.decoding.decoder.TokenGenerativeDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenGenerativeDecoder</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.model.</span></span><span class="sig-name descname"><span class="pre">UniEncoderSpanRelexGLiNER</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gliner.model.BaseEncoderGLiNER" title="gliner.model.BaseEncoderGLiNER"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseEncoderGLiNER</span></code></a></p>
@@ -1404,6 +1480,65 @@ detect entities and the relationships between them in a single forward pass.</p>
 <dd class="field-odd"><p>Tuple of ((ner_output, ner_f1), (rel_output, rel_f1)) containing</p>
 </dd>
 </dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.model.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenRelexGLiNER</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderTokenRelexGLiNER"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER" title="gliner.model.UniEncoderSpanRelexGLiNER"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanRelexGLiNER</span></code></a></p>
+<p>GLiNER model for both entity recognition and relation extraction.</p>
+<p>Performs joint entity and relation prediction, allowing the model to simultaneously
+detect entities and the relationships between them in a single forward pass.</p>
+<p>Initialize a BaseGLiNER model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>config</strong> – Model configuration object.</p></li>
+<li><p><strong>model</strong> – Pre-initialized model instance. If None, creates a new model.</p></li>
+<li><p><strong>tokenizer</strong> – Pre-initialized tokenizer. If None, creates a new tokenizer.</p></li>
+<li><p><strong>data_processor</strong> – Pre-initialized data processor. If None, creates a new processor.</p></li>
+<li><p><strong>backbone_from_pretrained</strong> – Whether to load the backbone from pretrained weights.</p></li>
+<li><p><strong>cache_dir</strong> – Directory for caching downloaded models.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to model creation.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.config_class">
+<span class="sig-name descname"><span class="pre">config_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.config_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.config.html#gliner.config.UniEncoderTokenRelexConfig" title="gliner.config.UniEncoderTokenRelexConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenRelexConfig</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.model_class">
+<span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.model_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenRelexModel" title="gliner.modeling.base.UniEncoderTokenRelexModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenRelexModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class">
+<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.UniEncoderTokenRelexORTModel" title="gliner.onnx.model.UniEncoderTokenRelexORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenRelexORTModel</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class">
+<span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.RelationExtractionTokenProcessor" title="gliner.data_processing.processor.RelationExtractionTokenProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationExtractionTokenProcessor</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.data_collator_class">
+<span class="sig-name descname"><span class="pre">data_collator_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_collator_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.data_processing.collator.html#gliner.data_processing.collator.RelationExtractionTokenDataCollator" title="gliner.data_processing.collator.RelationExtractionTokenDataCollator"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationExtractionTokenDataCollator</span></code></a></p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.decoder_class">
+<span class="sig-name descname"><span class="pre">decoder_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.decoder_class" title="Link to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="gliner.decoding.decoder.html#gliner.decoding.decoder.TokenRelexDecoder" title="gliner.decoding.decoder.TokenRelexDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">TokenRelexDecoder</span></code></a></p>
 </dd></dl>
 
 </dd></dl>

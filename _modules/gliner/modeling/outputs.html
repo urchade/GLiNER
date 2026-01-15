@@ -201,74 +201,77 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="34">    <span class="n">prompts_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="35">    <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="36">    <span class="n">words_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="37">    <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+</span><span data-line="37">    <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="38">    <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="39">    <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="40">    <span class="n">span_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-</span><span data-line="38">
-</span><span data-line="39">
+</span><span data-line="41">
+</span><span data-line="42">
 <div class="viewcode-block" id="GLiNERDecoderOutput">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERDecoderOutput">[docs]</a>
-</span><span data-line="40"><span class="nd">@dataclass</span>
-</span><span data-line="41"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERDecoderOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
-</span><span data-line="42"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with decoder components.</span>
-</span><span data-line="43">
-</span><span data-line="44"><span class="sd">    Extends GLiNERBaseOutput with additional decoder-specific outputs,</span>
-</span><span data-line="45"><span class="sd">    including decoder embeddings and span indices. This is typically used</span>
-</span><span data-line="46"><span class="sd">    in GLiNER variants that include an explicit decoder module.</span>
-</span><span data-line="47">
-</span><span data-line="48"><span class="sd">    Attributes:</span>
-</span><span data-line="49"><span class="sd">        loss (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="50"><span class="sd">        logits (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="51"><span class="sd">        prompts_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="52"><span class="sd">        prompts_embedding_mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="53"><span class="sd">        words_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="54"><span class="sd">        mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="55"><span class="sd">        decoder_loss (Optional[torch.FloatTensor]): Loss specific to the</span>
-</span><span data-line="56"><span class="sd">            decoder component. Shape: scalar tensor.</span>
-</span><span data-line="57"><span class="sd">        decoder_embedding (Optional[torch.FloatTensor]): Output embeddings</span>
-</span><span data-line="58"><span class="sd">            from the decoder. Shape: [batch_size, num_decoder_tokens, hidden_size].</span>
-</span><span data-line="59"><span class="sd">        decoder_embedding_mask (Optional[torch.LongTensor]): Attention mask</span>
-</span><span data-line="60"><span class="sd">            for decoder embeddings. Shape: [batch_size, num_decoder_tokens].</span>
-</span><span data-line="61"><span class="sd">        decoder_span_idx (Optional[torch.LongTensor]): Indices of spans</span>
-</span><span data-line="62"><span class="sd">            processed by the decoder. Shape: [batch_size, num_spans, 2],</span>
-</span><span data-line="63"><span class="sd">            where the last dimension contains [start_idx, end_idx].</span>
-</span><span data-line="64"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="65">
-</span><span data-line="66">    <span class="n">decoder_loss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="67">    <span class="n">decoder_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="68">    <span class="n">decoder_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="69">    <span class="n">decoder_span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+</span><span data-line="43"><span class="nd">@dataclass</span>
+</span><span data-line="44"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERDecoderOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
+</span><span data-line="45"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with decoder components.</span>
+</span><span data-line="46">
+</span><span data-line="47"><span class="sd">    Extends GLiNERBaseOutput with additional decoder-specific outputs,</span>
+</span><span data-line="48"><span class="sd">    including decoder embeddings and span indices. This is typically used</span>
+</span><span data-line="49"><span class="sd">    in GLiNER variants that include an explicit decoder module.</span>
+</span><span data-line="50">
+</span><span data-line="51"><span class="sd">    Attributes:</span>
+</span><span data-line="52"><span class="sd">        loss (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="53"><span class="sd">        logits (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="54"><span class="sd">        prompts_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="55"><span class="sd">        prompts_embedding_mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="56"><span class="sd">        words_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="57"><span class="sd">        mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="58"><span class="sd">        decoder_loss (Optional[torch.FloatTensor]): Loss specific to the</span>
+</span><span data-line="59"><span class="sd">            decoder component. Shape: scalar tensor.</span>
+</span><span data-line="60"><span class="sd">        decoder_embedding (Optional[torch.FloatTensor]): Output embeddings</span>
+</span><span data-line="61"><span class="sd">            from the decoder. Shape: [batch_size, num_decoder_tokens, hidden_size].</span>
+</span><span data-line="62"><span class="sd">        decoder_embedding_mask (Optional[torch.LongTensor]): Attention mask</span>
+</span><span data-line="63"><span class="sd">            for decoder embeddings. Shape: [batch_size, num_decoder_tokens].</span>
+</span><span data-line="64"><span class="sd">        decoder_span_idx (Optional[torch.LongTensor]): Indices of spans</span>
+</span><span data-line="65"><span class="sd">            processed by the decoder. Shape: [batch_size, num_spans, 2],</span>
+</span><span data-line="66"><span class="sd">            where the last dimension contains [start_idx, end_idx].</span>
+</span><span data-line="67"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="68">
+</span><span data-line="69">    <span class="n">decoder_loss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="70">    <span class="n">decoder_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="71">    <span class="n">decoder_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="72">    <span class="n">decoder_span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
-</span><span data-line="70">
-</span><span data-line="71">
+</span><span data-line="73">
+</span><span data-line="74">
 <div class="viewcode-block" id="GLiNERRelexOutput">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERRelexOutput">[docs]</a>
-</span><span data-line="72"><span class="nd">@dataclass</span>
-</span><span data-line="73"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERRelexOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
-</span><span data-line="74"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with relation extraction.</span>
-</span><span data-line="75">
-</span><span data-line="76"><span class="sd">    Extends GLiNERBaseOutput with relation-specific outputs for models</span>
-</span><span data-line="77"><span class="sd">    that perform both entity recognition and relation extraction (Relex).</span>
-</span><span data-line="78"><span class="sd">    This enables joint modeling of entities and their relationships.</span>
-</span><span data-line="79">
-</span><span data-line="80"><span class="sd">    Attributes:</span>
-</span><span data-line="81"><span class="sd">        loss (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="82"><span class="sd">        logits (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="83"><span class="sd">        prompts_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="84"><span class="sd">        prompts_embedding_mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="85"><span class="sd">        words_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="86"><span class="sd">        mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
-</span><span data-line="87"><span class="sd">        rel_idx (Optional[torch.LongTensor]): Indices of entity pairs for</span>
-</span><span data-line="88"><span class="sd">            which relations are predicted. Shape: [batch_size, num_relations, 2],</span>
-</span><span data-line="89"><span class="sd">            where the last dimension contains indices of the two entities.</span>
-</span><span data-line="90"><span class="sd">        rel_logits (Optional[torch.FloatTensor]): Prediction scores for</span>
-</span><span data-line="91"><span class="sd">            relations between entity pairs. Shape: [batch_size, num_relations, num_relation_types].</span>
-</span><span data-line="92"><span class="sd">        rel_mask (Optional[torch.FloatTensor]): Mask indicating valid relation</span>
-</span><span data-line="93"><span class="sd">            predictions. Shape: [batch_size, num_relations].</span>
-</span><span data-line="94"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="95">
-</span><span data-line="96">    <span class="n">rel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="97">    <span class="n">rel_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="98">    <span class="n">rel_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
+</span><span data-line="75"><span class="nd">@dataclass</span>
+</span><span data-line="76"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERRelexOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
+</span><span data-line="77"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with relation extraction.</span>
+</span><span data-line="78">
+</span><span data-line="79"><span class="sd">    Extends GLiNERBaseOutput with relation-specific outputs for models</span>
+</span><span data-line="80"><span class="sd">    that perform both entity recognition and relation extraction (Relex).</span>
+</span><span data-line="81"><span class="sd">    This enables joint modeling of entities and their relationships.</span>
+</span><span data-line="82">
+</span><span data-line="83"><span class="sd">    Attributes:</span>
+</span><span data-line="84"><span class="sd">        loss (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="85"><span class="sd">        logits (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="86"><span class="sd">        prompts_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="87"><span class="sd">        prompts_embedding_mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="88"><span class="sd">        words_embedding (Optional[torch.FloatTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="89"><span class="sd">        mask (Optional[torch.LongTensor]): Inherited from GLiNERBaseOutput.</span>
+</span><span data-line="90"><span class="sd">        rel_idx (Optional[torch.LongTensor]): Indices of entity pairs for</span>
+</span><span data-line="91"><span class="sd">            which relations are predicted. Shape: [batch_size, num_relations, 2],</span>
+</span><span data-line="92"><span class="sd">            where the last dimension contains indices of the two entities.</span>
+</span><span data-line="93"><span class="sd">        rel_logits (Optional[torch.FloatTensor]): Prediction scores for</span>
+</span><span data-line="94"><span class="sd">            relations between entity pairs. Shape: [batch_size, num_relations, num_relation_types].</span>
+</span><span data-line="95"><span class="sd">        rel_mask (Optional[torch.FloatTensor]): Mask indicating valid relation</span>
+</span><span data-line="96"><span class="sd">            predictions. Shape: [batch_size, num_relations].</span>
+</span><span data-line="97"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="98">
+</span><span data-line="99">    <span class="n">rel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="100">    <span class="n">rel_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="101">    <span class="n">rel_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">

@@ -160,6 +160,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.onnx.model.UniEncoderSpanRelexORTModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#gliner.onnx.model.UniEncoderTokenRelexORTModel"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexORTModel</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.onnx.model.UniEncoderTokenRelexORTModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -512,6 +516,49 @@ tokens and 0s for padding.</p></li>
 of each text sequence.</p></li>
 <li><p><strong>span_idx</strong> (<em>Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
 <li><p><strong>span_mask</strong> (<em>Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>GLiNERRelexOutput containing logits for span classification, relation
+indices, relation logits, and relation mask.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.onnx.model.UniEncoderTokenRelexORTModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.onnx.model.</span></span><span class="sig-name descname"><span class="pre">UniEncoderTokenRelexORTModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/onnx/model.html#UniEncoderTokenRelexORTModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.onnx.model.UniEncoderTokenRelexORTModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#gliner.onnx.model.BaseORTModel" title="gliner.onnx.model.BaseORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseORTModel</span></code></a></p>
+<p>ONNX Runtime model for uni-encoder token-level relation extraction.</p>
+<p>Uses a single encoder to process text and perform both entity recognition
+and relation extraction at the token level.</p>
+<p>Initialize the ONNX Runtime model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.onnx.model.UniEncoderTokenRelexORTModel.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attention_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">words_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text_lengths</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/onnx/model.html#UniEncoderTokenRelexORTModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.onnx.model.UniEncoderTokenRelexORTModel.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass for span relation extraction model using ONNX inference.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+tokens and 0s for padding.</p></li>
+<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+of each text sequence.</p></li>
+<li><p><strong>span_idx</strong> – Tensor containing indices of spans to classify.</p></li>
+<li><p><strong>span_mask</strong> – Tensor indicating which spans are valid (not padding).</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
 </dd>

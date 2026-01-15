@@ -163,7 +163,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.modeling.utils</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span>
+<span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Optional</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span data-line="4">
@@ -470,6 +470,92 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="294">    <span class="n">tail_rep</span> <span class="o">=</span> <span class="n">span_rep</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">pair_idx</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mi">0</span><span class="p">)]</span>  <span class="c1"># (B, N, D)</span>
 </span><span data-line="295">
 </span><span data-line="296">    <span class="k">return</span> <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">head_rep</span><span class="p">,</span> <span class="n">tail_rep</span></div>
+
+</span><span data-line="297">
+</span><span data-line="298">
+<div class="viewcode-block" id="extract_spans_from_tokens">
+<a class="viewcode-back" href="../../../api/gliner.modeling.utils.html#gliner.modeling.utils.extract_spans_from_tokens">[docs]</a>
+</span><span data-line="299"><span class="k">def</span><span class="w"> </span><span class="nf">extract_spans_from_tokens</span><span class="p">(</span>
+</span><span data-line="300">    <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="301">    <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="302">    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="303"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+</span><span data-line="304"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="305"><span class="sd">    Extract entity spans from BIO-style token predictions.</span>
+</span><span data-line="306">
+</span><span data-line="307"><span class="sd">    Args:</span>
+</span><span data-line="308"><span class="sd">        scores: (B, W, C, 3) - logits for [start, end, inside]</span>
+</span><span data-line="309"><span class="sd">        labels: Optional (B, W, C, 3) - ground truth labels</span>
+</span><span data-line="310"><span class="sd">        threshold: Confidence threshold (used when labels is None)</span>
+</span><span data-line="311">
+</span><span data-line="312"><span class="sd">    Returns:</span>
+</span><span data-line="313"><span class="sd">        span_idx: (B, N, 2) - [start, end] indices, padded</span>
+</span><span data-line="314"><span class="sd">        span_mask: (B, N) - validity mask</span>
+</span><span data-line="315"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="316">    <span class="n">B</span><span class="p">,</span> <span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="317">    <span class="n">device</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">device</span>
+</span><span data-line="318">
+</span><span data-line="319">    <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="320">        <span class="n">start_mask</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+</span><span data-line="321">        <span class="n">end_mask</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+</span><span data-line="322">        <span class="n">inside_mask</span> <span class="o">=</span> <span class="n">labels</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mf">0.5</span>
+</span><span data-line="323">    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="324">        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">scores</span><span class="p">)</span>
+</span><span data-line="325">        <span class="n">start_mask</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+</span><span data-line="326">        <span class="n">end_mask</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+</span><span data-line="327">        <span class="n">inside_mask</span> <span class="o">=</span> <span class="n">probs</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">threshold</span>
+</span><span data-line="328">
+</span><span data-line="329">    <span class="c1"># Prepend zeros for cumsum indexing</span>
+</span><span data-line="330">    <span class="n">inside_cumsum</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">inside_mask</span><span class="o">.</span><span class="n">long</span><span class="p">()</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># (B, W+1, C)</span>
+</span><span data-line="331">
+</span><span data-line="332">    <span class="n">spans_per_sample</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="333">
+</span><span data-line="334">    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
+</span><span data-line="335">        <span class="n">starts</span> <span class="o">=</span> <span class="n">start_mask</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="336">        <span class="n">ends</span> <span class="o">=</span> <span class="n">end_mask</span><span class="p">[</span><span class="n">b</span><span class="p">]</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="337">
+</span><span data-line="338">        <span class="k">if</span> <span class="n">starts</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">ends</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="339">            <span class="n">spans_per_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">))</span>
+</span><span data-line="340">            <span class="k">continue</span>
+</span><span data-line="341">
+</span><span data-line="342">        <span class="n">s_pos</span><span class="p">,</span> <span class="n">s_cls</span> <span class="o">=</span> <span class="n">starts</span><span class="o">.</span><span class="n">T</span>
+</span><span data-line="343">        <span class="n">e_pos</span><span class="p">,</span> <span class="n">e_cls</span> <span class="o">=</span> <span class="n">ends</span><span class="o">.</span><span class="n">T</span>
+</span><span data-line="344">
+</span><span data-line="345">        <span class="c1"># Find valid (start, end) pairs: same class &amp; end &gt;= start</span>
+</span><span data-line="346">        <span class="n">valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">s_cls</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">==</span> <span class="n">e_cls</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">s_pos</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">e_pos</span><span class="p">)</span>
+</span><span data-line="347">        <span class="n">si</span><span class="p">,</span> <span class="n">ei</span> <span class="o">=</span> <span class="n">valid</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">as_tuple</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="348">
+</span><span data-line="349">        <span class="k">if</span> <span class="n">si</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="350">            <span class="n">spans_per_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">))</span>
+</span><span data-line="351">            <span class="k">continue</span>
+</span><span data-line="352">
+</span><span data-line="353">        <span class="n">cs</span><span class="p">,</span> <span class="n">ce</span><span class="p">,</span> <span class="n">cc</span> <span class="o">=</span> <span class="n">s_pos</span><span class="p">[</span><span class="n">si</span><span class="p">],</span> <span class="n">e_pos</span><span class="p">[</span><span class="n">ei</span><span class="p">],</span> <span class="n">s_cls</span><span class="p">[</span><span class="n">si</span><span class="p">]</span>
+</span><span data-line="354">
+</span><span data-line="355">        <span class="c1"># Validate: all inside positions must be marked</span>
+</span><span data-line="356">        <span class="n">inside_cnt</span> <span class="o">=</span> <span class="n">inside_cumsum</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">ce</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">cc</span><span class="p">]</span> <span class="o">-</span> <span class="n">inside_cumsum</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="n">cs</span><span class="p">,</span> <span class="n">cc</span><span class="p">]</span>
+</span><span data-line="357">        <span class="n">valid</span> <span class="o">=</span> <span class="n">inside_cnt</span> <span class="o">==</span> <span class="p">(</span><span class="n">ce</span> <span class="o">-</span> <span class="n">cs</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="358">
+</span><span data-line="359">        <span class="n">cs</span><span class="p">,</span> <span class="n">ce</span> <span class="o">=</span> <span class="n">cs</span><span class="p">[</span><span class="n">valid</span><span class="p">],</span> <span class="n">ce</span><span class="p">[</span><span class="n">valid</span><span class="p">]</span>
+</span><span data-line="360">
+</span><span data-line="361">        <span class="k">if</span> <span class="n">cs</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="362">            <span class="n">spans_per_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">))</span>
+</span><span data-line="363">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="364">            <span class="n">spans_per_sample</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">cs</span><span class="p">,</span> <span class="n">ce</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="365">
+</span><span data-line="366">    <span class="c1"># Pad to uniform size</span>
+</span><span data-line="367">    <span class="n">max_spans</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">s</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">spans_per_sample</span><span class="p">)</span> <span class="k">if</span> <span class="n">spans_per_sample</span> <span class="k">else</span> <span class="mi">0</span>
+</span><span data-line="368">    <span class="n">max_spans</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_spans</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Ensure at least 1 to avoid empty tensor issues</span>
+</span><span data-line="369">
+</span><span data-line="370">    <span class="n">span_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_spans</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="371">    <span class="n">span_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_spans</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="372">
+</span><span data-line="373">    <span class="k">for</span> <span class="n">b</span><span class="p">,</span> <span class="n">spans</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">spans_per_sample</span><span class="p">):</span>
+</span><span data-line="374">        <span class="n">n</span> <span class="o">=</span> <span class="n">spans</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="375">        <span class="k">if</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="376">            <span class="n">span_idx</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="n">spans</span>
+</span><span data-line="377">            <span class="n">span_mask</span><span class="p">[</span><span class="n">b</span><span class="p">,</span> <span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="378">
+</span><span data-line="379">    <span class="k">return</span> <span class="n">span_idx</span><span class="p">,</span> <span class="n">span_mask</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
