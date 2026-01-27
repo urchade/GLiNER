@@ -1198,6 +1198,73 @@ class BaseEncoderGLiNER(BaseGLiNER):
         input_x = [{"tokenized_text": tk, "ner": None} for tk in all_tokens]
         return input_x
 
+    def _filter_valid_texts(self, texts: List[str]) -> Tuple[List[str], List[int]]:
+        """Filter out empty or whitespace-only strings from input texts.
+
+        Args:
+            texts: List of input texts.
+
+        Returns:
+            Tuple containing:
+                - valid_texts: List of non-empty texts
+                - valid_to_orig_idx: Mapping from valid text index to original text index
+        """
+        valid_texts = []
+        valid_to_orig_idx = []
+
+        for i, text in enumerate(texts):
+            if isinstance(text, str) and text.strip():
+                valid_texts.append(text)
+                valid_to_orig_idx.append(i)
+
+        return valid_texts, valid_to_orig_idx
+
+    def _map_entities_to_original(
+        self,
+        outputs: List[List[Any]],
+        valid_to_orig_idx: List[int],
+        all_start_token_idx_to_text_idx: List[List[int]],
+        all_end_token_idx_to_text_idx: List[List[int]],
+        valid_texts: List[str],
+        num_original_texts: int,
+    ) -> List[List[Dict[str, Any]]]:
+        """Map entity predictions back to original text indices.
+
+        Args:
+            outputs: Decoded outputs from model.
+            valid_to_orig_idx: Mapping from valid index to original index.
+            all_start_token_idx_to_text_idx: Start position mappings.
+            all_end_token_idx_to_text_idx: End position mappings.
+            valid_texts: Valid (non-empty) texts.
+            num_original_texts: Total number of original texts.
+
+        Returns:
+            List of entity predictions aligned with original input.
+        """
+        all_entities = [[] for _ in range(num_original_texts)]
+
+        for valid_i, output in enumerate(outputs):
+            orig_i = valid_to_orig_idx[valid_i]
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
+
+            entities = []
+            for start_token_idx, end_token_idx, ent_type, ent_score in output:
+                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
+                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+
+                entities.append({
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score,
+                })
+
+            all_entities[orig_i] = entities
+
+        return all_entities
+
     def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, **external_inputs):
         """Shared batch processing logic."""
         outputs = []
@@ -1272,13 +1339,22 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 - score: Confidence score
         """
         self.eval()
-        # raw input preparation
+
+        # Normalize input
         if isinstance(texts, str):
             texts = [texts]
 
+        # Filter out empty/whitespace-only strings
+        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+
+        # Early exit: nothing valid to process
+        if not valid_texts:
+            return [[] for _ in texts]
+
         entity_types = list(dict.fromkeys(labels))
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = \
+            self.prepare_inputs(valid_texts)
 
         input_x = self.prepare_base_input(tokens)
 
@@ -1292,34 +1368,35 @@ class BaseEncoderGLiNER(BaseGLiNER):
         )
 
         def collate_fn(batch, entity_types=entity_types):
-            batch_out = collator(batch, entity_types=entity_types)
-            return batch_out
+            return collator(batch, entity_types=entity_types)
 
-        data_loader = torch.utils.data.DataLoader(input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
-
-        active_packing = packing_config if packing_config is not None else self._inference_packing_config
-        outputs = self._process_batches(
-            data_loader, threshold, flat_ner, multi_label, packing_config=active_packing, **external_inputs
+        data_loader = torch.utils.data.DataLoader(
+            input_x,
+            batch_size=batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
         )
 
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
-            entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
-                ent_details = {
-                    "start": start_token_idx_to_text_idx[start_token_idx],
-                    "end": end_token_idx_to_text_idx[end_token_idx],
-                    "text": texts[i][start_text_idx:end_text_idx],
-                    "label": ent_type,
-                    "score": ent_score,
-                }
-                entities.append(ent_details)
+        active_packing = packing_config if packing_config is not None else self._inference_packing_config
 
-            all_entities.append(entities)
+        outputs = self._process_batches(
+            data_loader,
+            threshold,
+            flat_ner,
+            multi_label,
+            packing_config=active_packing,
+            **external_inputs,
+        )
+
+        # Map results back to original indices
+        all_entities = self._map_entities_to_original(
+            outputs,
+            valid_to_orig_idx,
+            all_start_token_idx_to_text_idx,
+            all_end_token_idx_to_text_idx,
+            valid_texts,
+            len(texts),
+        )
 
         return all_entities
 
@@ -2012,12 +2089,20 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         """
         self.eval()
 
+        # Normalize input
         if isinstance(texts, str):
             texts = [texts]
 
+        # Filter out empty/whitespace-only strings
+        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+
+        # Early exit: nothing valid to process
+        if not valid_texts:
+            return [[] for _ in texts]
+
         entity_types = list(dict.fromkeys(labels))
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
         input_x = self.prepare_base_input(tokens)
 
         collator = self.data_collator_class(
@@ -2070,11 +2155,12 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             )
             outputs.extend(decoded)
 
-        # Convert to entity format
-        all_entities = []
-        for i, output in enumerate(outputs):
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+        # Convert to entity format with mapping to original indices
+        all_entities = [[] for _ in texts]
+        for valid_i, output in enumerate(outputs):
+            orig_i = valid_to_orig_idx[valid_i]
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
             entities = []
 
             for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
@@ -2084,7 +2170,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 ent_details = {
                     "start": start_text_idx,
                     "end": end_text_idx,
-                    "text": texts[i][start_text_idx:end_text_idx],
+                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
                     "label": ent_type,
                     "score": ent_score,
                 }
@@ -2094,7 +2180,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
 
                 entities.append(ent_details)
 
-            all_entities.append(entities)
+            all_entities[orig_i] = entities
 
         return all_entities
 
@@ -2215,8 +2301,18 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         """
         self.eval()
 
+        # Normalize input
         if isinstance(texts, str):
             texts = [texts]
+
+        # Filter out empty/whitespace-only strings
+        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+
+        # Early exit: nothing valid to process
+        if not valid_texts:
+            if return_relations:
+                return [[] for _ in texts], [[] for _ in texts]
+            return [[] for _ in texts]
 
         if relation_threshold is None:
             relation_threshold = threshold
@@ -2228,7 +2324,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         entity_types = list(dict.fromkeys(labels))
         relation_types = list(dict.fromkeys(relations))
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
         input_x = self.prepare_base_input(tokens)
 
         collator = self.data_collator_class(
@@ -2314,11 +2410,12 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 for _ in range(len(batch["tokens"])):
                     all_relation_outputs.append(None)
 
-        # Convert entities to standard format
-        all_entities = []
-        for i, output in enumerate(all_entity_outputs):
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+        # Convert entities to standard format with mapping to original indices
+        all_entities = [[] for _ in texts]
+        for valid_i, output in enumerate(all_entity_outputs):
+            orig_i = valid_to_orig_idx[valid_i]
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
             entities = []
 
             for start_token_idx, end_token_idx, ent_type, ent_score in output:
@@ -2329,22 +2426,24 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                     {
                         "start": start_text_idx,
                         "end": end_text_idx,
-                        "text": texts[i][start_text_idx:end_text_idx],
+                        "text": valid_texts[valid_i][start_text_idx:end_text_idx],
                         "label": ent_type,
                         "score": ent_score,
                     }
                 )
 
-            all_entities.append(entities)
+            all_entities[orig_i] = entities
 
         if return_relations:
-            # Process relations
+            # Process relations with mapping to original indices
             all_relations = self._process_relations(
                 all_relation_outputs,
                 all_entity_outputs,
                 all_start_token_idx_to_text_idx,
                 all_end_token_idx_to_text_idx,
-                texts,
+                valid_texts,
+                valid_to_orig_idx,
+                len(texts),
             )
             return all_entities, all_relations
 
@@ -2356,7 +2455,9 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         all_entity_outputs,
         all_start_token_idx_to_text_idx,
         all_end_token_idx_to_text_idx,
-        texts,
+        valid_texts,
+        valid_to_orig_idx=None,
+        num_original_texts=None,
     ):
         """
         Process relation predictions into readable format.
@@ -2367,22 +2468,31 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             all_entity_outputs: List of entity outputs per example (token-level)
             all_start_token_idx_to_text_idx: Token to text index mappings (start)
             all_end_token_idx_to_text_idx: Token to text index mappings (end)
-            texts: Original input texts
+            valid_texts: Valid (non-empty) input texts
+            valid_to_orig_idx: Mapping from valid index to original index (optional)
+            num_original_texts: Total number of original texts (optional)
 
         Returns:
             List of relation lists, one per example
         """
-        all_relations = []
+        # If no mapping provided, assume 1:1 mapping
+        if valid_to_orig_idx is None:
+            valid_to_orig_idx = list(range(len(valid_texts)))
+        if num_original_texts is None:
+            num_original_texts = len(valid_texts)
 
-        for i, rel_tuples in enumerate(relation_outputs):
+        all_relations = [[] for _ in range(num_original_texts)]
+
+        for valid_i, rel_tuples in enumerate(relation_outputs):
+            orig_i = valid_to_orig_idx[valid_i]
+
             if rel_tuples is None or len(rel_tuples) == 0:
-                all_relations.append([])
                 continue
 
             relations = []
-            entities_list = all_entity_outputs[i]  # Token-level entities: (start, end, type, score)
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[i]
+            entities_list = all_entity_outputs[valid_i]  # Token-level entities: (start, end, type, score)
+            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
+            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
 
             # Process each relation tuple from decoder
             for head_idx, relation_label, tail_idx, score in rel_tuples:
@@ -2405,14 +2515,14 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                         "head": {
                             "start": head_start_text,
                             "end": head_end_text,
-                            "text": texts[i][head_start_text:head_end_text],
+                            "text": valid_texts[valid_i][head_start_text:head_end_text],
                             "type": head_type,
                             "entity_idx": head_idx,
                         },
                         "tail": {
                             "start": tail_start_text,
                             "end": tail_end_text,
-                            "text": texts[i][tail_start_text:tail_end_text],
+                            "text": valid_texts[valid_i][tail_start_text:tail_end_text],
                             "type": tail_type,
                             "entity_idx": tail_idx,
                         },
@@ -2421,7 +2531,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                     }
                 )
 
-            all_relations.append(relations)
+            all_relations[orig_i] = relations
 
         return all_relations
 
