@@ -1116,7 +1116,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=eval_dataset,
-            tokenizer=self.data_processor.transformer_tokenizer,
+            # tokenizer=self.data_processor.transformer_tokenizer,
             data_collator=data_collator,
         )
 
