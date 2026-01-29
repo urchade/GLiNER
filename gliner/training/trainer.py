@@ -131,7 +131,11 @@ class Trainer(transformers.Trainer):
 
     @property
     def use_apex(self) -> bool:
-        return False
+        return bool(getattr(self, "_use_apex", False))
+
+    @use_apex.setter
+    def use_apex(self, value: bool) -> None:
+        self._use_apex = bool(value)
 
     def compute_loss(
         self,
