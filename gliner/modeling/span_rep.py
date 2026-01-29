@@ -75,6 +75,7 @@ class SpanMLP(nn.Module):
         """
         super().__init__()
 
+        self.max_width = max_width
         self.mlp = nn.Linear(hidden_size, hidden_size * max_width)
 
     def forward(self, h, *args):
@@ -95,7 +96,7 @@ class SpanMLP(nn.Module):
 
         span_rep = self.mlp(h)
 
-        span_rep = span_rep.view(B, L, -1, D)
+        span_rep = span_rep.view(B, L, self.max_width, D)
 
         return span_rep.relu()
 

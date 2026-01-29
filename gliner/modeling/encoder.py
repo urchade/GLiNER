@@ -1,7 +1,7 @@
 import warnings
 from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
-
+import os
 import torch
 from torch import nn
 from transformers import AutoModel, AutoConfig
@@ -30,14 +30,12 @@ else:
     DECODER_MODEL_MAPPING = {}
 
 if IS_TURBOT5:
-    from turbot5.model.modeling import T5EncoderModel
-else:
-    from transformers import T5EncoderModel
+    from turbot5.model.modeling import T5EncoderModel as FlashT5EncoderModel
+from transformers import T5EncoderModel
 
 if IS_FLASHDEBERTA:
-    from flashdeberta import FlashDebertaV2Model as DebertaV2Model
-else:
-    from transformers import DebertaV2Model
+    from flashdeberta import FlashDebertaV2Model
+from transformers import DebertaV2Model
 
 if IS_PEFT:
     from peft import LoraConfig, get_peft_model
@@ -106,20 +104,29 @@ class Transformer(nn.Module):
             else:
                 ModelClass = DECODER_MODEL_MAPPING[config_name]
             custom = True
-        elif config_name in {"T5Config", "MT5Config"}:
+        elif config_name in {'T5Config', 'MT5Config'}:
+            custom=True
+            turbot5_type = os.environ.get("TURBOT5_ATTN_TYPE", "basic")
+            if turbot5_type and IS_TURBOT5:
+                ModelClass = FlashT5EncoderModel
+                kwargs = {'attention_type': turbot5_type}
+                config.encoder_config.attention_type=turbot5_type
+            else:
+                ModelClass = T5EncoderModel
+        elif config_name in {'DebertaV2Config'}:
             custom = True
-            ModelClass = T5EncoderModel
-            if IS_TURBOT5:
-                kwargs = {"attention_type": "flash"}
-        elif config_name in {"DebertaV2Config"}:
-            custom = True
-            ModelClass = DebertaV2Model
+            if os.environ.get("USE_FLASHDEBERTA", "") and IS_FLASHDEBERTA:
+                print('Using FlashDeberta backend.')
+                ModelClass = FlashDebertaV2Model
+            else:
+                ModelClass = DebertaV2Model
+            
         else:
             custom = False
             ModelClass = AutoModel
 
         if from_pretrained:
-            self.model = ModelClass.from_pretrained(model_name, trust_remote_code=True)
+            self.model = ModelClass.from_pretrained(model_name, **kwargs, trust_remote_code=True)
         elif not custom:
             self.model = ModelClass.from_config(encoder_config, trust_remote_code=True)
         else:

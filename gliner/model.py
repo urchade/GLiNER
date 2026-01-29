@@ -1274,15 +1274,13 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
 
-                entities.append(
-                    {
-                        "start": start_text_idx,
-                        "end": end_text_idx,
-                        "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                )
+                entities.append({
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
+                    "label": ent_type,
+                    "score": ent_score,
+                })
 
             all_entities[orig_i] = entities
 
@@ -1376,7 +1374,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         entity_types = list(dict.fromkeys(labels))
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = \
+            self.prepare_inputs(valid_texts)
 
         input_x = self.prepare_base_input(tokens)
 
