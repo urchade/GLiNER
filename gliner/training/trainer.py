@@ -83,111 +83,27 @@ class TrainingArguments(transformers.TrainingArguments):
     masking: Optional[str] = "global"
 
 
+
 class Trainer(transformers.Trainer):
-    """Custom Trainer with enhanced loss functions and error handling.
-
-    Extends the Hugging Face Trainer to support:
-    - Custom loss functions (focal loss, label smoothing)
-    - Differential learning rates for encoder vs. other parameters
-    - Robust error handling with automatic recovery from failed batches
-    - Custom negative sampling and masking strategies
-    - Persistent worker support for data loading
-
-    The trainer automatically handles CUDA out-of-memory errors and other
-    exceptions during training by skipping problematic batches and continuing.
+    """
+    Transformers v4/v5 compatible custom Trainer.
+    - v5-safe method signatures (num_items_in_batch)
+    - no hard dependency on self.use_apex
+    - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
 
-    def training_step(self, model, inputs, *args, **kwargs) -> torch.Tensor:
-        """Perform a training step on a batch of inputs.
+    @property
+    def use_apex(self) -> bool:
+        return False
 
-        Executes forward pass, loss computation, and backward pass for a single
-        training batch. Includes automatic error handling to skip problematic
-        batches without crashing the training run.
-
-        Args:
-            model: The model to train.
-            inputs: Dictionary of input tensors and targets for the model.
-                The dictionary will be unpacked before being fed to the model.
-                Most models expect targets under the 'labels' key.
-            *args: Additional positional arguments (unused, for compatibility).
-            **kwargs: Additional keyword arguments (unused, for compatibility).
-
-        Returns:
-            Training loss tensor for this batch, scaled by gradient accumulation
-            steps. Returns a zero tensor with requires_grad=True if an error occurs.
-
-        Note:
-            If an exception occurs during the training step, the method prints
-            the error, zeros gradients, clears CUDA cache, and returns a zero
-            loss to allow training to continue.
-        """
-        model.train()
-        try:
-            inputs = self._prepare_inputs(inputs)
-            if is_sagemaker_mp_enabled():
-                loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
-                return loss_mb.reduce_mean().detach().to(self.args.device)
-
-            with self.compute_loss_context_manager():
-                loss = self.compute_loss(model, inputs)
-
-            del inputs
-            torch.cuda.empty_cache()
-
-            kwargs = {}
-
-            if self.args.n_gpu > 1:
-                loss = loss.mean()  # Average on multi-gpu training
-
-            if self.use_apex:
-                from apex import amp
-
-                with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                    scaled_loss.backward()
-            else:
-                self.accelerator.backward(loss, **kwargs)
-
-            return loss.detach() / self.args.gradient_accumulation_steps
-
-        except Exception as e:
-            logger.info("Skipping iteration due to error: %s", e)
-            model.zero_grad(set_to_none=True)
-            torch.cuda.empty_cache()
-            # Safely get device for DataParallel or normal model
-            _model = getattr(model, "module", model)
-            device = next(_model.parameters()).device
-            return torch.tensor(0.0, requires_grad=True, device=device)
-
-    def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
-        """Save the trained model to a directory.
-
-        Args:
-            output_dir: Directory path where the model should be saved.
-                If None, uses the default output directory from training arguments.
-            _internal_call: Whether this is an internal call from the Trainer.
-                Used for compatibility with the parent class.
-        """
-        self.model.save_pretrained(output_dir)
-
-    def compute_loss(self, model, inputs):
-        """Compute loss using custom loss functions.
-
-        Performs forward pass with custom loss parameters including focal loss,
-        label smoothing, and negative sampling configurations from training arguments.
-
-        Args:
-            model: The model to compute loss for.
-            inputs: Dictionary of input tensors including features and labels.
-
-        Returns:
-            Computed loss tensor.
-
-        Note:
-            The loss function parameters (alpha, gamma, label_smoothing, etc.)
-            are passed to the model's forward method, so the model must support
-            these keyword arguments.
-        """
-        # Forward pass
+    def compute_loss(
+        self,
+        model,
+        inputs,
+        return_outputs: bool = False,
+        num_items_in_batch: Optional[int] = None,
+    ):
+        # Prepare inputs are done in training_step / prediction_step
         outputs = model(
             alpha=self.args.focal_loss_alpha,
             gamma=self.args.focal_loss_gamma,
@@ -198,156 +114,151 @@ class Trainer(transformers.Trainer):
             masking=self.args.masking,
             **inputs,
         )
-        loss = outputs.loss
-        return loss
+
+        loss = outputs.loss if hasattr(outputs, "loss") else outputs["loss"]
+        return (loss, outputs) if return_outputs else loss
+
+    def training_step(
+        self,
+        model: nn.Module,
+        inputs: Dict[str, Union[torch.Tensor, Any]],
+        num_items_in_batch: Optional[int] = None,
+    ) -> torch.Tensor:
+        model.train()
+        inputs = self._prepare_inputs(inputs)
+
+        # Guardrail: if labels are missing, fail loudly (otherwise you end up with loss=None -> silent 0)
+        if "labels" not in inputs:
+            raise KeyError(f"Batch has no 'labels'. Keys: {list(inputs.keys())}")
+
+        try:
+            if is_sagemaker_mp_enabled():
+                loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
+                return loss_mb.reduce_mean().detach().to(self.args.device)
+
+            with self.compute_loss_context_manager():
+                loss = self.compute_loss(model, inputs, num_items_in_batch=num_items_in_batch)
+
+            if loss is None:
+                raise RuntimeError("Model returned loss=None (check labels / remove_unused_columns / forward).")
+
+            # Average on multi-gpu
+            if self.args.n_gpu > 1:
+                loss = loss.mean()
+
+            # Match upstream Trainer behavior: scale loss for grad accumulation before backward
+            if self.args.gradient_accumulation_steps > 1 and self.deepspeed is None:
+                loss = loss / self.args.gradient_accumulation_steps
+
+            self.accelerator.backward(loss)
+
+            return loss.detach()
+
+        except torch.cuda.OutOfMemoryError as e:
+            logger.warning("Skipping batch due to CUDA OOM: %s", e)
+            model.zero_grad(set_to_none=True)
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            return torch.zeros((), device=self.args.device)
+
+        except RuntimeError as e:
+            # Some OOMs come as RuntimeError("CUDA out of memory...")
+            if "out of memory" in str(e).lower():
+                logger.warning("Skipping batch due to OOM RuntimeError: %s", e)
+                model.zero_grad(set_to_none=True)
+                if torch.cuda.is_available():
+                    torch.cuda.empty_cache()
+                return torch.zeros((), device=self.args.device)
+            # Anything else: raise, so you don't silently train with zeros again
+            raise
 
     def create_optimizer(self):
-        """Create and configure the optimizer with parameter groups.
-
-        Sets up the optimizer with support for:
-        - Separate learning rates for encoder and non-encoder parameters
-        - Weight decay only for non-bias and non-LayerNorm parameters
-        - Custom weight decay values for different parameter groups
-
-        Returns:
-            Configured optimizer instance.
-
-        Note:
-            If self.args.others_lr is set, creates four parameter groups:
-            1. Non-encoder parameters with weight decay
-            2. Non-encoder parameters without weight decay
-            3. Encoder parameters with weight decay
-            4. Encoder parameters without weight decay
-
-            Otherwise, creates two standard parameter groups with and without
-            weight decay.
-        """
         if is_sagemaker_mp_enabled():
             return super().create_optimizer()
 
         opt_model = self.model
+        if self.optimizer is not None:
+            return self.optimizer
 
-        if self.optimizer is None:
-            decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
-            decay_parameters = [name for name in decay_parameters if "bias" not in name]
-            if self.args.others_lr is not None:
-                encoder_parameters = [name for name, _ in opt_model.named_parameters() if "token_rep_layer" in name]
-                optimizer_grouped_parameters = [
-                    {
-                        "params": [
-                            p
-                            for n, p in opt_model.named_parameters()
-                            if (n in decay_parameters and n not in encoder_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": self.args.others_weight_decay,
-                        "lr": self.args.others_lr,
-                    },
-                    {
-                        "params": [
-                            p
-                            for n, p in opt_model.named_parameters()
-                            if (n not in decay_parameters and n not in encoder_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": 0.0,
-                        "lr": self.args.others_lr,
-                    },
-                    {
-                        "params": [
-                            p
-                            for n, p in opt_model.named_parameters()
-                            if (n in decay_parameters and n in encoder_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": self.args.weight_decay,
-                    },
-                    {
-                        "params": [
-                            p
-                            for n, p in opt_model.named_parameters()
-                            if (n not in decay_parameters and n in encoder_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": 0.0,
-                    },
-                ]
-            else:
-                optimizer_grouped_parameters = [
-                    {
-                        "params": [
-                            p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": self.args.weight_decay,
-                    },
-                    {
-                        "params": [
-                            p
-                            for n, p in opt_model.named_parameters()
-                            if (n not in decay_parameters and p.requires_grad)
-                        ],
-                        "weight_decay": 0.0,
-                    },
-                ]
+        decay_parameters = get_parameter_names(opt_model, ALL_LAYERNORM_LAYERS)
+        decay_parameters = [name for name in decay_parameters if "bias" not in name]
 
-            optimizer_cls, optimizer_kwargs = Trainer.get_optimizer_cls_and_kwargs(self.args)
+        if self.args.others_lr is not None:
+            encoder_parameters = [name for name, _ in opt_model.named_parameters() if "token_rep_layer" in name]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters()
+                        if (n in decay_parameters and n not in encoder_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": self.args.others_weight_decay,
+                    "lr": self.args.others_lr,
+                },
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters()
+                        if (n not in decay_parameters and n not in encoder_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": 0.0,
+                    "lr": self.args.others_lr,
+                },
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters()
+                        if (n in decay_parameters and n in encoder_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": self.args.weight_decay,
+                },
+                {
+                    "params": [
+                        p for n, p in opt_model.named_parameters()
+                        if (n not in decay_parameters and n in encoder_parameters and p.requires_grad)
+                    ],
+                    "weight_decay": 0.0,
+                },
+            ]
+        else:
+            optimizer_grouped_parameters = [
+                {
+                    "params": [p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)],
+                    "weight_decay": self.args.weight_decay,
+                },
+                {
+                    "params": [p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)],
+                    "weight_decay": 0.0,
+                },
+            ]
 
-            self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
+        # Works across v4/v5
+        if hasattr(transformers.Trainer, "get_optimizer_cls_and_kwargs"):
+            optimizer_cls, optimizer_kwargs = transformers.Trainer.get_optimizer_cls_and_kwargs(self.args)
+        else:
+            # very old fallback
+            optimizer_cls, optimizer_kwargs = super().get_optimizer_cls_and_kwargs(self.args)
 
+        self.optimizer = optimizer_cls(optimizer_grouped_parameters, **optimizer_kwargs)
         return self.optimizer
 
     def prediction_step(
         self,
-        model: torch.nn.Module,
+        model: nn.Module,
         inputs: Dict[str, Union[torch.Tensor, Any]],
         prediction_loss_only: bool,
         ignore_keys: Optional[List[str]] = None,
     ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
-        """Perform an evaluation step on the model using inputs.
+        model.eval()
+        inputs = self._prepare_inputs(inputs)
 
-        Executes a single forward pass for evaluation without computing gradients.
-
-        Args:
-            model: The model to evaluate.
-            inputs: Dictionary of input tensors and targets for the model.
-                The dictionary will be unpacked before being fed to the model.
-                Most models expect targets under the 'labels' key.
-            prediction_loss_only: If True, only returns the loss and ignores
-                logits and labels.
-            ignore_keys: Optional list of keys in the model output dictionary
-                that should be ignored when gathering predictions. Currently unused.
-
-        Returns:
-            A tuple of (loss, logits, labels):
-            - loss: Loss tensor if computed, None otherwise
-            - logits: Model predictions if prediction_loss_only is False, None otherwise
-            - labels: Ground truth labels if prediction_loss_only is False, None otherwise
-        """
         with torch.no_grad():
-            loss = None
-            with self.compute_loss_context_manager():
-                outputs = model(**inputs)
-            loss = outputs.loss
-            logits = outputs.logits
-            labels = inputs["labels"]
+            loss, outputs = self.compute_loss(model, inputs, return_outputs=True)
+            logits = getattr(outputs, "logits", None)
+            labels = inputs.get("labels", None)
+
         if prediction_loss_only:
             return (loss, None, None)
         return (loss, logits, labels)
 
     def get_train_dataloader(self) -> DataLoader:
-        """Create and return the training DataLoader.
-
-        Constructs a DataLoader with appropriate sampler, collation function,
-        and worker configuration for the training dataset. Includes seeded
-        worker initialization for reproducibility.
-
-        Returns:
-            Configured and accelerator-prepared training DataLoader.
-
-        Raises:
-            ValueError: If train_dataset is None.
-
-        Note:
-            For IterableDataset, sampler and drop_last are not set.
-            For regular datasets, uses the sampler from _get_train_sampler()
-            and applies worker seeding via seed_worker function.
-        """
         if self.train_dataset is None:
             raise ValueError("Trainer: training requires a train_dataset.")
 
@@ -371,30 +282,6 @@ class Trainer(transformers.Trainer):
         return self.accelerator.prepare(DataLoader(train_dataset, **dataloader_params))
 
     def get_eval_dataloader(self, eval_dataset: Optional[Union[str, Dataset]] = None) -> DataLoader:
-        """Create and return the evaluation DataLoader.
-
-        Constructs a DataLoader for evaluation with support for persistent workers
-        and multiple evaluation datasets. Caches DataLoaders when persistent workers
-        are enabled to avoid recreation overhead.
-
-        Args:
-            eval_dataset: Evaluation dataset to use. Can be:
-                - None: Uses self.eval_dataset
-                - str: Uses self.eval_dataset[eval_dataset] (for named eval sets)
-                - Dataset: Overrides self.eval_dataset directly
-
-        Returns:
-            Configured and accelerator-prepared evaluation DataLoader.
-
-        Raises:
-            ValueError: If both eval_dataset and self.eval_dataset are None.
-
-        Note:
-            When persistent_workers is True, DataLoaders are cached in
-            self._eval_dataloaders to avoid worker process recreation between
-            evaluation calls. The cache key is the dataset name (if string)
-            or "eval" for the default dataset.
-        """
         if eval_dataset is None and self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
 
@@ -413,11 +300,10 @@ class Trainer(transformers.Trainer):
             if eval_dataset is not None
             else self.eval_dataset
         )
-        data_collator = self.data_collator
 
         dataloader_params = {
             "batch_size": self.args.eval_batch_size,
-            "collate_fn": data_collator,
+            "collate_fn": self.data_collator,
             "num_workers": self.args.dataloader_num_workers,
             "pin_memory": self.args.dataloader_pin_memory,
             "persistent_workers": self.args.dataloader_persistent_workers,
@@ -428,9 +314,8 @@ class Trainer(transformers.Trainer):
             dataloader_params["drop_last"] = self.args.dataloader_drop_last
             dataloader_params["prefetch_factor"] = self.args.dataloader_prefetch_factor
 
-        # accelerator.free_memory() will destroy the references, so
-        # we need to store the non-prepared version
         eval_dataloader = DataLoader(eval_dataset, **dataloader_params)
+
         if self.args.dataloader_persistent_workers:
             if hasattr(self, "_eval_dataloaders"):
                 self._eval_dataloaders[dataloader_key] = eval_dataloader
