@@ -158,9 +158,10 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer"><code class="docutils literal notranslate"><span class="pre">Trainer</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.training.trainer.Trainer.training_step"><code class="docutils literal notranslate">training_step()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer.save_model"><code class="docutils literal notranslate">save_model()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.use_apex"><code class="docutils literal notranslate">use_apex</span></code></a></li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer.compute_loss"><code class="docutils literal notranslate">compute_loss()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.training.trainer.Trainer.training_step"><code class="docutils literal notranslate">training_step()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer.create_optimizer"><code class="docutils literal notranslate">create_optimizer()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer.prediction_step"><code class="docutils literal notranslate">prediction_step()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.training.trainer.Trainer.get_train_dataloader"><code class="docutils literal notranslate">get_train_dataloader()</span></code></a></li>
@@ -427,145 +428,103 @@ Defaults to ‘global’.</p>
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.training.trainer.</span></span><span class="sig-name descname"><span class="pre">Trainer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_collator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eval_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processing_class</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_loss_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compute_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">callbacks</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(None,</span> <span class="pre">None)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer_cls_and_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">preprocess_logits_for_metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Trainer</span></code></p>
-<p>Custom Trainer with enhanced loss functions and error handling.</p>
-<p>Extends the Hugging Face Trainer to support:
-- Custom loss functions (focal loss, label smoothing)
-- Differential learning rates for encoder vs. other parameters
-- Robust error handling with automatic recovery from failed batches
-- Custom negative sampling and masking strategies
-- Persistent worker support for data loading</p>
-<p>The trainer automatically handles CUDA out-of-memory errors and other
-exceptions during training by skipping problematic batches and continuing.</p>
+<p>Transformers v4/v5 compatible custom Trainer.
+- v5-safe method signatures (num_items_in_batch)
+- no hard dependency on self.use_apex
+- skips only OOM by default (other exceptions are raised so you don’t silently get 0 loss)</p>
 <dl class="field-list simple">
 </dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.training_step">
-<span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.training_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.training_step" title="Link to this definition">¶</a></dt>
-<dd><p>Perform a training step on a batch of inputs.</p>
-<p>Executes forward pass, loss computation, and backward pass for a single
-training batch. Includes automatic error handling to skip problematic
-batches without crashing the training run.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – The model to train.</p></li>
-<li><p><strong>inputs</strong> – Dictionary of input tensors and targets for the model.
-The dictionary will be unpacked before being fed to the model.
-Most models expect targets under the ‘labels’ key.</p></li>
-<li><p><strong>*args</strong> – Additional positional arguments (unused, for compatibility).</p></li>
-<li><p><strong>**kwargs</strong> – Additional keyword arguments (unused, for compatibility).</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Training loss tensor for this batch, scaled by gradient accumulation
-steps. Returns a zero tensor with requires_grad=True if an error occurs.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Tensor</em></p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If an exception occurs during the training step, the method prints
-the error, zeros gradients, clears CUDA cache, and returns a zero
-loss to allow training to continue.</p>
-</div>
-</dd></dl>
-
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.save_model">
 <span class="sig-name descname"><span class="pre">save_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_internal_call</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.save_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.save_model" title="Link to this definition">¶</a></dt>
-<dd><p>Save the trained model to a directory.</p>
+<dd><p>Will save the model, so you can reload it using <cite>from_pretrained()</cite>.</p>
+<p>Will only save from the main process.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>output_dir</strong> (<em>str</em><em> | </em><em>None</em>) – Directory path where the model should be saved.
-If None, uses the default output directory from training arguments.</p></li>
-<li><p><strong>_internal_call</strong> (<em>bool</em>) – Whether this is an internal call from the Trainer.
-Used for compatibility with the parent class.</p></li>
-</ul>
-</dd>
 </dl>
 </dd></dl>
 
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.use_apex">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">use_apex</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#gliner.training.trainer.Trainer.use_apex" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.compute_loss">
-<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.compute_loss" title="Link to this definition">¶</a></dt>
-<dd><p>Compute loss using custom loss functions.</p>
-<p>Performs forward pass with custom loss parameters including focal loss,
-label smoothing, and negative sampling configurations from training arguments.</p>
+<span class="sig-name descname"><span class="pre">compute_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_outputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_items_in_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.compute_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.compute_loss" title="Link to this definition">¶</a></dt>
+<dd><p>How the loss is computed by Trainer. By default, all models return the loss in the first element.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> – The model to compute loss for.</p></li>
-<li><p><strong>inputs</strong> – Dictionary of input tensors including features and labels.</p></li>
+<li><p><strong>model</strong> (<cite>nn.Module</cite>) – The model to compute the loss for.</p></li>
+<li><p><strong>inputs</strong> (<cite>dict[str, Union[torch.Tensor, Any]]</cite>) – The input data for the model.</p></li>
+<li><p><strong>return_outputs</strong> (<cite>bool</cite>, <em>optional</em>, defaults to <cite>False</cite>) – Whether to return the model outputs along with the loss.</p></li>
+<li><p><strong>num_items_in_batch</strong> (Optional[torch.Tensor], <em>optional</em>) – The number of items in the batch. If num_items_in_batch is not passed,</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Computed loss tensor.</p>
+<dd class="field-even"><p>The loss of the model along with its output if return_outputs was set to True</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The loss function parameters (alpha, gamma, label_smoothing, etc.)
-are passed to the model’s forward method, so the model must support
-these keyword arguments.</p>
-</div>
+<p>Subclass and override for custom behavior. If you are not using <cite>num_items_in_batch</cite> when computing your loss,
+make sure to overwrite <cite>self.model_accepts_loss_kwargs</cite> to <cite>False</cite>. Otherwise, the loss calculating might be slightly inaccurate when performing gradient accumulation.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.training.trainer.Trainer.training_step">
+<span class="sig-name descname"><span class="pre">training_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_items_in_batch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.training_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.training_step" title="Link to this definition">¶</a></dt>
+<dd><p>Perform a training step on a batch of inputs.</p>
+<p>Subclass and override to inject custom behavior.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<cite>nn.Module</cite>) – The model to train.</p></li>
+<li><p><strong>inputs</strong> (<cite>dict[str, Union[torch.Tensor, Any]]</cite>) – <p>The inputs and targets of the model.</p>
+<p>The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+argument <cite>labels</cite>. Check your model’s documentation for all accepted arguments.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The tensor with training loss on this batch.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><cite>torch.Tensor</cite></p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.create_optimizer">
 <span class="sig-name descname"><span class="pre">create_optimizer</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.create_optimizer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.create_optimizer" title="Link to this definition">¶</a></dt>
-<dd><p>Create and configure the optimizer with parameter groups.</p>
-<p>Sets up the optimizer with support for:
-- Separate learning rates for encoder and non-encoder parameters
-- Weight decay only for non-bias and non-LayerNorm parameters
-- Custom weight decay values for different parameter groups</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Configured optimizer instance.</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>If self.args.others_lr is set, creates four parameter groups:
-1. Non-encoder parameters with weight decay
-2. Non-encoder parameters without weight decay
-3. Encoder parameters with weight decay
-4. Encoder parameters without weight decay</p>
-<p>Otherwise, creates two standard parameter groups with and without
-weight decay.</p>
-</div>
+<dd><p>Setup the optimizer.</p>
+<p>We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+Trainer’s init through <cite>optimizers</cite>, or subclass and override this method in a subclass.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.prediction_step">
 <span class="sig-name descname"><span class="pre">prediction_step</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prediction_loss_only</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.prediction_step"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.prediction_step" title="Link to this definition">¶</a></dt>
-<dd><p>Perform an evaluation step on the model using inputs.</p>
-<p>Executes a single forward pass for evaluation without computing gradients.</p>
+<dd><p>Perform an evaluation step on <cite>model</cite> using <cite>inputs</cite>.</p>
+<p>Subclass and override to inject custom behavior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>Module</em>) – The model to evaluate.</p></li>
-<li><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Tensor</em><em> | </em><em>Any</em><em>]</em>) – Dictionary of input tensors and targets for the model.
-The dictionary will be unpacked before being fed to the model.
-Most models expect targets under the ‘labels’ key.</p></li>
-<li><p><strong>prediction_loss_only</strong> (<em>bool</em>) – If True, only returns the loss and ignores
-logits and labels.</p></li>
-<li><p><strong>ignore_keys</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of keys in the model output dictionary
-that should be ignored when gathering predictions. Currently unused.</p></li>
+<li><p><strong>model</strong> (<cite>nn.Module</cite>) – The model to evaluate.</p></li>
+<li><p><strong>inputs</strong> (<cite>dict[str, Union[torch.Tensor, Any]]</cite>) – <p>The inputs and targets of the model.</p>
+<p>The dictionary will be unpacked before being fed to the model. Most models expect the targets under the
+argument <cite>labels</cite>. Check your model’s documentation for all accepted arguments.</p>
+</p></li>
+<li><p><strong>prediction_loss_only</strong> (<cite>bool</cite>) – Whether or not to return the loss only.</p></li>
+<li><p><strong>ignore_keys</strong> (<cite>list[str]</cite>, <em>optional</em>) – A list of keys in the output of your model (if it is a dictionary) that should be ignored when
+gathering predictions.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>loss: Loss tensor if computed, None otherwise</p></li>
-<li><p>logits: Model predictions if prediction_loss_only is False, None otherwise</p></li>
-<li><p>labels: Ground truth labels if prediction_loss_only is False, None otherwise</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>A tuple with the loss,
+logits and labels (each being optional).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>A tuple of (loss, logits, labels)</p>
+<dd class="field-odd"><p>tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -573,60 +532,24 @@ that should be ignored when gathering predictions. Currently unused.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.get_train_dataloader">
 <span class="sig-name descname"><span class="pre">get_train_dataloader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.get_train_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.get_train_dataloader" title="Link to this definition">¶</a></dt>
-<dd><p>Create and return the training DataLoader.</p>
-<p>Constructs a DataLoader with appropriate sampler, collation function,
-and worker configuration for the training dataset. Includes seeded
-worker initialization for reproducibility.</p>
+<dd><p>Returns the training [<cite>~torch.utils.data.DataLoader</cite>].</p>
+<p>Will use no sampler if <cite>train_dataset</cite> does not implement <cite>__len__</cite>, a random sampler (adapted to distributed
+training if necessary) otherwise.</p>
+<p>Subclass and override this method if you want to inject some custom behavior.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Configured and accelerator-prepared training DataLoader.</p>
-</dd>
-<dt class="field-even">Raises<span class="colon">:</span></dt>
-<dd class="field-even"><p><strong>ValueError</strong> – If train_dataset is None.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>DataLoader</em></p>
-</dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For IterableDataset, sampler and drop_last are not set.
-For regular datasets, uses the sampler from _get_train_sampler()
-and applies worker seeding via seed_worker function.</p>
-</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.training.trainer.Trainer.get_eval_dataloader">
 <span class="sig-name descname"><span class="pre">get_eval_dataloader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eval_dataset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/training/trainer.html#Trainer.get_eval_dataloader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.training.trainer.Trainer.get_eval_dataloader" title="Link to this definition">¶</a></dt>
-<dd><p>Create and return the evaluation DataLoader.</p>
-<p>Constructs a DataLoader for evaluation with support for persistent workers
-and multiple evaluation datasets. Caches DataLoaders when persistent workers
-are enabled to avoid recreation overhead.</p>
+<dd><p>Returns the evaluation [<cite>~torch.utils.data.DataLoader</cite>].</p>
+<p>Subclass and override this method if you want to inject some custom behavior.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>eval_dataset</strong> (<em>str</em><em> | </em><em>Dataset</em><em> | </em><em>None</em>) – Evaluation dataset to use. Can be:
-- None: Uses self.eval_dataset
-- str: Uses self.eval_dataset[eval_dataset] (for named eval sets)
-- Dataset: Overrides self.eval_dataset directly</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Configured and accelerator-prepared evaluation DataLoader.</p>
-</dd>
-<dt class="field-odd">Raises<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>ValueError</strong> – If both eval_dataset and self.eval_dataset are None.</p>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>DataLoader</em></p>
+<dd class="field-odd"><p><strong>eval_dataset</strong> (<cite>str</cite> or <cite>torch.utils.data.Dataset</cite>, <em>optional</em>) – If a <cite>str</cite>, will use <cite>self.eval_dataset[eval_dataset]</cite> as the evaluation dataset. If a <cite>Dataset</cite>, will override <cite>self.eval_dataset</cite> and must implement <cite>__len__</cite>. If it is a [<cite>~datasets.Dataset</cite>], columns not accepted by the <cite>model.forward()</cite> method are automatically removed.</p>
 </dd>
 </dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>When persistent_workers is True, DataLoaders are cached in
-self._eval_dataloaders to avoid worker process recreation between
-evaluation calls. The cache key is the dataset name (if string)
-or “eval” for the default dataset.</p>
-</div>
 </dd></dl>
 
 </dd></dl>

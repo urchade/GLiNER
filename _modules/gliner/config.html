@@ -566,7 +566,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="324">    <span class="k">def</span><span class="w"> </span><span class="nf">model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span data-line="325"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Auto-detect model type based on configuration.&quot;&quot;&quot;</span>
 </span><span data-line="326">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span><span class="p">:</span>
-</span><span data-line="327">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s1">&#39;token-level&#39;</span><span class="p">:</span>
+</span><span data-line="327">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token-level&quot;</span><span class="p">:</span>
 </span><span data-line="328">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_token_decoder&quot;</span>
 </span><span data-line="329">            <span class="k">else</span><span class="p">:</span>
 </span><span data-line="330">                <span class="k">return</span> <span class="s2">&quot;gliner_uni_encoder_span_decoder&quot;</span>
