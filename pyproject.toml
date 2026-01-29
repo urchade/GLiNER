@@ -36,7 +36,7 @@ maintainers = [
 
 dependencies = [
     "torch>=2.0.0",
-    "transformers>=4.57.3",
+    "transformers>=4.57.3,<5.2.0",
     "huggingface_hub>=0.21.4",
     "tqdm",
     "onnxruntime",

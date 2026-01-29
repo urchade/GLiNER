@@ -324,7 +324,7 @@ class GLiNERConfig(BaseGLiNERConfig):
     def model_type(self):
         """Auto-detect model type based on configuration."""
         if self.labels_decoder:
-            if self.span_mode == 'token-level':
+            if self.span_mode == "token-level":
                 return "gliner_uni_encoder_token_decoder"
             else:
                 return "gliner_uni_encoder_span_decoder"
