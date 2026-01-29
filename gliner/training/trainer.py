@@ -4,6 +4,7 @@ This module extends the Hugging Face Transformers Trainer class to support
 custom loss functions (focal loss, label smoothing), flexible learning rates
 for different parameter groups, and robust error handling during training.
 """
+
 import os
 import inspect
 import logging
@@ -84,7 +85,6 @@ class TrainingArguments(transformers.TrainingArguments):
     masking: Optional[str] = "global"
 
 
-
 class Trainer(transformers.Trainer):
     """
     Transformers v4/v5 compatible custom Trainer.
@@ -92,6 +92,7 @@ class Trainer(transformers.Trainer):
     - no hard dependency on self.use_apex
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
+
     def _save(self, output_dir: str = None, state_dict=None):
         # called by HF during checkpoint saves
         if not self.args.should_save:
@@ -229,7 +230,8 @@ class Trainer(transformers.Trainer):
             optimizer_grouped_parameters = [
                 {
                     "params": [
-                        p for n, p in opt_model.named_parameters()
+                        p
+                        for n, p in opt_model.named_parameters()
                         if (n in decay_parameters and n not in encoder_parameters and p.requires_grad)
                     ],
                     "weight_decay": self.args.others_weight_decay,
@@ -237,7 +239,8 @@ class Trainer(transformers.Trainer):
                 },
                 {
                     "params": [
-                        p for n, p in opt_model.named_parameters()
+                        p
+                        for n, p in opt_model.named_parameters()
                         if (n not in decay_parameters and n not in encoder_parameters and p.requires_grad)
                     ],
                     "weight_decay": 0.0,
@@ -245,14 +248,16 @@ class Trainer(transformers.Trainer):
                 },
                 {
                     "params": [
-                        p for n, p in opt_model.named_parameters()
+                        p
+                        for n, p in opt_model.named_parameters()
                         if (n in decay_parameters and n in encoder_parameters and p.requires_grad)
                     ],
                     "weight_decay": self.args.weight_decay,
                 },
                 {
                     "params": [
-                        p for n, p in opt_model.named_parameters()
+                        p
+                        for n, p in opt_model.named_parameters()
                         if (n not in decay_parameters and n in encoder_parameters and p.requires_grad)
                     ],
                     "weight_decay": 0.0,
@@ -261,11 +266,15 @@ class Trainer(transformers.Trainer):
         else:
             optimizer_grouped_parameters = [
                 {
-                    "params": [p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)],
+                    "params": [
+                        p for n, p in opt_model.named_parameters() if (n in decay_parameters and p.requires_grad)
+                    ],
                     "weight_decay": self.args.weight_decay,
                 },
                 {
-                    "params": [p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)],
+                    "params": [
+                        p for n, p in opt_model.named_parameters() if (n not in decay_parameters and p.requires_grad)
+                    ],
                     "weight_decay": 0.0,
                 },
             ]

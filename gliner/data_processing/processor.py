@@ -807,7 +807,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
 
         for i, sentence_entities in enumerate(batch["entities"]):
             for st, ed, sp_label in sentence_entities:
-                if sp_label not in batch["classes_to_id"][i]: 
+                if sp_label not in batch["classes_to_id"][i]:
                     continue
                 lbl = batch["classes_to_id"][i][sp_label]
                 class_idx = lbl - 1  # Convert to 0-indexed

@@ -9,12 +9,12 @@ from pathlib import Path
 
 import torch
 import onnxruntime as ort
+import transformers
 from tqdm import tqdm
 from torch import nn
-from safetensors import safe_open
-import transformers
-from transformers import AutoTokenizer
 from packaging import version
+from safetensors import safe_open
+from transformers import AutoTokenizer
 from huggingface_hub import PyTorchModelHubMixin, snapshot_download
 from torch.utils.data import DataLoader
 from safetensors.torch import save_file
@@ -1137,7 +1137,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             trainer_kwargs["tokenizer"] = self.data_processor.transformer_tokenizer
         else:
             trainer_kwargs["processing_class"] = self.data_processor.transformer_tokenizer
-            
+
         trainer = Trainer(**trainer_kwargs)
 
         # Train
@@ -1274,13 +1274,15 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 start_text_idx = start_token_idx_to_text_idx[start_token_idx]
                 end_text_idx = end_token_idx_to_text_idx[end_token_idx]
 
-                entities.append({
-                    "start": start_text_idx,
-                    "end": end_text_idx,
-                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                    "label": ent_type,
-                    "score": ent_score,
-                })
+                entities.append(
+                    {
+                        "start": start_text_idx,
+                        "end": end_text_idx,
+                        "text": valid_texts[valid_i][start_text_idx:end_text_idx],
+                        "label": ent_type,
+                        "score": ent_score,
+                    }
+                )
 
             all_entities[orig_i] = entities
 
@@ -1374,8 +1376,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         entity_types = list(dict.fromkeys(labels))
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = \
-            self.prepare_inputs(valid_texts)
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
 
         input_x = self.prepare_base_input(tokens)
 
