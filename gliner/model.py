@@ -527,7 +527,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         tokenizer = None
         if load_tokenizer:
             tokenizer = AutoTokenizer.from_pretrained(config_instance.model_name, cache_dir=cache_dir)
-            self._set_tokenizer_spec_tokens(tokenizer)
+            cls._set_tokenizer_spec_tokens(tokenizer)
         # Create model instance from scratch
         instance = cls(
             config_instance,
@@ -1135,7 +1135,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         if version.parse(transformers.__version__) < version.parse("5.0.0"):
             trainer_kwargs["tokenizer"] = self.data_processor.transformer_tokenizer
-
+        else:
+            trainer_kwargs["processing_class"] = self.data_processor.transformer_tokenizer
+            
         trainer = Trainer(**trainer_kwargs)
 
         # Train

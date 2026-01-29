@@ -1,5 +1,6 @@
 import argparse
 import json
+import torch
 from pathlib import Path
 from gliner import GLiNER
 from gliner.utils import load_config_as_namespace, namespace_to_dict
@@ -46,7 +47,7 @@ def main(cfg_path: str):
         print(f"Validation samples: {len(eval_dataset)}")
 
     # Build model
-    model = build_model(model_cfg, train_cfg)
+    model = build_model(model_cfg, train_cfg).to(dtype=torch.float32)
     print(f"Model type: {model.__class__.__name__}")
     
     # Get freeze components
@@ -85,6 +86,9 @@ def main(cfg_path: str):
         save_total_limit=cfg.training.save_total_limit,
         # Freezing
         freeze_components=freeze_components,
+
+        # Dtype
+        bf16=True
     )
 
     print(f"\n✓ Training complete! Model saved to {output_dir}")

@@ -4,7 +4,8 @@ This module extends the Hugging Face Transformers Trainer class to support
 custom loss functions (focal loss, label smoothing), flexible learning rates
 for different parameter groups, and robust error handling during training.
 """
-
+import os
+import inspect
 import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
 from dataclasses import field, dataclass
@@ -91,6 +92,42 @@ class Trainer(transformers.Trainer):
     - no hard dependency on self.use_apex
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
+    def _save(self, output_dir: str = None, state_dict=None):
+        # called by HF during checkpoint saves
+        if not self.args.should_save:
+            return
+
+        output_dir = output_dir or self.args.output_dir
+        os.makedirs(output_dir, exist_ok=True)
+
+        model_to_save = self.accelerator.unwrap_model(self.model)
+
+        # Prefer safetensors if TrainingArguments says so
+        safe = bool(getattr(self.args, "save_safetensors", False))
+
+        sp = getattr(model_to_save, "save_pretrained", None)
+        if sp is None:
+            # last-resort fallback: behave like HF (weights only)
+            torch.save(model_to_save.state_dict(), os.path.join(output_dir, "pytorch_model.bin"))
+            return
+
+        sp_sig = inspect.signature(sp).parameters
+        kwargs = {}
+        if "safe_serialization" in sp_sig:
+            kwargs["safe_serialization"] = safe
+
+        if state_dict is not None and "state_dict" in sp_sig:
+            kwargs["state_dict"] = state_dict
+
+        model_to_save.save_pretrained(output_dir, **kwargs)
+
+        proc = getattr(self, "processing_class", None) or getattr(self, "tokenizer", None)
+        if proc is not None and hasattr(proc, "save_pretrained"):
+            proc.save_pretrained(output_dir)
+
+    def save_model(self, output_dir: str = None, _internal_call: bool = False):
+        # make final save consistent with checkpoint saving
+        self._save(output_dir)
 
     @property
     def use_apex(self) -> bool:
