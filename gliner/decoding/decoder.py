@@ -230,6 +230,7 @@ class BaseSpanDecoder(BaseDecoder):
         multi_label: bool,
         span_label_map: Dict[int, List[str]],
         return_class_probs: bool = False,
+        input_spans_i: Optional[List[Tuple[int, int]]] = None,
     ) -> List[tuple]:
         """
         Decode spans for a single batch item.
@@ -248,10 +249,22 @@ class BaseSpanDecoder(BaseDecoder):
             span_label_map (Dict[int, List[str]]): Mapping from flat span indices to
                 generated labels (empty dict for non-generative decoders).
             return_class_probs (bool): Whether to include class probabilities in output.
+            input_spans_i (Optional[List[Tuple[int, int]]]): If provided, only these
+                (word_start, word_end) spans will be considered. Others are masked out.
 
         Returns:
             List[tuple]: List of decoded span tuples for this sample.
         """
+        # Mask probabilities to only include input spans (for efficiency)
+        if input_spans_i is not None:
+            L, K_dim, C = probs_i.shape
+            span_filter = torch.zeros(L, K_dim, dtype=torch.bool, device=probs_i.device)
+            for word_start, word_end in input_spans_i:
+                width = word_end - word_start
+                if 0 <= width < K_dim and 0 <= word_start < L:
+                    span_filter[word_start, width] = True
+            probs_i = probs_i * span_filter.unsqueeze(-1)
+
         span_i = []
 
         # Find all spans above threshold
@@ -288,6 +301,7 @@ class BaseSpanDecoder(BaseDecoder):
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
         **kwargs,
     ) -> List[List[Span]]:
         """
@@ -304,6 +318,8 @@ class BaseSpanDecoder(BaseDecoder):
             threshold (float): Confidence threshold for span predictions.
             multi_label (bool): Whether to allow multiple labels per span.
             return_class_probs (bool): Whether to include class probabilities in output.
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
             **kwargs: Additional keyword arguments (unused in base class).
 
         Returns:
@@ -317,6 +333,7 @@ class BaseSpanDecoder(BaseDecoder):
         for i in range(B):
             probs_i = probs[i]
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            input_spans_i = input_spans[i] if input_spans is not None else None
 
             # For base decoder, span_label_map is empty
             span_label_map = {}
@@ -331,6 +348,7 @@ class BaseSpanDecoder(BaseDecoder):
                 multi_label=multi_label,
                 span_label_map=span_label_map,
                 return_class_probs=return_class_probs,
+                input_spans_i=input_spans_i,
             )
             spans.append(span_i)
 
@@ -522,6 +540,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> List[List[tuple]]:
         """
         Decode model output with generated labels.
@@ -543,6 +562,8 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             threshold (float): Confidence threshold for span predictions.
             multi_label (bool): Whether to allow multiple labels per span.
             return_class_probs (bool): Whether to include class probabilities in output.
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
 
         Returns:
             List[List[tuple]]: For each sample, list of span tuples with generated labels.
@@ -573,6 +594,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             probs_i = probs[i]
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
             span_label_map_i = span_label_maps[i]
+            input_spans_i = input_spans[i] if input_spans is not None else None
 
             span_i = self._decode_batch_item(
                 probs_i=probs_i,
@@ -584,6 +606,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
                 multi_label=multi_label,
                 span_label_map=span_label_map_i,
                 return_class_probs=return_class_probs,
+                input_spans_i=input_spans_i,
             )
             spans.append(span_i)
 
@@ -601,6 +624,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         sel_idx: Optional[torch.LongTensor] = None,
         num_gen_sequences: int = 1,
         return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
         **kwargs,
     ) -> List[List[tuple]]:
         """
@@ -622,6 +646,8 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             sel_idx (Optional[torch.LongTensor]): Selected span indices for span mode.
             num_gen_sequences (int): Number of label sequences generated per span.
             return_class_probs (bool): Whether to include class probabilities in output.
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
             **kwargs: Additional keyword arguments (unused).
 
         Returns:
@@ -640,6 +666,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
                 threshold=threshold,
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
+                input_spans=input_spans,
             )
 
         # Fall back to standard decoding without generative labels
@@ -651,6 +678,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             threshold=threshold,
             multi_label=multi_label,
             return_class_probs=return_class_probs,
+            input_spans=input_spans,
         )
 
 
@@ -953,6 +981,7 @@ class TokenDecoder(BaseDecoder):
         end_i: torch.Tensor,
         id_to_classes: Dict[int, str],
         threshold: float,
+        input_spans_i: Optional[set] = None,
     ) -> List[tuple]:
         """
         Calculate spans and their scores from start/end/inside predictions.
@@ -968,6 +997,8 @@ class TokenDecoder(BaseDecoder):
             end_i (torch.Tensor): End scores for this sample.
             id_to_classes (Dict[int, str]): Mapping from class IDs to class names.
             threshold (float): Confidence threshold.
+            input_spans_i (Optional[set]): If provided, set of (word_start, word_end)
+                tuples to restrict output to.
 
         Returns:
             List[Span]: List of Span objects.
@@ -976,6 +1007,8 @@ class TokenDecoder(BaseDecoder):
         for st, cls_st in zip(*start_idx):
             for ed, cls_ed in zip(*end_idx):
                 if ed >= st and cls_st == cls_ed:
+                    if input_spans_i is not None and (st, ed) not in input_spans_i:
+                        continue
                     ins = scores_inside_i[st : ed + 1, cls_st]
                     if (ins < threshold).any():
                         continue
@@ -1005,6 +1038,7 @@ class TokenDecoder(BaseDecoder):
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> List[List[tuple]]:
         """
         Decode from span-level predictions.
@@ -1024,6 +1058,8 @@ class TokenDecoder(BaseDecoder):
             multi_label (bool): Whether to allow multiple labels per span.
             return_class_probs (bool): Whether to include class probabilities (not yet supported
                 for TokenDecoder, parameter kept for API consistency).
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
 
         Returns:
             List[List[Span]]: For each sample, list of Span objects.
@@ -1036,6 +1072,7 @@ class TokenDecoder(BaseDecoder):
 
         for i in range(batch_size):
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+            input_spans_set = set(input_spans[i]) if input_spans is not None else None
             span_scores = []
 
             # Get valid spans for this sample
@@ -1045,6 +1082,10 @@ class TokenDecoder(BaseDecoder):
             for span_pos in valid_indices:
                 span_start = span_idx[i, span_pos, 0].item()
                 span_end = span_idx[i, span_pos, 1].item()
+
+                # Skip spans not in input_spans
+                if input_spans_set is not None and (span_start, span_end) not in input_spans_set:
+                    continue
 
                 # Get probabilities for all classes for this span
                 probs = span_probs[i, span_pos]
@@ -1081,6 +1122,7 @@ class TokenDecoder(BaseDecoder):
         span_idx: Optional[torch.Tensor] = None,
         span_mask: Optional[torch.Tensor] = None,
         return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
         **kwargs,
     ) -> List[List[Span]]:
         """
@@ -1108,6 +1150,8 @@ class TokenDecoder(BaseDecoder):
                 Used for span-level decoding.
             return_class_probs (bool): Whether to include class probabilities (not yet supported
                 for TokenDecoder, parameter kept for API consistency).
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
             **kwargs: Additional keyword arguments (unused).
 
         Returns:
@@ -1129,6 +1173,7 @@ class TokenDecoder(BaseDecoder):
                 threshold=threshold,
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
+                input_spans=input_spans,
             )
 
         # Check if token-level decoding is requested
@@ -1139,6 +1184,7 @@ class TokenDecoder(BaseDecoder):
 
             for i, _ in enumerate(tokens):
                 id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+                input_spans_i = set(input_spans[i]) if input_spans is not None else None
                 span_scores = self._calculate_span_score(
                     self._get_indices_above_threshold(scores_start[i], threshold),
                     self._get_indices_above_threshold(scores_end[i], threshold),
@@ -1147,6 +1193,7 @@ class TokenDecoder(BaseDecoder):
                     torch.sigmoid(scores_end[i]),
                     id_to_class_i,
                     threshold,
+                    input_spans_i=input_spans_i,
                 )
                 span_i = self.greedy_search(span_scores, flat_ner, multi_label)
                 spans.append(span_i)
@@ -1402,6 +1449,7 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
         span_logits: Optional[torch.Tensor] = None,
         span_idx: Optional[torch.Tensor] = None,
         span_mask: Optional[torch.Tensor] = None,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> List[List[tuple]]:
         """Decode model output with generated labels.
 
@@ -1424,6 +1472,8 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
             span_logits (torch.Tensor, optional): Span classification logits.
             span_idx (torch.Tensor, optional): Span indices.
             span_mask (torch.Tensor, optional): Span mask.
+            input_spans (Optional[List[List[Tuple[int, int]]]]): If provided, only these
+                (word_start, word_end) spans will be considered for each sample.
 
         Returns:
             List[List[tuple]]: For each sample, list of span tuples with generated labels.
@@ -1452,6 +1502,7 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
         for i in range(batch_size):
             id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
             span_label_map_i = span_label_maps[i]
+            input_spans_set = set(input_spans[i]) if input_spans is not None else None
             span_scores = []
 
             valid_mask = span_mask[i]
@@ -1460,6 +1511,10 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
             for span_pos in valid_indices:
                 span_start = span_idx[i, span_pos, 0].item()
                 span_end = span_idx[i, span_pos, 1].item()
+
+                # Skip spans not in input_spans
+                if input_spans_set is not None and (span_start, span_end) not in input_spans_set:
+                    continue
 
                 probs = span_probs[i, span_pos]
                 class_indices = torch.where(probs > threshold)[0]
@@ -1491,6 +1546,7 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
         span_logits: Optional[torch.Tensor] = None,
         span_idx: Optional[torch.Tensor] = None,
         span_mask: Optional[torch.Tensor] = None,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
         **kwargs,
     ) -> List[List[tuple]]:
         """Decode model output, with optional generative label support.
@@ -1511,6 +1567,8 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
             span_logits: Span classification logits.
             span_idx: Span indices.
             span_mask: Span mask.
+            input_spans: If provided, only these (word_start, word_end) spans
+                will be considered for each sample.
             **kwargs: Additional arguments.
 
         Returns:
@@ -1531,6 +1589,7 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
                 span_logits=span_logits,
                 span_idx=span_idx,
                 span_mask=span_mask,
+                input_spans=input_spans,
             )
 
         # Fall back to standard decoding without generative labels
@@ -1544,4 +1603,5 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
             span_logits=span_logits,
             span_idx=span_idx,
             span_mask=span_mask,
+            input_spans=input_spans,
         )

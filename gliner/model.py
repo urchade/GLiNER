@@ -4,7 +4,7 @@ import json
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Set, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
@@ -186,6 +186,50 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def evaluate(self):
         pass
 
+    @staticmethod
+    def _convert_char_spans_to_word_spans(
+        input_spans: List[List[Dict]],
+        all_start_token_idx_to_text_idx: List[List[int]],
+        all_end_token_idx_to_text_idx: List[List[int]],
+    ) -> List[Set[Tuple[int, int]]]:
+        """Convert character-level input spans to word-level span sets.
+
+        For each text, builds reverse lookups from character positions to word
+        indices, then converts each input span. Spans whose character positions
+        don't align with word boundaries are silently dropped.
+
+        Args:
+            input_spans: Per-text list of span dicts with 'start' and 'end'
+                character positions.
+            all_start_token_idx_to_text_idx: Per-text mapping from word index
+                to character start position.
+            all_end_token_idx_to_text_idx: Per-text mapping from word index
+                to character end position.
+
+        Returns:
+            List of sets of (word_start, word_end) tuples, one set per text.
+        """
+        result: List[Set[Tuple[int, int]]] = []
+
+        for spans, starts, ends in zip(
+            input_spans,
+            all_start_token_idx_to_text_idx,
+            all_end_token_idx_to_text_idx,
+        ):
+            char_start_to_word = {char_pos: word_idx for word_idx, char_pos in enumerate(starts)}
+            char_end_to_word = {char_pos: word_idx for word_idx, char_pos in enumerate(ends)}
+
+            allowed: Set[Tuple[int, int]] = set()
+            for sp in spans:
+                word_start = char_start_to_word.get(sp["start"])
+                word_end = char_end_to_word.get(sp["end"])
+                if word_start is not None and word_end is not None:
+                    allowed.add((word_start, word_end))
+
+            result.append(allowed)
+
+        return result
+    
     def forward(self, *args, **kwargs):
         """Forward pass through the model.
 
@@ -1240,6 +1284,44 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         return valid_texts, valid_to_orig_idx
 
+    def _convert_spans_to_word_indices(
+        self,
+        input_spans: List[List[Dict]],
+        all_start_token_idx_to_text_idx: List[List[int]],
+        all_end_token_idx_to_text_idx: List[List[int]],
+    ) -> List[List[Tuple[int, int]]]:
+        """Convert character-level input spans to word-level (start, end) tuples.
+
+        Args:
+            input_spans: Per-text list of span dicts with 'start' and 'end' char positions.
+            all_start_token_idx_to_text_idx: Per-text mapping from word index to char start.
+            all_end_token_idx_to_text_idx: Per-text mapping from word index to char end.
+
+        Returns:
+            Per-text list of (word_start, word_end) tuples. Spans that don't align
+            to word boundaries are silently dropped.
+        """
+        word_input_spans = []
+        for text_i, spans in enumerate(input_spans):
+            # Build reverse lookups: char position -> word index
+            start_char_to_word = {
+                char_pos: word_idx
+                for word_idx, char_pos in enumerate(all_start_token_idx_to_text_idx[text_i])
+            }
+            end_char_to_word = {
+                char_pos: word_idx
+                for word_idx, char_pos in enumerate(all_end_token_idx_to_text_idx[text_i])
+            }
+
+            word_spans = []
+            for span in spans:
+                word_start = start_char_to_word.get(span["start"])
+                word_end = end_char_to_word.get(span["end"])
+                if word_start is not None and word_end is not None and word_end >= word_start:
+                    word_spans.append((word_start, word_end))
+            word_input_spans.append(word_spans)
+        return word_input_spans
+
     def _map_entities_to_original(
         self,
         outputs: List[List[Any]],
@@ -1292,11 +1374,12 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         return all_entities
 
-    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, return_class_probs=False, **external_inputs):
+    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, return_class_probs=False, word_input_spans=None, **external_inputs):
         """Shared batch processing logic."""
         outputs = []
         is_onnx = self.onnx_model
         device = self.device
+        batch_offset = 0
 
         for batch in data_loader:
             # Move to device once (outside condition)
@@ -1316,6 +1399,13 @@ class BaseEncoderGLiNER(BaseGLiNER):
             if not isinstance(model_logits, torch.Tensor):
                 model_logits = torch.from_numpy(model_logits)
 
+            # Slice input_spans for this batch
+            batch_input_spans = None
+            if word_input_spans is not None:
+                current_batch_size = len(batch["tokens"])
+                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_offset += current_batch_size
+
             # Decode
             decoded = self.decoder.decode(
                 batch["tokens"],
@@ -1328,6 +1418,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 threshold=threshold,
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
+                input_spans=batch_input_spans,
             )
             outputs.extend(decoded)
 
@@ -1343,6 +1434,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
+        input_spans: List[List[Dict]] = None,
         return_class_probs: bool = False,
         **external_inputs,
     ) -> List[List[Dict[str, Any]]]:
@@ -1357,6 +1449,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             batch_size: Batch size for processing. Defaults to 8.
             packing_config: Configuration describing how to pack encoder inputs. When None
                 the instance-level configuration set via configure_inference_packing is used.
+            input_spans: Input entity spans that should be classified by the model.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **external_inputs: Additional inputs to pass to the model.
 
@@ -1386,6 +1479,14 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = \
             self.prepare_inputs(valid_texts)
+
+        # Convert input_spans from character positions to word indices
+        word_input_spans = None
+        if input_spans is not None:
+            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
+            word_input_spans = self._convert_spans_to_word_indices(
+                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
+            )
 
         input_x = self.prepare_base_input(tokens)
 
@@ -1417,6 +1518,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             multi_label,
             packing_config=active_packing,
             return_class_probs=return_class_probs,
+            word_input_spans=word_input_spans,
             **external_inputs,
         )
 
@@ -1608,6 +1710,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
+        input_spans: List[List[Dict]] = None,
         return_class_probs: bool = False,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts using pre-computed label embeddings.
@@ -1622,6 +1725,8 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             batch_size: Batch size for processing. Defaults to 8.
             packing_config: Configuration describing how to pack encoder inputs. When None
                 the instance-level configuration set via configure_inference_packing is used.
+            input_spans: Input entity spans to limit predictions to. Each span is a dict
+                with 'start' and 'end' character positions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
 
         Returns:
@@ -1635,6 +1740,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             multi_label=multi_label,
             batch_size=batch_size,
             packing_config=packing_config,
+            input_spans=input_spans,
             return_class_probs=return_class_probs,
             labels_embeddings=labels_embeddings,
         )
