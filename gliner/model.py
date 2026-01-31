@@ -1270,23 +1270,29 @@ class BaseEncoderGLiNER(BaseGLiNER):
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
 
             entities = []
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+            for span in output:
+                # Use Span object attributes
+                start_text_idx = start_token_idx_to_text_idx[span.start]
+                end_text_idx = end_token_idx_to_text_idx[span.end]
 
-                entities.append({
+                entity = {
                     "start": start_text_idx,
                     "end": end_text_idx,
                     "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                    "label": ent_type,
-                    "score": ent_score,
-                })
+                    "label": span.entity_type,
+                    "score": span.score,
+                }
+
+                if span.class_probs is not None:
+                    entity["class_probs"] = span.class_probs
+
+                entities.append(entity)
 
             all_entities[orig_i] = entities
 
         return all_entities
 
-    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, **external_inputs):
+    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, return_class_probs=False, **external_inputs):
         """Shared batch processing logic."""
         outputs = []
         is_onnx = self.onnx_model
@@ -1321,6 +1327,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 flat_ner=flat_ner,
                 threshold=threshold,
                 multi_label=multi_label,
+                return_class_probs=return_class_probs,
             )
             outputs.extend(decoded)
 
@@ -1336,6 +1343,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
+        return_class_probs: bool = False,
         **external_inputs,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts.
@@ -1349,6 +1357,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             batch_size: Batch size for processing. Defaults to 8.
             packing_config: Configuration describing how to pack encoder inputs. When None
                 the instance-level configuration set via configure_inference_packing is used.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **external_inputs: Additional inputs to pass to the model.
 
         Returns:
@@ -1358,6 +1367,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 - text: Entity text
                 - label: Entity type
                 - score: Confidence score
+                - class_probs: (optional) Dictionary mapping class names to probabilities (top 5)
         """
         self.eval()
 
@@ -1406,6 +1416,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             flat_ner,
             multi_label,
             packing_config=active_packing,
+            return_class_probs=return_class_probs,
             **external_inputs,
         )
 
@@ -1428,6 +1439,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
+        return_class_probs: bool = False,
         **kwargs,
     ) -> List[Dict[str, Any]]:
         """Predict entities for a single text input.
@@ -1438,13 +1450,15 @@ class BaseEncoderGLiNER(BaseGLiNER):
             flat_ner: Whether to use flat NER. Defaults to True.
             threshold: Confidence threshold for predictions. Defaults to 0.5.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **kwargs: Additional arguments passed to inference.
 
         Returns:
             List of entity predictions as dictionaries.
         """
         return self.inference(
-            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label, **kwargs
+            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
+            return_class_probs=return_class_probs, **kwargs
         )[0]
 
     def batch_predict_entities(
@@ -1594,6 +1608,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
+        return_class_probs: bool = False,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts using pre-computed label embeddings.
 
@@ -1607,6 +1622,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             batch_size: Batch size for processing. Defaults to 8.
             packing_config: Configuration describing how to pack encoder inputs. When None
                 the instance-level configuration set via configure_inference_packing is used.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
 
         Returns:
             List of lists with predicted entities.
@@ -1619,13 +1635,15 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             multi_label=multi_label,
             batch_size=batch_size,
             packing_config=packing_config,
+            return_class_probs=return_class_probs,
             labels_embeddings=labels_embeddings,
         )
 
         return all_entities
 
     def predict_with_embeds(
-        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False, **kwargs
+        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False,
+        return_class_probs=False, **kwargs
     ):
         """Predict entities for a single text input using pre-computed label embeddings.
 
@@ -1636,13 +1654,15 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             flat_ner: Whether to use flat NER. Defaults to True.
             threshold: Confidence threshold for predictions. Defaults to 0.5.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **kwargs: Additional arguments passed to batch_predict_with_embeds.
 
         Returns:
             List of entity predictions.
         """
         return self.batch_predict_with_embeds(
-            [text], labels_embeddings, labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label, **kwargs
+            [text], labels_embeddings, labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
+            return_class_probs=return_class_probs, **kwargs
         )[0]
 
     def _get_onnx_export_kwargs(self) -> dict[str, Any]:
@@ -2091,6 +2111,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         gen_constraints: Optional[List[str]] = None,
         num_gen_sequences: int = 1,
         packing_config: Optional[InferencePackingConfig] = None,
+        return_class_probs: bool = False,
         **gen_kwargs,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities with optional label generation.
@@ -2105,6 +2126,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             gen_constraints: Labels to constrain generation.
             num_gen_sequences: Number of label sequences to generate per span.
             packing_config: Inference packing configuration.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **gen_kwargs: Additional generation parameters.
 
         Returns:
@@ -2175,6 +2197,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 gen_labels=gen_labels,
                 sel_idx=model_output.decoder_span_idx,
                 num_gen_sequences=num_gen_sequences,
+                return_class_probs=return_class_probs,
             )
             outputs.extend(decoded)
 
@@ -2186,20 +2209,24 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
             entities = []
 
-            for start_token_idx, end_token_idx, ent_type, gen_ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+            for span in output:
+                # Use Span object attributes
+                start_text_idx = start_token_idx_to_text_idx[span.start]
+                end_text_idx = end_token_idx_to_text_idx[span.end]
 
                 ent_details = {
                     "start": start_text_idx,
                     "end": end_text_idx,
                     "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                    "label": ent_type,
-                    "score": ent_score,
+                    "label": span.entity_type,
+                    "score": span.score,
                 }
 
-                if gen_ent_type is not None:
-                    ent_details["generated_labels"] = gen_ent_type
+                if span.generated_labels is not None:
+                    ent_details["generated_labels"] = span.generated_labels
+
+                if span.class_probs is not None:
+                    ent_details["class_probs"] = span.class_probs
 
                 entities.append(ent_details)
 
@@ -2304,6 +2331,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
         return_relations: bool = True,
+        return_class_probs: bool = False,
     ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
         """Predict entities and relations.
 
@@ -2319,6 +2347,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             batch_size: Batch size for processing.
             packing_config: Inference packing configuration.
             return_relations: Whether to return relation predictions.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
 
         Returns:
             Tuple of (entities, relations) if return_relations=True, else just entities.
@@ -2414,6 +2443,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 relation_threshold=relation_threshold,
                 multi_label=multi_label,
                 rel_id_to_classes=batch["rel_id_to_classes"],
+                return_class_probs=return_class_probs,
             )
 
             if len(decoded_results) == 1:
@@ -2442,19 +2472,23 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
             entities = []
 
-            for start_token_idx, end_token_idx, ent_type, ent_score in output:
-                start_text_idx = start_token_idx_to_text_idx[start_token_idx]
-                end_text_idx = end_token_idx_to_text_idx[end_token_idx]
+            for span in output:
+                # Use Span object attributes
+                start_text_idx = start_token_idx_to_text_idx[span.start]
+                end_text_idx = end_token_idx_to_text_idx[span.end]
 
-                entities.append(
-                    {
-                        "start": start_text_idx,
-                        "end": end_text_idx,
-                        "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                        "label": ent_type,
-                        "score": ent_score,
-                    }
-                )
+                entity = {
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
+                    "label": span.entity_type,
+                    "score": span.score,
+                }
+
+                if span.class_probs is not None:
+                    entity["class_probs"] = span.class_probs
+
+                entities.append(entity)
 
             all_entities[orig_i] = entities
 
@@ -2524,15 +2558,15 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 if head_idx >= len(entities_list) or tail_idx >= len(entities_list):
                     continue
 
-                # Get head and tail entities (token-level)
-                head_start_tok, head_end_tok, head_type, _ = entities_list[head_idx]
-                tail_start_tok, tail_end_tok, tail_type, _ = entities_list[tail_idx]
+                # Get head and tail entities (using Span objects)
+                head_span = entities_list[head_idx]
+                tail_span = entities_list[tail_idx]
 
                 # Convert token indices to text indices
-                head_start_text = start_token_idx_to_text_idx[head_start_tok]
-                head_end_text = end_token_idx_to_text_idx[head_end_tok]
-                tail_start_text = start_token_idx_to_text_idx[tail_start_tok]
-                tail_end_text = end_token_idx_to_text_idx[tail_end_tok]
+                head_start_text = start_token_idx_to_text_idx[head_span.start]
+                head_end_text = end_token_idx_to_text_idx[head_span.end]
+                tail_start_text = start_token_idx_to_text_idx[tail_span.start]
+                tail_end_text = end_token_idx_to_text_idx[tail_span.end]
 
                 relations.append(
                     {
@@ -2540,14 +2574,14 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                             "start": head_start_text,
                             "end": head_end_text,
                             "text": valid_texts[valid_i][head_start_text:head_end_text],
-                            "type": head_type,
+                            "type": head_span.entity_type,
                             "entity_idx": head_idx,
                         },
                         "tail": {
                             "start": tail_start_text,
                             "end": tail_end_text,
                             "text": valid_texts[valid_i][tail_start_text:tail_end_text],
-                            "type": tail_type,
+                            "type": tail_span.entity_type,
                             "entity_idx": tail_idx,
                         },
                         "relation": relation_label,
