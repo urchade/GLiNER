@@ -185,50 +185,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     @abstractmethod
     def evaluate(self):
         pass
-
-    @staticmethod
-    def _convert_char_spans_to_word_spans(
-        input_spans: List[List[Dict]],
-        all_start_token_idx_to_text_idx: List[List[int]],
-        all_end_token_idx_to_text_idx: List[List[int]],
-    ) -> List[Set[Tuple[int, int]]]:
-        """Convert character-level input spans to word-level span sets.
-
-        For each text, builds reverse lookups from character positions to word
-        indices, then converts each input span. Spans whose character positions
-        don't align with word boundaries are silently dropped.
-
-        Args:
-            input_spans: Per-text list of span dicts with 'start' and 'end'
-                character positions.
-            all_start_token_idx_to_text_idx: Per-text mapping from word index
-                to character start position.
-            all_end_token_idx_to_text_idx: Per-text mapping from word index
-                to character end position.
-
-        Returns:
-            List of sets of (word_start, word_end) tuples, one set per text.
-        """
-        result: List[Set[Tuple[int, int]]] = []
-
-        for spans, starts, ends in zip(
-            input_spans,
-            all_start_token_idx_to_text_idx,
-            all_end_token_idx_to_text_idx,
-        ):
-            char_start_to_word = {char_pos: word_idx for word_idx, char_pos in enumerate(starts)}
-            char_end_to_word = {char_pos: word_idx for word_idx, char_pos in enumerate(ends)}
-
-            allowed: Set[Tuple[int, int]] = set()
-            for sp in spans:
-                word_start = char_start_to_word.get(sp["start"])
-                word_end = char_end_to_word.get(sp["end"])
-                if word_start is not None and word_end is not None:
-                    allowed.add((word_start, word_end))
-
-            result.append(allowed)
-
-        return result
     
     def forward(self, *args, **kwargs):
         """Forward pass through the model.
@@ -2217,6 +2173,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         gen_constraints: Optional[List[str]] = None,
         num_gen_sequences: int = 1,
         packing_config: Optional[InferencePackingConfig] = None,
+        input_spans: List[List[Dict]] = None,
         return_class_probs: bool = False,
         **gen_kwargs,
     ) -> List[List[Dict[str, Any]]]:
@@ -2232,6 +2189,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             gen_constraints: Labels to constrain generation.
             num_gen_sequences: Number of label sequences to generate per span.
             packing_config: Inference packing configuration.
+            input_spans: Input entity spans to limit predictions to. Each span is a dict
+                with 'start' and 'end' character positions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
             **gen_kwargs: Additional generation parameters.
 
@@ -2254,6 +2213,16 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         entity_types = list(dict.fromkeys(labels))
 
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
+
+        # Convert input_spans from character positions to word indices
+        word_input_spans = None
+        if input_spans is not None:
+            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
+            print(valid_input_spans)
+            word_input_spans = self._convert_spans_to_word_indices(
+                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
+            )
+
         input_x = self.prepare_base_input(tokens)
 
         collator = self.data_collator_class(
@@ -2274,6 +2243,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         active_packing = packing_config if packing_config is not None else self._inference_packing_config
 
         outputs = []
+        batch_offset = 0
         for batch in data_loader:
             if not self.onnx_model:
                 batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
@@ -2293,6 +2263,13 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                     model_output, labels_trie=labels_trie, num_return_sequences=num_gen_sequences, **gen_kwargs
                 )
 
+            # Slice input_spans for this batch
+            batch_input_spans = None
+            if word_input_spans is not None:
+                current_batch_size = len(batch["tokens"])
+                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_offset += current_batch_size
+
             decoded = self.decoder.decode(
                 batch["tokens"],
                 batch["id_to_classes"],
@@ -2304,6 +2281,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 sel_idx=model_output.decoder_span_idx,
                 num_gen_sequences=num_gen_sequences,
                 return_class_probs=return_class_probs,
+                input_spans=batch_input_spans,
             )
             outputs.extend(decoded)
 
@@ -2436,6 +2414,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
+        input_spans: List[List[Dict]] = None,
         return_relations: bool = True,
         return_class_probs: bool = False,
     ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
@@ -2452,6 +2431,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             multi_label: Allow multiple labels per span.
             batch_size: Batch size for processing.
             packing_config: Inference packing configuration.
+            input_spans: Input entity spans to limit predictions to. Each span is a dict
+                with 'start' and 'end' character positions.
             return_relations: Whether to return relation predictions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
 
@@ -2484,6 +2465,15 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         relation_types = list(dict.fromkeys(relations))
 
         tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
+
+        # Convert input_spans from character positions to word indices
+        word_input_spans = None
+        if input_spans is not None:
+            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
+            word_input_spans = self._convert_spans_to_word_indices(
+                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
+            )
+
         input_x = self.prepare_base_input(tokens)
 
         collator = self.data_collator_class(
@@ -2508,6 +2498,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         all_relation_outputs = []
         all_id_to_classes = []
         all_rel_id_to_classes = []
+        batch_offset = 0
 
         for batch in data_loader:
             if not self.onnx_model:
@@ -2537,6 +2528,13 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             if not isinstance(rel_mask, torch.Tensor):
                 rel_mask = torch.from_numpy(rel_mask)
 
+            # Slice input_spans for this batch
+            batch_input_spans = None
+            if word_input_spans is not None:
+                current_batch_size = len(batch["tokens"])
+                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_offset += current_batch_size
+
             decoded_results = self.decoder.decode(
                 batch["tokens"],
                 batch["id_to_classes"],
@@ -2550,6 +2548,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 multi_label=multi_label,
                 rel_id_to_classes=batch["rel_id_to_classes"],
                 return_class_probs=return_class_probs,
+                input_spans=batch_input_spans,
             )
 
             if len(decoded_results) == 1:
