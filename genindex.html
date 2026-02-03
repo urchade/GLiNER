@@ -157,6 +157,8 @@ data-aria-dark="Switch to auto color mode">
 </li>
         <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.BaseDecoder.__init__">(gliner.decoding.decoder.BaseDecoder method)</a>
 </li>
+        <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.__init__">(gliner.decoding.decoder.Span method)</a>
+</li>
         <li><a href="api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.__init__">(gliner.decoding.trie.python_labels_trie.LabelsTrie method)</a>
 </li>
         <li><a href="api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Node.__init__">(gliner.decoding.trie.python_labels_trie.Node method)</a>
@@ -470,6 +472,8 @@ data-aria-dark="Switch to auto color mode">
       </ul></li>
       <li><a href="api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.CamelArabicSplitter">CamelArabicSplitter (class in gliner.data_processing.tokenizer)</a>
 </li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.class_probs">class_probs (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id4">[1]</a>
+</li>
       <li><a href="api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseDataCollator.collate_batch">collate_batch() (gliner.data_processing.collator.BaseDataCollator method)</a>
 
       <ul>
@@ -768,6 +772,10 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder">Encoder (class in gliner.modeling.encoder)</a>
 </li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.end">end (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id1">[1]</a>
+</li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.entity_type">entity_type (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id2">[1]</a>
+</li>
       <li><a href="api/gliner.modeling.decoder.html#gliner.modeling.decoder.NumericalStabilityProcessor.epsilon">epsilon (gliner.modeling.decoder.NumericalStabilityProcessor attribute)</a>
 </li>
       <li><a href="api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ERMLPInteraction">ERMLPInteraction (class in gliner.modeling.multitask.triples_layers)</a>
@@ -1000,6 +1008,8 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanDecoderModel.generate_labels">(gliner.modeling.base.UniEncoderSpanDecoderModel method)</a>
 </li>
       </ul></li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.generated_labels">generated_labels (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id5">[1]</a>
+</li>
       <li><a href="api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.get">get() (gliner.decoding.trie.python_labels_trie.LabelsTrie method)</a>
 </li>
       <li><a href="api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.Trie.get_branch">get_branch() (gliner.decoding.trie.python_labels_trie.Trie method)</a>
@@ -2045,6 +2055,8 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="api/gliner.modeling.layers.html#gliner.modeling.layers.CrossFuser.schema">schema (gliner.modeling.layers.CrossFuser attribute)</a>
 </li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.score">score (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id3">[1]</a>
+</li>
       <li><a href="api/gliner.modeling.scorers.html#gliner.modeling.scorers.Scorer">Scorer (class in gliner.modeling.scorers)</a>
 </li>
       <li><a href="api/gliner.modeling.base.html#gliner.modeling.base.BiEncoderTokenModel.scorer">scorer (gliner.modeling.base.BiEncoderTokenModel attribute)</a>
@@ -2099,11 +2111,13 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.SimplEInteraction">SimplEInteraction (class in gliner.modeling.multitask.triples_layers)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.data_processing.processor.html#gliner.data_processing.processor.BaseProcessor.sort_entities_and_relations">sort_entities_and_relations() (gliner.data_processing.processor.BaseProcessor method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.SpaCyTokenSplitter">SpaCyTokenSplitter (class in gliner.data_processing.tokenizer)</a>
+</li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span">Span (class in gliner.decoding.decoder)</a>
 </li>
       <li><a href="api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERBaseOutput.span_idx">span_idx (gliner.modeling.outputs.GLiNERBaseOutput attribute)</a>
 </li>
@@ -2154,6 +2168,8 @@ data-aria-dark="Switch to auto color mode">
       <li><a href="api/gliner.modeling.layers.html#gliner.modeling.layers.LayersFuser.squeeze">squeeze (gliner.modeling.layers.LayersFuser attribute)</a>
 </li>
       <li><a href="api/gliner.data_processing.tokenizer.html#gliner.data_processing.tokenizer.StanzaWordsSplitter">StanzaWordsSplitter (class in gliner.data_processing.tokenizer)</a>
+</li>
+      <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.start">start (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id0">[1]</a>
 </li>
       <li><a href="api/gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig.streams_per_batch">streams_per_batch (gliner.infer_packing.InferencePackingConfig attribute)</a>, <a href="api/gliner.infer_packing.html#id2">[1]</a>
 
