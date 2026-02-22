@@ -93,26 +93,29 @@ class BaseDecoder(ABC):
         else:
             has_ov = partial(has_overlapping_nested, multi_label=multi_label)
 
+        if not spans:
+            return []
+
         new_list = []
+        selected_tuples = []
 
         # Sort by probability (descending)
         span_prob = sorted(spans, key=lambda x: -x.score)
 
         for span in span_prob:
-            # Check overlap with already selected spans
             # Convert to tuple (start, end, entity_type) for overlap checker
             span_tuple = (span.start, span.end, span.entity_type)
             overlap_detected = False
-            for existing_span in new_list:
-                existing_tuple = (existing_span.start, existing_span.end, existing_span.entity_type)
+            for existing_tuple in selected_tuples:
                 if has_ov(span_tuple, existing_tuple):
                     overlap_detected = True
                     break
             if not overlap_detected:
                 new_list.append(span)
+                selected_tuples.append(span_tuple)
 
-        # Sort by start position
-        new_list = sorted(new_list, key=lambda x: x.start)
+        # Sort by start position (in-place)
+        new_list.sort(key=lambda x: x.start)
         return new_list
 
 
@@ -270,15 +273,31 @@ class BaseSpanDecoder(BaseDecoder):
         # Find all spans above threshold
         s_idx, k_idx, c_idx = self._find_candidate_spans(probs_i, threshold)
 
-        for s, k, c in zip(s_idx.tolist(), k_idx.tolist(), c_idx.tolist()):
-            # Skip if span exceeds sentence length
-            if not self._is_valid_span(s, k, tokens_i):
-                continue
+        if s_idx.numel() == 0:
+            return span_i
 
-            # Calculate flat index (matches encoder's indexing)
-            flat_idx = s * K + k
-            score = probs_i[s, k, c].item()
+        # Vectorized valid span check: end = start + width + 1 must be <= len(tokens)
+        num_tokens = len(tokens_i)
+        valid_mask = (s_idx + k_idx + 1) <= num_tokens
+        s_idx = s_idx[valid_mask]
+        k_idx = k_idx[valid_mask]
+        c_idx = c_idx[valid_mask]
 
+        if s_idx.numel() == 0:
+            return span_i
+
+        # Extract ALL scores at once (single GPU→CPU transfer instead of N .item() calls)
+        scores = probs_i[s_idx, k_idx, c_idx].tolist()
+
+        # Compute flat indices vectorized
+        flat_idxs = (s_idx * K + k_idx).tolist()
+
+        # Convert index tensors to Python lists in one batch
+        s_list = s_idx.tolist()
+        k_list = k_idx.tolist()
+        c_list = c_idx.tolist()
+
+        for s, k, c, flat_idx, score in zip(s_list, k_list, c_list, flat_idxs, scores):
             # Get class probabilities if requested
             class_probs = None
             if return_class_probs:
