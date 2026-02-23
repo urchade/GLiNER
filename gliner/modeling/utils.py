@@ -248,17 +248,12 @@ def build_entity_pairs(
     device = adj.device
     D = span_rep.shape[-1]
 
-    # Generate all possible (i, j) pairs where i != j
-    all_rows = []
-    all_cols = []
-    for i in range(E):
-        for j in range(E):
-            if i != j:
-                all_rows.append(i)
-                all_cols.append(j)
-
-    rows = torch.tensor(all_rows, device=device, dtype=torch.long)
-    cols = torch.tensor(all_cols, device=device, dtype=torch.long)
+    # Generate all possible (i, j) pairs where i != j using meshgrid
+    arange = torch.arange(E, device=device, dtype=torch.long)
+    grid_i, grid_j = torch.meshgrid(arange, arange, indexing='ij')
+    off_diag = grid_i != grid_j
+    rows = grid_i[off_diag]
+    cols = grid_j[off_diag]
 
     # For each example in batch, find pairs exceeding threshold
     batch_pair_lists: list[torch.Tensor] = []

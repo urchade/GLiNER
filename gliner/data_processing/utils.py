@@ -238,8 +238,7 @@ def prepare_span_idx(num_tokens, max_width):
 
     Example:
         >>> spans = prepare_span_idx(num_tokens=3, max_width=2)
-        >>> spans
-        [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2), (2, 3)]
+        >>> spans  # tensor([[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]])
         >>> # For sequence ["The", "cat", "sat"]:
         >>> # (0, 0) = "The"
         >>> # (0, 1) = "The cat"
@@ -247,6 +246,10 @@ def prepare_span_idx(num_tokens, max_width):
         >>> # (1, 2) = "cat sat"
         >>> # (2, 2) = "sat"
         >>> # (2, 3) would be invalid (beyond sequence length)
+
+    Returns:
+        torch.LongTensor of shape (num_tokens * max_width, 2) with columns [start, end].
     """
-    span_idx = [(i, i + j) for i in range(num_tokens) for j in range(max_width)]
-    return span_idx
+    starts = torch.arange(num_tokens, dtype=torch.long).unsqueeze(1).expand(-1, max_width).reshape(-1)
+    offsets = torch.arange(max_width, dtype=torch.long).unsqueeze(0).expand(num_tokens, -1).reshape(-1)
+    return torch.stack([starts, starts + offsets], dim=1)
