@@ -368,17 +368,21 @@ contains:</p>
 </dl>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span> <span class="o">=</span> <span class="n">prepare_span_idx</span><span class="p">(</span><span class="n">num_tokens</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span>
-</span><span data-line="3"><span class="go">[(0, 0), (0, 1), (1, 1), (1, 2), (2, 2), (2, 3)]</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
-</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 0) = &quot;The&quot;</span>
-</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 1) = &quot;The cat&quot;</span>
-</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 1) = &quot;cat&quot;</span>
-</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 2) = &quot;cat sat&quot;</span>
-</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 2) = &quot;sat&quot;</span>
-</span><span data-line="10"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 3) would be invalid (beyond sequence length)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span>  <span class="c1"># tensor([[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]])</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 0) = &quot;The&quot;</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 1) = &quot;The cat&quot;</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 1) = &quot;cat&quot;</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 2) = &quot;cat sat&quot;</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 2) = &quot;sat&quot;</span>
+</span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 3) would be invalid (beyond sequence length)</span>
 </span></pre></div>
 </div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.LongTensor of shape (num_tokens * max_width, 2) with columns [start, end].</p>
+</dd>
+</dl>
 </dd></dl>
 
 </section>

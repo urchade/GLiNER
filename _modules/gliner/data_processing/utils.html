@@ -417,18 +417,21 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="238">
 </span><span data-line="239"><span class="sd">    Example:</span>
 </span><span data-line="240"><span class="sd">        &gt;&gt;&gt; spans = prepare_span_idx(num_tokens=3, max_width=2)</span>
-</span><span data-line="241"><span class="sd">        &gt;&gt;&gt; spans</span>
-</span><span data-line="242"><span class="sd">        [(0, 0), (0, 1), (1, 1), (1, 2), (2, 2), (2, 3)]</span>
-</span><span data-line="243"><span class="sd">        &gt;&gt;&gt; # For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
-</span><span data-line="244"><span class="sd">        &gt;&gt;&gt; # (0, 0) = &quot;The&quot;</span>
-</span><span data-line="245"><span class="sd">        &gt;&gt;&gt; # (0, 1) = &quot;The cat&quot;</span>
-</span><span data-line="246"><span class="sd">        &gt;&gt;&gt; # (1, 1) = &quot;cat&quot;</span>
-</span><span data-line="247"><span class="sd">        &gt;&gt;&gt; # (1, 2) = &quot;cat sat&quot;</span>
-</span><span data-line="248"><span class="sd">        &gt;&gt;&gt; # (2, 2) = &quot;sat&quot;</span>
-</span><span data-line="249"><span class="sd">        &gt;&gt;&gt; # (2, 3) would be invalid (beyond sequence length)</span>
-</span><span data-line="250"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="251">    <span class="n">span_idx</span> <span class="o">=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_width</span><span class="p">)]</span>
-</span><span data-line="252">    <span class="k">return</span> <span class="n">span_idx</span></div>
+</span><span data-line="241"><span class="sd">        &gt;&gt;&gt; spans  # tensor([[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]])</span>
+</span><span data-line="242"><span class="sd">        &gt;&gt;&gt; # For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
+</span><span data-line="243"><span class="sd">        &gt;&gt;&gt; # (0, 0) = &quot;The&quot;</span>
+</span><span data-line="244"><span class="sd">        &gt;&gt;&gt; # (0, 1) = &quot;The cat&quot;</span>
+</span><span data-line="245"><span class="sd">        &gt;&gt;&gt; # (1, 1) = &quot;cat&quot;</span>
+</span><span data-line="246"><span class="sd">        &gt;&gt;&gt; # (1, 2) = &quot;cat sat&quot;</span>
+</span><span data-line="247"><span class="sd">        &gt;&gt;&gt; # (2, 2) = &quot;sat&quot;</span>
+</span><span data-line="248"><span class="sd">        &gt;&gt;&gt; # (2, 3) would be invalid (beyond sequence length)</span>
+</span><span data-line="249">
+</span><span data-line="250"><span class="sd">    Returns:</span>
+</span><span data-line="251"><span class="sd">        torch.LongTensor of shape (num_tokens * max_width, 2) with columns [start, end].</span>
+</span><span data-line="252"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="253">    <span class="n">starts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="254">    <span class="n">offsets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_width</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="255">    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">starts</span><span class="p">,</span> <span class="n">starts</span> <span class="o">+</span> <span class="n">offsets</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
