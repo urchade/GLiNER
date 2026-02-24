@@ -142,6 +142,18 @@ If you find GLiNER useful in your research, please consider citing our papers:
       url={https://arxiv.org/abs/2406.12925}, 
 }
 ```
+
+```bibtex
+@misc{stepanov2026millionlabelnerbreakingscale,
+      title={The Million-Label NER: Breaking Scale Barriers with GLiNER bi-encoder}, 
+      author={Ihor Stepanov and Mykhailo Shtopko and Dmytro Vodianytskyi and Oleksandr Lukashov},
+      year={2026},
+      eprint={2602.18487},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2602.18487}, 
+}
+```
 ## Support and funding
 
 This project has been supported and funded by **F.initiatives** and **Laboratoire Informatique de Paris Nord**.
