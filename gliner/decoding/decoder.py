@@ -824,6 +824,86 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         )
 
 
+def _decode_relations_batch(
+    rel_idx: torch.Tensor,
+    rel_logits: torch.Tensor,
+    rel_mask: torch.Tensor,
+    rel_probs_threshold: float,
+    spans: List[List[tuple]],
+    rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+    batch_size: int,
+) -> List[List[tuple]]:
+    """Vectorized relation decoding shared by Span and Token relex decoders.
+
+    Replaces the triple-nested (batch x relations x classes) loop with a single
+    ``torch.where`` call on the full (B, R, C) probability tensor, reducing
+    CUDA kernel launches from O(B*R*C) to ~10 regardless of tensor size.
+
+    Args:
+        rel_idx: (B, R, 2) head/tail span indices.
+        rel_logits: (B, R, C) relation class logits.
+        rel_mask: (B, R) boolean mask for valid relations.
+        rel_probs_threshold: Minimum sigmoid probability to keep.
+        spans: Per-sample span lists used for bounds checking.
+        rel_id_to_classes: Class-id -> label mapping (global dict or per-sample list).
+        batch_size: Number of samples in the batch.
+
+    Returns:
+        List of relation lists, one per sample.  Each relation is a tuple
+        ``(head_idx, relation_label, tail_idx, score)``.
+    """
+    relations: List[List[tuple]] = [[] for _ in range(batch_size)]
+
+    # 1. Sigmoid — one kernel
+    rel_probs = torch.sigmoid(rel_logits)
+
+    # 2. Apply relation mask — zeros out padded relations
+    rel_probs = rel_probs * rel_mask.unsqueeze(-1)
+
+    # 3. Vectorized index-validity check
+    head = rel_idx[..., 0]  # (B, R)
+    tail = rel_idx[..., 1]  # (B, R)
+    num_spans = torch.tensor(
+        [len(s) for s in spans], device=rel_idx.device, dtype=head.dtype
+    )  # (B,)
+    valid = (
+        (head >= 0)
+        & (tail >= 0)
+        & (head < num_spans[:, None])
+        & (tail < num_spans[:, None])
+    )  # (B, R)
+    rel_probs = rel_probs * valid.unsqueeze(-1)
+
+    # 4. Single torch.where on the full (B, R, C) tensor
+    b_idx, r_idx, c_idx = torch.where(rel_probs > rel_probs_threshold)
+
+    if b_idx.numel() == 0:
+        return relations
+
+    # 5. Bulk-extract everything to Python in a handful of transfers
+    scores = rel_probs[b_idx, r_idx, c_idx].tolist()
+    head_list = head[b_idx, r_idx].tolist()
+    tail_list = tail[b_idx, r_idx].tolist()
+    b_list = b_idx.tolist()
+    c_list = c_idx.tolist()
+
+    # 6. Pre-resolve per-sample class mappings
+    is_list = isinstance(rel_id_to_classes, list)
+
+    # 7. Pure-Python grouping — no more GPU access
+    for k in range(len(b_list)):
+        b = b_list[k]
+        c1 = c_list[k] + 1  # class IDs are 1-indexed
+        mapping = rel_id_to_classes[b] if is_list else rel_id_to_classes
+        if c1 not in mapping:
+            continue
+        relations[b].append(
+            (int(head_list[k]), mapping[c1], int(tail_list[k]), scores[k])
+        )
+
+    return relations
+
+
 class SpanRelexDecoder(BaseSpanDecoder):
     """Span decoder with relation extraction support.
 
@@ -930,59 +1010,22 @@ class SpanRelexDecoder(BaseSpanDecoder):
             - tail_idx: Index into the sample's spans list for the tail entity
             - score: Confidence score for this relation (float, 0-1 range)
         """
-        relations = [[] for _ in range(batch_size)]
-
-        # Check if relation outputs are available
         if rel_idx is None or rel_logits is None:
-            return relations
+            return [[] for _ in range(batch_size)]
 
         # Get or create relation mask
         if rel_mask is None:
-            # Create default mask (all valid)
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
-        rel_probs = torch.sigmoid(rel_logits)
-
-        # Decode relations for each sample
-        for i in range(batch_size):
-            rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
-
-            # Process each potential relation
-            for j in range(rel_idx.size(1)):
-                # Skip if masked out
-                if not rel_mask[i, j]:
-                    continue
-
-                head_idx = rel_idx[i, j, 0].item()
-                tail_idx = rel_idx[i, j, 1].item()
-
-                # Skip invalid indices
-                if head_idx < 0 or tail_idx < 0:
-                    continue
-
-                # Skip if either span was removed by greedy search
-                if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
-                    continue
-
-                # Check each relation class
-                for c, p in enumerate(rel_probs[i, j]):
-                    prob = p.item()
-
-                    # Skip low confidence predictions
-                    if prob <= threshold:
-                        continue
-
-                    # Skip if class ID not in mapping
-                    # (c + 1 because 0 may be "no-relation" or padding)
-                    if (c + 1) not in rel_id_to_class_i:
-                        continue
-
-                    rel_label = rel_id_to_class_i[c + 1]
-
-                    # Append relation: (head_idx, relation_label, tail_idx, score)
-                    relations[i].append((head_idx, rel_label, tail_idx, prob))
-
-        return relations
+        return _decode_relations_batch(
+            rel_idx=rel_idx,
+            rel_logits=rel_logits,
+            rel_mask=rel_mask,
+            rel_probs_threshold=threshold,
+            spans=spans,
+            rel_id_to_classes=rel_id_to_classes,
+            batch_size=batch_size,
+        )
 
     def decode(
         self,
@@ -1414,55 +1457,22 @@ class TokenRelexDecoder(TokenDecoder):
             - tail_idx: Index into the sample's spans list for the tail entity
             - score: Confidence score for this relation (float, 0-1 range)
         """
-        relations = [[] for _ in range(batch_size)]
-
-        # Check if relation outputs are available
         if rel_idx is None or rel_logits is None:
-            return relations
+            return [[] for _ in range(batch_size)]
 
         # Get or create relation mask
         if rel_mask is None:
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
-        rel_probs = torch.sigmoid(rel_logits)
-
-        # Decode relations for each sample
-        for i in range(batch_size):
-            rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
-
-            # Process each potential relation
-            for j in range(rel_idx.size(1)):
-                # Skip if masked out
-                if not rel_mask[i, j]:
-                    continue
-
-                head_idx = rel_idx[i, j, 0].item()
-                tail_idx = rel_idx[i, j, 1].item()
-
-                # Skip invalid indices
-                if head_idx < 0 or tail_idx < 0:
-                    continue
-
-                # Skip if either span was removed by greedy search
-                if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
-                    continue
-
-                # Check each relation class
-                for c, p in enumerate(rel_probs[i, j]):
-                    prob = p.item()
-
-                    # Skip low confidence predictions
-                    if prob <= threshold:
-                        continue
-
-                    # Skip if class ID not in mapping (c + 1 because 0 is padding)
-                    if (c + 1) not in rel_id_to_class_i:
-                        continue
-
-                    rel_label = rel_id_to_class_i[c + 1]
-                    relations[i].append((head_idx, rel_label, tail_idx, prob))
-
-        return relations
+        return _decode_relations_batch(
+            rel_idx=rel_idx,
+            rel_logits=rel_logits,
+            rel_mask=rel_mask,
+            rel_probs_threshold=threshold,
+            spans=spans,
+            rel_id_to_classes=rel_id_to_classes,
+            batch_size=batch_size,
+        )
 
     def decode(
         self,
