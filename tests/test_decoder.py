@@ -5,7 +5,8 @@ from gliner.decoding.decoder import (
     SpanGenerativeDecoder,
     SpanRelexDecoder,
     TokenDecoder,
-    BaseSpanDecoder
+    BaseSpanDecoder,
+    _decode_relations_batch,
 )
 from unittest.mock import Mock
 
@@ -854,3 +855,226 @@ class TestGreedySearch:
         
         assert len(result) == 0
         assert isinstance(result, list)
+
+
+def _decode_relations_reference(rel_idx, rel_logits, rel_mask, threshold,
+                                spans, rel_id_to_classes, batch_size):
+    """Original triple-nested loop implementation for correctness comparison."""
+    relations = [[] for _ in range(batch_size)]
+    if rel_idx is None or rel_logits is None:
+        return relations
+    if rel_mask is None:
+        rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool,
+                              device=rel_idx.device)
+    rel_probs = torch.sigmoid(rel_logits)
+    for i in range(batch_size):
+        rel_id_to_class_i = (rel_id_to_classes[i]
+                             if isinstance(rel_id_to_classes, list)
+                             else rel_id_to_classes)
+        for j in range(rel_idx.size(1)):
+            if not rel_mask[i, j]:
+                continue
+            head_idx = rel_idx[i, j, 0].item()
+            tail_idx = rel_idx[i, j, 1].item()
+            if head_idx < 0 or tail_idx < 0:
+                continue
+            if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
+                continue
+            for c, p in enumerate(rel_probs[i, j]):
+                prob = p.item()
+                if prob <= threshold:
+                    continue
+                if (c + 1) not in rel_id_to_class_i:
+                    continue
+                rel_label = rel_id_to_class_i[c + 1]
+                relations[i].append((head_idx, rel_label, tail_idx, prob))
+    return relations
+
+
+class TestDecodeRelationsBatch:
+    """Correctness tests comparing vectorized _decode_relations_batch against
+    the original triple-nested loop reference implementation."""
+
+    @staticmethod
+    def _compare(rel_idx, rel_logits, rel_mask, threshold, spans,
+                 rel_id_to_classes, batch_size):
+        """Run both implementations and assert identical output."""
+        ref = _decode_relations_reference(
+            rel_idx, rel_logits, rel_mask, threshold,
+            spans, rel_id_to_classes, batch_size,
+        )
+        new = _decode_relations_batch(
+            rel_idx, rel_logits, rel_mask, threshold,
+            spans, rel_id_to_classes, batch_size,
+        )
+        assert len(ref) == len(new) == batch_size
+        for i in range(batch_size):
+            # Sort both lists for order-independent comparison
+            ref_sorted = sorted(ref[i])
+            new_sorted = sorted(new[i])
+            assert len(ref_sorted) == len(new_sorted), (
+                f"Sample {i}: ref has {len(ref_sorted)} relations, "
+                f"new has {len(new_sorted)}"
+            )
+            for r, n in zip(ref_sorted, new_sorted):
+                assert r[0] == n[0], f"head mismatch: {r} vs {n}"
+                assert r[1] == n[1], f"label mismatch: {r} vs {n}"
+                assert r[2] == n[2], f"tail mismatch: {r} vs {n}"
+                assert abs(r[3] - n[3]) < 1e-6, f"score mismatch: {r} vs {n}"
+
+    def test_basic_batch(self):
+        """Basic B=2, R=3, C=2 with valid indices and above-threshold probs."""
+        B, R, C = 2, 3, 2
+        rel_idx = torch.tensor([
+            [[0, 1], [1, 2], [0, 2]],
+            [[0, 1], [1, 0], [2, 0]],
+        ])
+        # Logits chosen so sigmoid > 0.5 for some, < 0.5 for others
+        rel_logits = torch.tensor([
+            [[2.0, -2.0], [0.5, 1.5], [-1.0, -1.0]],
+            [[1.0, 1.0], [-2.0, 2.0], [0.3, -0.3]],
+        ])
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [
+            [(0, 1, "A", 0.9), (1, 2, "B", 0.8), (2, 3, "C", 0.7)],
+            [(0, 1, "X", 0.9), (1, 2, "Y", 0.8), (2, 3, "Z", 0.7)],
+        ]
+        rel_id_to_classes = {1: "rel_A", 2: "rel_B"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_negative_indices_filtered(self):
+        """Relations with negative head or tail indices should be skipped."""
+        B, R, C = 1, 4, 1
+        rel_idx = torch.tensor([[[0, 1], [-1, 0], [0, -1], [-1, -1]]])
+        rel_logits = torch.full((B, R, C), 3.0)  # all above threshold
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]
+        rel_id_to_classes = {1: "rel"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_out_of_bounds_indices_filtered(self):
+        """Relations with head/tail beyond span count should be skipped."""
+        B, R, C = 1, 3, 1
+        rel_idx = torch.tensor([[[0, 1], [0, 5], [10, 0]]])
+        rel_logits = torch.full((B, R, C), 3.0)
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]  # len=2
+        rel_id_to_classes = {1: "rel"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_mask_filters_relations(self):
+        """Relations with mask=False should be skipped even if above threshold."""
+        B, R, C = 1, 3, 1
+        rel_idx = torch.tensor([[[0, 1], [0, 1], [0, 1]]])
+        rel_logits = torch.full((B, R, C), 3.0)
+        rel_mask = torch.tensor([[True, False, True]])
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]
+        rel_id_to_classes = {1: "rel"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_per_sample_class_mappings(self):
+        """Each sample can have a different class mapping."""
+        B, R, C = 2, 2, 2
+        rel_idx = torch.tensor([[[0, 1], [1, 0]], [[0, 1], [1, 0]]])
+        rel_logits = torch.full((B, R, C), 2.0)
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [
+            [(0, 1, "A", 0.9), (1, 2, "B", 0.8)],
+            [(0, 1, "X", 0.9), (1, 2, "Y", 0.8)],
+        ]
+        # Sample 0 has class 1 only, sample 1 has class 2 only
+        rel_id_to_classes = [
+            {1: "rel_alpha"},
+            {2: "rel_beta"},
+        ]
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_unmapped_class_ids_filtered(self):
+        """Class IDs not in the mapping should be skipped."""
+        B, R, C = 1, 1, 3
+        rel_idx = torch.tensor([[[0, 1]]])
+        rel_logits = torch.full((B, R, C), 3.0)  # all above threshold
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]
+        # Only map class 2 (c_idx=1 -> c+1=2), so c_idx=0 and c_idx=2 are skipped
+        rel_id_to_classes = {2: "rel_only"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_threshold_boundary(self):
+        """Scores exactly at threshold should be excluded (> not >=)."""
+        B, R, C = 1, 1, 1
+        # sigmoid(0.0) = 0.5 exactly
+        rel_idx = torch.tensor([[[0, 1]]])
+        rel_logits = torch.tensor([[[0.0]]])
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]
+        rel_id_to_classes = {1: "rel"}
+        # threshold=0.5 -> sigmoid(0)=0.5, should be excluded (> not >=)
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_empty_spans_sample(self):
+        """Samples with zero spans should produce no relations."""
+        B, R, C = 2, 2, 1
+        rel_idx = torch.tensor([[[0, 1], [1, 0]], [[0, 1], [1, 0]]])
+        rel_logits = torch.full((B, R, C), 3.0)
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [
+            [],  # empty — all indices should be out-of-bounds
+            [(0, 1, "A", 0.9), (1, 2, "B", 0.8)],
+        ]
+        rel_id_to_classes = {1: "rel"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_large_batch(self):
+        """Stress test with B=32, R=200, C=20."""
+        B, R, C = 32, 200, 20
+        torch.manual_seed(42)
+        rel_idx = torch.randint(0, 10, (B, R, 2))
+        # Sprinkle some negative indices
+        rel_idx[rel_idx % 7 == 0] = -1
+        rel_logits = torch.randn(B, R, C)
+        rel_mask = torch.rand(B, R) > 0.2
+        spans = [
+            [(s, s + 1, f"ent_{s}", 0.9) for s in range(8)]
+            for _ in range(B)
+        ]
+        rel_id_to_classes = {i: f"rel_{i}" for i in range(1, C + 1)}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_all_below_threshold(self):
+        """When all probs are below threshold, should return empty lists."""
+        B, R, C = 2, 3, 2
+        rel_idx = torch.tensor([
+            [[0, 1], [1, 0], [0, 1]],
+            [[0, 1], [1, 0], [0, 1]],
+        ])
+        rel_logits = torch.full((B, R, C), -5.0)  # sigmoid(-5) ~ 0.007
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [
+            [(0, 1, "A", 0.9), (1, 2, "B", 0.8)],
+            [(0, 1, "X", 0.9), (1, 2, "Y", 0.8)],
+        ]
+        rel_id_to_classes = {1: "rel_A", 2: "rel_B"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
+
+    def test_no_mask_creates_default(self):
+        """When rel_mask is None, callers create all-True mask before calling."""
+        B, R, C = 1, 2, 1
+        rel_idx = torch.tensor([[[0, 1], [1, 0]]])
+        rel_logits = torch.full((B, R, C), 2.0)
+        # Simulate what callers do: create default mask
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [[(0, 1, "A", 0.9), (1, 2, "B", 0.8)]]
+        rel_id_to_classes = {1: "rel"}
+        self._compare(rel_idx, rel_logits, rel_mask, 0.5,
+                       spans, rel_id_to_classes, B)
