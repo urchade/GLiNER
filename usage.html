@@ -683,22 +683,29 @@ data-aria-dark="Switch to auto color mode">
 </span></pre></div>
 </div>
 <p>:::tip
-Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.47.0</span></code>.
+Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.51.3</span></code>.
 :::</p>
 </section>
 <section id="usage">
 <h3>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h3>
-<p>GLiNER will automatically detect and use FlashDeBERTa. If needed, you can switch to the standard <code class="docutils literal notranslate"><span class="pre">eager</span></code> attention mechanism:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="c1"># Use FlashDeBERTa (automatic if installed)</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">)</span>
+<p>To enable FlashDeBERTa, set the <code class="docutils literal notranslate"><span class="pre">USE_FLASHDEBERTA</span></code> environment variable before loading the model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">USE_FLASHDEBERTA</span><span class="o">=</span><span class="m">1</span>
+</span></pre></div>
+</div>
+<p>Or set it directly in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="2"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="c1"># Or explicitly use eager attention</span>
-</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="8">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
-</span><span data-line="9">    <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span>
-</span><span data-line="10"><span class="p">)</span>
+</span><span data-line="6"><span class="c1"># FlashDeBERTa will be used when USE_FLASHDEBERTA is set and the package is installed</span>
+</span><span data-line="7"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="c1"># To explicitly use eager attention instead</span>
+</span><span data-line="10"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="11">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span>
+</span><span data-line="13"><span class="p">)</span>
 </span></pre></div>
 </div>
 <p><strong>Performance Boost</strong>: FlashDeBERTa provides up to a <strong>3× speed boost</strong> for typical sequence lengths—and even greater improvements for longer sequences.</p>

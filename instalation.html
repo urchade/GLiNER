@@ -239,9 +239,21 @@ It’s a good practice to create and activate a virtual environment before insta
 </span></pre></div>
 </div>
 <p>:::tip
-Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.47.0</span></code>.
+Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.51.3</span></code>.
 :::</p>
-<p>GLiNER will automatically detect and use <code class="docutils literal notranslate"><span class="pre">FlashDeBERTa</span></code>. If needed, you can switch to the standard <code class="docutils literal notranslate"><span class="pre">eager</span></code> attention mechanism by specifying the attention implementation:</p>
+<p>To enable FlashDeBERTa, set the <code class="docutils literal notranslate"><span class="pre">USE_FLASHDEBERTA</span></code> environment variable before loading the model:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">USE_FLASHDEBERTA</span><span class="o">=</span><span class="m">1</span>
+</span></pre></div>
+</div>
+<p>Or set it directly in Python:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="2"><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_mediumv2.1&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>If needed, you can switch to the standard <code class="docutils literal notranslate"><span class="pre">eager</span></code> attention mechanism by specifying the attention implementation:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_mediumv2.1&quot;</span><span class="p">,</span> <span class="n">_attn_implementation</span><span class="o">=</span><span class="s2">&quot;eager&quot;</span><span class="p">)</span>
 </span></pre></div>
 </div>
