@@ -86,10 +86,26 @@ To use `FlashDeBERTa` with GLiNER, install it:
 pip install flashdeberta -U
 ```
 :::tip
-Before using FlashDeBERTa, please make sure that you have `transformers>=4.47.0`.
+Before using FlashDeBERTa, please make sure that you have `transformers>=4.51.3`.
 :::
 
-GLiNER will automatically detect and use `FlashDeBERTa`. If needed, you can switch to the standard `eager` attention mechanism by specifying the attention implementation:
+To enable FlashDeBERTa, set the `USE_FLASHDEBERTA` environment variable before loading the model:
+
+```bash
+export USE_FLASHDEBERTA=1
+```
+
+Or set it directly in Python:
+
+```python
+import os
+os.environ["USE_FLASHDEBERTA"] = "1"
+
+from gliner import GLiNER
+model = GLiNER.from_pretrained("urchade/gliner_mediumv2.1")
+```
+
+If needed, you can switch to the standard `eager` attention mechanism by specifying the attention implementation:
 
 ```python
 model = GLiNER.from_pretrained("urchade/gliner_mediumv2.1", _attn_implementation="eager")
