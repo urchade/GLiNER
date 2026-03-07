@@ -680,7 +680,8 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         all_losses = all_losses * mask
 
         if reduction == "mean":
-            loss = all_losses.sum()/mask.float().sum()
+            num_valid = mask.float().sum()
+            loss = all_losses.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=scores.device)
         elif reduction == "sum":
             loss = all_losses.sum()
         else:
