@@ -26,6 +26,7 @@ from torch import nn
 from torch.nn import functional as F
 
 from .utils import (
+    build_all_entity_pairs,
     build_entity_pairs,
     extract_prompt_features,
     extract_word_embeddings,
@@ -2014,9 +2015,10 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         super().__init__(config, from_pretrained, cache_dir)
 
         if config.relations_layer is not None:
-            self.relations_rep_layer = RelationsRepLayer(
-                in_dim=config.hidden_size, relation_mode=config.relations_layer
-            )
+            if config.relations_layer != "none":
+                self.relations_rep_layer = RelationsRepLayer(
+                    in_dim=config.hidden_size, relation_mode=config.relations_layer
+                )
 
             if config.triples_layer is not None:
                 self.triples_score_layer = TriplesScoreLayer(config.triples_layer)
@@ -2033,7 +2035,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         span_labels: Optional[torch.FloatTensor] = None,
         threshold: float = 0.5,
         top_k: Optional[int] = None,
-    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        span_idx: Optional[torch.LongTensor] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor, Optional[torch.Tensor]]:
         """Select entity spans for relation extraction.
 
         Filters spans based on entity classification scores or ground truth labels,
@@ -2046,11 +2049,15 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             span_labels: Optional ground truth labels of shape (B, L, K, C).
             threshold: Confidence threshold for selecting spans.
             top_k: Optional limit on number of spans to select.
+            span_idx: Optional span boundary indices of shape (B, L*K, 2).
+                If provided, selected boundaries are returned for decoding.
 
         Returns:
             Tuple containing:
                 - target_rep: Selected span representations of shape (B, E, D).
                 - target_mask: Mask for selected spans of shape (B, E).
+                - target_span_idx: Selected span boundaries of shape (B, E, 2),
+                    or None if span_idx was not provided.
         """
         B = span_rep.size(0)
         D = span_rep.size(-1)
@@ -2075,7 +2082,16 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         target_rep, target_mask = self.select_target_embedding(representations=span_rep_flat, rep_mask=rep_mask)
 
-        return target_rep, target_mask
+        # Also select span boundaries using the same mask
+        target_span_idx = None
+        if span_idx is not None:
+            span_idx_float = span_idx.float()
+            target_span_idx_float, _ = self.select_target_embedding(
+                representations=span_idx_float, rep_mask=rep_mask
+            )
+            target_span_idx = target_span_idx_float.long()
+
+        return target_rep, target_mask, target_span_idx
 
     def select_target_embedding(
         self, representations: Optional[torch.FloatTensor] = None, rep_mask: Optional[torch.LongTensor] = None
@@ -2127,13 +2143,14 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         span_rep = self.span_rep_layer(words_embeddings, span_idx)
         scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embeddings)
 
-        if hasattr(self, "relations_rep_layer"):
-            target_span_rep, target_span_mask = self.select_span_target_embedding(
-                span_rep, scores, span_mask, labels, threshold
+        has_relex = hasattr(self, "relations_rep_layer") or hasattr(self, "pair_rep_layer") or hasattr(self, "triples_score_layer")
+        if has_relex:
+            target_span_rep, target_span_mask, entity_spans = self.select_span_target_embedding(
+                span_rep, scores, span_mask, labels, threshold, span_idx=span_idx
             )
         else:
-            target_span_rep, target_span_mask = None, None
-        return scores, target_span_rep, target_span_mask
+            target_span_rep, target_span_mask, entity_spans = None, None, None
+        return scores, target_span_rep, target_span_mask, entity_spans
 
     def forward(
         self,
@@ -2212,7 +2229,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
         batch_size, _, embed_dim = prompts_embedding.shape
 
-        scores, target_span_rep, target_span_mask = self.represent_spans(
+        scores, target_span_rep, target_span_mask, entity_spans = self.represent_spans(
             words_embedding, mask, prompts_embedding, span_idx, span_mask, labels, threshold
         )
 
@@ -2220,8 +2237,11 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         rel_prompts_embedding_mask = None
         pred_adj_matrix = None
 
-        if hasattr(self, "relations_rep_layer"):
-            pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
+        has_relex = hasattr(self, "relations_rep_layer") or hasattr(self, "pair_rep_layer") or hasattr(self, "triples_score_layer")
+
+        if has_relex:
+            if hasattr(self, "relations_rep_layer"):
+                pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
 
             rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
                 self.config.rel_token_index,
@@ -2236,11 +2256,15 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             B, _, D = target_span_rep.shape
             C_rel = rel_prompts_embedding.size(1)
 
-            adj_for_selection = adj_matrix if (labels is not None and adj_matrix is not None) else pred_adj_matrix
-
-            pair_idx, pair_mask, head_rep_selected, tail_rep_selected = build_entity_pairs(
-                adj_for_selection, target_span_rep, threshold=adjacency_threshold
-            )
+            if hasattr(self, "relations_rep_layer"):
+                adj_for_selection = adj_matrix if (labels is not None and adj_matrix is not None) else pred_adj_matrix
+                pair_idx, pair_mask, head_rep_selected, tail_rep_selected = build_entity_pairs(
+                    adj_for_selection, target_span_rep, threshold=adjacency_threshold
+                )
+            else:
+                pair_idx, pair_mask, head_rep_selected, tail_rep_selected = build_all_entity_pairs(
+                    target_span_rep, target_span_mask
+                )
 
             N = head_rep_selected.size(1)
 
@@ -2265,22 +2289,51 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, span_mask=span_mask, word_mask=mask, **kwargs)
 
-            if adj_matrix is not None and rel_matrix is not None and hasattr(self, "relations_rep_layer"):
-                adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
-                adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
-
+            if has_relex and rel_matrix is not None:
                 rel_labels_selected = rel_matrix
+                # Align rel_labels_selected to N (pairs from build_entity_pairs / build_all_entity_pairs).
+                # They should match by construction, but can differ by 1 in edge cases.
+                if rel_labels_selected.size(1) != N:
+                    if rel_labels_selected.size(1) > N:
+                        rel_labels_selected = rel_labels_selected[:, :N, :]
+                    else:
+                        pad = rel_labels_selected.new_zeros(B, N - rel_labels_selected.size(1), rel_labels_selected.size(2))
+                        rel_labels_selected = torch.cat([rel_labels_selected, pad], dim=1)
+
+                # Align rel_labels_selected to C_rel (relation classes from prompt embeddings).
+                # rel_matrix uses C from rel_class_to_ids which can differ from C_rel.
+                if rel_labels_selected.size(2) != C_rel:
+                    if rel_labels_selected.size(2) > C_rel:
+                        rel_labels_selected = rel_labels_selected[:, :, :C_rel]
+                    else:
+                        pad = rel_labels_selected.new_zeros(B, rel_labels_selected.size(1), C_rel - rel_labels_selected.size(2))
+                        rel_labels_selected = torch.cat([rel_labels_selected, pad], dim=2)
+
                 rel_mask_selected = pair_mask.unsqueeze(-1).expand(B, N, C_rel)
                 class_mask = rel_prompts_embedding_mask.unsqueeze(1).expand(B, N, C_rel)
 
                 rel_loss = self.rel_loss(pair_scores, rel_labels_selected, rel_mask_selected, class_mask, **kwargs)
 
-                loss = (
-                    loss * self.config.span_loss_coef
-                    + adj_loss * self.config.adjacency_loss_coef
-                    + rel_loss * self.config.relation_loss_coef
-                )
+                if hasattr(self, "relations_rep_layer") and adj_matrix is not None:
+                    adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
+                    adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
 
+                    loss = (
+                        loss * self.config.span_loss_coef
+                        + adj_loss * self.config.adjacency_loss_coef
+                        + rel_loss * self.config.relation_loss_coef
+                    )
+                else:
+                    loss = (
+                        loss * self.config.span_loss_coef
+                        + rel_loss * self.config.relation_loss_coef
+                    )
+
+        # During training, rel_logits/rel_idx/rel_mask/entity_spans can have
+        # variable sizes across batch splits (different C_rel or N per GPU),
+        # which causes DataParallel gather to fail. Only loss is needed for
+        # training, so skip these tensors when labels are provided.
+        is_training = labels is not None
         output = GLiNERRelexOutput(
             logits=scores,
             loss=loss,
@@ -2288,9 +2341,10 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             prompts_embedding_mask=prompts_embedding_mask,
             words_embedding=words_embedding,
             mask=mask,
-            rel_idx=pair_idx,
-            rel_logits=pair_scores,
-            rel_mask=pair_mask,
+            rel_idx=None if is_training else pair_idx,
+            rel_logits=None if is_training else pair_scores,
+            rel_mask=None if is_training else pair_mask,
+            entity_spans=None if is_training else entity_spans,
         )
         return output
 
@@ -2514,4 +2568,5 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
             span_idx = span_idx * span_mask.unsqueeze(-1).long()
         target_span_rep = self.span_rep_layer(words_embeddings, span_idx)
 
-        return scores, target_span_rep, span_mask
+        # span_idx directly corresponds to target_span_rep positions
+        return scores, target_span_rep, span_mask, span_idx

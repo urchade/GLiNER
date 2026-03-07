@@ -99,3 +99,4 @@ class GLiNERRelexOutput(GLiNERBaseOutput):
     rel_idx: Optional[torch.LongTensor] = None
     rel_logits: Optional[torch.FloatTensor] = None
     rel_mask: Optional[torch.FloatTensor] = None
+    entity_spans: Optional[torch.LongTensor] = None

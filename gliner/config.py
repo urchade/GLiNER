@@ -197,6 +197,10 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         rel_token: str = "<<REL>>",
         adjacency_loss_coef=1.0,
         relation_loss_coef=1.0,
+        augment_data_prob=0.0,
+        augment_ent_drop_prob=(0.0, 1.0),
+        augment_rel_drop_prob=(0.0, 0.3),
+        augment_add_other_prob=0.5,
         **kwargs,
     ):
         """Initialize UniEncoderRelexConfig.
@@ -204,6 +208,8 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         Args:
             relations_layer (str, optional): Name of relations layer,
                 see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+                Use "none" to enable single-step relation extraction that scores all
+                entity pair combinations directly without adjacency filtering.
             triples_layer (str, optional): Name of triples layer,
                 see gliner.modeling.multitask.triples_layers.py. Defaults to None.
             embed_rel_token (bool, optional): Whether to embed relation tokens. Defaults to True.
@@ -211,6 +217,12 @@ class UniEncoderRelexConfig(UniEncoderConfig):
             rel_token (str, optional): Relation marker token. Defaults to "<<REL>>".
             adjacency_loss_coef (float, optional): Adjacency modeling loss coefficient. Defaults to 1.0.
             relation_loss_coef (float, optional): Relation representaton loss coefficient. Defaults to 1.0.
+            augment_data_prob (float, optional): Probability of applying data augmentation
+                to an example. Defaults to 0.0 (disabled).
+            augment_ent_drop_prob (tuple, optional): Range (min, max) from which to sample
+                the per-type entity drop probability. Defaults to (0.0, 0.4).
+            augment_rel_drop_prob (tuple, optional): Range (min, max) from which to sample
+                the per-type relation drop probability. Defaults to (0.0, 0.4).
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 
         Raises:
@@ -225,6 +237,10 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         self.rel_token = rel_token
         self.adjacency_loss_coef = adjacency_loss_coef
         self.relation_loss_coef = relation_loss_coef
+        self.augment_data_prob = augment_data_prob
+        self.augment_ent_drop_prob = tuple(augment_ent_drop_prob)
+        self.augment_rel_drop_prob = tuple(augment_rel_drop_prob)
+        self.augment_add_other_prob = augment_add_other_prob
 
 
 class UniEncoderSpanRelexConfig(UniEncoderRelexConfig):

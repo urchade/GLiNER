@@ -615,6 +615,52 @@ class SpanRelexDecoder(BaseSpanDecoder):
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
         return (start, start + width, ent_type, score)
 
+    def _build_entity_span_to_decoded_idx(
+        self,
+        spans: List[List[tuple]],
+        entity_spans: Optional[torch.Tensor],
+        batch_size: int,
+    ) -> List[Optional[dict]]:
+        """Build mapping from model entity indices to decoded span indices.
+
+        Maps entity positions in the model's internal target_span_rep
+        (referenced by pair_idx) to positions in the decoded spans list.
+        Uses span boundaries (start, end) for matching.
+
+        Args:
+            spans: Decoded entity spans per sample, each as (start, end, type, score).
+            entity_spans: Tensor of shape (B, E, 2) with span boundaries for each
+                entity in target_span_rep. None if not available.
+            batch_size: Number of samples.
+
+        Returns:
+            List of dicts mapping model entity index -> decoded span index,
+            or None entries if entity_spans is not available.
+        """
+        if entity_spans is None:
+            return [None] * batch_size
+
+        mappings = []
+        for i in range(batch_size):
+            # Build reverse lookup: (start, end) -> index in decoded spans
+            span_boundary_to_idx = {}
+            for idx, span_tuple in enumerate(spans[i]):
+                key = (span_tuple[0], span_tuple[1])
+                if key not in span_boundary_to_idx:
+                    span_boundary_to_idx[key] = idx
+
+            # Map each entity in target_span_rep to decoded span index
+            model_to_decoded = {}
+            for e in range(entity_spans.size(1)):
+                start = entity_spans[i, e, 0].item()
+                end = entity_spans[i, e, 1].item()
+                key = (start, end)
+                if key in span_boundary_to_idx:
+                    model_to_decoded[e] = span_boundary_to_idx[key]
+
+            mappings.append(model_to_decoded)
+        return mappings
+
     def _decode_relations(
         self,
         model_output,
@@ -625,43 +671,36 @@ class SpanRelexDecoder(BaseSpanDecoder):
         rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
         threshold: float,
         batch_size: int,
+        entity_spans: Optional[torch.Tensor] = None,
     ) -> List[List[tuple]]:
         """Decode relations between detected entity spans.
 
-        Extracts relation predictions from model outputs and maps them to pairs
-        of detected entity spans. For each potential relation, checks if both
-        head and tail entities exist in the decoded spans and if the relation
-        confidence exceeds the threshold.
+        Uses entity_spans (model's internal entity boundaries) to correctly map
+        pair_idx values (which reference target_span_rep positions) to positions
+        in the decoded spans list. This is necessary because greedy search may
+        remove or reorder entities during decoding.
 
         Args:
             model_output: Model output object containing relation predictions.
-                Expected to have attributes rel_idx, rel_logits, and optionally rel_mask.
             spans: List of entity spans for each sample in the batch.
                 Each sample contains a list of tuples: (start, end, entity_type, score).
             rel_idx: Tensor of shape (batch_size, num_relations, 2) containing
                 indices of head and tail entities for each potential relation.
-                None if no relations to decode.
             rel_logits: Tensor of shape (batch_size, num_relations, num_relation_classes)
-                containing logits for relation classifications. None if no relations.
+                containing logits for relation classifications.
             rel_mask: Optional boolean tensor of shape (batch_size, num_relations)
                 indicating which relations are valid (True) vs. padding (False).
-                If None, all relations are considered valid.
             rel_id_to_classes: Mapping from relation class IDs to relation names.
-                Can be either:
-                - Dict: Single mapping used for all samples
-                - List[Dict]: Per-sample mappings for different relation schemas
                 Class IDs are 1-indexed (0 reserved for "no relation" or padding).
-            threshold: Minimum confidence score (after sigmoid) for a relation
-                to be included in the output. Must be in range [0, 1].
+            threshold: Minimum confidence score (after sigmoid) for a relation.
             batch_size: Number of samples in the batch.
+            entity_spans: Optional tensor of shape (B, E, 2) with span boundaries
+                for entities in target_span_rep. Used to map pair_idx to decoded spans.
 
         Returns:
             List of relation lists, one per sample. Each relation is a tuple:
-            (head_idx, relation_label, tail_idx, score) where:
-            - head_idx: Index into the sample's spans list for the head entity
-            - relation_label: String name of the relation type
-            - tail_idx: Index into the sample's spans list for the tail entity
-            - score: Confidence score for this relation (float, 0-1 range)
+            (head_idx, relation_label, tail_idx, score) where head_idx and tail_idx
+            are indices into the corresponding sample's decoded spans list.
         """
         relations = [[] for _ in range(batch_size)]
 
@@ -676,9 +715,13 @@ class SpanRelexDecoder(BaseSpanDecoder):
 
         rel_probs = torch.sigmoid(rel_logits)
 
+        # Build mapping from model entity indices to decoded span indices
+        idx_mappings = self._build_entity_span_to_decoded_idx(spans, entity_spans, batch_size)
+
         # Decode relations for each sample
         for i in range(batch_size):
             rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+            idx_map = idx_mappings[i]
 
             # Process each potential relation
             for j in range(rel_idx.size(1)):
@@ -686,16 +729,25 @@ class SpanRelexDecoder(BaseSpanDecoder):
                 if not rel_mask[i, j]:
                     continue
 
-                head_idx = rel_idx[i, j, 0].item()
-                tail_idx = rel_idx[i, j, 1].item()
+                model_head_idx = rel_idx[i, j, 0].item()
+                model_tail_idx = rel_idx[i, j, 1].item()
 
                 # Skip invalid indices
-                if head_idx < 0 or tail_idx < 0:
+                if model_head_idx < 0 or model_tail_idx < 0:
                     continue
 
-                # Skip if either span was removed by greedy search
-                if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
-                    continue
+                # Map model entity indices to decoded span indices
+                if idx_map is not None:
+                    head_idx = idx_map.get(model_head_idx)
+                    tail_idx = idx_map.get(model_tail_idx)
+                    if head_idx is None or tail_idx is None:
+                        continue
+                else:
+                    # Fallback: use model indices directly (legacy behavior)
+                    head_idx = model_head_idx
+                    tail_idx = model_tail_idx
+                    if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
+                        continue
 
                 # Check each relation class
                 for c, p in enumerate(rel_probs[i, j]):
@@ -730,6 +782,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         relation_threshold: float = 0.5,
         multi_label: bool = False,
         rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
+        entity_spans: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
         """Decode model output to extract entities and relations.
@@ -740,58 +793,23 @@ class SpanRelexDecoder(BaseSpanDecoder):
 
         Args:
             tokens: Tokenized input text for each sample in the batch.
-                Each sample is a list of token strings.
             id_to_classes: Mapping from entity class IDs to entity type names.
-                Can be either:
-                - Dict: Single mapping used for all samples (global entity schema)
-                - List[Dict]: Per-sample mappings for different entity schemas
-                Class IDs are 1-indexed (0 is reserved for padding).
             model_output: Model output object containing both entity logits and
-                optionally relation predictions. Must have a logits attribute for
-                entity extraction. May have rel_idx, rel_logits, and rel_mask for
-                relation extraction.
-            rel_idx: Optional tensor of shape (batch_size, num_relations, 2) containing
-                head and tail entity indices for each potential relation.
-            rel_logits: Optional tensor of shape (batch_size, num_relations, num_relation_classes)
-                containing relation classification logits.
-            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)
-                indicating valid relations. If None, all relations are considered valid.
-            flat_ner: If True, applies greedy filtering to ensure non-overlapping
-                entity spans. If False, allows overlapping entities. Defaults to False.
-            threshold: Minimum confidence score (0-1) for both entity
-                predictions to be included in the output. Defaults to 0.5.
-            relation_threshold: Minimum confidence score (0-1) for both relation
-                predictions to be included in the output. Defaults to 0.5.
-            multi_label: If True, allows multiple entity types per span. If False,
-                only the highest-scoring entity type per span is kept. Defaults to False.
+                optionally relation predictions.
+            rel_idx: Optional tensor of shape (batch_size, num_relations, 2).
+            rel_logits: Optional tensor of shape (batch_size, num_relations, num_relation_classes).
+            rel_mask: Optional boolean tensor of shape (batch_size, num_relations).
+            flat_ner: If True, applies greedy filtering for non-overlapping entities.
+            threshold: Minimum confidence score for entity predictions.
+            relation_threshold: Minimum confidence score for relation predictions.
+            multi_label: If True, allows multiple entity types per span.
             rel_id_to_classes: Optional mapping from relation class IDs to relation names.
-                If None, relation decoding is skipped and empty relation lists are returned.
-                Can be either a single Dict or List[Dict] for per-sample mappings.
-                Class IDs are 1-indexed.
+            entity_spans: Optional tensor of shape (B, E, 2) with span boundaries
+                for entities in target_span_rep. Used for correct index mapping.
             **kwargs: Additional keyword arguments passed to the parent class decode method.
 
         Returns:
-            Tuple of (spans, relations) where:
-            - spans: List of entity span lists, one per sample. Each entity span is
-              a tuple: (start, end, entity_type, score)
-            - relations: List of relation lists, one per sample. Each relation is
-              a tuple: (head_idx, relation_label, tail_idx, score) where head_idx
-              and tail_idx are indices into the corresponding sample's spans list.
-
-        Examples:
-            >>> decoder = SpanRelexDecoder()
-            >>> tokens = [["John", "works", "at", "Microsoft"]]
-            >>> id_to_classes = {1: "PERSON", 2: "ORG"}
-            >>> rel_id_to_classes = {1: "works_at"}
-            >>> spans, relations = decoder.decode(
-            ...     tokens=tokens,
-            ...     id_to_classes=id_to_classes,
-            ...     model_output=output,
-            ...     rel_id_to_classes=rel_id_to_classes,
-            ...     threshold=0.5,
-            ... )
-            >>> # spans[0] might be: [(0, 1, "PERSON", 0.9), (3, 4, "ORG", 0.85)]
-            >>> # relations[0] might be: [(0, "works_at", 1, 0.8)]
+            Tuple of (spans, relations).
         """
         # Decode entity spans using base class logic
         spans = super().decode(
@@ -817,6 +835,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
                 rel_id_to_classes=rel_id_to_classes,
                 threshold=relation_threshold,
                 batch_size=len(tokens),
+                entity_spans=entity_spans,
             )
 
         return spans, relations
@@ -1065,6 +1084,47 @@ class TokenRelexDecoder(TokenDecoder):
     - Multi-label entity classification
     """
 
+    def _build_entity_span_to_decoded_idx(
+        self,
+        spans: List[List[tuple]],
+        entity_spans: Optional[torch.Tensor],
+        batch_size: int,
+    ) -> List[Optional[dict]]:
+        """Build mapping from model entity indices to decoded span indices.
+
+        Uses span boundaries (start, end) to match model entities to decoded spans.
+
+        Args:
+            spans: Decoded entity spans per sample, each as (start, end, type, score).
+            entity_spans: Tensor of shape (B, E, 2) with span boundaries for each
+                entity in target_span_rep. None if not available.
+            batch_size: Number of samples.
+
+        Returns:
+            List of dicts mapping model entity index -> decoded span index.
+        """
+        if entity_spans is None:
+            return [None] * batch_size
+
+        mappings = []
+        for i in range(batch_size):
+            span_boundary_to_idx = {}
+            for idx, span_tuple in enumerate(spans[i]):
+                key = (span_tuple[0], span_tuple[1])
+                if key not in span_boundary_to_idx:
+                    span_boundary_to_idx[key] = idx
+
+            model_to_decoded = {}
+            for e in range(entity_spans.size(1)):
+                start = entity_spans[i, e, 0].item()
+                end = entity_spans[i, e, 1].item()
+                key = (start, end)
+                if key in span_boundary_to_idx:
+                    model_to_decoded[e] = span_boundary_to_idx[key]
+
+            mappings.append(model_to_decoded)
+        return mappings
+
     def _decode_relations(
         self,
         spans: List[List[tuple]],
@@ -1074,41 +1134,26 @@ class TokenRelexDecoder(TokenDecoder):
         rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
         threshold: float,
         batch_size: int,
+        entity_spans: Optional[torch.Tensor] = None,
     ) -> List[List[tuple]]:
         """Decode relations between detected entity spans.
 
-        Extracts relation predictions from model outputs and maps them to pairs
-        of detected entity spans. For each potential relation, checks if both
-        head and tail entities exist in the decoded spans and if the relation
-        confidence exceeds the threshold.
+        Uses entity_spans (model's internal entity boundaries) to correctly map
+        pair_idx values to positions in the decoded spans list.
 
         Args:
             spans: List of entity spans for each sample in the batch.
-                Each sample contains a list of tuples: (start, end, entity_type, score).
-            rel_idx: Tensor of shape (batch_size, num_relations, 2) containing
-                indices of head and tail entities for each potential relation.
-                None if no relations to decode.
-            rel_logits: Tensor of shape (batch_size, num_relations, num_relation_classes)
-                containing logits for relation classifications. None if no relations.
-            rel_mask: Optional boolean tensor of shape (batch_size, num_relations)
-                indicating which relations are valid (True) vs. padding (False).
-                If None, all relations are considered valid.
+            rel_idx: Tensor of shape (batch_size, num_relations, 2).
+            rel_logits: Tensor of shape (batch_size, num_relations, num_relation_classes).
+            rel_mask: Optional boolean tensor of shape (batch_size, num_relations).
             rel_id_to_classes: Mapping from relation class IDs to relation names.
-                Can be either:
-                - Dict: Single mapping used for all samples
-                - List[Dict]: Per-sample mappings for different relation schemas
-                Class IDs are 1-indexed (0 reserved for "no relation" or padding).
-            threshold: Minimum confidence score (after sigmoid) for a relation
-                to be included in the output. Must be in range [0, 1].
+            threshold: Minimum confidence score (after sigmoid).
             batch_size: Number of samples in the batch.
+            entity_spans: Optional tensor of shape (B, E, 2) with span boundaries
+                for entities in target_span_rep.
 
         Returns:
-            List of relation lists, one per sample. Each relation is a tuple:
-            (head_idx, relation_label, tail_idx, score) where:
-            - head_idx: Index into the sample's spans list for the head entity
-            - relation_label: String name of the relation type
-            - tail_idx: Index into the sample's spans list for the tail entity
-            - score: Confidence score for this relation (float, 0-1 range)
+            List of relation lists, one per sample.
         """
         relations = [[] for _ in range(batch_size)]
 
@@ -1122,9 +1167,13 @@ class TokenRelexDecoder(TokenDecoder):
 
         rel_probs = torch.sigmoid(rel_logits)
 
+        # Build mapping from model entity indices to decoded span indices
+        idx_mappings = self._build_entity_span_to_decoded_idx(spans, entity_spans, batch_size)
+
         # Decode relations for each sample
         for i in range(batch_size):
             rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+            idx_map = idx_mappings[i]
 
             # Process each potential relation
             for j in range(rel_idx.size(1)):
@@ -1132,16 +1181,24 @@ class TokenRelexDecoder(TokenDecoder):
                 if not rel_mask[i, j]:
                     continue
 
-                head_idx = rel_idx[i, j, 0].item()
-                tail_idx = rel_idx[i, j, 1].item()
+                model_head_idx = rel_idx[i, j, 0].item()
+                model_tail_idx = rel_idx[i, j, 1].item()
 
                 # Skip invalid indices
-                if head_idx < 0 or tail_idx < 0:
+                if model_head_idx < 0 or model_tail_idx < 0:
                     continue
 
-                # Skip if either span was removed by greedy search
-                if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
-                    continue
+                # Map model entity indices to decoded span indices
+                if idx_map is not None:
+                    head_idx = idx_map.get(model_head_idx)
+                    tail_idx = idx_map.get(model_tail_idx)
+                    if head_idx is None or tail_idx is None:
+                        continue
+                else:
+                    head_idx = model_head_idx
+                    tail_idx = model_tail_idx
+                    if head_idx >= len(spans[i]) or tail_idx >= len(spans[i]):
+                        continue
 
                 # Check each relation class
                 for c, p in enumerate(rel_probs[i, j]):
@@ -1173,6 +1230,7 @@ class TokenRelexDecoder(TokenDecoder):
         relation_threshold: float = 0.5,
         multi_label: bool = False,
         rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
+        entity_spans: Optional[torch.Tensor] = None,
         **kwargs,
     ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
         """Decode model output to extract entities and relations.
@@ -1257,6 +1315,7 @@ class TokenRelexDecoder(TokenDecoder):
                 rel_id_to_classes=rel_id_to_classes,
                 threshold=relation_threshold,
                 batch_size=len(tokens),
+                entity_spans=entity_spans,
             )
 
         return spans, relations
