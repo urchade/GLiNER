@@ -477,7 +477,8 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         all_losses = all_losses * span_mask.float()
 
         if reduction == "mean":
-            loss = all_losses.mean()
+            num_valid = span_mask.float().sum()
+            loss = all_losses.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=scores.device)
         elif reduction == "sum":
             loss = all_losses.sum()
         else:
@@ -679,7 +680,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         all_losses = all_losses * mask
 
         if reduction == "mean":
-            loss = all_losses.mean()
+            loss = all_losses.sum()/mask.float().sum()
         elif reduction == "sum":
             loss = all_losses.sum()
         else:
@@ -976,7 +977,8 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         all_losses = all_losses * mask_label.float()
 
         if reduction == "mean":
-            loss = all_losses.mean()
+            num_valid = mask_label.float().sum()
+            loss = all_losses.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=scores.device)
         elif reduction == "sum":
             loss = all_losses.sum()
         else:
@@ -1588,7 +1590,8 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         all_losses = all_losses * mask_label.float()
 
         if reduction == "mean":
-            loss = all_losses.mean()
+            num_valid = mask_label.float().sum()
+            loss = all_losses.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=scores.device)
         elif reduction == "sum":
             loss = all_losses.sum()
         else:
@@ -2477,19 +2480,20 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
         """
         all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
-        all_losses = all_losses * (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
+        masked_loss = all_losses * (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
 
         if reduction == "mean":
-            loss = all_losses.mean()
+            num_valid = (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).sum()
+            loss = masked_loss.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=scores.device)
         elif reduction == "sum":
-            loss = all_losses.sum()
+            loss = masked_loss.sum()
         else:
             warnings.warn(
                 f"Invalid Value for config 'loss_reduction': '{reduction}' \n Supported reduction modes:"
                 f" 'none', 'mean', 'sum'. It will be used 'sum' instead.",
                 stacklevel=2,
             )
-            loss = all_losses.sum()
+            loss = masked_loss.sum()
         return loss
 
     def represent_spans(
