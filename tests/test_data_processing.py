@@ -355,56 +355,57 @@ class TestMakeMapping:
 
 class TestPrepareSpanIdx:
     """Test suite for prepare_span_idx function."""
-    
+
     def test_generates_all_spans_within_width(self):
         """Should generate all possible spans up to max_width."""
         result = prepare_span_idx(num_tokens=3, max_width=2)
-        
-        expected = [
-            (0, 0), (0, 1),  # Starting at 0
-            (1, 1), (1, 2),  # Starting at 1
-            (2, 2), (2, 3),  # Starting at 2
-        ]
-        assert result == expected
-    
+
+        expected = torch.LongTensor([
+            [0, 0], [0, 1],  # Starting at 0
+            [1, 1], [1, 2],  # Starting at 1
+            [2, 2], [2, 3],  # Starting at 2
+        ])
+        assert torch.equal(result, expected)
+
     def test_span_width_one(self):
         """Should generate single-token spans when max_width=1."""
         result = prepare_span_idx(num_tokens=3, max_width=1)
-        
-        assert result == [(0, 0), (1, 1), (2, 2)]
-    
+
+        assert torch.equal(result, torch.LongTensor([[0, 0], [1, 1], [2, 2]]))
+
     def test_single_token(self):
         """Should handle single token correctly."""
         result = prepare_span_idx(num_tokens=1, max_width=3)
-        
-        assert result == [(0, 0), (0, 1), (0, 2)]
-    
+
+        assert torch.equal(result, torch.LongTensor([[0, 0], [0, 1], [0, 2]]))
+
     def test_span_count(self):
         """Should generate correct number of spans."""
         num_tokens = 5
         max_width = 3
         result = prepare_span_idx(num_tokens, max_width)
-        
+
         # Each token starts max_width spans
         expected_count = num_tokens * max_width
         assert len(result) == expected_count
-    
+
     def test_spans_can_exceed_sequence(self):
         """Generated spans can extend beyond sequence (filtered later)."""
         result = prepare_span_idx(num_tokens=2, max_width=3)
-        
+
         # Last spans will exceed sequence length
-        assert (1, 3) in result  # This exceeds num_tokens=2
-        assert result[-1] == (1, 3)
-    
+        result_list = result.tolist()
+        assert [1, 3] in result_list  # This exceeds num_tokens=2
+        assert result_list[-1] == [1, 3]
+
     def test_span_format(self):
-        """Should return list of (start, end) tuples."""
+        """Should return a LongTensor with shape (N, 2)."""
         result = prepare_span_idx(num_tokens=2, max_width=2)
-        
-        assert all(isinstance(span, tuple) for span in result)
-        assert all(len(span) == 2 for span in result)
-        assert all(isinstance(i, int) for span in result for i in span)
-    
+
+        assert isinstance(result, torch.Tensor)
+        assert result.dtype == torch.long
+        assert result.shape[1] == 2
+
     @pytest.mark.parametrize("num_tokens,max_width", [
         (1, 1),
         (5, 1),
@@ -415,22 +416,22 @@ class TestPrepareSpanIdx:
     def test_various_parameters(self, num_tokens, max_width):
         """Should work with various parameter combinations."""
         result = prepare_span_idx(num_tokens, max_width)
-        
+
         assert len(result) == num_tokens * max_width
-        assert all(span[0] < num_tokens for span in result)
-    
+        assert (result[:, 0] < num_tokens).all()
+
     def test_span_ordering(self):
         """Should generate spans in order: by start position, then by width."""
         result = prepare_span_idx(num_tokens=3, max_width=3)
-        
+
         # Check that spans starting at 0 come first
         first_three = result[:3]
-        assert all(span[0] == 0 for span in first_three)
-        assert first_three == [(0, 0), (0, 1), (0, 2)]
-        
+        assert (first_three[:, 0] == 0).all()
+        assert torch.equal(first_three, torch.LongTensor([[0, 0], [0, 1], [0, 2]]))
+
         # Then spans starting at 1
         next_three = result[3:6]
-        assert all(span[0] == 1 for span in next_three)
+        assert (next_three[:, 0] == 1).all()
 
 
 @pytest.fixture
