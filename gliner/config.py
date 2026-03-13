@@ -197,7 +197,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         rel_token: str = "<<REL>>",
         adjacency_loss_coef=1.0,
         relation_loss_coef=1.0,
-        augment_data_prob=0.0,
+        augment_data_prob=0.5,
         augment_ent_drop_prob=(0.0, 1.0),
         augment_rel_drop_prob=(0.0, 0.3),
         augment_add_other_prob=0.5,

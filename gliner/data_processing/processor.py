@@ -1630,7 +1630,6 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 self.augment_example(b, ner_negatives) if random.random() < augment_prob else b
                 for b in batch_list
             ]
-
         if class_to_ids is None and entity_types is None:
             # Dynamically infer per-example mappings
             class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes = self.batch_generate_class_mappings(
@@ -1807,7 +1806,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             "rel_id_to_classes": rel_id_to_classes,
         }
 
-    def create_relation_labels(self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=(1.0, 3.0)):
+    def create_relation_labels(self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=(1.0, 10.0)):
         """Create relation labels with negative pair sampling.
 
         Overrides the span-based version to work with token-level entity representations.

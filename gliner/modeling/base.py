@@ -2065,12 +2065,14 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         span_rep_flat = span_rep.view(B, -1, D)
         span_mask_flat = span_mask.view(B, -1)
 
-        if span_labels is not None:
+        if span_labels is not None and span_labels.size(-1) > 0:
             span_prob_flat = span_labels.max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat == 1).bool()
-        else:
+        elif span_scores is not None and span_scores.size(-1) > 0:
             span_prob_flat = torch.sigmoid(span_scores).max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat > threshold) & span_mask_flat.bool()
+        else:
+            keep = torch.zeros_like(span_mask_flat, dtype=torch.bool)
 
         if top_k is not None and top_k > 0:
             sel_scores = span_prob_flat.masked_fill(~keep, -1.0)
@@ -2287,9 +2289,11 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         loss = None
         if labels is not None:
-            loss = self.loss(scores, labels, prompts_embedding_mask, span_mask=span_mask, word_mask=mask, **kwargs)
+            num_ner_classes = prompts_embedding_mask.shape[-1]
+            if num_ner_classes > 0:
+                loss = self.loss(scores, labels, prompts_embedding_mask, span_mask=span_mask, word_mask=mask, **kwargs)
 
-            if has_relex and rel_matrix is not None:
+            if has_relex and rel_matrix is not None and C_rel > 0:
                 rel_labels_selected = rel_matrix
                 # Align rel_labels_selected to N (pairs from build_entity_pairs / build_all_entity_pairs).
                 # They should match by construction, but can differ by 1 in edge cases.
@@ -2314,18 +2318,20 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
                 rel_loss = self.rel_loss(pair_scores, rel_labels_selected, rel_mask_selected, class_mask, **kwargs)
 
+                span_loss = loss * self.config.span_loss_coef if loss is not None else 0.0
+
                 if hasattr(self, "relations_rep_layer") and adj_matrix is not None:
                     adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
                     adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
 
                     loss = (
-                        loss * self.config.span_loss_coef
+                        span_loss
                         + adj_loss * self.config.adjacency_loss_coef
                         + rel_loss * self.config.relation_loss_coef
                     )
                 else:
                     loss = (
-                        loss * self.config.span_loss_coef
+                        span_loss
                         + rel_loss * self.config.relation_loss_coef
                     )
 
