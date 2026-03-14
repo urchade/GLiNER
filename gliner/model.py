@@ -2528,12 +2528,9 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             if not isinstance(rel_mask, torch.Tensor):
                 rel_mask = torch.from_numpy(rel_mask)
 
-            # Slice input_spans for this batch
-            batch_input_spans = None
-            if word_input_spans is not None:
-                current_batch_size = len(batch["tokens"])
-                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
-                batch_offset += current_batch_size
+            entity_spans = getattr(model_output, "entity_spans", None)
+            if entity_spans is not None and not isinstance(entity_spans, torch.Tensor):
+                entity_spans = torch.from_numpy(entity_spans)
 
             decoded_results = self.decoder.decode(
                 batch["tokens"],
@@ -2547,8 +2544,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 relation_threshold=relation_threshold,
                 multi_label=multi_label,
                 rel_id_to_classes=batch["rel_id_to_classes"],
-                return_class_probs=return_class_probs,
-                input_spans=batch_input_spans,
+                entity_spans=entity_spans,
             )
 
             if len(decoded_results) == 1:
@@ -2779,6 +2775,10 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             if not isinstance(rel_mask, torch.Tensor):
                 rel_mask = torch.from_numpy(rel_mask)
 
+            entity_spans = getattr(model_output, "entity_spans", None)
+            if entity_spans is not None and not isinstance(entity_spans, torch.Tensor):
+                entity_spans = torch.from_numpy(entity_spans)
+
             # Decode predictions
             decoded_results = self.decoder.decode(
                 batch["tokens"],
@@ -2792,6 +2792,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 relation_threshold=relation_threshold,
                 multi_label=multi_label,
                 rel_id_to_classes=batch["rel_id_to_classes"],
+                entity_spans=entity_spans,
             )
 
             # Unpack results
