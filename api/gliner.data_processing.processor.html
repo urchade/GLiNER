@@ -196,6 +196,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor"><code class="docutils literal notranslate"><span class="pre">RelationExtractionSpanProcessor</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.augment_example"><code class="docutils literal notranslate">augment_example()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings"><code class="docutils literal notranslate">batch_generate_class_mappings()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.collate_raw_batch"><code class="docutils literal notranslate">collate_raw_batch()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.preprocess_example"><code class="docutils literal notranslate">preprocess_example()</span></code></a></li>
@@ -1288,6 +1289,40 @@ between entity pairs, supporting end-to-end joint training.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.augment_example">
+<span class="sig-name descname"><span class="pre">augment_example</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">example</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">other_keyword</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'other'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.augment_example"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.augment_example" title="Link to this definition">¶</a></dt>
+<dd><p>Apply data augmentation by randomly dropping entity/relation types.</p>
+<p>For each example (triggered by augment_data_prob):
+- Sample a per-type drop probability from augment_ent_drop_prob range</p>
+<blockquote>
+<div><p>and drop each entity type with that probability.</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>Sample a per-type drop probability from augment_rel_drop_prob range
+and drop each relation type with that probability.</p></li>
+<li><p>With augment_add_other_prob, entities whose type is dropped get their
+type replaced with “other” so they still participate in relation
+extraction. If “other” is not added and the entity has no active
+(non-dropped) relations, it is dropped entirely.</p></li>
+<li><p>Relations with dropped types are removed; relation indices are remapped
+after entity removal.</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>example</strong> – Dictionary with ‘ner’ and ‘relations’ keys.</p></li>
+<li><p><strong>ner_negatives</strong> – Pool of negative entity types (unused, kept for API compat).</p></li>
+<li><p><strong>other_keyword</strong> – Replacement type label for dropped entity types.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A (possibly modified) copy of the example with ‘_dropped_ent_types’
+and ‘_dropped_rel_types’ metadata keys.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings">
 <span class="sig-name descname"><span class="pre">batch_generate_class_mappings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ner_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sampled_neg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.batch_generate_class_mappings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.batch_generate_class_mappings" title="Link to this definition">¶</a></dt>
 <dd><p>Generate class mappings for both entities and relations.</p>
@@ -1408,22 +1443,30 @@ extraction, including entity spans, relation pairs, and their labels.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels">
-<span class="sig-name descname"><span class="pre">create_relation_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_reversed_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_random_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.create_relation_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">create_relation_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_reversed_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">add_random_negatives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">negative_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(1.0,</span> <span class="pre">10.0)</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/data_processing/processor.html#RelationExtractionSpanProcessor.create_relation_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.data_processing.processor.RelationExtractionSpanProcessor.create_relation_labels" title="Link to this definition">¶</a></dt>
 <dd><p>Create relation labels with negative pair sampling.</p>
 <p>Overrides the span-based version to work with token-level entity representations.
 Uses entities_id count instead of span_label for entity counting.</p>
+<p>When relations_layer is “none”, generates labels for ALL entity pair
+combinations (no adjacency matrix), matching the order produced by
+build_all_entity_pairs. Otherwise, uses adjacency-based pair sampling.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>batch</strong> – Batch dictionary containing entities and relations.</p></li>
 <li><p><strong>add_reversed_negatives</strong> – If True, add reversed direction pairs as negatives.</p></li>
 <li><p><strong>add_random_negatives</strong> – If True, add random entity pairs as negatives.</p></li>
-<li><p><strong>negative_ratio</strong> – Ratio of negative to positive pairs.</p></li>
+<li><p><strong>negative_ratio</strong> – Ratio of negative to positive pairs. Can be a float for a fixed ratio
+or a (min, max) tuple to sample a random ratio per example.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p>adj_matrix: Adjacency matrix (shape: [B, max_entities, max_entities])</p></li>
+<li><dl class="simple">
+<dt>adj_matrix: Adjacency matrix (shape: [B, max_entities, max_entities]).</dt><dd><p>None when relations_layer is “none”.</p>
+</dd>
+</dl>
+</li>
 <li><p>rel_matrix: Multi-hot relation labels (shape: [B, max_pairs, num_relation_classes])</p></li>
 </ul>
 </p>

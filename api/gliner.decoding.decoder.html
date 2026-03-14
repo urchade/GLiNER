@@ -532,7 +532,7 @@ relationship types based on model predictions.</p>
 - Multi-label entity classification</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.decoding.decoder.SpanRelexDecoder.decode">
-<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#SpanRelexDecoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.SpanRelexDecoder.decode" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#SpanRelexDecoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.SpanRelexDecoder.decode" title="Link to this definition">¶</a></dt>
 <dd><p>Decode model output to extract entities and relations.</p>
 <p>Main decoding method that extracts both entity spans and relations from
 model outputs. First decodes entity spans using the parent class logic,
@@ -540,69 +540,30 @@ then decodes relations between the detected entities.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tokens</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Tokenized input text for each sample in the batch.
-Each sample is a list of token strings.</p></li>
-<li><p><strong>id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Mapping from entity class IDs to entity type names.
-Can be either:
-- Dict: Single mapping used for all samples (global entity schema)
-- List[Dict]: Per-sample mappings for different entity schemas
-Class IDs are 1-indexed (0 is reserved for padding).</p></li>
+<li><p><strong>tokens</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Tokenized input text for each sample in the batch.</p></li>
+<li><p><strong>id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>]</em>) – Mapping from entity class IDs to entity type names.</p></li>
 <li><p><strong>model_output</strong> – Model output object containing both entity logits and
-optionally relation predictions. Must have a logits attribute for
-entity extraction. May have rel_idx, rel_logits, and rel_mask for
-relation extraction.</p></li>
-<li><p><strong>rel_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, 2) containing
-head and tail entity indices for each potential relation.</p></li>
-<li><p><strong>rel_logits</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, num_relation_classes)
-containing relation classification logits.</p></li>
-<li><p><strong>rel_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional boolean tensor of shape (batch_size, num_relations)
-indicating valid relations. If None, all relations are considered valid.</p></li>
-<li><p><strong>flat_ner</strong> (<em>bool</em>) – If True, applies greedy filtering to ensure non-overlapping
-entity spans. If False, allows overlapping entities. Defaults to False.</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – Minimum confidence score (0-1) for both entity
-predictions to be included in the output. Defaults to 0.5.</p></li>
-<li><p><strong>relation_threshold</strong> (<em>float</em>) – Minimum confidence score (0-1) for both relation
-predictions to be included in the output. Defaults to 0.5.</p></li>
-<li><p><strong>multi_label</strong> (<em>bool</em>) – If True, allows multiple entity types per span. If False,
-only the highest-scoring entity type per span is kept. Defaults to False.</p></li>
-<li><p><strong>rel_id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional mapping from relation class IDs to relation names.
-If None, relation decoding is skipped and empty relation lists are returned.
-Can be either a single Dict or List[Dict] for per-sample mappings.
-Class IDs are 1-indexed.</p></li>
-<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in entity output.</p></li>
+optionally relation predictions.</p></li>
+<li><p><strong>rel_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, 2).</p></li>
+<li><p><strong>rel_logits</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, num_relation_classes).</p></li>
+<li><p><strong>rel_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional boolean tensor of shape (batch_size, num_relations).</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – If True, applies greedy filtering for non-overlapping entities.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Minimum confidence score for entity predictions.</p></li>
+<li><p><strong>relation_threshold</strong> (<em>float</em>) – Minimum confidence score for relation predictions.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – If True, allows multiple entity types per span.</p></li>
+<li><p><strong>rel_id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional mapping from relation class IDs to relation names.</p></li>
+<li><p><strong>entity_spans</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (B, E, 2) with span boundaries
+for entities in target_span_rep. Used for correct index mapping.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to the parent class decode method.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>spans: List of entity span lists, one per sample. Each entity span is
-a tuple: (start, end, entity_type, score) or (start, end, entity_type, score, class_probs)</p></li>
-<li><p>relations: List of relation lists, one per sample. Each relation is
-a tuple: (head_idx, relation_label, tail_idx, score) where head_idx
-and tail_idx are indices into the corresponding sample’s spans list.</p></li>
-</ul>
-</p>
+<dd class="field-even"><p>Tuple of (spans, relations).</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Tuple of (spans, relations) where</p>
+<dd class="field-odd"><p><em>Tuple</em>[<em>List</em>[<em>List</em>[tuple]], <em>List</em>[<em>List</em>[tuple]]]</p>
 </dd>
 </dl>
-<p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">decoder</span> <span class="o">=</span> <span class="n">SpanRelexDecoder</span><span class="p">()</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="s2">&quot;works&quot;</span><span class="p">,</span> <span class="s2">&quot;at&quot;</span><span class="p">,</span> <span class="s2">&quot;Microsoft&quot;</span><span class="p">]]</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;ORG&quot;</span><span class="p">}</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">rel_id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;works_at&quot;</span><span class="p">}</span>
-</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
-</span><span data-line="6"><span class="gp">... </span>    <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
-</span><span data-line="7"><span class="gp">... </span>    <span class="n">id_to_classes</span><span class="o">=</span><span class="n">id_to_classes</span><span class="p">,</span>
-</span><span data-line="8"><span class="gp">... </span>    <span class="n">model_output</span><span class="o">=</span><span class="n">output</span><span class="p">,</span>
-</span><span data-line="9"><span class="gp">... </span>    <span class="n">rel_id_to_classes</span><span class="o">=</span><span class="n">rel_id_to_classes</span><span class="p">,</span>
-</span><span data-line="10"><span class="gp">... </span>    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="11"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="12"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># spans[0] might be: [(0, 1, &quot;PERSON&quot;, 0.9), (3, 4, &quot;ORG&quot;, 0.85)]</span>
-</span><span data-line="13"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># relations[0] might be: [(0, &quot;works_at&quot;, 1, 0.8)]</span>
-</span></pre></div>
-</div>
 </dd></dl>
 
 </dd></dl>
@@ -678,7 +639,7 @@ relationship types based on model predictions.</p>
 - Multi-label entity classification</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.decoding.decoder.TokenRelexDecoder.decode">
-<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#TokenRelexDecoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.TokenRelexDecoder.decode" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">decode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tokens</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_to_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_logits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_mask</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_id_to_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#TokenRelexDecoder.decode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.TokenRelexDecoder.decode" title="Link to this definition">¶</a></dt>
 <dd><p>Decode model output to extract entities and relations.</p>
 <p>Main decoding method that extracts both entity spans and relations from
 model outputs. First decodes entity spans using BIO-style token tagging,

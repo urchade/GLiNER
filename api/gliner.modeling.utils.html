@@ -134,6 +134,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.utils.extract_prompt_features"><code class="docutils literal notranslate"><span class="pre">extract_prompt_features()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.utils.extract_prompt_features_and_word_embeddings"><code class="docutils literal notranslate"><span class="pre">extract_prompt_features_and_word_embeddings()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.utils.build_entity_pairs"><code class="docutils literal notranslate"><span class="pre">build_entity_pairs()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.utils.build_all_entity_pairs"><code class="docutils literal notranslate"><span class="pre">build_all_entity_pairs()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.utils.extract_spans_from_tokens"><code class="docutils literal notranslate"><span class="pre">extract_spans_from_tokens()</span></code></a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -345,6 +346,34 @@ Shape: (batch_size, max_pairs)</p></li>
 Shape: (batch_size, max_pairs, embed_dim)</p></li>
 <li><p>tail_rep: Embeddings of tail entities for each pair.
 Shape: (batch_size, max_pairs, embed_dim)</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Tuple containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.modeling.utils.build_all_entity_pairs">
+<span class="sig-prename descclassname"><span class="pre">gliner.modeling.utils.</span></span><span class="sig-name descname"><span class="pre">build_all_entity_pairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/utils.html#build_all_entity_pairs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.utils.build_all_entity_pairs" title="Link to this definition">¶</a></dt>
+<dd><p>Build all possible entity pairs for single-step relation extraction.</p>
+<p>Generates all directed pairs (i, j) where i != j for valid entities
+(those with span_mask == 1), without any adjacency filtering.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>span_rep</strong> (<em>Tensor</em>) – Entity/span embeddings. Shape: (batch_size, num_entities, embed_dim)</p></li>
+<li><p><strong>span_mask</strong> (<em>Tensor</em>) – Mask for valid entities. Shape: (batch_size, num_entities)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>pair_idx: Indices of (head, tail) entity pairs. Shape: (B, max_pairs, 2)</p></li>
+<li><p>pair_mask: Boolean mask for valid pairs. Shape: (B, max_pairs)</p></li>
+<li><p>head_rep: Head entity embeddings. Shape: (B, max_pairs, embed_dim)</p></li>
+<li><p>tail_rep: Tail entity embeddings. Shape: (B, max_pairs, embed_dim)</p></li>
 </ul>
 </p>
 </dd>

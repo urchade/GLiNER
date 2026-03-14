@@ -659,14 +659,16 @@ Defaults to “microsoft/deberta-v3-small”.</p></li>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gliner.config.UniEncoderRelexConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderRelexConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderRelexConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderRelexConfig" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.config.</span></span><span class="sig-name descname"><span class="pre">UniEncoderRelexConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_data_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_ent_drop_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_rel_drop_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_add_other_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderRelexConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderRelexConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#gliner.config.UniEncoderConfig" title="gliner.config.UniEncoderConfig"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderConfig</span></code></a></p>
 <p>Initialize UniEncoderRelexConfig.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -674,6 +676,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>
@@ -683,13 +691,15 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.config.UniEncoderRelexConfig.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderRelexConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderRelexConfig.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relations_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">triples_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embed_rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'&lt;&lt;REL&gt;&gt;'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_loss_coef</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_data_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_ent_drop_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">1.0)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_rel_drop_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">(0.0,</span> <span class="pre">0.3)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">augment_add_other_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/config.html#UniEncoderRelexConfig.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.config.UniEncoderRelexConfig.__init__" title="Link to this definition">¶</a></dt>
 <dd><p>Initialize UniEncoderRelexConfig.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -697,6 +707,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>
@@ -718,7 +734,9 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -726,6 +744,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>
@@ -741,7 +765,9 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -749,6 +775,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>
@@ -770,7 +802,9 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -778,6 +812,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>
@@ -793,7 +833,9 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>relations_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of relations layer,
-see gliner.modeling.multitask.relations_layers.py. Defaults to None.</p></li>
+see gliner.modeling.multitask.relations_layers.py. Defaults to None.
+Use “none” to enable single-step relation extraction that scores all
+entity pair combinations directly without adjacency filtering.</p></li>
 <li><p><strong>triples_layer</strong> (<em>str</em><em>, </em><em>optional</em>) – Name of triples layer,
 see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>embed_rel_token</strong> (<em>bool</em><em>, </em><em>optional</em>) – Whether to embed relation tokens. Defaults to True.</p></li>
@@ -801,6 +843,12 @@ see gliner.modeling.multitask.triples_layers.py. Defaults to None.</p></li>
 <li><p><strong>rel_token</strong> (<em>str</em><em>, </em><em>optional</em>) – Relation marker token. Defaults to “&lt;&lt;REL&gt;&gt;”.</p></li>
 <li><p><strong>adjacency_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Adjacency modeling loss coefficient. Defaults to 1.0.</p></li>
 <li><p><strong>relation_loss_coef</strong> (<em>float</em><em>, </em><em>optional</em>) – Relation representaton loss coefficient. Defaults to 1.0.</p></li>
+<li><p><strong>augment_data_prob</strong> (<em>float</em><em>, </em><em>optional</em>) – Probability of applying data augmentation
+to an example. Defaults to 0.0 (disabled).</p></li>
+<li><p><strong>augment_ent_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type entity drop probability. Defaults to (0.0, 0.4).</p></li>
+<li><p><strong>augment_rel_drop_prob</strong> (<em>tuple</em><em>, </em><em>optional</em>) – Range (min, max) from which to sample
+the per-type relation drop probability. Defaults to (0.0, 0.4).</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to UniEncoderConfig.</p></li>
 </ul>
 </dd>

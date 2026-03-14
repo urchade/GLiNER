@@ -1604,7 +1604,7 @@ scoring via concatenation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.base.UniEncoderSpanRelexModel.select_span_target_embedding">
-<span class="sig-name descname"><span class="pre">select_span_target_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanRelexModel.select_span_target_embedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanRelexModel.select_span_target_embedding" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">select_span_target_embedding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">span_rep</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_scores</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">top_k</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_idx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#UniEncoderSpanRelexModel.select_span_target_embedding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.UniEncoderSpanRelexModel.select_span_target_embedding" title="Link to this definition">¶</a></dt>
 <dd><p>Select entity spans for relation extraction.</p>
 <p>Filters spans based on entity classification scores or ground truth labels,
 keeping only high-confidence or positive entity spans for relation modeling.</p>
@@ -1617,12 +1617,19 @@ keeping only high-confidence or positive entity spans for relation modeling.</p>
 <li><p><strong>span_labels</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Optional ground truth labels of shape (B, L, K, C).</p></li>
 <li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for selecting spans.</p></li>
 <li><p><strong>top_k</strong> (<em>int</em><em> | </em><em>None</em>) – Optional limit on number of spans to select.</p></li>
+<li><p><strong>span_idx</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Optional span boundary indices of shape (B, L*K, 2).
+If provided, selected boundaries are returned for decoding.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p>target_rep: Selected span representations of shape (B, E, D).</p></li>
 <li><p>target_mask: Mask for selected spans of shape (B, E).</p></li>
+<li><dl class="simple">
+<dt>target_span_idx: Selected span boundaries of shape (B, E, 2),</dt><dd><p>or None if span_idx was not provided.</p>
+</dd>
+</dl>
+</li>
 </ul>
 </p>
 </dd>
