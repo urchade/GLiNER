@@ -1548,6 +1548,8 @@ class TokenRelexDecoder(TokenDecoder):
         # Build mapping from model entity indices to decoded span indices
         idx_mappings = self._build_entity_span_to_decoded_idx(spans, entity_spans, batch_size)
 
+        relations = [[] for _ in range(batch_size)]
+        
         # Decode relations for each sample
         for i in range(batch_size):
             rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
