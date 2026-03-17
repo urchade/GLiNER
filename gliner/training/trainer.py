@@ -78,6 +78,8 @@ class TrainingArguments(transformers.TrainingArguments):
     others_weight_decay: Optional[float] = 0.0
     focal_loss_alpha: Optional[float] = -1
     focal_loss_gamma: Optional[float] = 0
+    rel_focal_loss_alpha: Optional[float] = None
+    rel_focal_loss_gamma: Optional[float] = None
     focal_loss_prob_margin: Optional[float] = 0
     label_smoothing: Optional[float] = 0
     loss_reduction: Optional[str] = "sum"
@@ -146,9 +148,13 @@ class Trainer(transformers.Trainer):
         num_items_in_batch: Optional[int] = None,
     ):
         # Prepare inputs are done in training_step / prediction_step
+        rel_alpha = self.args.rel_focal_loss_alpha if self.args.rel_focal_loss_alpha is not None else self.args.focal_loss_alpha
+        rel_gamma = self.args.rel_focal_loss_gamma if self.args.rel_focal_loss_gamma is not None else self.args.focal_loss_gamma
         outputs = model(
             alpha=self.args.focal_loss_alpha,
             gamma=self.args.focal_loss_gamma,
+            rel_alpha=rel_alpha,
+            rel_gamma=rel_gamma,
             prob_margin=self.args.focal_loss_prob_margin,
             label_smoothing=self.args.label_smoothing,
             reduction=self.args.loss_reduction,

@@ -2316,13 +2316,17 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 rel_mask_selected = pair_mask.unsqueeze(-1).expand(B, N, C_rel)
                 class_mask = rel_prompts_embedding_mask.unsqueeze(1).expand(B, N, C_rel)
 
-                rel_loss = self.rel_loss(pair_scores, rel_labels_selected, rel_mask_selected, class_mask, **kwargs)
+                rel_kwargs = dict(kwargs)
+                rel_kwargs['alpha'] = rel_kwargs.pop('rel_alpha', rel_kwargs.get('alpha', -1.0))
+                rel_kwargs['gamma'] = rel_kwargs.pop('rel_gamma', rel_kwargs.get('gamma', 0.0))
+
+                rel_loss = self.rel_loss(pair_scores, rel_labels_selected, rel_mask_selected, class_mask, **rel_kwargs)
 
                 span_loss = loss * self.config.span_loss_coef if loss is not None else 0.0
 
                 if hasattr(self, "relations_rep_layer") and adj_matrix is not None:
                     adj_mask = target_span_mask.float().unsqueeze(1) * target_span_mask.float().unsqueeze(2)
-                    adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **kwargs)
+                    adj_loss = self.adj_loss(pred_adj_matrix, adj_matrix, adj_mask, **rel_kwargs)
 
                     loss = (
                         span_loss

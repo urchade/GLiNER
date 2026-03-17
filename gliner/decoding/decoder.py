@@ -992,7 +992,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
             # Build reverse lookup: (start, end) -> index in decoded spans
             span_boundary_to_idx = {}
             for idx, span_tuple in enumerate(spans[i]):
-                key = (span_tuple[0], span_tuple[1])
+                key = (span_tuple.start, span_tuple.end)
                 if key not in span_boundary_to_idx:
                     span_boundary_to_idx[key] = idx
 
@@ -1061,6 +1061,8 @@ class SpanRelexDecoder(BaseSpanDecoder):
         # Build mapping from model entity indices to decoded span indices
         idx_mappings = self._build_entity_span_to_decoded_idx(spans, entity_spans, batch_size)
 
+        relations = [[] for _ in range(batch_size)]
+
         # Decode relations for each sample
         for i in range(batch_size):
             rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
@@ -1124,6 +1126,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         threshold: float = 0.5,
         relation_threshold: float = 0.5,
         multi_label: bool = False,
+        return_class_probs: bool = False,
         rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
         entity_spans: Optional[torch.Tensor] = None,
         **kwargs,
@@ -1488,7 +1491,7 @@ class TokenRelexDecoder(TokenDecoder):
         for i in range(batch_size):
             span_boundary_to_idx = {}
             for idx, span_tuple in enumerate(spans[i]):
-                key = (span_tuple[0], span_tuple[1])
+                key = (span_tuple.start, span_tuple.end)
                 if key not in span_boundary_to_idx:
                     span_boundary_to_idx[key] = idx
 
@@ -1545,6 +1548,8 @@ class TokenRelexDecoder(TokenDecoder):
         # Build mapping from model entity indices to decoded span indices
         idx_mappings = self._build_entity_span_to_decoded_idx(spans, entity_spans, batch_size)
 
+        relations = [[] for _ in range(batch_size)]
+        
         # Decode relations for each sample
         for i in range(batch_size):
             rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
