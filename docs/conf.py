@@ -21,6 +21,10 @@ extensions = [
     "sphinx.ext.autosummary",
 ]
 
+myst_enable_extensions = [
+    "colon_fence",
+]
+
 html_theme = "shibuya"
 html_theme_options = {
     "navigation_depth": 4,
