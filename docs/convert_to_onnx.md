@@ -136,7 +136,7 @@ Quantized models (INT8) offer:
 - **Lower memory usage**: Important for edge deployment
 - **Minimal accuracy loss**: Typically < 1% F1 score difference
 
-:::tip When to Use Quantization
+:::{tip} When to Use Quantization
 Use quantized models for:
 - CPU-based production deployments
 - Mobile and edge devices
@@ -347,7 +347,7 @@ Not all GLiNER architectures support ONNX export:
 | **UniEncoderSpanDecoder** | ❌ Not supported | Generative decoder incompatible with static graphs |
 | **UniEncoderSpanRelex** | ✅ Full | Entity + relation extraction |
 
-:::warning Decoder Models
+:::{warning} Decoder Models
 Models with generative decoders (`UniEncoderSpanDecoder`) cannot be exported to ONNX because the decoder requires iterative generation, which is not suitable for static computation graphs. Consider using the encoder-only variants or PyTorch for these models.
 :::
 
