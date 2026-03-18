@@ -142,13 +142,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#subtoken-pooling"><code class="docutils literal notranslate"><span class="pre">subtoken_pooling</span></code></a></li>
 <li><a class="reference internal" href="#span-mode-source"><code class="docutils literal notranslate"><span class="pre">span_mode</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/span_rep.py" target="_blank" rel="noopener noreferrer">[source]</a></sup></a></li>
 <li><a class="reference internal" href="#post-fusion-schema-source"><code class="docutils literal notranslate"><span class="pre">post_fusion_schema</span></code> <sup><a href="https://github.com/urchade/GLiNER/blob/main/gliner/modeling/layers.py#L298" target="_blank" rel="noopener noreferrer">[source]</a></sup></a></li>
-</ul>
-</li>
-</ul>
-</li>
-<li><a class="reference internal" href="#tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated">:::tip
-The number of fusion layers (<code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code>) controls how many times the entire schema is repeated.
-:::</a><ul>
 <li><a class="reference internal" href="#num-post-fusion-layers"><code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code></a></li>
 <li><a class="reference internal" href="#vocab-size"><code class="docutils literal notranslate"><span class="pre">vocab_size</span></code></a></li>
 <li><a class="reference internal" href="#max-neg-type-ratio"><code class="docutils literal notranslate"><span class="pre">max_neg_type_ratio</span></code></a></li>
@@ -163,6 +156,8 @@ The number of fusion layers (<code class="docutils literal notranslate"><span cl
 <li><a class="reference internal" href="#ent-token"><code class="docutils literal notranslate"><span class="pre">ent_token</span></code></a></li>
 <li><a class="reference internal" href="#sep-token"><code class="docutils literal notranslate"><span class="pre">sep_token</span></code></a></li>
 <li><a class="reference internal" href="#attn-implementation"><code class="docutils literal notranslate"><span class="pre">_attn_implementation</span></code></a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li><a class="reference internal" href="#uniencoder-span-configuration">UniEncoder Span Configuration</a><ul>
@@ -403,94 +398,92 @@ The number of fusion layers (<code class="docutils literal notranslate"><span cl
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;l2t&quot;</span></code> — a single step where labels attend to span tokens</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code> — disables fusion entirely (no interaction is applied)</p></li>
 </ul>
+<div class="tip docutils">
+<p>The number of fusion layers (<code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code>) controls how many times the entire schema is repeated.</p>
+</div>
 </section>
-</section>
-</section>
-<section id="tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated">
-<h2>:::tip
-The number of fusion layers (<code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code>) controls how many times the entire schema is repeated.
-:::<a class="headerlink" href="#tip-the-number-of-fusion-layers-num-post-fusion-layers-controls-how-many-times-the-entire-schema-is-repeated" title="Link to this heading">¶</a></h2>
+<hr class="docutils" />
 <section id="num-post-fusion-layers">
-<h3><code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code><a class="headerlink" href="#num-post-fusion-layers" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">num_post_fusion_layers</span></code><a class="headerlink" href="#num-post-fusion-layers" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
 <p>Number of layers applied after span-label fusion.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="vocab-size">
-<h3><code class="docutils literal notranslate"><span class="pre">vocab_size</span></code><a class="headerlink" href="#vocab-size" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">vocab_size</span></code><a class="headerlink" href="#vocab-size" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
 <p>Vocabulary size override if needed. Automatically set during model initialization.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="max-neg-type-ratio">
-<h3><code class="docutils literal notranslate"><span class="pre">max_neg_type_ratio</span></code><a class="headerlink" href="#max-neg-type-ratio" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">max_neg_type_ratio</span></code><a class="headerlink" href="#max-neg-type-ratio" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
 <p>Controls the ratio of negative (non-matching) types during training.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="max-types">
-<h3><code class="docutils literal notranslate"><span class="pre">max_types</span></code><a class="headerlink" href="#max-types" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">max_types</span></code><a class="headerlink" href="#max-types" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">25</span></code></p>
 <p>Maximum number of entity types supported per batch.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="max-len">
-<h3><code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#max-len" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#max-len" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">384</span></code></p>
 <p>Maximum sequence length accepted by the encoder.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="words-splitter-type">
-<h3><code class="docutils literal notranslate"><span class="pre">words_splitter_type</span></code><a class="headerlink" href="#words-splitter-type" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">words_splitter_type</span></code><a class="headerlink" href="#words-splitter-type" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;whitespace&quot;</span></code></p>
 <p>Heuristic used for word-level splitting during inference.<br />
 <strong>Choices:</strong> <code class="docutils literal notranslate"><span class="pre">&quot;whitespace&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;spacy&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;moses&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">stanza</span></code>, <code class="docutils literal notranslate"><span class="pre">universal</span></code></p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="num-rnn-layers">
-<h3><code class="docutils literal notranslate"><span class="pre">num_rnn_layers</span></code><a class="headerlink" href="#num-rnn-layers" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">num_rnn_layers</span></code><a class="headerlink" href="#num-rnn-layers" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">1</span></code></p>
 <p>Number of LSTM layers to apply on top of encoder outputs. Set to 0 to disable LSTM.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="fuse-layers">
-<h3><code class="docutils literal notranslate"><span class="pre">fuse_layers</span></code><a class="headerlink" href="#fuse-layers" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">fuse_layers</span></code><a class="headerlink" href="#fuse-layers" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">False</span></code></p>
 <p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, combine representations from multiple encoders (labels and main encoder).</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="embed-ent-token">
-<h3><code class="docutils literal notranslate"><span class="pre">embed_ent_token</span></code><a class="headerlink" href="#embed-ent-token" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">embed_ent_token</span></code><a class="headerlink" href="#embed-ent-token" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">bool</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">True</span></code></p>
 <p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">&lt;&lt;ENT&gt;&gt;</span></code> tokens will be pooled for each label. If <code class="docutils literal notranslate"><span class="pre">False</span></code>, the first token of each label will be pooled as label embedding.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="class-token-index">
-<h3><code class="docutils literal notranslate"><span class="pre">class_token_index</span></code><a class="headerlink" href="#class-token-index" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">class_token_index</span></code><a class="headerlink" href="#class-token-index" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">int</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">-1</span></code></p>
 <p>Index of the entity token in the vocabulary. Set automatically during initialization.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="encoder-config">
-<h3><code class="docutils literal notranslate"><span class="pre">encoder_config</span></code><a class="headerlink" href="#encoder-config" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">encoder_config</span></code><a class="headerlink" href="#encoder-config" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dict</span></code> or <code class="docutils literal notranslate"><span class="pre">PretrainedConfig</span></code>, <em>optional</em></p>
 <p>A nested config dictionary for the encoder model. If a dict is passed, its <code class="docutils literal notranslate"><span class="pre">model_type</span></code> must be set or inferred.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="ent-token">
-<h3><code class="docutils literal notranslate"><span class="pre">ent_token</span></code><a class="headerlink" href="#ent-token" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">ent_token</span></code><a class="headerlink" href="#ent-token" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;ENT&gt;&gt;&quot;</span></code></p>
 <p>Special token used to mark entity type boundaries in the input.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="sep-token">
-<h3><code class="docutils literal notranslate"><span class="pre">sep_token</span></code><a class="headerlink" href="#sep-token" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">sep_token</span></code><a class="headerlink" href="#sep-token" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em>, defaults to <code class="docutils literal notranslate"><span class="pre">&quot;&lt;&lt;SEP&gt;&gt;&quot;</span></code></p>
 <p>Token used to separate entity types from input text.</p>
-<hr class="docutils" />
 </section>
+<hr class="docutils" />
 <section id="attn-implementation">
-<h3><code class="docutils literal notranslate"><span class="pre">_attn_implementation</span></code><a class="headerlink" href="#attn-implementation" title="Link to this heading">¶</a></h3>
+<h4><code class="docutils literal notranslate"><span class="pre">_attn_implementation</span></code><a class="headerlink" href="#attn-implementation" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">str</span></code>, <em>optional</em></p>
 <p>Optional override for attention logic. Can be used to disable Flash Attention if installed.</p>
 <p><strong>Example:</strong></p>
@@ -500,6 +493,7 @@ The number of fusion layers (<code class="docutils literal notranslate"><span cl
 </span><span data-line="4"><span class="p">)</span>
 </span></pre></div>
 </div>
+</section>
 </section>
 </section>
 <hr class="docutils" />
@@ -674,9 +668,9 @@ The number of fusion layers (<code class="docutils literal notranslate"><span cl
 </section>
 <section id="important-notes">
 <h3>Important Notes<a class="headerlink" href="#important-notes" title="Link to this heading">¶</a></h3>
-<p>:::warning Embedding Resizing Not Supported
-Unlike UniEncoder models, BiEncoder models do not support token embedding resizing. The vocabulary is fixed to the pretrained encoder’s vocabulary.
-:::</p>
+<div class="warning docutils">
+<p>Unlike UniEncoder models, BiEncoder models do not support token embedding resizing. The vocabulary is fixed to the pretrained encoder’s vocabulary.</p>
+</div>
 </section>
 <section id="id5">
 <h3>Usage Example<a class="headerlink" href="#id5" title="Link to this heading">¶</a></h3>

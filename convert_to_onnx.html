@@ -372,8 +372,10 @@ data-aria-dark="Switch to auto color mode">
 <li><p><strong>Lower memory usage</strong>: Important for edge deployment</p></li>
 <li><p><strong>Minimal accuracy loss</strong>: Typically &lt; 1% F1 score difference</p></li>
 </ul>
-<p>:::tip When to Use Quantization
-Use quantized models for:</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>When to Use Quantization</p>
+<p>Use quantized models for:</p>
 <ul class="simple">
 <li><p>CPU-based production deployments</p></li>
 <li><p>Mobile and edge devices</p></li>
@@ -384,9 +386,9 @@ Use quantized models for:</p>
 <ul class="simple">
 <li><p>GPU inference (GPUs are optimized for FP16/FP32)</p></li>
 <li><p>Maximum accuracy requirements</p></li>
-<li><p>Research and experimentation
-:::</p></li>
+<li><p>Research and experimentation</p></li>
 </ul>
+</div>
 </section>
 <section id="output-structure">
 <h3>Output Structure<a class="headerlink" href="#output-structure" title="Link to this heading">¶</a></h3>
@@ -642,9 +644,11 @@ Use quantized models for:</p>
 </tbody>
 </table>
 </div>
-<p>:::warning Decoder Models
-Models with generative decoders (<code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoder</span></code>) cannot be exported to ONNX because the decoder requires iterative generation, which is not suitable for static computation graphs. Consider using the encoder-only variants or PyTorch for these models.
-:::</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Decoder Models</p>
+<p>Models with generative decoders (<code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoder</span></code>) cannot be exported to ONNX because the decoder requires iterative generation, which is not suitable for static computation graphs. Consider using the encoder-only variants or PyTorch for these models.</p>
+</div>
 </section>
 <section id="advanced-onnx-features">
 <h2>Advanced ONNX Features<a class="headerlink" href="#advanced-onnx-features" title="Link to this heading">¶</a></h2>

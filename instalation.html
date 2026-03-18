@@ -172,9 +172,9 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner
 </span></pre></div>
 </div>
-<p>:::tip[ONNX runtime]
-If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU feature. This also installs the <code class="docutils literal notranslate"><span class="pre">onnxruntime-gpu</span></code> dependency.
-:::</p>
+<div class="tip[ONNX docutils">
+<p>If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU feature. This also installs the <code class="docutils literal notranslate"><span class="pre">onnxruntime-gpu</span></code> dependency.</p>
+</div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>gpu<span class="o">]</span>
 </span></pre></div>
 </div>
@@ -201,10 +201,10 @@ If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU fe
 </span></pre></div>
 </div>
 </li>
-<li><p><strong>Install Dependencies:</strong>
-:::tip
-It’s a good practice to create and activate a virtual environment before installing dependencies:
-:::</p>
+<li><p><strong>Install Dependencies:</strong></p>
+<div class="tip docutils">
+<p>It’s a good practice to create and activate a virtual environment before installing dependencies:</p>
+</div>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
 </span><span data-line="2"><span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">   </span><span class="c1"># On Windows use: venv\Scripts\activate</span>
 </span></pre></div>
@@ -238,9 +238,9 @@ It’s a good practice to create and activate a virtual environment before insta
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>flashdeberta<span class="w"> </span>-U
 </span></pre></div>
 </div>
-<p>:::tip
-Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.51.3</span></code>.
-:::</p>
+<div class="tip docutils">
+<p>Before using FlashDeBERTa, please make sure that you have <code class="docutils literal notranslate"><span class="pre">transformers&gt;=4.51.3</span></code>.</p>
+</div>
 <p>To enable FlashDeBERTa, set the <code class="docutils literal notranslate"><span class="pre">USE_FLASHDEBERTA</span></code> environment variable before loading the model:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">export</span><span class="w"> </span><span class="nv">USE_FLASHDEBERTA</span><span class="o">=</span><span class="m">1</span>
 </span></pre></div>
