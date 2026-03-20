@@ -230,6 +230,42 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         """Compile the model using torch.compile for optimization."""
         self.model = torch.compile(self.model)
 
+    def quantize(self) -> None:
+        """Apply float16 quantization to the model.
+
+        On GPU this converts the model to half-precision, which halves memory
+        usage and leverages Tensor Core acceleration for faster inference.
+
+        On CPU this applies float16 dynamic quantization via PyTorch, which
+        reduces memory but does not speed up inference.
+
+        Raises:
+            RuntimeError: If the model is an ONNX model (use ONNX quantization instead).
+
+        Examples:
+            >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", map_location="cuda")
+            >>> model.quantize()  # fp16 half-precision on GPU — ~1.4x faster
+        """
+        if self.onnx_model:
+            raise RuntimeError(
+                "Cannot apply PyTorch quantization to an ONNX model. "
+                "Use export_to_onnx(quantize=True) for ONNX quantization."
+            )
+
+        if self.device.type == "cuda":
+            self.model.half()
+            logger.info("Applied float16 half-precision to model (GPU).")
+        else:
+            warnings.warn(
+                "Quantization on CPU reduces memory usage but does not improve inference speed. "
+                "For faster inference, use a CUDA GPU with `map_location='cuda'`.",
+                stacklevel=2,
+            )
+            self.model = torch.ao.quantization.quantize_dynamic(
+                self.model, {nn.Linear}, dtype=torch.float16
+            )
+            logger.info("Applied float16 dynamic quantization to all nn.Linear layers (CPU).")
+
     def _get_special_tokens(self):
         """Get special tokens to add to tokenizer.
 
@@ -455,6 +491,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: bool = True,
         backbone_from_pretrained: bool = True,
         compile_torch_model: bool = False,
+        quantize: bool = False,
         map_location: str = "cpu",
         # Config overrides
         max_length: Optional[int] = None,
@@ -476,6 +513,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -552,6 +590,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     "Cannot compile model on CPU. Set `map_location='cuda'` to compile.",
                     stacklevel=2,
                 )
+
+        if quantize:
+            instance.quantize()
+
         instance.eval()
         return instance
 
@@ -572,6 +614,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        quantize: Optional[bool] = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         session_options=None,
@@ -599,6 +642,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -665,6 +709,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     instance.compile()
                 else:
                     warnings.warn("Cannot compile model on CPU. Set `map_location='cuda'` to compile.", stacklevel=2)
+
+            if quantize:
+                instance.quantize()
 
             instance.eval()
         else:
@@ -3108,6 +3155,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        quantize: Optional[bool] = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
@@ -3136,6 +3184,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -3150,7 +3199,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         Examples:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
             >>> model = GLiNER.from_pretrained("knowledgator/gliner-bi-small-v1.0")
-            >>> model = GLiNER.from_pretrained("path/to/local/model")
+            >>> model = GLiNER.from_pretrained("path/to/local/model", quantize=True)
         """
         model_dir = Path(model_id)
         if not model_dir.exists():
@@ -3199,6 +3248,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer=load_tokenizer,
             resize_token_embeddings=resize_token_embeddings,
             compile_torch_model=compile_torch_model,
+            quantize=quantize,
             max_length=max_length,
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
@@ -3217,6 +3267,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: bool = True,
         backbone_from_pretrained: bool = True,
         compile_torch_model: bool = False,
+        quantize: bool = False,
         map_location: str = "cpu",
         # Config overrides
         max_length: Optional[int] = None,
@@ -3234,6 +3285,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -3272,6 +3324,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings=resize_token_embeddings,
             backbone_from_pretrained=backbone_from_pretrained,
             compile_torch_model=compile_torch_model,
+            quantize=quantize,
             map_location=map_location,
             max_length=max_length,
             max_width=max_width,

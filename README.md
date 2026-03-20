@@ -78,6 +78,30 @@ UEFA Nations League => competitions
 European Championship => competitions
 ```
 
+### Quantization
+
+Load with `quantize=True` for faster GPU inference:
+
+```python
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda", quantize=True)
+```
+
+This converts the model to float16 half-precision, leveraging Tensor Core acceleration on modern GPUs. Benchmarked on CoNLL-2003 and WNUT-2017 (strict F1, `gliner_medium-v2.1`):
+
+| Condition | CoNLL-2003 F1 | WNUT-2017 F1 | Speedup |
+|-----------|:---:|:---:|:---:|
+| GPU fp32 (baseline) | 0.8107 | 0.6247 | 1.00x |
+| **GPU quantized (fp16)** | **0.8107** | **0.6247** | **1.42x** |
+
+Zero quality loss. You can also quantize after loading:
+
+```python
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
+model.quantize()
+```
+
+On CPU, `quantize=True` reduces memory usage but does not improve speed.
+
 ## 👨‍💻 Model Authors
 GLiNER was originally developed by:
 * [Urchade Zaratiana](urchade.github.io)
