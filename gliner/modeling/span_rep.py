@@ -143,9 +143,9 @@ class SpanCAT(nn.Module):
 
         B, L, D = h.size()
 
-        h = h.view(B, L, 1, D).repeat(1, 1, self.max_width, 1)
+        h = h.view(B, L, 1, D).expand(B, L, self.max_width, D)
 
-        q = self.query_seg.view(1, 1, self.max_width, -1).repeat(B, L, 1, 1)
+        q = self.query_seg.view(1, 1, self.max_width, -1).expand(B, L, self.max_width, -1)
 
         span_rep = torch.cat([h, q], dim=-1)
 
@@ -296,7 +296,8 @@ class SpanEndpointsBlock(nn.Module):
         """
         B, L, D = x.size()
 
-        span_idx = torch.LongTensor([[i, i + self.kernel_size - 1] for i in range(L)]).to(x.device)
+        starts = torch.arange(L, device=x.device)
+        span_idx = torch.stack([starts, starts + self.kernel_size - 1], dim=1)
 
         x = F.pad(x, (0, 0, 0, self.kernel_size - 1), "constant", 0)
 

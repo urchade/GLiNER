@@ -2274,7 +2274,6 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         word_input_spans = None
         if input_spans is not None:
             valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            print(valid_input_spans)
             word_input_spans = self._convert_spans_to_word_indices(
                 valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
             )
