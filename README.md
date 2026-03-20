@@ -108,7 +108,9 @@ Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
 | + compile | 0.8107 | 1.31x |
 | **+ quantize + compile** | **0.8107** | **1.94x** |
 
-On CPU, `quantize=True` reduces memory usage but does not improve speed.
+**Notes:**
+- `quantize=True` on CPU reduces memory usage but does not improve speed.
+- `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).
 
 ## 👨‍💻 Model Authors
 GLiNER was originally developed by:
