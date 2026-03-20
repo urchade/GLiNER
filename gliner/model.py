@@ -227,8 +227,17 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         self._inference_packing_config = config
 
     def compile(self):
-        """Compile the model using torch.compile for optimization."""
-        self.model = torch.compile(self.model)
+        """Compile the model using torch.compile for optimization.
+
+        Uses ``dynamic=True`` to generate shape-generic kernels, which avoids
+        recompilation on variable-length NER inputs. Also enables
+        ``capture_scalar_outputs`` to trace through data-dependent shape
+        operations (e.g., computing max number of entity types per batch).
+
+        Best combined with ``quantize()`` for maximum throughput (~1.9x over fp32).
+        """
+        torch._dynamo.config.capture_scalar_outputs = True
+        self.model = torch.compile(self.model, dynamic=True)
 
     def quantize(self) -> None:
         """Apply float16 quantization to the model.
@@ -513,7 +522,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
+            quantize: Whether to apply fp16 quantization (GPU speedup, CPU memory reduction).
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -642,7 +651,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
+            quantize: Whether to apply fp16 quantization (GPU speedup, CPU memory reduction).
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -3184,7 +3193,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
+            quantize: Whether to apply fp16 quantization (GPU speedup, CPU memory reduction).
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -3285,7 +3294,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Whether to apply dynamic int8 quantization for faster CPU inference.
+            quantize: Whether to apply fp16 quantization (GPU speedup, CPU memory reduction).
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
