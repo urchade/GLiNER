@@ -235,8 +235,23 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         operations (e.g., computing max number of entity types per batch).
 
         Best combined with ``quantize()`` for maximum throughput (~1.9x over fp32).
+
+        When FlashDeBERTa is active, its custom Triton kernels are incompatible
+        with torch.compile tracing.  The encoder forward is automatically
+        wrapped with ``torch.compiler.disable`` so the rest of the model
+        (span representation, scoring, etc.) still benefits from compilation.
         """
         torch._dynamo.config.capture_scalar_outputs = True
+
+        # FlashDeBERTa uses hand-written Triton kernels that torch.compile cannot trace. 
+        try:
+            bert_layer = self.model.token_rep_layer.bert_layer
+            model_cls = bert_layer.model.__class__.__name__
+            if model_cls == "FlashDebertaV2Model":
+                bert_layer.forward = torch.compiler.disable(bert_layer.forward)
+        except AttributeError:
+            pass  # non-standard architecture, skip
+
         self.model = torch.compile(self.model, dynamic=True)
 
     def quantize(self) -> None:
