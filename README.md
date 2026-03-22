@@ -112,7 +112,6 @@ Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
 **Quantization options:**
 - `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
 - `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
-- `quantize="int8"` — int8 dynamic quantization (CPU only). **Not compatible with DeBERTa-based models** due to error accumulation across transformer layers.
 - On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
 
 **Compilation notes:**

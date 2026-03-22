@@ -260,22 +260,18 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         "half": torch.float16,
         "bf16": torch.bfloat16,
         "bfloat16": torch.bfloat16,
-        "int8": torch.qint8,
     }
 
     def quantize(self, dtype: str = "fp16") -> None:
-        """Apply quantization to the model.
+        """Apply half-precision quantization to the model.
 
         Args:
             dtype: Quantization type. Options:
                 - ``"fp16"`` (default): float16 half-precision. On GPU, uses Tensor Core
                   acceleration for ~1.4x speedup. On CPU, applies dynamic quantization
                   (reduces memory, no speed benefit).
-                - ``"bf16"``: bfloat16 half-precision (GPU only). Better numerical
-                  stability than fp16 with slightly less speedup (~1.2x).
-                - ``"int8"``: int8 dynamic quantization (CPU only). Reduces memory and
-                  may improve speed on CPU, but **breaks DeBERTa-based models** due to
-                  disentangled attention sensitivity. Only use with non-DeBERTa backbones.
+                - ``"bf16"``: bfloat16 half-precision. Better numerical stability than
+                  fp16 with slightly less speedup (~1.2x).
 
         Raises:
             RuntimeError: If the model is an ONNX model (use ONNX quantization instead).
@@ -300,25 +296,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             )
         torch_dtype = self._QUANTIZE_DTYPES[dtype_lower]
 
-        if torch_dtype == torch.qint8:
-            # int8 dynamic quantization — CPU only, breaks DeBERTa
-            if self.device.type != "cpu":
-                raise ValueError(
-                    "int8 dynamic quantization is only supported on CPU. "
-                    "For GPU quantization, use 'fp16' or 'bf16'."
-                )
-            model_name = getattr(self.config, "model_name", "")
-            if "deberta" in model_name.lower():
-                raise ValueError(
-                    "int8 dynamic quantization breaks DeBERTa-based models. "
-                    "Quantization error accumulates across transformer layers and "
-                    "collapses output scores to near-zero (F1=0.0). Use 'fp16' instead."
-                )
-            self.model = torch.ao.quantization.quantize_dynamic(
-                self.model, {nn.Linear}, dtype=torch.qint8
-            )
-            logger.info("Applied int8 dynamic quantization to all nn.Linear layers (CPU).")
-        elif self.device.type == "cuda":
+        if self.device.type == "cuda":
             if torch_dtype == torch.bfloat16:
                 self.model.bfloat16()
                 logger.info("Applied bfloat16 half-precision to model (GPU).")
@@ -333,7 +311,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 stacklevel=2,
             )
             if torch_dtype == torch.bfloat16:
-                # quantize_dynamic doesn't support bfloat16; use dtype cast instead
                 self.model.bfloat16()
                 logger.info("Applied bfloat16 precision to model (CPU).")
             else:
@@ -589,9 +566,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16, ``"bf16"``
-                for bfloat16, ``"int8"`` for int8 dynamic quantization (CPU only, breaks
-                DeBERTa). ``False`` to disable.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16. ``False`` to disable.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -721,9 +697,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16, ``"bf16"``
-                for bfloat16, ``"int8"`` for int8 dynamic quantization (CPU only, breaks
-                DeBERTa). ``False`` to disable.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16. ``False`` to disable.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -3265,9 +3240,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16, ``"bf16"``
-                for bfloat16, ``"int8"`` for int8 dynamic quantization (CPU only, breaks
-                DeBERTa). ``False`` to disable.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16. ``False`` to disable.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -3368,9 +3342,8 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
-            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16, ``"bf16"``
-                for bfloat16, ``"int8"`` for int8 dynamic quantization (CPU only, breaks
-                DeBERTa). ``False`` to disable.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16. ``False`` to disable.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
