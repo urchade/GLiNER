@@ -86,7 +86,7 @@ Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU in
 model = GLiNER.from_pretrained(
     "urchade/gliner_medium-v2.1",
     map_location="cuda",
-    quantize=True,
+    quantize=True,            # or "fp16", "bf16"
     compile_torch_model=True,
 )
 ```
@@ -95,8 +95,9 @@ Or apply after loading:
 
 ```python
 model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
-model.quantize()   # fp16 half-precision
-model.compile()    # torch.compile with dynamic shapes
+model.quantize()         # fp16 half-precision (default)
+model.quantize("bf16")   # bfloat16 — better numerical stability, slightly less speedup
+model.compile()          # torch.compile with dynamic shapes
 ```
 
 Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
@@ -108,8 +109,13 @@ Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
 | + compile | 0.8107 | 1.31x |
 | **+ quantize + compile** | **0.8107** | **1.94x** |
 
-**Notes:**
-- `quantize=True` on CPU reduces memory usage but does not improve speed.
+**Quantization options:**
+- `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
+- `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
+- `quantize="int8"` — int8 dynamic quantization (CPU only). **Not compatible with DeBERTa-based models** due to error accumulation across transformer layers.
+- On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
+
+**Compilation notes:**
 - `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).
 
 ## 👨‍💻 Model Authors

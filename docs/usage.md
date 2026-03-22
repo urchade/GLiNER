@@ -376,7 +376,7 @@ from gliner import GLiNER
 model = GLiNER.from_pretrained(
     "urchade/gliner_medium-v2.1",
     map_location="cuda",
-    quantize=True,
+    quantize=True,            # or "fp16", "bf16"
     compile_torch_model=True,
 )
 ```
@@ -385,24 +385,29 @@ Or apply after loading:
 
 ```python
 model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
-model.quantize()   # fp16 half-precision
-model.compile()    # torch.compile with dynamic shapes
+model.quantize()         # fp16 half-precision (default)
+model.quantize("bf16")   # bfloat16 — better numerical stability, slightly less speedup
+model.compile()          # torch.compile with dynamic shapes
 ```
 
 Compilation is especially beneficial for short sequences, where the overhead of the standard eager execution is proportionally larger. For longer sequences, [FlashDeBERTa](#-using-flashdeberta) is recommended as it scales much better with sequence length.
 
-**Benchmarks** (`gliner_medium-v2.1`, RTX 5090):
+**Benchmarks** (CoNLL-2003 strict F1, `gliner_medium-v2.1`, RTX 5090):
 
-| Configuration             | seq-128 | seq-1024 | speedup@128 | speedup@1024 |
-|--------------------------|--------:|---------:|------------:|-------------:|
-| Baseline (fp32)          | 7.9 ms  | 65.3 ms  | 1.00x       | 1.00x        |
-| Quantized (fp16)         | 7.0 ms  | 41.9 ms  | 1.13x       | 1.56x        |
-| Compiled + Quantized     | 5.2 ms  | 55.9 ms  | 1.50x       | 1.17x        |
-| FlashDeBERTa             | 6.7 ms  | 36.0 ms  | 1.18x       | 1.81x        |
-| Compiled + FlashDeBERTa  | 6.2 ms  | 35.3 ms  | 1.27x       | 1.85x        |
+| Condition | F1 | Speedup |
+|-----------|:---:|:---:|
+| GPU fp32 (baseline) | 0.8107 | 1.00x |
+| + quantize (fp16) | 0.8107 | 1.35x |
+| + compile | 0.8107 | 1.31x |
+| **+ quantize + compile** | **0.8107** | **1.94x** |
 
-**Notes:**
-- `quantize=True` on CPU reduces memory usage but does not improve speed.
+**Quantization options:**
+- `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
+- `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
+- `quantize="int8"` — int8 dynamic quantization (CPU only). **Not compatible with DeBERTa-based models** due to error accumulation across transformer layers.
+- On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
+
+**Compilation notes:**
 - `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).
 
 ### ⚡ Accelerating Inference with Sequence Packing
