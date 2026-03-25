@@ -1,0 +1,242 @@
+{
+  "timestamp": "2026-03-24T22:27:38.423729",
+  "model": "urchade/gliner_small-v2.1",
+  "gpu": {
+    "fp32": {
+      "size_mb": 582.3,
+      "short (~20w)": {
+        "mean_ms": 12.23,
+        "median_ms": 11.0,
+        "stdev_ms": 4.3,
+        "min_ms": 7.57,
+        "max_ms": 23.09,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 11.66,
+        "median_ms": 9.82,
+        "stdev_ms": 3.97,
+        "min_ms": 9.08,
+        "max_ms": 25.66,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 16.49,
+        "median_ms": 14.21,
+        "stdev_ms": 5.26,
+        "min_ms": 12.96,
+        "max_ms": 37.23,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 24.47,
+        "median_ms": 19.79,
+        "stdev_ms": 9.61,
+        "min_ms": 17.44,
+        "max_ms": 50.88,
+        "n": 40,
+        "word_count": 333
+      }
+    },
+    "fp16": {
+      "size_mb": 291.2,
+      "short (~20w)": {
+        "mean_ms": 13.93,
+        "median_ms": 12.99,
+        "stdev_ms": 5.09,
+        "min_ms": 7.83,
+        "max_ms": 21.89,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 11.9,
+        "median_ms": 10.46,
+        "stdev_ms": 3.87,
+        "min_ms": 9.55,
+        "max_ms": 26.11,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 19.94,
+        "median_ms": 16.45,
+        "stdev_ms": 8.54,
+        "min_ms": 13.2,
+        "max_ms": 45.13,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 30.13,
+        "median_ms": 22.63,
+        "stdev_ms": 23.57,
+        "min_ms": 17.32,
+        "max_ms": 164.03,
+        "n": 40,
+        "word_count": 333
+      }
+    },
+    "int8": {
+      "size_mb": 582.3,
+      "short (~20w)": {
+        "mean_ms": 189.73,
+        "median_ms": 195.53,
+        "stdev_ms": 25.51,
+        "min_ms": 142.1,
+        "max_ms": 238.33,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 174.55,
+        "median_ms": 167.3,
+        "stdev_ms": 30.04,
+        "min_ms": 134.71,
+        "max_ms": 244.62,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 199.0,
+        "median_ms": 195.95,
+        "stdev_ms": 33.46,
+        "min_ms": 143.11,
+        "max_ms": 260.92,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 182.5,
+        "median_ms": 177.84,
+        "stdev_ms": 25.6,
+        "min_ms": 153.03,
+        "max_ms": 275.02,
+        "n": 40,
+        "word_count": 333
+      }
+    }
+  },
+  "cpu": {
+    "fp32": {
+      "size_mb": 582.3,
+      "short (~20w)": {
+        "mean_ms": 667.74,
+        "median_ms": 669.46,
+        "stdev_ms": 254.03,
+        "min_ms": 59.68,
+        "max_ms": 1130.3,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 180.62,
+        "median_ms": 86.78,
+        "stdev_ms": 232.98,
+        "min_ms": 48.67,
+        "max_ms": 1044.24,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 289.39,
+        "median_ms": 206.83,
+        "stdev_ms": 343.1,
+        "min_ms": 103.34,
+        "max_ms": 1889.11,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 1383.69,
+        "median_ms": 468.94,
+        "stdev_ms": 2786.69,
+        "min_ms": 135.95,
+        "max_ms": 12805.89,
+        "n": 40,
+        "word_count": 333
+      }
+    },
+    "fp16": {
+      "size_mb": 382.6,
+      "short (~20w)": {
+        "mean_ms": 377.53,
+        "median_ms": 218.18,
+        "stdev_ms": 375.79,
+        "min_ms": 30.72,
+        "max_ms": 1354.82,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 123.84,
+        "median_ms": 93.49,
+        "stdev_ms": 94.03,
+        "min_ms": 45.52,
+        "max_ms": 484.35,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 824.84,
+        "median_ms": 423.37,
+        "stdev_ms": 713.95,
+        "min_ms": 103.37,
+        "max_ms": 2066.22,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 341.78,
+        "median_ms": 179.15,
+        "stdev_ms": 414.61,
+        "min_ms": 130.81,
+        "max_ms": 2038.18,
+        "n": 40,
+        "word_count": 333
+      }
+    },
+    "int8": {
+      "size_mb": 582.3,
+      "short (~20w)": {
+        "mean_ms": 1392.18,
+        "median_ms": 1003.49,
+        "stdev_ms": 1576.11,
+        "min_ms": 138.96,
+        "max_ms": 6792.12,
+        "n": 40,
+        "word_count": 9
+      },
+      "medium (~80w)": {
+        "mean_ms": 538.5,
+        "median_ms": 532.87,
+        "stdev_ms": 91.95,
+        "min_ms": 371.44,
+        "max_ms": 738.75,
+        "n": 40,
+        "word_count": 76
+      },
+      "long (~200w)": {
+        "mean_ms": 1691.01,
+        "median_ms": 1533.87,
+        "stdev_ms": 671.15,
+        "min_ms": 897.35,
+        "max_ms": 3598.17,
+        "n": 40,
+        "word_count": 200
+      },
+      "very long (~400w)": {
+        "mean_ms": 1612.13,
+        "median_ms": 1548.77,
+        "stdev_ms": 432.57,
+        "min_ms": 1001.53,
+        "max_ms": 2643.24,
+        "n": 40,
+        "word_count": 333
+      }
+    }
+  }
+}
