@@ -2096,38 +2096,31 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         return target_rep, target_mask, target_span_idx
 
     def select_target_embedding(
-        self, representations: Optional[torch.FloatTensor] = None, rep_mask: Optional[torch.LongTensor] = None
+        self,
+        representations: torch.Tensor,
+        rep_mask: torch.Tensor,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
-        """Pack valid representations by removing masked positions.
 
-        Args:
-            representations: Tensor of shape (B, N, D).
-            rep_mask: Mask of shape (B, N) where 1 indicates valid position.
-
-        Returns:
-            Tuple containing:
-                - target_rep: Packed representations of shape (B, M, D).
-                - target_mask: Packed mask of shape (B, M).
-        """
         B, N, D = representations.shape
+
+        # (B,)
         lengths = rep_mask.sum(dim=-1)
-        max_len = lengths.max().item()
 
-        if max_len != N:
-            target_rep = representations.new_zeros(B, max_len, D)
-            target_mask = rep_mask.new_zeros(B, max_len)
+        # scalar tensor (IMPORTANT: no .item())
+        max_len = lengths.max()
 
-            new_col_idx = rep_mask.cumsum(dim=1) - 1
-            keep = rep_mask.bool()
+        # Move valid tokens to the front
+        order = torch.argsort(rep_mask, dim=1, descending=True)
 
-            batch_idx, old_col_idx = torch.where(keep)
-            new_col_idx = new_col_idx[keep]
+        packed_rep = representations.gather(
+            dim=1,
+            index=order.unsqueeze(-1).expand(-1, -1, D),
+        )
+        packed_mask = rep_mask.gather(dim=1, index=order)
 
-            target_rep[batch_idx, new_col_idx] = representations[batch_idx, old_col_idx]
-            target_mask[batch_idx, new_col_idx] = 1
-        else:
-            target_rep = representations
-            target_mask = rep_mask
+        # Slice using dynamic max_len
+        target_rep = packed_rep[:, :max_len, :]
+        target_mask = packed_mask[:, :max_len]
 
         return target_rep, target_mask
 

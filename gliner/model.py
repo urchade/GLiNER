@@ -2838,7 +2838,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 "span_idx",
                 "span_mask",
             ],
-            "output_names": ["logits", "rel_idx", "rel_logits", "rel_mask"],
+            "output_names": ["logits", "rel_idx", "rel_logits", "rel_mask", "entity_spans"],
             "dynamic_axes": {
                 "input_ids": {0: "batch_size", 1: "sequence_length"},
                 "attention_mask": {0: "batch_size", 1: "sequence_length"},
@@ -2865,6 +2865,11 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 "rel_mask": {
                     0: "batch_size",
                     1: "num_pairs",
+                },
+                "entity_spans": {
+                    0: "batch_size",
+                    1: "num_entities",
+                    2: "span_boundary",
                 },
             },
         }
@@ -2898,8 +2903,13 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                     span_idx=span_idx,
                     span_mask=span_mask,
                 )
-                # Return all outputs for relation extraction
-                return out.logits, out.rel_idx, out.rel_logits, out.rel_mask
+                # entity_spans: (B, E, 2) — span boundaries of entities
+                # selected internally for relation extraction.  rel_idx
+                # values are indices into this list.
+                entity_spans = out.entity_spans if out.entity_spans is not None else torch.zeros(
+                    input_ids.size(0), 0, 2, dtype=torch.long, device=input_ids.device
+                )
+                return out.logits, out.rel_idx, out.rel_logits, out.rel_mask, entity_spans
 
         return UniEncoderSpanRelexWrapper(core_model)
 

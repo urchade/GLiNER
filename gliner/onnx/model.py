@@ -367,6 +367,7 @@ class UniEncoderSpanRelexORTModel(BaseORTModel):
             rel_idx=inference_output["rel_idx"],
             rel_logits=inference_output["rel_logits"],
             rel_mask=inference_output["rel_mask"],
+            entity_spans=inference_output.get("entity_spans"),
         )
         return outputs
 

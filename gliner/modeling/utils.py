@@ -290,68 +290,97 @@ def build_entity_pairs(
 
     return pair_idx, pair_mask, head_rep, tail_rep
 
-
 def build_all_entity_pairs(
     span_rep: torch.Tensor,
     span_mask: torch.Tensor,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-    """Build all possible entity pairs for single-step relation extraction.
-
-    Generates all directed pairs (i, j) where i != j for valid entities
-    (those with span_mask == 1), without any adjacency filtering.
+    """
+    ONNX-friendly version.
 
     Args:
-        span_rep: Entity/span embeddings. Shape: (batch_size, num_entities, embed_dim)
-        span_mask: Mask for valid entities. Shape: (batch_size, num_entities)
+        span_rep:  (B, E, D)
+        span_mask: (B, E) with 1 for valid entities, 0 for invalid
 
     Returns:
-        Tuple containing:
-            - pair_idx: Indices of (head, tail) entity pairs. Shape: (B, max_pairs, 2)
-            - pair_mask: Boolean mask for valid pairs. Shape: (B, max_pairs)
-            - head_rep: Head entity embeddings. Shape: (B, max_pairs, embed_dim)
-            - tail_rep: Tail entity embeddings. Shape: (B, max_pairs, embed_dim)
+        pair_idx:  (B, M, 2) long
+        pair_mask: (B, M) bool
+        head_rep:  (B, M, D)
+        tail_rep:  (B, M, D)
+
+    where M = max(valid directed pairs in batch), but at least 1.
     """
     B, E, D = span_rep.shape
     device = span_rep.device
 
-    # Count valid entities per example
-    entity_counts = span_mask.long().sum(dim=1)  # (B,)
+    span_mask_bool = span_mask.to(torch.bool)
 
-    # Build pairs per example
-    batch_pair_lists: list[torch.Tensor] = []
-    for b in range(B):
-        n = entity_counts[b].item()
-        if n < 2:
-            batch_pair_lists.append(torch.zeros(0, 2, dtype=torch.long, device=device))
-            continue
-        # All (i, j) pairs where i != j, both < n
-        idx = torch.arange(n, device=device)
-        row = idx.repeat_interleave(n - 1)
-        col = torch.cat([torch.cat([idx[:i], idx[i + 1:]]) for i in range(n)])
-        batch_pair_lists.append(torch.stack([row, col], dim=-1))
+    entity_idx = torch.arange(E, device=device, dtype=torch.long)
+    head_grid = entity_idx.unsqueeze(1).expand(E, E)
+    tail_grid = entity_idx.unsqueeze(0).expand(E, E)
 
-    N = max(p.shape[0] for p in batch_pair_lists) if batch_pair_lists else 0
+    valid_pairs_full = (
+        span_mask_bool.unsqueeze(2)
+        & span_mask_bool.unsqueeze(1)
+        & (head_grid.unsqueeze(0) != tail_grid.unsqueeze(0))
+    )
 
-    if N == 0:
-        pair_idx = torch.full((B, 1, 2), -1, dtype=torch.long, device=device)
-        pair_mask = torch.zeros((B, 1), dtype=torch.bool, device=device)
-        head_rep = tail_rep = torch.zeros((B, 1, D), dtype=span_rep.dtype, device=device)
-        return pair_idx, pair_mask, head_rep, tail_rep
+    P = E * E
+    valid_pairs_flat = valid_pairs_full.reshape(B, P)  # (B, P)
 
-    pair_idx = torch.full((B, N, 2), -1, dtype=torch.long, device=device)
-    pair_mask = torch.zeros((B, N), dtype=torch.bool, device=device)
+    pair_counts = valid_pairs_flat.to(torch.long).sum(dim=1)   # (B,)
+    max_pairs = pair_counts.max()                              # scalar tensor
+    max_pairs = max_pairs.clamp_min(1)                         # avoid zero-width outputs
 
-    for b, pairs in enumerate(batch_pair_lists):
-        m = pairs.shape[0]
-        pair_idx[b, :m] = pairs
-        pair_mask[b, :m] = True
+    pair_idx_full = torch.stack(
+        [head_grid.reshape(P), tail_grid.reshape(P)],
+        dim=-1,
+    )  # (P, 2)
 
-    batch_idx = torch.arange(B, device=device).unsqueeze(1)
-    head_rep = span_rep[batch_idx, pair_idx[..., 0].clamp_min(0)]
-    tail_rep = span_rep[batch_idx, pair_idx[..., 1].clamp_min(0)]
+
+    positions = torch.arange(P, device=device, dtype=torch.long).unsqueeze(0).expand(B, P)
+    sort_key = positions + (~valid_pairs_flat).to(torch.long) * P
+    order = torch.argsort(sort_key, dim=1)  # (B, P)
+
+    # Reorder pair indices and validity mask
+    pair_idx_full_batched = pair_idx_full.unsqueeze(0).expand(B, P, 2)  # (B, P, 2)
+    pair_idx_packed = torch.gather(
+        pair_idx_full_batched,
+        dim=1,
+        index=order.unsqueeze(-1).expand(B, P, 2),
+    )  # (B, P, 2)
+
+    pair_mask_packed = torch.gather(
+        valid_pairs_flat,
+        dim=1,
+        index=order,
+    )  # (B, P)
+
+    pair_idx = pair_idx_packed[:, :max_pairs, :]   # (B, M, 2)
+    pair_mask = pair_mask_packed[:, :max_pairs]    # (B, M)
+
+    neg_one = torch.full_like(pair_idx, -1)
+    pair_idx = torch.where(pair_mask.unsqueeze(-1), pair_idx, neg_one)
+
+    head_idx = pair_idx[..., 0].clamp_min(0)  # (B, M)
+    tail_idx = pair_idx[..., 1].clamp_min(0)  # (B, M)
+
+    head_rep = torch.gather(
+        span_rep,
+        dim=1,
+        index=head_idx.unsqueeze(-1).expand(-1, -1, D),
+    )  # (B, M, D)
+
+    tail_rep = torch.gather(
+        span_rep,
+        dim=1,
+        index=tail_idx.unsqueeze(-1).expand(-1, -1, D),
+    )  # (B, M, D)
+
+    pair_mask_f = pair_mask.unsqueeze(-1).to(span_rep.dtype)
+    head_rep = head_rep * pair_mask_f
+    tail_rep = tail_rep * pair_mask_f
 
     return pair_idx, pair_mask, head_rep, tail_rep
-
 
 def extract_spans_from_tokens(
     scores: torch.Tensor,
