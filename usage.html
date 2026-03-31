@@ -150,7 +150,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#local-models-and-caching">Local Models and Caching</a><ul>
 <li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
 <li><a class="reference internal" href="#device-selection">Device Selection</a></li>
-<li><a class="reference internal" href="#model-compilation-pytorch-2-0">Model Compilation (PyTorch 2.0+)</a></li>
+<li><a class="reference internal" href="#quantization-compilation-flashdeberta">Quantization, Compilation &amp; FlashDeBERTa</a></li>
 <li><a class="reference internal" href="#accelerating-inference-with-sequence-packing">&#9889; Accelerating Inference with Sequence Packing</a></li>
 <li><a class="reference internal" href="#usage-with-spacy">&#128268; Usage with spaCy</a><ul>
 <li><a class="reference internal" href="#expected-output">Expected Output</a></li>
@@ -576,20 +576,67 @@ data-aria-dark="Switch to auto color mode">
 </span></pre></div>
 </div>
 </section>
-<section id="model-compilation-pytorch-2-0">
-<h3>Model Compilation (PyTorch 2.0+)<a class="headerlink" href="#model-compilation-pytorch-2-0" title="Link to this heading">¶</a></h3>
-<p>Compile models for faster inference:</p>
+<section id="quantization-compilation-flashdeberta">
+<h3>Quantization, Compilation &amp; FlashDeBERTa<a class="headerlink" href="#quantization-compilation-flashdeberta" title="Link to this heading">¶</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">quantize=True</span></code> and <code class="docutils literal notranslate"><span class="pre">compile_torch_model=True</span></code> for up to ~1.9x faster GPU inference with zero quality loss:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="c1"># Load and compile (requires PyTorch 2.0+ and CUDA)</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="5">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="n">compile_torch_model</span><span class="o">=</span><span class="kc">True</span>
-</span><span data-line="7"><span class="p">)</span>
-</span><span data-line="8">
-</span><span data-line="9"><span class="c1"># Expect ~2x speedup on compatible hardware</span>
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="4">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">quantize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># or &quot;fp16&quot;, &quot;bf16&quot;</span>
+</span><span data-line="7">    <span class="n">compile_torch_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="8"><span class="p">)</span>
 </span></pre></div>
 </div>
+<p>Or apply after loading:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>         <span class="c1"># fp16 half-precision (default)</span>
+</span><span data-line="3"><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>   <span class="c1"># bfloat16 — better numerical stability, slightly less speedup</span>
+</span><span data-line="4"><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>          <span class="c1"># torch.compile with dynamic shapes</span>
+</span></pre></div>
+</div>
+<p>Compilation is especially beneficial for short sequences, where the overhead of the standard eager execution is proportionally larger. For longer sequences, <a class="reference internal" href="#-using-flashdeberta"><span class="xref myst">FlashDeBERTa</span></a> is recommended as it scales much better with sequence length.</p>
+<p><strong>Benchmarks</strong> (CoNLL-2003 strict F1, <code class="docutils literal notranslate"><span class="pre">gliner_medium-v2.1</span></code>, RTX 5090):</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Condition</p></th>
+<th class="head text-center"><p>F1</p></th>
+<th class="head text-center"><p>Speedup</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GPU fp32 (baseline)</p></td>
+<td class="text-center"><p>0.8107</p></td>
+<td class="text-center"><p>1.00x</p></td>
+</tr>
+<tr class="row-odd"><td><p>+ quantize (fp16)</p></td>
+<td class="text-center"><p>0.8107</p></td>
+<td class="text-center"><p>1.35x</p></td>
+</tr>
+<tr class="row-even"><td><p>+ compile</p></td>
+<td class="text-center"><p>0.8107</p></td>
+<td class="text-center"><p>1.31x</p></td>
+</tr>
+<tr class="row-odd"><td><p><strong>+ quantize + compile</strong></p></td>
+<td class="text-center"><p><strong>0.8107</strong></p></td>
+<td class="text-center"><p><strong>1.94x</strong></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><strong>Quantization options:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize=True</span></code> or <code class="docutils literal notranslate"><span class="pre">quantize=&quot;fp16&quot;</span></code> — float16 half-precision. Best GPU speedup (~1.35x).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize=&quot;bf16&quot;</span></code> — bfloat16. Better numerical stability, slightly less speedup (~1.2x).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize=&quot;int8&quot;</span></code> — int8 quantization. On CPU, uses built-in FBGEMM int8 kernels (~1.6x speedup). On GPU, uses <a class="reference external" href="https://github.com/pytorch/ao">torchao</a> int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT). Stock DeBERTa-based models lose accuracy with int8.</p></li>
+<li><p>On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.</p></li>
+</ul>
+<p><strong>Compilation notes:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">compile_torch_model=True</span></code> uses <a class="reference external" href="https://pytorch.org/docs/stable/torch.compiler.html">torch.compile</a> which JIT-compiles the model via <a class="reference external" href="https://github.com/triton-lang/triton">Triton</a> kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on <strong>Linux and WSL</strong> (not native Windows or macOS).</p></li>
+</ul>
 </section>
 <section id="accelerating-inference-with-sequence-packing">
 <h3>⚡ Accelerating Inference with Sequence Packing<a class="headerlink" href="#accelerating-inference-with-sequence-packing" title="Link to this heading">¶</a></h3>
