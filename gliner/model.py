@@ -227,8 +227,141 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         self._inference_packing_config = config
 
     def compile(self):
-        """Compile the model using torch.compile for optimization."""
-        self.model = torch.compile(self.model)
+        """Compile the model using torch.compile for optimization.
+
+        Uses ``dynamic=True`` to generate shape-generic kernels, which avoids
+        recompilation on variable-length NER inputs. Also enables
+        ``capture_scalar_outputs`` to trace through data-dependent shape
+        operations (e.g., computing max number of entity types per batch).
+
+        Best combined with ``quantize()`` for maximum throughput (~1.9x over fp32).
+
+        When FlashDeBERTa is active, its custom Triton kernels are incompatible
+        with torch.compile tracing.  The encoder forward is automatically
+        wrapped with ``torch.compiler.disable`` so the rest of the model
+        (span representation, scoring, etc.) still benefits from compilation.
+        """
+        torch._dynamo.config.capture_scalar_outputs = True
+
+        # FlashDeBERTa uses hand-written Triton kernels that torch.compile cannot trace. 
+        try:
+            bert_layer = self.model.token_rep_layer.bert_layer
+            model_cls = bert_layer.model.__class__.__name__
+            if model_cls == "FlashDebertaV2Model":
+                bert_layer.forward = torch.compiler.disable(bert_layer.forward)
+        except AttributeError:
+            pass  # non-standard architecture, skip
+
+        self.model = torch.compile(self.model, dynamic=True)
+
+    _QUANTIZE_DTYPES = {
+        "fp16": torch.float16,
+        "float16": torch.float16,
+        "half": torch.float16,
+        "bf16": torch.bfloat16,
+        "bfloat16": torch.bfloat16,
+        "int8": "int8",
+    }
+
+    def quantize(self, dtype: str = "fp16") -> None:
+        """Apply quantization to the model.
+
+        Args:
+            dtype: Quantization type. Options:
+                - ``"fp16"`` (default): float16 half-precision. On GPU, uses Tensor Core
+                  acceleration for ~1.4x speedup. On CPU, applies dynamic quantization
+                  (reduces memory, no speed benefit).
+                - ``"bf16"``: bfloat16 half-precision. Better numerical stability than
+                  fp16 with slightly less speedup (~1.2x).
+                - ``"int8"``: int8 quantization (GPU and CPU). On CPU, uses PyTorch's
+                  built-in dynamic quantization with FBGEMM int8 kernels (~1.6x
+                  speedup). On GPU, uses ``torchao`` int8 weight-only quantization
+                  (~50% memory reduction, no speed gain; requires the ``torchao``
+                  package). Stock DeBERTa-based models lose accuracy with int8;
+                  use this with models that have been fine-tuned with
+                  quantization-aware training (QAT).
+
+        Raises:
+            RuntimeError: If the model is an ONNX model (use ONNX quantization instead).
+            ValueError: If *dtype* is not a recognized quantization type.
+            ImportError: If ``torchao`` is not installed and int8 on GPU is requested.
+
+        Examples:
+            >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", map_location="cuda")
+            >>> model.quantize()           # fp16 half-precision on GPU — ~1.4x faster
+            >>> model.quantize("bf16")     # bfloat16 on GPU — ~1.2x faster
+            >>> model.quantize("int8")     # int8 quantization (torchao on GPU, FBGEMM on CPU)
+        """
+        if self.onnx_model:
+            raise RuntimeError(
+                "Cannot apply PyTorch quantization to an ONNX model. "
+                "Use export_to_onnx(quantize=True) for ONNX quantization."
+            )
+
+        dtype_lower = dtype.lower()
+        if dtype_lower not in self._QUANTIZE_DTYPES:
+            raise ValueError(
+                f"Unknown quantize dtype {dtype!r}. "
+                f"Supported: {sorted(self._QUANTIZE_DTYPES.keys())}"
+            )
+        torch_dtype = self._QUANTIZE_DTYPES[dtype_lower]
+
+        if torch_dtype == "int8":
+            self._apply_int8_quantization()
+            return
+
+        if self.device.type == "cuda":
+            if torch_dtype == torch.bfloat16:
+                self.model.bfloat16()
+                logger.info("Applied bfloat16 half-precision to model (GPU).")
+            else:
+                self.model.half()
+                logger.info("Applied float16 half-precision to model (GPU).")
+        else:
+            warnings.warn(
+                f"{dtype_lower} quantization on CPU reduces memory usage but does not "
+                "improve inference speed. For faster inference, use a CUDA GPU with "
+                "`map_location='cuda'`.",
+                stacklevel=2,
+            )
+            if torch_dtype == torch.bfloat16:
+                self.model.bfloat16()
+                logger.info("Applied bfloat16 precision to model (CPU).")
+            else:
+                self.model = torch.ao.quantization.quantize_dynamic(
+                    self.model, {nn.Linear}, dtype=torch.float16
+                )
+                logger.info("Applied float16 dynamic quantization to all nn.Linear layers (CPU).")
+
+    def _apply_int8_quantization(self) -> None:
+        """Apply int8 quantization using the best backend for the current device.
+
+        - **CPU**: Uses ``torch.ao.quantization.quantize_dynamic`` with FBGEMM
+          int8 kernels.  ~1.6x faster than fp32, no extra dependencies.
+        - **GPU**: Uses ``torchao.quantize_`` with ``Int8WeightOnlyConfig``.
+          Requires the ``torchao`` package.
+        """
+        if self.device.type == "cpu":
+            self.model = torch.ao.quantization.quantize_dynamic(
+                self.model, {nn.Linear}, dtype=torch.qint8
+            )
+            logger.info(
+                "Applied int8 dynamic quantization to all nn.Linear layers (CPU)."
+            )
+        else:
+            try:
+                import torchao
+                from torchao.quantization import Int8WeightOnlyConfig
+            except ImportError:
+                raise ImportError(
+                    "int8 quantization on GPU requires the 'torchao' package. "
+                    "Install it with: pip install torchao"
+                ) from None
+
+            torchao.quantize_(self.model, Int8WeightOnlyConfig())
+            logger.info(
+                "Applied int8 weight-only quantization via torchao (GPU)."
+            )
 
     def _get_special_tokens(self):
         """Get special tokens to add to tokenizer.
@@ -455,6 +588,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: bool = True,
         backbone_from_pretrained: bool = True,
         compile_torch_model: bool = False,
+        quantize: Union[bool, str] = False,
         map_location: str = "cpu",
         # Config overrides
         max_length: Optional[int] = None,
@@ -476,6 +610,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
+                (requires ``torchao``). ``False`` to disable.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -552,6 +689,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     "Cannot compile model on CPU. Set `map_location='cuda'` to compile.",
                     stacklevel=2,
                 )
+
+        if quantize:
+            dtype = quantize if isinstance(quantize, str) else "fp16"
+            instance.quantize(dtype)
+
         instance.eval()
         return instance
 
@@ -572,6 +714,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        quantize: Union[bool, str] = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         session_options=None,
@@ -599,6 +742,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
+                (requires ``torchao``). ``False`` to disable.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -665,6 +811,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     instance.compile()
                 else:
                     warnings.warn("Cannot compile model on CPU. Set `map_location='cuda'` to compile.", stacklevel=2)
+
+            if quantize:
+                dtype = quantize if isinstance(quantize, str) else "fp16"
+                instance.quantize(dtype)
 
             instance.eval()
         else:
@@ -2222,7 +2372,6 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         word_input_spans = None
         if input_spans is not None:
             valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            print(valid_input_spans)
             word_input_spans = self._convert_spans_to_word_indices(
                 valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
             )
@@ -3113,6 +3262,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         load_tokenizer: Optional[bool] = None,
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
+        quantize: Union[bool, str] = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
@@ -3141,6 +3291,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer: Whether to load tokenizer.
             resize_token_embeddings: Whether to resize embeddings.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
+                (requires ``torchao``). ``False`` to disable.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -3155,7 +3308,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         Examples:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
             >>> model = GLiNER.from_pretrained("knowledgator/gliner-bi-small-v1.0")
-            >>> model = GLiNER.from_pretrained("path/to/local/model")
+            >>> model = GLiNER.from_pretrained("path/to/local/model", quantize=True)
         """
         model_dir = Path(model_id)
         if not model_dir.exists():
@@ -3204,6 +3357,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             load_tokenizer=load_tokenizer,
             resize_token_embeddings=resize_token_embeddings,
             compile_torch_model=compile_torch_model,
+            quantize=quantize,
             max_length=max_length,
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
@@ -3222,6 +3376,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: bool = True,
         backbone_from_pretrained: bool = True,
         compile_torch_model: bool = False,
+        quantize: Union[bool, str] = False,
         map_location: str = "cpu",
         # Config overrides
         max_length: Optional[int] = None,
@@ -3239,6 +3394,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings: Whether to resize token embeddings.
             backbone_from_pretrained: Whether to load the backbone encoder from pretrained weights.
             compile_torch_model: Whether to compile with torch.compile.
+            quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
+                ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
+                (requires ``torchao``). ``False`` to disable.
             map_location: Device to map model to.
             max_length: Override max_length in config.
             max_width: Override max_width in config.
@@ -3277,6 +3435,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings=resize_token_embeddings,
             backbone_from_pretrained=backbone_from_pretrained,
             compile_torch_model=compile_torch_model,
+            quantize=quantize,
             map_location=map_location,
             max_length=max_length,
             max_width=max_width,
