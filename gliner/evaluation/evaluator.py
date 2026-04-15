@@ -166,7 +166,10 @@ class BaseNEREvaluator(BaseEvaluator):
         """
         all_ents = []
         for ent in ents:
-            all_ents.append([ent[2], (ent[0], ent[1])])
+            if hasattr(ent, "start"):
+                all_ents.append([ent.entity_type, (ent.start, ent.end)])
+            else:
+                all_ents.append([ent[2], (ent[0], ent[1])])
         return all_ents
 
     def transform_data(self):

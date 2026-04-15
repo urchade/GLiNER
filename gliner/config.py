@@ -39,6 +39,8 @@ class BaseGLiNERConfig(PretrainedConfig):
         span_loss_coef: float = 1.0,
         represent_spans: bool = False,
         neg_spans_ratio: float = 1.0,
+        precomputed_prompts_mode: Optional[bool] = None,
+        id_to_classes: Optional[dict] = None,
         **kwargs,
     ):
         """Initialize BaseGLiNERConfig.
@@ -72,6 +74,8 @@ class BaseGLiNERConfig(PretrainedConfig):
             span_loss_coef (float, optional): Span loss coefficient. Defaults to 1.0.
             represent_spans (bool, optional): Whether to represent spans. Defaults to False.
             neg_spans_ratio (float, optional): Ratio of negative spans. Defaults to 1.0.
+            precomputed_prompts_mode (Optional[bool]): Whether to use precomputed prompts. Defaults to None.
+            id_to_classes (Optional[dict]): Mapping from class IDs to class names. Defaults to None.
             **kwargs: Additional keyword arguments passed to parent class.
         """
         super().__init__(**kwargs)
@@ -108,6 +112,8 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.span_loss_coef = span_loss_coef
         self.represent_spans = represent_spans
         self.neg_spans_ratio = neg_spans_ratio
+        self.precomputed_prompts_mode = precomputed_prompts_mode
+        self.id_to_classes = id_to_classes
 
 
 class UniEncoderConfig(BaseGLiNERConfig):
@@ -201,6 +207,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         augment_ent_drop_prob=(0.0, 1.0),
         augment_rel_drop_prob=(0.0, 0.3),
         augment_add_other_prob=0.5,
+        rel_id_to_classes: Optional[dict] = None,
         **kwargs,
     ):
         """Initialize UniEncoderRelexConfig.
@@ -223,6 +230,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
                 the per-type entity drop probability. Defaults to (0.0, 0.4).
             augment_rel_drop_prob (tuple, optional): Range (min, max) from which to sample
                 the per-type relation drop probability. Defaults to (0.0, 0.4).
+            rel_id_to_classes (Optional[dict]): Mapping from relation class IDs to class names. Defaults to None.
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 
         Raises:
@@ -241,6 +249,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         self.augment_ent_drop_prob = tuple(augment_ent_drop_prob)
         self.augment_rel_drop_prob = tuple(augment_rel_drop_prob)
         self.augment_add_other_prob = augment_add_other_prob
+        self.rel_id_to_classes = rel_id_to_classes
 
 
 class UniEncoderSpanRelexConfig(UniEncoderRelexConfig):

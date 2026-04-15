@@ -69,6 +69,7 @@ from .modeling.base import (
     UniEncoderSpanDecoderModel,
     UniEncoderTokenDecoderModel,
 )
+from .modeling.utils import extract_prompt_features
 from .data_processing import (
     BaseProcessor,
     BiEncoderSpanProcessor,
@@ -1715,6 +1716,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             **kwargs,
         )
 
+    @torch.no_grad()
     def evaluate(
         self,
         test_data: List[Dict[str, Any]],
@@ -1760,6 +1762,124 @@ class BaseEncoderGLiNER(BaseGLiNER):
         out, f1 = evaluator.evaluate()
 
         return out, f1
+
+    @torch.no_grad()
+    def compress_prompt_embeddings(
+        self,
+        texts: List[str],
+        labels: List[str],
+        rel_labels: Optional[List[str]] = None,
+        batch_size: int = 8,
+    ) -> None:
+        """Precompute averaged prompt embeddings for each label.
+
+        Runs the normal forward pass over (texts, labels) pairs, extracts the
+        per-label prompt embedding from each example, and stores the mean per
+        label on the underlying model. Sets ``config.precomputed_prompts_mode``
+        to True so subsequent inference/training will skip label-prepending and
+        look up the stored embeddings instead. Relation labels are supported for
+        relation-extraction models via ``rel_labels``.
+
+        Args:
+            texts: List of raw input texts used as contexts for averaging.
+            labels: Entity labels to compress.
+            rel_labels: Optional relation labels (relex models only).
+            batch_size: Batch size used while running the model.
+        """
+        if not texts or not labels:
+            raise ValueError("`texts` and `labels` must both be non-empty.")
+
+        self.eval()
+        device = self.device
+        D = self.config.hidden_size
+
+        # Force the normal (non-precomputed) code path while we compute the stats.
+        prev_mode = getattr(self.config, "precomputed_prompts_mode", None)
+        self.config.precomputed_prompts_mode = False
+        try:
+            labels = list(dict.fromkeys(labels))
+            rel_labels = list(dict.fromkeys(rel_labels)) if rel_labels else None
+
+            L = len(labels)
+            L_rel = len(rel_labels) if rel_labels else 0
+            ent_sum = torch.zeros(L, D, device=device)
+            rel_sum = torch.zeros(L_rel, D, device=device) if L_rel else None
+
+            tokens, _, _ = self.prepare_inputs(texts)
+            input_x = self.prepare_base_input(tokens)
+
+            collator_kwargs = dict(
+                return_tokens=True,
+                return_entities=True,
+                return_id_to_classes=True,
+                prepare_labels=False,
+            )
+            if rel_labels is not None:
+                collator_kwargs["return_rel_id_to_classes"] = True
+
+            collator = self.data_collator_class(
+                self.config, data_processor=self.data_processor, **collator_kwargs
+            )
+
+            def collate_fn(batch):
+                if rel_labels is not None:
+                    return collator(batch, entity_types=labels, relation_types=rel_labels)
+                return collator(batch, entity_types=labels)
+
+            loader = DataLoader(
+                input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
+            )
+
+            for batch in tqdm(loader, desc="Compressing prompts"):
+                batch_gpu = {
+                    k: (v.to(device) if isinstance(v, torch.Tensor) else v)
+                    for k, v in batch.items()
+                }
+                input_ids = batch_gpu["input_ids"]
+                attention_mask = batch_gpu["attention_mask"]
+
+                # Encode once; pull pre-projection prompt embeddings directly.
+                token_embeds = self.model.token_rep_layer(input_ids, attention_mask)
+                batch_size_e, _, embed_dim_e = token_embeds.shape
+
+                prompts_emb, _ = extract_prompt_features(
+                    self.config.class_token_index,
+                    token_embeds,
+                    input_ids,
+                    attention_mask,
+                    batch_size_e,
+                    embed_dim_e,
+                    self.config.embed_ent_token,
+                )
+                # prompts_emb is (B, L, D) in the canonical `labels` order since we
+                ent_sum = ent_sum + prompts_emb.detach().sum(dim=0).to(device)
+
+                if rel_labels is not None and getattr(self.config, "rel_token_index", None) is not None:
+                    rel_emb, _ = extract_prompt_features(
+                        self.config.rel_token_index,
+                        token_embeds,
+                        input_ids,
+                        attention_mask,
+                        batch_size_e,
+                        embed_dim_e,
+                        self.config.embed_rel_token,
+                    )
+                    rel_sum = rel_sum + rel_emb.detach().sum(dim=0).to(device)
+
+            avg = ent_sum / len(texts)
+            self.model.set_precomputed_prompts(labels, avg, rel=False)
+            self.config.id_to_classes = {i + 1: l for i, l in enumerate(labels)}
+
+            if rel_labels is not None:
+                rel_avg = rel_sum / len(texts)
+                self.model.set_precomputed_prompts(rel_labels, rel_avg, rel=True)
+                self.config.rel_id_to_classes = {i + 1: l for i, l in enumerate(rel_labels)}
+
+        except Exception:
+            self.config.precomputed_prompts_mode = prev_mode
+            raise
+
+        self.config.precomputed_prompts_mode = True
 
 
 class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
@@ -2847,6 +2967,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         return all_relations
 
+    @torch.no_grad()
     def evaluate(
         self,
         test_data: List[Dict[str, Any]],

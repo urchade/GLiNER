@@ -94,9 +94,15 @@ class GLiNERRelexOutput(GLiNERBaseOutput):
             relations between entity pairs. Shape: [batch_size, num_relations, num_relation_types].
         rel_mask (Optional[torch.FloatTensor]): Mask indicating valid relation
             predictions. Shape: [batch_size, num_relations].
+        rel_prompts_embedding (Optional[torch.FloatTensor]): Embeddings for
+            relation type prompts/labels. Shape: [batch_size, num_relation_types, hidden_size].
+        rel_prompts_embedding_mask (Optional[torch.LongTensor]): Attention mask
+            for relation prompt embeddings. Shape: [batch_size, num_relation_types].
     """
 
     rel_idx: Optional[torch.LongTensor] = None
     rel_logits: Optional[torch.FloatTensor] = None
     rel_mask: Optional[torch.FloatTensor] = None
     entity_spans: Optional[torch.LongTensor] = None
+    rel_prompts_embedding: Optional[torch.FloatTensor] = None
+    rel_prompts_embedding_mask: Optional[torch.LongTensor] = None

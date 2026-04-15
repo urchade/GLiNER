@@ -74,6 +74,54 @@ class BaseModel(ABC, nn.Module):
         self.config = config
         self.from_pretrained = from_pretrained
         self.cache_dir = cache_dir
+        # Precomputed prompt storage. Populated via compress_prompt_embeddings.
+        self.register_parameter("precomputed_prompts", None)
+        self.register_parameter("precomputed_rel_prompts", None)
+        self._precomputed_labels: list = []
+        self._precomputed_rel_labels: list = []
+
+    def set_precomputed_prompts(
+        self, labels: list, embeddings: torch.Tensor, rel: bool = False
+    ) -> None:
+        """Store averaged prompt embeddings keyed by label name.
+
+        Args:
+            labels: Ordered list of label names (length N).
+            embeddings: Tensor of shape (N, D) with one embedding per label.
+            rel: If True, store as relation prompts, otherwise entity prompts.
+        """
+        param_name = "precomputed_rel_prompts" if rel else "precomputed_prompts"
+        labels_attr = "_precomputed_rel_labels" if rel else "_precomputed_labels"
+        param = nn.Parameter(embeddings.detach().clone(), requires_grad=False)
+        # Replace existing parameter safely.
+        if param_name in self._parameters:
+            del self._parameters[param_name]
+        self.register_parameter(param_name, param)
+        setattr(self, labels_attr, list(labels))
+
+    def lookup_precomputed_prompts(
+        self,
+        batch_size: int,
+        device: torch.device,
+        rel: bool = False,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Return precomputed prompts as (B, L, D) with an all-ones (B, L) mask.
+
+        The stored (L, D) matrix is built once by ``compress_prompt_embeddings``
+        in a canonical label order; inference just expands it to the batch size.
+        """
+        param_name = "precomputed_rel_prompts" if rel else "precomputed_prompts"
+        stored: Optional[torch.Tensor] = getattr(self, param_name)
+        if stored is None:
+            raise RuntimeError(
+                f"Precomputed prompts not initialised (attr={param_name}). "
+                f"Call compress_prompt_embeddings first."
+            )
+        stored_dev = stored.to(device) if stored.device != device else stored
+        L = stored_dev.size(0)
+        out = stored_dev.unsqueeze(0).expand(batch_size, -1, -1)
+        mask = torch.ones(batch_size, L, dtype=torch.long, device=device)
+        return out, mask
 
     @abstractmethod
     def get_representations(self) -> Tuple[torch.Tensor, ...]:
@@ -308,11 +356,25 @@ class BaseUniEncoderModel(BaseModel):
         """
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = (
-            self._extract_prompt_features_and_word_embeddings(
-                token_embeds, input_ids, attention_mask, text_lengths, words_mask
-            )
+        use_precomputed = (
+            getattr(self.config, "precomputed_prompts_mode", False)
+            and getattr(self, "precomputed_prompts", None) is not None
         )
+        if use_precomputed:
+            batch_size, _, embed_dim = token_embeds.shape
+            max_text_length = text_lengths.max()
+            words_embedding, mask = extract_word_embeddings(
+                token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim, text_lengths
+            )
+            prompts_embedding, prompts_embedding_mask = self.lookup_precomputed_prompts(
+                batch_size, device=token_embeds.device, rel=False
+            )
+        else:
+            prompts_embedding, prompts_embedding_mask, words_embedding, mask = (
+                self._extract_prompt_features_and_word_embeddings(
+                    token_embeds, input_ids, attention_mask, text_lengths, words_mask
+                )
+            )
 
         if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
@@ -2200,11 +2262,26 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **encoder_kwargs)
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = (
-            self._extract_prompt_features_and_word_embeddings(
-                token_embeds, input_ids, attention_mask, text_lengths, words_mask
-            )
+        use_precomputed = (
+            getattr(self.config, "precomputed_prompts_mode", False)
+            and getattr(self, "precomputed_prompts", None) is not None
         )
+        if use_precomputed:
+            batch_size_e, _, embed_dim_e = token_embeds.shape
+            max_text_length = text_lengths.max()
+            words_embedding, mask = extract_word_embeddings(
+                token_embeds, words_mask, attention_mask,
+                batch_size_e, max_text_length, embed_dim_e, text_lengths,
+            )
+            prompts_embedding, prompts_embedding_mask = self.lookup_precomputed_prompts(
+                batch_size_e, device=token_embeds.device, rel=False
+            )
+        else:
+            prompts_embedding, prompts_embedding_mask, words_embedding, mask = (
+                self._extract_prompt_features_and_word_embeddings(
+                    token_embeds, input_ids, attention_mask, text_lengths, words_mask
+                )
+            )
 
         if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask)
@@ -2236,7 +2313,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         )
 
         pair_idx, pair_mask, pair_scores = None, None, None
-        rel_prompts_embedding_mask = None
+        rel_prompts_embedding , rel_prompts_embedding_mask = None, None
         pred_adj_matrix = None
 
         has_relex = hasattr(self, "relations_rep_layer") or hasattr(self, "pair_rep_layer") or hasattr(self, "triples_score_layer")
@@ -2245,15 +2322,20 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             if hasattr(self, "relations_rep_layer"):
                 pred_adj_matrix = self.relations_rep_layer(target_span_rep, target_span_mask)
 
-            rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
-                self.config.rel_token_index,
-                token_embeds,
-                input_ids,
-                attention_mask,
-                batch_size,
-                embed_dim,
-                self.config.embed_rel_token,
-            )
+            if use_precomputed and getattr(self, "precomputed_rel_prompts", None) is not None:
+                rel_prompts_embedding, rel_prompts_embedding_mask = self.lookup_precomputed_prompts(
+                    batch_size, device=token_embeds.device, rel=True
+                )
+            else:
+                rel_prompts_embedding, rel_prompts_embedding_mask = extract_prompt_features(
+                    self.config.rel_token_index,
+                    token_embeds,
+                    input_ids,
+                    attention_mask,
+                    batch_size,
+                    embed_dim,
+                    self.config.embed_rel_token,
+                )
 
             B, _, D = target_span_rep.shape
             C_rel = rel_prompts_embedding.size(1)
@@ -2354,6 +2436,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             rel_idx=None if is_training else pair_idx,
             rel_logits=None if is_training else pair_scores,
             rel_mask=None if is_training else pair_mask,
+            rel_prompts_embedding=rel_prompts_embedding,
+            rel_prompts_embedding_mask=rel_prompts_embedding_mask,
             entity_spans=None if is_training else entity_spans,
         )
         return output
