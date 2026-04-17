@@ -1,3 +1,9 @@
+<div align="center">
+  <a href="https://pioneer.ai/gliner" target="_blank" rel="noopener noreferrer">
+    <img src="image/GitHub.png" alt="Pioneer AI - Fine-tune GLiNER with a single prompt" width="100%"/>
+  </a>
+</div>
+
 > [!IMPORTANT]
 > **🚀 GLiNER2 is Now Available from [Fastino Labs](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
 
@@ -16,6 +22,9 @@
         <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open GLiNER In Colab"></a>
         <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg" alt="Open GLiNER In HF Spaces"></a>
         <a href="https://huggingface.co/models?library=gliner&sort=trending"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow" alt="HuggingFace Models"></a>
+        <br>
+        <a href="https://www.reddit.com/r/GLiNER/"><img src="https://img.shields.io/badge/Reddit-r%2FGLiNER-FF4500?logo=reddit&logoColor=white" alt="Reddit r/GLiNER"></a>
+        <a href="https://discord.gg/fastino"><img src="https://img.shields.io/badge/Discord-Fastino%20Community-5865F2?logo=discord&logoColor=white" alt="Fastino Discord"></a>
     </div>
     <br>
 </div>
