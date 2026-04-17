@@ -1534,6 +1534,38 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         return outputs
 
+    def prepapre_batch(self, texts, labels, input_spans):
+        """Prepare a batch for inference. This can be overridden for custom batch preparation logic."""
+        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(texts)
+        input_x = self.prepare_base_input(tokens)
+        
+        raw_batch = self.data_processor.collate_raw_batch(input_x, entity_types=labels)
+        return raw_batch, all_start_token_idx_to_text_idx, all_end_token_idx_to_text
+
+    def run_model(self, raw_batch, **external_inputs):
+        model_input = self.data_collator.collate_function(raw_batch)
+        self.data_collator._add_span_fields(model_input, raw_batch)
+        self.data_collator._add_conditional_returns(model_input, raw_batch)
+        self.data_collator._filter_none_values(model_input)
+
+        model_output = self.model(**model_input, **external_inputs)
+        return model_output
+
+    def decode_batch(self, model_output, batch, threshold, flat_ner, multi_label, return_class_probs=False):
+        decoded = self.decoder.decode(
+            batch["tokens"],
+            batch["id_to_classes"],
+            model_output[0],
+            span_idx=model_output.span_idx,
+            span_mask=model_output.span_mask,
+            span_logits=model_output.span_logits,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            return_class_probs=return_class_probs,
+        )
+        return decoded
+        
     @torch.no_grad()
     def inference(
         self,
