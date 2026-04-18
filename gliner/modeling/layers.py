@@ -1,4 +1,4 @@
-from typing import List, Tuple, Optional
+from typing import List, Tuple, Optional, Union
 
 import torch
 import torch.nn.functional as F
@@ -37,7 +37,11 @@ class LstmSeq2SeqEncoder(nn.Module):
         )
 
     def forward(
-        self, x: torch.Tensor, mask: torch.Tensor, hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None
+        self,
+        x: torch.Tensor,
+        mask: torch.Tensor,
+        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
+        lengths: Optional[Union[List[int], torch.Tensor]] = None,
     ) -> torch.Tensor:
         """Encodes input sequences through the LSTM.
 
@@ -46,12 +50,16 @@ class LstmSeq2SeqEncoder(nn.Module):
             mask: Binary mask tensor of shape (batch_size, seq_len) where 1 indicates
                 valid positions and 0 indicates padding.
             hidden: Optional initial hidden state tuple (h_0, c_0). Defaults to None.
+            lengths: Optional precomputed per-sample valid lengths. When provided by
+                the collator as a CPU list/tensor, avoids a ``mask.sum(dim=1).cpu()``
+                GPU→CPU sync on every forward.
 
         Returns:
             Encoded output tensor of shape (batch_size, seq_len, hidden_size).
         """
         # Packing the input sequence
-        lengths = mask.sum(dim=1).cpu()
+        if lengths is None:
+            lengths = mask.sum(dim=1).cpu()
         packed_x = pack_padded_sequence(x, lengths, batch_first=True, enforce_sorted=False)
 
         # Passing packed sequence through LSTM

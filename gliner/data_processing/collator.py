@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union, Optional
 
+import torch
+
 from .processor import (
     BaseProcessor,
     BiEncoderSpanProcessor,
@@ -75,6 +77,23 @@ class BaseDataCollator(ABC):
         """
         model_input = self.data_processor.collate_fn(raw_batch, **kwargs)
         return model_input
+
+    @staticmethod
+    def _add_precomputed_lengths(model_input: Dict[str, Any]) -> None:
+        """Precompute CPU-side lengths that the forward would otherwise derive via a GPU→CPU sync.
+
+        Call this while ``attention_mask`` / ``text_lengths`` are still on CPU (before
+        ``run_batch`` moves tensors to device). The resulting ``token_lengths`` and
+        ``word_lengths`` are Python lists, so they survive the move step unchanged and
+        are consumed by the encoder packing short-circuit and the LSTM packer.
+        """
+        attention_mask = model_input.get("attention_mask")
+        if isinstance(attention_mask, torch.Tensor) and "token_lengths" not in model_input:
+            model_input["token_lengths"] = attention_mask.sum(dim=-1, dtype=torch.int64).tolist()
+
+        text_lengths = model_input.get("text_lengths")
+        if isinstance(text_lengths, torch.Tensor) and "word_lengths" not in model_input:
+            model_input["word_lengths"] = text_lengths.view(-1).tolist()
 
     def _add_conditional_returns(self, model_input: Dict[str, Any], raw_batch: Dict[str, Any]) -> None:
         """
@@ -257,6 +276,7 @@ class SpanDataCollator(BaseSpanCollator):
                     model_input[field] = model_input.get(field)
 
         self._add_conditional_returns(model_input, raw_batch)
+        self._add_precomputed_lengths(model_input)
 
         return self._filter_none_values(model_input)
 
@@ -324,6 +344,7 @@ class TokenDataCollator(BaseTokenCollator):
 
         self._add_token_fields(model_input, raw_batch)
         self._add_conditional_returns(model_input, raw_batch)
+        self._add_precomputed_lengths(model_input)
 
         return self._filter_none_values(model_input)
 
@@ -460,6 +481,7 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
 
         if self.return_relations:
             model_input["relations"] = raw_batch.get("relations")
+        self._add_precomputed_lengths(model_input)
         return self._filter_none_values(model_input)
 
     def _filter_none_values(self, batch_dict: Dict[str, Any]) -> Dict[str, Any]:

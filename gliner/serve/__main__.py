@@ -117,7 +117,7 @@ def main():
     batch_group.add_argument(
         "--batch-wait-timeout-ms",
         type=float,
-        default=50.0,
+        default=10.0,
         help="Batch wait timeout in milliseconds",
     )
     batch_group.add_argument(

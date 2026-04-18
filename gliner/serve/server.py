@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
-from .config import GLiNERServeConfig
+from .config import GLiNERFactoryConfig
 from .memory import GLiNERMemoryEstimator
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class GLiNERServer:
         - Sequence packing for improved throughput
     """
 
-    def __init__(self, config: GLiNERServeConfig):
+    def __init__(self, config: GLiNERFactoryConfig):
         """Initialize the GLiNER server deployment.
 
         Args:
@@ -424,7 +424,7 @@ class GLiNERServer:
         return results
 
 
-def _build_deployment(config: GLiNERServeConfig):
+def _build_deployment(config: GLiNERFactoryConfig):
     """Build Ray Serve deployment from config."""
     from ray import serve
 
@@ -440,7 +440,7 @@ def _build_deployment(config: GLiNERServeConfig):
         max_ongoing_requests=config.max_ongoing_requests,
     )
     class GLiNERDeployment:
-        def __init__(self, serve_config: GLiNERServeConfig):
+        def __init__(self, serve_config: GLiNERFactoryConfig):
             self.server = GLiNERServer(serve_config)
             # Seed Ray's batcher with the pessimistic worst-case size so the
             # first batch is safe. ``_infer_batch`` re-calls ``batch_size_fn``
@@ -538,7 +538,7 @@ def _build_deployment(config: GLiNERServeConfig):
 
 
 def serve(
-    config: GLiNERServeConfig,
+    config: GLiNERFactoryConfig,
     blocking: bool = False,
 ) -> Any:
     """Start GLiNER Ray Serve deployment.
@@ -551,8 +551,8 @@ def serve(
         Ray Serve deployment handle for making predictions.
 
     Example:
-        >>> from gliner.serve import GLiNERServeConfig, serve
-        >>> config = GLiNERServeConfig(model="urchade/gliner_small-v2.1")
+        >>> from gliner.serve import GLiNERFactoryConfig, serve
+        >>> config = GLiNERFactoryConfig(model="urchade/gliner_small-v2.1")
         >>> handle = serve(config)
         >>> # Make predictions
         >>> ref = handle.predict.remote("John works at Google", ["person", "org"])
@@ -597,3 +597,134 @@ def shutdown() -> None:
     from ray import serve as ray_serve
 
     ray_serve.shutdown()
+
+
+class GLiNERFactory:
+    """vLLM-style synchronous facade over a GLiNER Ray Serve deployment.
+
+    Bundles config → deploy → client into one lifecycle-managed object so
+    callers never see Ray's ObjectRefs.
+
+    Pass a list of texts to ``predict`` to preserve dynamic batching: each
+    text is dispatched as a separate request so Ray Serve's ``@serve.batch``
+    can accumulate them into a single forward pass. A Python loop of
+    single-text calls would serialize and defeat batching.
+
+    Example:
+        >>> from gliner.serve import GLiNERFactory
+        >>> llm = GLiNERFactory(model="urchade/gliner_small-v2.1")
+        >>> outputs = llm.predict(
+        ...     ["John works at Google", "Paris is in France"],
+        ...     labels=["person", "organization", "location"],
+        ... )
+        >>> llm.shutdown()
+
+        Or as a context manager:
+        >>> with GLiNERFactory(model="urchade/gliner_small-v2.1") as llm:
+        ...     out = llm.predict("John works at Google", ["person", "org"])
+    """
+
+    def __init__(
+        self,
+        model: Optional[str] = None,
+        *,
+        config: Optional[GLiNERFactoryConfig] = None,
+        **kwargs,
+    ):
+        """Build a config (if not provided) and start the Ray Serve deployment.
+
+        Args:
+            model: Model name or path. Ignored if ``config`` is provided.
+            config: Prebuilt ``GLiNERFactoryConfig``. Mutually exclusive with
+                ``model``/``kwargs``.
+            **kwargs: Forwarded to ``GLiNERFactoryConfig`` when building one.
+        """
+        if config is not None:
+            if model is not None or kwargs:
+                raise ValueError(
+                    "Pass either `config` or `model`/kwargs, not both."
+                )
+        else:
+            if model is None:
+                raise ValueError("Must provide either `model` or `config`.")
+            config = GLiNERFactoryConfig(model=model, **kwargs)
+
+        self.config = config
+        self._handle = serve(config, blocking=False)
+        self._closed = False
+
+    @property
+    def handle(self):
+        """Underlying Ray Serve deployment handle — for async/advanced use."""
+        return self._handle
+
+    def predict(
+        self,
+        texts: Union[str, List[str]],
+        labels: List[str],
+        relations: Optional[List[str]] = None,
+        threshold: Optional[float] = None,
+        relation_threshold: Optional[float] = None,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Blocking prediction. Returns a dict for ``str`` input, list for list input."""
+        single = isinstance(texts, str)
+        items = [texts] if single else list(texts)
+
+        refs = [
+            self._handle.predict.remote(
+                t, labels, relations, threshold, relation_threshold,
+                flat_ner, multi_label,
+            )
+            for t in items
+        ]
+        results = [ref.result() for ref in refs]
+        return results[0] if single else results
+
+    async def predict_async(
+        self,
+        texts: Union[str, List[str]],
+        labels: List[str],
+        relations: Optional[List[str]] = None,
+        threshold: Optional[float] = None,
+        relation_threshold: Optional[float] = None,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        """Async prediction. Concurrent calls accumulate into one batch."""
+        import asyncio
+
+        single = isinstance(texts, str)
+        items = [texts] if single else list(texts)
+
+        refs = [
+            self._handle.predict.remote(
+                t, labels, relations, threshold, relation_threshold,
+                flat_ner, multi_label,
+            )
+            for t in items
+        ]
+        results = list(await asyncio.gather(*refs))
+        return results[0] if single else results
+
+    def shutdown(self) -> None:
+        """Tear down the Ray Serve deployment. Idempotent."""
+        if self._closed:
+            return
+        from ray import serve as ray_serve
+        ray_serve.shutdown()
+        self._closed = True
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.shutdown()
+        return False
+
+    def __del__(self):
+        try:
+            self.shutdown()
+        except Exception:
+            pass
