@@ -1,6 +1,6 @@
-# GLiNER Serve
+# Serving
 
-Ray Serve deployment for GLiNER with dynamic batching and memory-aware batch sizing.
+Production deployment for GLiNER via [Ray Serve](https://docs.ray.io/en/latest/serve/index.html), with dynamic batching, memory-aware batch sizing, precompiled power-of-two batch sizes, and multi-replica scaling. Source lives under [`gliner/serve/`](https://github.com/urchade/GLiNER/tree/main/gliner/serve).
 
 ## Installation
 
@@ -24,7 +24,25 @@ python -m gliner.serve --model urchade/gliner_small-v2.1
 
 ### Make Predictions
 
-**Python client:**
+**In-process (vLLM-style, recommended):**
+```python
+from gliner.serve import GLiNERFactory
+
+with GLiNERFactory(model="urchade/gliner_small-v2.1") as llm:
+    outputs = llm.predict(
+        ["John works at Google", "Paris is in France"],
+        labels=["person", "organization", "location"],
+    )
+    print(outputs)
+```
+
+`GLiNERFactory` bundles config → deploy → client into one lifecycle-managed
+object. Passing a list of texts preserves dynamic batching — each text is
+dispatched as a separate request so Ray Serve's ``@serve.batch`` accumulates
+them into a single forward pass. Use `predict_async` for concurrent calls
+from `asyncio`.
+
+**Remote Python client** (attach to a running deployment):
 ```python
 from gliner.serve import GLiNERClient
 
@@ -77,8 +95,10 @@ python -m gliner.serve \
 
 ## Programmatic Usage
 
+Preferred (vLLM-style):
+
 ```python
-from gliner.serve import GLiNERServeConfig, serve
+from gliner.serve import GLiNERFactory, GLiNERServeConfig
 
 config = GLiNERServeConfig(
     model="urchade/gliner_small-v2.1",
@@ -89,9 +109,19 @@ config = GLiNERServeConfig(
     enable_flashdeberta=True,
 )
 
-handle = serve(config)
+llm = GLiNERFactory(config=config)
+try:
+    result = llm.predict("John works at Google", ["person", "organization"])
+finally:
+    llm.shutdown()
+```
 
-# Make predictions via handle
+Low-level (direct handle, for advanced use — returns Ray ObjectRefs):
+
+```python
+from gliner.serve import GLiNERServeConfig, serve
+
+handle = serve(GLiNERServeConfig(model="urchade/gliner_small-v2.1"))
 ref = handle.predict.remote("John works at Google", ["person", "organization"])
 result = ref.result()
 ```
