@@ -166,6 +166,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.predict_entities"><code class="docutils literal notranslate">predict_entities()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.batch_predict_entities"><code class="docutils literal notranslate">batch_predict_entities()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.evaluate"><code class="docutils literal notranslate">evaluate()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.compress_prompt_embeddings"><code class="docutils literal notranslate">compress_prompt_embeddings()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.model.BaseBiEncoderGLiNER"><code class="docutils literal notranslate"><span class="pre">BaseBiEncoderGLiNER</span></code></a><ul>
@@ -900,6 +901,40 @@ the instance-level configuration set via configure_inference_packing is used.</p
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>Tuple</em>[<em>Any</em>, float]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.compress_prompt_embeddings">
+<span class="sig-name descname"><span class="pre">compress_prompt_embeddings</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_epochs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_lr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-05</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_output_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./distill_ckpt'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distill_train_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.compress_prompt_embeddings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.compress_prompt_embeddings" title="Link to this definition">¶</a></dt>
+<dd><p>Precompute averaged prompt embeddings for each label.</p>
+<p>Runs the normal forward pass over (texts, labels) pairs, extracts the
+per-label prompt embedding from each example, and stores the mean per
+label on the underlying model. Sets <code class="docutils literal notranslate"><span class="pre">config.precomputed_prompts_mode</span></code>
+to True so subsequent inference/training will skip label-prepending and
+look up the stored embeddings instead. Relation labels are supported for
+relation-extraction models via <code class="docutils literal notranslate"><span class="pre">rel_labels</span></code>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">distill=True</span></code>, the raw (pre-compression) model first generates
+pseudo-labels over <code class="docutils literal notranslate"><span class="pre">texts</span></code>; the method then compresses prompt
+embeddings and fine-tunes the compressed model on those pseudo-labels
+so quality recovers end-to-end in a single call.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of raw input texts used as contexts for averaging.</p></li>
+<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Entity labels to compress.</p></li>
+<li><p><strong>rel_labels</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional relation labels (relex models only).</p></li>
+<li><p><strong>batch_size</strong> (<em>int</em>) – Batch size used while running the model.</p></li>
+<li><p><strong>distill</strong> (<em>bool</em>) – If True, generate pseudo-labels with the raw model over
+<code class="docutils literal notranslate"><span class="pre">texts</span></code> and fine-tune the compressed model on them.</p></li>
+<li><p><strong>distill_threshold</strong> (<em>float</em>) – Confidence threshold for pseudo-label generation.</p></li>
+<li><p><strong>distill_epochs</strong> (<em>int</em>) – Number of fine-tuning epochs.</p></li>
+<li><p><strong>distill_lr</strong> (<em>float</em>) – Fine-tuning learning rate.</p></li>
+<li><p><strong>distill_batch_size</strong> (<em>int</em><em> | </em><em>None</em>) – Batch size for fine-tuning (defaults to <code class="docutils literal notranslate"><span class="pre">batch_size</span></code>).</p></li>
+<li><p><strong>distill_output_dir</strong> (<em>str</em>) – Output directory passed to <code class="docutils literal notranslate"><span class="pre">train_model</span></code>.</p></li>
+<li><p><strong>distill_train_kwargs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>] </em><em>| </em><em>None</em>) – Extra kwargs forwarded to <code class="docutils literal notranslate"><span class="pre">train_model</span></code>.</p></li>
+</ul>
 </dd>
 </dl>
 </dd></dl>

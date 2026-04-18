@@ -184,6 +184,13 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#example-3-analyze-news-articles">Example 3: Analyze News Articles</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#prompt-compression-precomputed-prompt-embeddings">&#9889; Prompt Compression (Precomputed Prompt Embeddings)</a><ul>
+<li><a class="reference internal" href="#how-it-works">How it works</a></li>
+<li><a class="reference internal" href="#basic-usage-entity-extraction">Basic usage (entity extraction)</a></li>
+<li><a class="reference internal" href="#id2">Relation extraction</a></li>
+<li><a class="reference internal" href="#end-to-end-distillation">End-to-end distillation</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#tips-and-best-practices">Tips and Best Practices</a></li>
 <li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
 <li><a class="reference internal" href="#low-accuracy">Low Accuracy</a></li>
@@ -1182,6 +1189,108 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Timeline: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </span></pre></div>
 </div>
+</section>
+</section>
+<section id="prompt-compression-precomputed-prompt-embeddings">
+<h2>⚡ Prompt Compression (Precomputed Prompt Embeddings)<a class="headerlink" href="#prompt-compression-precomputed-prompt-embeddings" title="Link to this heading">¶</a></h2>
+<p>For uni-encoder models (span, token, and relation-extraction variants) you can
+precompute the prompt embeddings for a <strong>fixed</strong> label set and reuse them at
+inference time. In precomputed mode the encoder receives only the text
+(no <code class="docutils literal notranslate"><span class="pre">&lt;&lt;ENT&gt;&gt;label1&lt;&lt;ENT&gt;&gt;...&lt;&lt;SEP&gt;&gt;</span></code> prefix), which shortens the input sequence,
+reduces attention cost, and can noticeably speed up inference — at a small
+accuracy trade-off versus re-encoding the prompts on every call.</p>
+<section id="how-it-works">
+<h3>How it works<a class="headerlink" href="#how-it-works" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">BaseGLiNER.compress_prompt_embeddings(texts,</span> <span class="pre">labels,</span> <span class="pre">rel_labels=None,</span> <span class="pre">batch_size=8,</span> <span class="pre">distill=False,</span> <span class="pre">distill_threshold=0.3,</span> <span class="pre">distill_epochs=3,</span> <span class="pre">distill_lr=1e-5,</span> <span class="pre">distill_batch_size=None,</span> <span class="pre">distill_output_dir=&quot;./distill_ckpt&quot;,</span> <span class="pre">distill_train_kwargs=None)</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Runs the normal forward pass over <code class="docutils literal notranslate"><span class="pre">(texts,</span> <span class="pre">labels)</span></code> pairs.</p></li>
+<li><p>Extracts the per-label prompt embedding (the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;ENT&gt;&gt;</span></code> token representation,
+pre-projection) from each example.</p></li>
+<li><p>Averages across all examples to produce an <code class="docutils literal notranslate"><span class="pre">(L,</span> <span class="pre">D)</span></code> matrix stored as a
+non-trainable parameter on the underlying model (<code class="docutils literal notranslate"><span class="pre">model.precomputed_prompts</span></code>).</p></li>
+<li><p>Sets <code class="docutils literal notranslate"><span class="pre">config.precomputed_prompts_mode</span> <span class="pre">=</span> <span class="pre">True</span></code> and writes
+<code class="docutils literal notranslate"><span class="pre">config.id_to_classes</span></code>, so subsequent <code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> / <code class="docutils literal notranslate"><span class="pre">forward</span></code> calls
+skip prompt-prepending and look up the stored embeddings instead.</p></li>
+</ol>
+<p>The stored embeddings travel with <code class="docutils literal notranslate"><span class="pre">state_dict</span></code>, so <code class="docutils literal notranslate"><span class="pre">save_pretrained</span></code> /
+<code class="docutils literal notranslate"><span class="pre">from_pretrained</span></code> round-trip them automatically. Training can continue after
+compression — the stored matrix is frozen but everything else keeps training.</p>
+</section>
+<section id="basic-usage-entity-extraction">
+<h3>Basic usage (entity extraction)<a class="headerlink" href="#basic-usage-entity-extraction" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="c1"># Representative texts from your target domain. They do not need labels;</span>
+</span><span data-line="6"><span class="c1"># they are only used as contexts while averaging the prompt representations.</span>
+</span><span data-line="7"><span class="n">calibration_texts</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="8">    <span class="s2">&quot;Barack Obama was born in Honolulu, Hawaii.&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">&quot;Apple announced a new iPhone at their Cupertino headquarters.&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="c1"># ... ideally 100–1000 diverse sentences from your domain</span>
+</span><span data-line="11"><span class="p">]</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="c1"># One-time compression step</span>
+</span><span data-line="16"><span class="n">model</span><span class="o">.</span><span class="n">compress_prompt_embeddings</span><span class="p">(</span><span class="n">calibration_texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="c1"># Inference now uses the precomputed prompts — no need to pass labels again</span>
+</span><span data-line="19"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
+</span><span data-line="20">    <span class="s2">&quot;Tim Cook visited Berlin last Tuesday.&quot;</span><span class="p">,</span>
+</span><span data-line="21">    <span class="n">labels</span><span class="p">,</span>               <span class="c1"># must match (order-insensitive) the compressed set</span>
+</span><span data-line="22">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="23"><span class="p">)</span>
+</span><span data-line="24">
+</span><span data-line="25"><span class="c1"># Persist the compressed model</span>
+</span><span data-line="26"><span class="n">model</span><span class="o">.</span><span class="n">save_pretrained</span><span class="p">(</span><span class="s2">&quot;./gliner-compressed&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="id2">
+<h3>Relation extraction<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<p>For relex models (<code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexModel</span></code> / <code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexModel</span></code>),
+pass <code class="docutils literal notranslate"><span class="pre">rel_labels</span></code> so the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;REL&gt;&gt;</span></code> prompt embeddings are compressed as well:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">compress_prompt_embeddings</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">texts</span><span class="o">=</span><span class="n">calibration_texts</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="4">    <span class="n">rel_labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;works_for&quot;</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">,</span> <span class="s2">&quot;founder_of&quot;</span><span class="p">],</span>
+</span><span data-line="5">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="6"><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="end-to-end-distillation">
+<h3>End-to-end distillation<a class="headerlink" href="#end-to-end-distillation" title="Link to this heading">¶</a></h3>
+<p>Compression alone can dip quality because averaged prompt embeddings drop
+context-specific signal. Pass <code class="docutils literal notranslate"><span class="pre">distill=True</span></code> to recover it in a single call:
+the raw (pre-compression) model first generates pseudo-labels over <code class="docutils literal notranslate"><span class="pre">texts</span></code>,
+prompts are then compressed, and the compressed model is fine-tuned on those
+pseudo-labels — no separate script required.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">compress_prompt_embeddings</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">texts</span><span class="o">=</span><span class="n">calibration_texts</span><span class="p">,</span>     <span class="c1"># also used as the distillation corpus</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">distill</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">distill_threshold</span><span class="o">=</span><span class="mf">0.3</span><span class="p">,</span>       <span class="c1"># pseudo-label confidence cutoff</span>
+</span><span data-line="7">    <span class="n">distill_epochs</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">distill_lr</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">distill_output_dir</span><span class="o">=</span><span class="s2">&quot;./distill_ckpt&quot;</span><span class="p">,</span>
+</span><span data-line="10"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Relevant knobs:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">distill_threshold</span></code>: confidence cutoff used when the raw model produces
+pseudo-labels. Lower values widen the training signal but add noise.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distill_epochs</span></code>, <code class="docutils literal notranslate"><span class="pre">distill_lr</span></code>: fine-tuning schedule.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distill_batch_size</span></code>: defaults to <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> if omitted.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distill_output_dir</span></code>: forwarded to <code class="docutils literal notranslate"><span class="pre">train_model</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">distill_train_kwargs</span></code>: dict of extra kwargs merged into the underlying
+<code class="docutils literal notranslate"><span class="pre">train_model</span></code> call (e.g. to override <code class="docutils literal notranslate"><span class="pre">save_strategy</span></code>, <code class="docutils literal notranslate"><span class="pre">logging_steps</span></code>, etc.).</p></li>
+</ul>
+<p>Pseudo-labels are generated from the same <code class="docutils literal notranslate"><span class="pre">texts</span></code> used for compression, so one
+diverse in-domain corpus serves both roles.</p>
 </section>
 </section>
 <section id="tips-and-best-practices">

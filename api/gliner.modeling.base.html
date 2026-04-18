@@ -137,6 +137,8 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.modeling.base.BaseModel.cache_dir"><code class="docutils literal notranslate">cache_dir</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate">data_processor</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BaseModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.BaseModel.set_precomputed_prompts"><code class="docutils literal notranslate">set_precomputed_prompts()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.modeling.base.BaseModel.lookup_precomputed_prompts"><code class="docutils literal notranslate">lookup_precomputed_prompts()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BaseModel.get_representations"><code class="docutils literal notranslate">get_representations()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BaseModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.base.BaseModel.loss"><code class="docutils literal notranslate">loss()</span></code></a></li>
@@ -356,6 +358,31 @@ losses with various masking strategies.</p>
 <li><p><strong>cache_dir</strong> (<em>str</em><em> | </em><em>Path</em><em> | </em><em>None</em>) – Directory path for caching pretrained models.</p></li>
 </ul>
 </dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.BaseModel.set_precomputed_prompts">
+<span class="sig-name descname"><span class="pre">set_precomputed_prompts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BaseModel.set_precomputed_prompts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BaseModel.set_precomputed_prompts" title="Link to this definition">¶</a></dt>
+<dd><p>Store averaged prompt embeddings keyed by label name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<em>list</em>) – Ordered list of label names (length N).</p></li>
+<li><p><strong>embeddings</strong> (<em>Tensor</em>) – Tensor of shape (N, D) with one embedding per label.</p></li>
+<li><p><strong>rel</strong> (<em>bool</em>) – If True, store as relation prompts, otherwise entity prompts.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.modeling.base.BaseModel.lookup_precomputed_prompts">
+<span class="sig-name descname"><span class="pre">lookup_precomputed_prompts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/base.html#BaseModel.lookup_precomputed_prompts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.base.BaseModel.lookup_precomputed_prompts" title="Link to this definition">¶</a></dt>
+<dd><p>Return precomputed prompts as (B, L, D) with an all-ones (B, L) mask.</p>
+<p>The stored (L, D) matrix is built once by <code class="docutils literal notranslate"><span class="pre">compress_prompt_embeddings</span></code>
+in a canonical label order; inference just expands it to the batch size.</p>
+<dl class="field-list simple">
 </dl>
 </dd></dl>
 

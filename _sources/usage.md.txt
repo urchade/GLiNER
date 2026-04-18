@@ -990,6 +990,112 @@ print(f"- Products: {[e['text'] for e in entities if e['label'] == 'product']}")
 print(f"- Timeline: {[e['text'] for e in entities if e['label'] == 'date']}")
 ```
 
+## ⚡ Prompt Compression (Precomputed Prompt Embeddings)
+
+For uni-encoder models (span, token, and relation-extraction variants) you can
+precompute the prompt embeddings for a **fixed** label set and reuse them at
+inference time. In precomputed mode the encoder receives only the text
+(no `<<ENT>>label1<<ENT>>...<<SEP>>` prefix), which shortens the input sequence,
+reduces attention cost, and can noticeably speed up inference — at a small
+accuracy trade-off versus re-encoding the prompts on every call.
+
+### How it works
+
+`BaseGLiNER.compress_prompt_embeddings(texts, labels, rel_labels=None, batch_size=8, distill=False, distill_threshold=0.3, distill_epochs=3, distill_lr=1e-5, distill_batch_size=None, distill_output_dir="./distill_ckpt", distill_train_kwargs=None)`:
+
+1. Runs the normal forward pass over `(texts, labels)` pairs.
+2. Extracts the per-label prompt embedding (the `<<ENT>>` token representation,
+   pre-projection) from each example.
+3. Averages across all examples to produce an `(L, D)` matrix stored as a
+   non-trainable parameter on the underlying model (`model.precomputed_prompts`).
+4. Sets `config.precomputed_prompts_mode = True` and writes
+   `config.id_to_classes`, so subsequent `predict_entities` / `forward` calls
+   skip prompt-prepending and look up the stored embeddings instead.
+
+The stored embeddings travel with `state_dict`, so `save_pretrained` /
+`from_pretrained` round-trip them automatically. Training can continue after
+compression — the stored matrix is frozen but everything else keeps training.
+
+### Basic usage (entity extraction)
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+
+# Representative texts from your target domain. They do not need labels;
+# they are only used as contexts while averaging the prompt representations.
+calibration_texts = [
+    "Barack Obama was born in Honolulu, Hawaii.",
+    "Apple announced a new iPhone at their Cupertino headquarters.",
+    # ... ideally 100–1000 diverse sentences from your domain
+]
+
+labels = ["person", "organization", "location", "date"]
+
+# One-time compression step
+model.compress_prompt_embeddings(calibration_texts, labels, batch_size=16)
+
+# Inference now uses the precomputed prompts — no need to pass labels again
+entities = model.predict_entities(
+    "Tim Cook visited Berlin last Tuesday.",
+    labels,               # must match (order-insensitive) the compressed set
+    threshold=0.5,
+)
+
+# Persist the compressed model
+model.save_pretrained("./gliner-compressed")
+```
+
+### Relation extraction
+
+For relex models (`UniEncoderSpanRelexModel` / `UniEncoderTokenRelexModel`),
+pass `rel_labels` so the `<<REL>>` prompt embeddings are compressed as well:
+
+```python
+model.compress_prompt_embeddings(
+    texts=calibration_texts,
+    labels=["person", "organization", "location"],
+    rel_labels=["works_for", "located_in", "founder_of"],
+    batch_size=8,
+)
+```
+
+### End-to-end distillation
+
+Compression alone can dip quality because averaged prompt embeddings drop
+context-specific signal. Pass `distill=True` to recover it in a single call:
+the raw (pre-compression) model first generates pseudo-labels over `texts`,
+prompts are then compressed, and the compressed model is fine-tuned on those
+pseudo-labels — no separate script required.
+
+```python
+model.compress_prompt_embeddings(
+    texts=calibration_texts,     # also used as the distillation corpus
+    labels=labels,
+    batch_size=16,
+    distill=True,
+    distill_threshold=0.3,       # pseudo-label confidence cutoff
+    distill_epochs=3,
+    distill_lr=1e-5,
+    distill_output_dir="./distill_ckpt",
+)
+```
+
+Relevant knobs:
+
+- `distill_threshold`: confidence cutoff used when the raw model produces
+  pseudo-labels. Lower values widen the training signal but add noise.
+- `distill_epochs`, `distill_lr`: fine-tuning schedule.
+- `distill_batch_size`: defaults to `batch_size` if omitted.
+- `distill_output_dir`: forwarded to `train_model`.
+- `distill_train_kwargs`: dict of extra kwargs merged into the underlying
+  `train_model` call (e.g. to override `save_strategy`, `logging_steps`, etc.).
+
+Pseudo-labels are generated from the same `texts` used for compression, so one
+diverse in-domain corpus serves both roles.
+
+
 ## Tips and Best Practices
 
 1. **Choose the right model architecture**:
