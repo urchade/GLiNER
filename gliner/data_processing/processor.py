@@ -179,7 +179,15 @@ class BaseProcessor(ABC):
         input_texts: List[List[str]] = []
         prompt_lengths: List[int] = []
 
+        skip_prompt = getattr(self.config, "precomputed_prompts_mode", False)
+
         for i, text in enumerate(texts):
+            if skip_prompt:
+                prompt = [self.sep_token]
+                prompt_lengths.append(len(prompt))
+                input_texts.append(prompt + list(text))
+                continue
+
             ents = self._select_entities(i, entities, blank)
 
             ents = self._maybe_remap_entities(ents)
@@ -373,6 +381,20 @@ class BaseProcessor(ABC):
         Returns:
             Dictionary containing collated batch data ready for model input.
         """
+        if getattr(self.config, "precomputed_prompts_mode", False) and class_to_ids is None:
+            # In precomputed mode, the label set is fixed by compress_prompt_embeddings
+            # and stored on the config. Reuse it for every batch instead of
+            # re-deriving per-sample mappings.
+            fixed = getattr(self.config, "id_to_classes", None)
+            if fixed:
+                shared_id_to_classes = dict(fixed)
+                shared_class_to_ids = {v: k for k, v in shared_id_to_classes.items()}
+                # Downstream code (create_labels, create_batch_dict) indexes
+                # these by sample, so replicate the shared mapping per sample.
+                class_to_ids = [shared_class_to_ids for _ in batch_list]
+                id_to_classes = [shared_id_to_classes for _ in batch_list]
+                entity_types = None
+
         if class_to_ids is None and entity_types is None:
             # Dynamically infer per-example mappings
             class_to_ids, id_to_classes = self.batch_generate_class_mappings(batch_list, negatives)
@@ -2026,7 +2048,15 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         input_texts: List[List[str]] = []
         prompt_lengths: List[int] = []
 
+        skip_prompt = getattr(self.config, "precomputed_prompts_mode", False)
+
         for i, text in enumerate(texts):
+            if skip_prompt:
+                prompt = [self.sep_token]
+                prompt_lengths.append(len(prompt))
+                input_texts.append(prompt + list(text))
+                continue
+
             ents = self._select_entities(i, entities, blank)
             ents = self._maybe_remap_entities(ents)
 
