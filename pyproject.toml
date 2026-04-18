@@ -12,7 +12,7 @@ version = {attr = "gliner.__version__"}
 name = "gliner"
 description = "Generalist model for NER (Extract any entity types from texts)"
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.10"
 license = {text = "Apache-2.0"}
 keywords = [
     "named-entity-recognition",
@@ -61,6 +61,9 @@ training = ["accelerate"]
 stanza = [
     "stanza",
     "langdetect"
+]
+serve = [
+    "ray[serve]>=2.9.0",
 ]
 
 [dependency-groups]
