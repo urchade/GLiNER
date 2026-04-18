@@ -11,8 +11,8 @@ Quick Start:
     result = client.predict("John works at Google", ["person", "organization"])
 
     # Or programmatically start server
-    from gliner.serve import GLiNERFactoryConfig, serve
-    config = GLiNERFactoryConfig(model="urchade/gliner_small-v2.1")
+    from gliner.serve import GLiNERServeConfig, serve
+    config = GLiNERServeConfig(model="urchade/gliner_small-v2.1")
     handle = serve(config)
 
 Features:
@@ -25,13 +25,13 @@ Features:
 See docs/serving.md for full documentation.
 """
 
-from .config import GLiNERFactoryConfig
+from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
 from .server import GLiNERFactory, GLiNERServer, serve, shutdown
 from .client import GLiNERClient, get_client
 
 __all__ = [
-    "GLiNERFactoryConfig",
+    "GLiNERServeConfig",
     "GLiNERMemoryEstimator",
     "GLiNERFactory",
     "GLiNERServer",

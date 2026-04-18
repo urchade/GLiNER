@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple, Union
 
 import torch
 
-from .config import GLiNERFactoryConfig
+from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class GLiNERServer:
         - Sequence packing for improved throughput
     """
 
-    def __init__(self, config: GLiNERFactoryConfig):
+    def __init__(self, config: GLiNERServeConfig):
         """Initialize the GLiNER server deployment.
 
         Args:
@@ -424,7 +424,7 @@ class GLiNERServer:
         return results
 
 
-def _build_deployment(config: GLiNERFactoryConfig):
+def _build_deployment(config: GLiNERServeConfig):
     """Build Ray Serve deployment from config."""
     from ray import serve
 
@@ -440,7 +440,7 @@ def _build_deployment(config: GLiNERFactoryConfig):
         max_ongoing_requests=config.max_ongoing_requests,
     )
     class GLiNERDeployment:
-        def __init__(self, serve_config: GLiNERFactoryConfig):
+        def __init__(self, serve_config: GLiNERServeConfig):
             self.server = GLiNERServer(serve_config)
             # Seed Ray's batcher with the pessimistic worst-case size so the
             # first batch is safe. ``_infer_batch`` re-calls ``batch_size_fn``
@@ -538,7 +538,7 @@ def _build_deployment(config: GLiNERFactoryConfig):
 
 
 def serve(
-    config: GLiNERFactoryConfig,
+    config: GLiNERServeConfig,
     blocking: bool = False,
 ) -> Any:
     """Start GLiNER Ray Serve deployment.
@@ -551,8 +551,8 @@ def serve(
         Ray Serve deployment handle for making predictions.
 
     Example:
-        >>> from gliner.serve import GLiNERFactoryConfig, serve
-        >>> config = GLiNERFactoryConfig(model="urchade/gliner_small-v2.1")
+        >>> from gliner.serve import GLiNERServeConfig, serve
+        >>> config = GLiNERServeConfig(model="urchade/gliner_small-v2.1")
         >>> handle = serve(config)
         >>> # Make predictions
         >>> ref = handle.predict.remote("John works at Google", ["person", "org"])
@@ -628,16 +628,16 @@ class GLiNERFactory:
         self,
         model: Optional[str] = None,
         *,
-        config: Optional[GLiNERFactoryConfig] = None,
+        config: Optional[GLiNERServeConfig] = None,
         **kwargs,
     ):
         """Build a config (if not provided) and start the Ray Serve deployment.
 
         Args:
             model: Model name or path. Ignored if ``config`` is provided.
-            config: Prebuilt ``GLiNERFactoryConfig``. Mutually exclusive with
+            config: Prebuilt ``GLiNERServeConfig``. Mutually exclusive with
                 ``model``/``kwargs``.
-            **kwargs: Forwarded to ``GLiNERFactoryConfig`` when building one.
+            **kwargs: Forwarded to ``GLiNERServeConfig`` when building one.
         """
         if config is not None:
             if model is not None or kwargs:
@@ -647,7 +647,7 @@ class GLiNERFactory:
         else:
             if model is None:
                 raise ValueError("Must provide either `model` or `config`.")
-            config = GLiNERFactoryConfig(model=model, **kwargs)
+            config = GLiNERServeConfig(model=model, **kwargs)
 
         self.config = config
         self._handle = serve(config, blocking=False)
