@@ -105,11 +105,11 @@ Portugal => location
 
 ### Quantization and Compilation
 
-GLiNER models are already small, but quantization and compilation can make them significantly faster and more memory-efficient — important when running on edge devices, serving at high throughput, or keeping GPU costs low.
+GLiNER models are already small, but quantization and compilation can make them significantly faster and more memory-efficient, important when running on edge devices, serving at high throughput, or keeping GPU costs low.
 
 - **`torch.compile`** fuses operations and removes Python overhead, yielding up to ~1.5x speedup with no quality loss.
 - **FP16 quantization** (`quantize=True`) halves model memory and speeds up matrix operations. Combined with compilation, this gives up to **~1.9x faster GPU inference** with virtually no quality loss.
-- **INT8 quantization** cuts memory by another 2x on top of FP16 and is supported out of the box — however, models need to be trained with Quantization-Aware Training (QAT) to preserve accuracy at INT8 precision.
+- **INT8 quantization** cuts memory by another 2x on top of FP16 and is supported out of the box, however, models need to be trained with Quantization-Aware Training (QAT) to preserve accuracy at INT8 precision.
 
 ```python
 model = GLiNER.from_pretrained(
@@ -124,20 +124,22 @@ Find more information on compilation and other optimizations in the [documentati
 
 ## Serving
 
-GLiNER provides a built-in serving interface for batch inference:
+For production workloads — high-throughput pipelines, multi-user services, or anywhere you need to go beyond single-process `model.inference()` calls — GLiNER provides a Ray Serve-based serving layer. It adds dynamic batching that automatically groups incoming requests, memory-aware batch sizing that prevents CUDA OOM by calibrating against your GPU, precompiled kernels for common batch sizes to avoid first-call latency, horizontal scaling across multiple GPUs via Ray replicas, and an HTTP API for language-agnostic access.
+
+```bash
+python -m gliner.serve --model gliner-community/gliner_small-v2.5 --dtype fp16
+```
+
+Then query from Python:
 
 ```python
-from gliner.serve import GLiNERFactory
+from gliner.serve import GLiNERClient
 
-with GLiNERFactory(
-    model="gliner-community/gliner_small-v2.5",
-    dtype="bfloat16",
-    enable_flashdeberta=True,
-) as llm:
-    outputs = llm.predict(
-        ["John works at Google", "Paris is in France"],
-        labels=["person", "organization", "location"],
-    )
+client = GLiNERClient()  # connects to http://localhost:8000/gliner
+results = client.predict(
+    ["John works at Google", "Paris is in France"],
+    labels=["person", "organization", "location"],
+)
 ```
 
 More information on serving options and parameters can be found in the [documentation](https://urchade.github.io/GLiNER/serving.html).
