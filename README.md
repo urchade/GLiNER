@@ -33,42 +33,38 @@ GLiNER is a framework for training and deploying small Named Entity Recognition 
 
 Other tasks such as text classification, entity linking, and schema extraction are supported through projects in the [Ecosystem](#ecosystem).
 
----
-
 ## Why GLiNER?
 
 <table>
 <tr>
 <td width="33%" align="center">
-<h3>Zero-shot Recognition</h3>
+<b>Zero-shot Recognition</b>
 <p>Extract any entity type — no labeled data or task-specific training required</p>
 </td>
 <td width="33%" align="center">
-<h3>Runs Anywhere</h3>
+<b>Runs Anywhere</b>
 <p>CPU, INT8 quantization, <code>torch.compile</code>, ONNX export — deploy on any hardware</p>
 </td>
 <td width="33%" align="center">
-<h3>Millions of Labels</h3>
+<b>Millions of Labels</b>
 <p>Bi-encoder pre-computes label embeddings, scaling to 100+ entity types without degradation</p>
 </td>
 </tr>
 <tr>
 <td width="33%" align="center">
-<h3>NER + Relations</h3>
+<b>NER + Relations</b>
 <p>Build knowledge graphs in a single pass with the joint RelEx architecture</p>
 </td>
 <td width="33%" align="center">
-<h3>PII Detection</h3>
+<b>PII Detection</b>
 <p>State-of-the-art multilingual PII models covering major entity types across 100+ languages</p>
 </td>
 <td width="33%" align="center">
-<h3>Fine-Tune in Minutes</h3>
+<b>Fine-Tune in Minutes</b>
 <p>Few-shot learning on small datasets — bring your own labels and get competitive results fast</p>
 </td>
 </tr>
 </table>
-
----
 
 ## Quick Start
 
@@ -109,7 +105,11 @@ Portugal => location
 
 ### Quantization and Compilation
 
-Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
+GLiNER models are already small, but quantization and compilation can make them significantly faster and more memory-efficient — important when running on edge devices, serving at high throughput, or keeping GPU costs low.
+
+- **`torch.compile`** fuses operations and removes Python overhead, yielding up to ~1.5x speedup with no quality loss.
+- **FP16 quantization** (`quantize=True`) halves model memory and speeds up matrix operations. Combined with compilation, this gives up to **~1.9x faster GPU inference** with virtually no quality loss.
+- **INT8 quantization** cuts memory by another 2x on top of FP16 and is supported out of the box — however, models need to be trained with Quantization-Aware Training (QAT) to preserve accuracy at INT8 precision.
 
 ```python
 model = GLiNER.from_pretrained(
@@ -119,6 +119,8 @@ model = GLiNER.from_pretrained(
     compile_torch_model=True,
 )
 ```
+
+Find more information on compilation and other optimizations in the [documentation](https://urchade.github.io/GLiNER/usage.html#quantization-compilation-flashdeberta).
 
 ## Serving
 
@@ -138,7 +140,7 @@ with GLiNERFactory(
     )
 ```
 
----
+More information on serving options and parameters can be found in the [documentation](https://urchade.github.io/GLiNER/serving.html).
 
 ## Training
 
@@ -167,37 +169,31 @@ model.train_model(
 ```
 
 For detailed training examples, see the [example notebooks](https://github.com/urchade/GLiNER/tree/main/examples):
+- [Documentation on training](https://urchade.github.io/GLiNER/training.html)
 - [Fine-tuning on Colab](https://colab.research.google.com/drive/1HNKd74cmfS9tGvWrKeIjSxBt01QQS7bq?usp=sharing)
-- [ONNX Conversion](https://github.com/urchade/GLiNER/blob/main/examples/convert_to_onnx.ipynb)
 - [Synthetic Data Generation](https://github.com/urchade/GLiNER/blob/main/examples/synthetic_data_generation.ipynb)
-
----
 
 ## Architectures
 
 GLiNER supports multiple architectures tailored to different use cases:
 
-| Architecture | Description |
-|---|---|
-| **Uni-encoder** | Strong zero-shot capabilities, supports up to ~50 entity types. The original GLiNER architecture. |
-| **Bi-encoder** | Scalable to massive numbers of entity types via separate text and label encoding. |
-| **RelEx** | Joint NER and relation extraction in a single model. |
-| **GLiNER Decoder** | Hybrid architecture for open NER — entity types are generated with a small decoder for maximum flexibility. |
+| Architecture | Description | Example Model |
+|---|---|---|
+| **Uni-encoder** | Strong zero-shot capabilities, supports up to ~50 entity types. The original GLiNER architecture. | [gliner_multi_pii-v1](https://huggingface.co/urchade/gliner_multi_pii-v1) |
+| **Bi-encoder** | Scalable to massive numbers of entity types via separate text and label encoding. | [gliner-bi-base-v2.0](https://huggingface.co/knowledgator/gliner-bi-base-v2.0) |
+| **RelEx** | Joint NER and relation extraction in a single model. | [gliner-relex-large-v1.0](https://huggingface.co/knowledgator/gliner-relex-large-v1.0) |
+| **GLiNER Decoder** | Hybrid architecture for open NER: entity types are generated with a small decoder for maximum flexibility. | [gliner-decoder-large-v1.0](https://huggingface.co/knowledgator/gliner-decoder-large-v1.0) |
 
-For more details, see the [documentation](https://urchade.github.io/GLiNER).
-
----
+For more details, see the [documentation](https://urchade.github.io/GLiNER/architectures.html).
 
 ## Popular Use Cases
 
-- **Compliance & PII Redaction** — detect and mask 40+ types of personal data (SSN, credit cards, passports, emails, IBANs, etc.) across documents and data pipelines
-- **Knowledge Graph Construction** — jointly extract entities and relations to power Graph RAG, semantic search, and analytics
-- **Large-Scale Entity Extraction** — use the bi-encoder to tag millions of documents against hundreds or thousands of entity types in production
-- **Domain-Specific NER** — fine-tune on biomedical, legal, financial, or any specialized corpus with minimal labeled data
-- **Multi-lingual Information Extraction** — extract structured data from 100+ languages with a single model
-- **Search & Retrieval Augmentation** — parse queries into structured entities to improve search relevance and RAG pipelines
-
----
+- **[Compliance & PII Redaction](https://urchade.github.io/GLiNER/usage.html#compliance--pii-redaction)** — detect and mask 40+ types of personal data (SSN, credit cards, passports, emails, IBANs, etc.) across documents and data pipelines
+- **[Knowledge Graph Construction](https://urchade.github.io/GLiNER/usage.html#knowledge-graph-construction)** — jointly extract entities and relations to power Graph RAG, semantic search, and analytics
+- **[Large-Scale Entity Extraction](https://urchade.github.io/GLiNER/usage.html#large-scale-entity-extraction)** — use the bi-encoder to tag millions of documents against hundreds or thousands of entity types in production
+- **[Domain-Specific NER](https://urchade.github.io/GLiNER/usage.html#domain-specific-ner)** — fine-tune on biomedical, legal, financial, or any specialized corpus with minimal labeled data
+- **[Multi-lingual Information Extraction](https://urchade.github.io/GLiNER/usage.html#multi-lingual-information-extraction)** — extract structured data from 100+ languages with a single model
+- **[Search & Retrieval Augmentation](https://urchade.github.io/GLiNER/usage.html#search--retrieval-augmentation)** — parse queries into structured entities to improve search relevance and RAG pipelines
 
 ## Ecosystem
 
@@ -213,15 +209,11 @@ GLiNER has a rich ecosystem of community projects and integrations:
 | [vllm-factory](https://github.com/ddickmann/vllm-factory) | vLLM integration for scalable GLiNER serving |
 | [gliner-spacy](https://github.com/theirstory/gliner-spacy) | spaCy integration for GLiNER |
 
----
-
 ## Documentation
 
 Full documentation is available at [urchade.github.io/GLiNER](https://urchade.github.io/GLiNER).
 
----
-
-## Authors & Maintainers
+## Authors & Creators
 
 GLiNER was originally developed by:
 * [Urchade Zaratiana](https://www.linkedin.com/in/urchade-zaratiana-36ba9814b/)
@@ -229,10 +221,10 @@ GLiNER was originally developed by:
 * Pierre Holat
 * Thierry Charnois
 
-Alternative architectures, such as bi-encoder, GLiNER-relex were developed by [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/)
+Alternative architectures, such as bi-encoder and GLiNER-relex, were developed by [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/).
 
 
-### Maintainers
+## Maintainers
 
 <div align="center">
   <table>
@@ -251,15 +243,11 @@ Alternative architectures, such as bi-encoder, GLiNER-relex were developed by [I
   </table>
 </div>
 
----
-
 ## Community
 
 - [Discord — GLiNER Community](https://discord.gg/x7hQsjX2Kk)
 - [Reddit — r/GLiNER](https://www.reddit.com/r/GLiNER/)
 - [HuggingFace](https://huggingface.co/gliner-community)
-
----
 
 ## Contributing
 
@@ -277,8 +265,6 @@ We welcome contributions from the community! Here's how to get started:
 6. **Submit a pull request** with a clear description of what you changed and why.
 
 For bug reports and feature requests, please [open an issue](https://github.com/urchade/GLiNER/issues). For questions and discussions, join us on [Discord](https://discord.gg/x7hQsjX2Kk).
-
----
 
 ## Citations
 
