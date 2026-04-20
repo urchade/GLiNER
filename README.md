@@ -1,90 +1,110 @@
 <div align="center">
-  <a href="https://pioneer.ai/gliner" target="_blank" rel="noopener noreferrer">
-    <img src="image/GitHub.png" alt="Pioneer AI - Fine-tune GLiNER with a single prompt" width="100%"/>
-  </a>
+
+# GLiNER: Generalist and Lightweight Model for Named Entity Recognition
+
+**Zero-shot NER | Relation Extraction | PII Detection | Information Extraction | Token Classification**
+
+<div>
+    <!-- Docs & Resources -->
+    <a href="https://urchade.github.io/GLiNER"><img src="https://img.shields.io/badge/Docs-GLiNER-blue" alt="GLiNER Documentation"></a>
+    <a href="https://arxiv.org/abs/2311.08526"><img src="https://img.shields.io/badge/arXiv-2311.08526-b31b1b.svg" alt="GLiNER Paper"></a>
+    <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open GLiNER In Colab"></a>
+    <a href="https://github.com/urchade/GLiNER/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/urchade/GLiNER?color=blue"></a>
+    <br>
+    <!-- Community -->
+    <a href="https://discord.gg/x7hQsjX2Kk"><img alt="GLiNER Community Discord" src="https://img.shields.io/badge/Discord-GLiNER%20Community-5865F2?logo=discord&logoColor=white"></a>
+    <a href="https://www.reddit.com/r/GLiNER/"><img src="https://img.shields.io/badge/Reddit-r%2FGLiNER-FF4500?logo=reddit&logoColor=white" alt="Reddit r/GLiNER"></a>
+    <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg" alt="Open GLiNER In HF Spaces"></a>
+    <a href="https://huggingface.co/models?library=gliner&sort=trending"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow" alt="HuggingFace Models"></a>
+    <br>
+    <!-- Stats -->
+    <a href="https://clickpy.clickhouse.com/dashboard/gliner"><img src="https://static.pepy.tech/badge/gliner" alt="GLiNER Downloads"></a>
+    <a href="https://github.com/urchade/GLiNER"><img alt="GLiNER GitHub stars" src="https://img.shields.io/github/stars/urchade/GLiNER?style=social"></a>
+</div>
+<br>
 </div>
 
-> [!IMPORTANT]
-> **🚀 GLiNER2 is Now Available from [Fastino Labs](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
 
-# 👑 GLiNER: Generalist and Lightweight Model for Named Entity Recognition
+<div align="center">
+  <img src="assets/banner.png" alt="GLiNER Banner" width="100%">
+</div>
+
+GLiNER is a framework for training and deploying small Named Entity Recognition (NER) models with zero-shot capabilities. In addition to traditional NER, it also supports joint entity and relation extraction, as well as multi-task token classification. GLiNER is fine-tunable, optimized to run on CPUs and consumer hardware, and has performance competitive with LLMs several times its size, like ChatGPT and UniNER.
+
+Other tasks such as text classification, entity linking, and schema extraction are supported through projects in the [Ecosystem](#ecosystem).
 
 ---
 
-<div align="center">
-    <div>
-        <a href="https://clickpy.clickhouse.com/dashboard/gliner"><img src="https://static.pepy.tech/badge/gliner" alt="GLiNER Downloads"></a>
-        <a href="https://arxiv.org/abs/2311.08526"><img src="https://img.shields.io/badge/arXiv-2311.08526-b31b1b.svg" alt="GLiNER Paper"></a>
-        <a href="https://discord.gg/Y2yVxpSQnG"><img alt="GLiNER Discord" src="https://img.shields.io/discord/1089800235347353640?logo=discord&logoColor=white&label=Discord&color=blue"></a>
-        <a href="https://github.com/urchade/GLiNER"><img alt="GLiNER GitHub stars" src="https://img.shields.io/github/stars/urchade/GLiNER?style=social"></a>
-        <a href="https://github.com/urchade/GLiNER/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/urchade/GLiNER?color=blue"></a>
-        <br>
-        <a href="https://colab.research.google.com/drive/1mhalKWzmfSTqMnR0wQBZvt9-ktTsATHB?usp=sharing"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open GLiNER In Colab"></a>
-        <a href="https://huggingface.co/spaces/urchade/gliner_mediumv2.1"><img src="https://huggingface.co/datasets/huggingface/badges/resolve/main/open-in-hf-spaces-sm.svg" alt="Open GLiNER In HF Spaces"></a>
-        <a href="https://huggingface.co/models?library=gliner&sort=trending"><img src="https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow" alt="HuggingFace Models"></a>
-        <br>
-        <a href="https://www.reddit.com/r/GLiNER/"><img src="https://img.shields.io/badge/Reddit-r%2FGLiNER-FF4500?logo=reddit&logoColor=white" alt="Reddit r/GLiNER"></a>
-        <a href="https://discord.gg/fastino"><img src="https://img.shields.io/badge/Discord-Fastino%20Community-5865F2?logo=discord&logoColor=white" alt="Fastino Discord"></a>
-    </div>
-    <br>
-</div>
+## Why GLiNER?
 
-GLiNER is a framework for training and deploying small Named Entity Recognition (NER) models with zero-shot capabilities. In addition to tradition NER, it also supports joint entity and relation extraction. GLiNER is fine-tunable, optimized to run on CPUs and consumer hardware, and has performance competitive with LLMs several times its size, like ChatGPT and UniNER.
+<table>
+<tr>
+<td width="33%" align="center">
+<h3>Zero-shot Recognition</h3>
+<p>Extract any entity type — no labeled data or task-specific training required</p>
+</td>
+<td width="33%" align="center">
+<h3>Runs Anywhere</h3>
+<p>CPU, INT8 quantization, <code>torch.compile</code>, ONNX export — deploy on any hardware</p>
+</td>
+<td width="33%" align="center">
+<h3>Millions of Labels</h3>
+<p>Bi-encoder pre-computes label embeddings, scaling to 100+ entity types without degradation</p>
+</td>
+</tr>
+<tr>
+<td width="33%" align="center">
+<h3>NER + Relations</h3>
+<p>Build knowledge graphs in a single pass with the joint RelEx architecture</p>
+</td>
+<td width="33%" align="center">
+<h3>PII Detection</h3>
+<p>State-of-the-art multilingual PII models covering major entity types across 100+ languages</p>
+</td>
+<td width="33%" align="center">
+<h3>Fine-Tune in Minutes</h3>
+<p>Few-shot learning on small datasets — bring your own labels and get competitive results fast</p>
+</td>
+</tr>
+</table>
 
+---
 
-## Example Notebooks
-
-Explore various examples including finetuning, ONNX conversion, and synthetic data generation. 
-
-- [Example Notebooks](https://github.com/urchade/GLiNER/tree/main/examples)
-- Finetune on Colab &nbsp;[<img align="center" src="https://colab.research.google.com/assets/colab-badge.svg" />](https://colab.research.google.com/drive/1HNKd74cmfS9tGvWrKeIjSxBt01QQS7bq?usp=sharing)
-## 🛠 Installation & Usage
+## Quick Start
 
 ### Installation
+
 ```bash
-!pip install gliner
+pip install gliner
 ```
 
-### Usage
-After the installation of the GLiNER library, import the `GLiNER` class. Following this, you can load your chosen model with `GLiNER.from_pretrained` and utilize `predict_entities` to discern entities within your text.
+### Basic Usage
 
 ```python
 from gliner import GLiNER
 
-# Initialize GLiNER with the base model
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+model = GLiNER.from_pretrained("gliner-community/gliner_small-v2.5")
 
-# Sample text for entity prediction
 text = """
-Cristiano Ronaldo dos Santos Aveiro (Portuguese pronunciation: [kɾiʃˈtjɐnu ʁɔˈnaldu]; born 5 February 1985) is a Portuguese professional footballer who plays as a forward for and captains both Saudi Pro League club Al Nassr and the Portugal national team. Widely regarded as one of the greatest players of all time, Ronaldo has won five Ballon d'Or awards,[note 3] a record three UEFA Men's Player of the Year Awards, and four European Golden Shoes, the most by a European player. He has won 33 trophies in his career, including seven league titles, five UEFA Champions Leagues, the UEFA European Championship and the UEFA Nations League. Ronaldo holds the records for most appearances (183), goals (140) and assists (42) in the Champions League, goals in the European Championship (14), international goals (128) and international appearances (205). He is one of the few players to have made over 1,200 professional career appearances, the most by an outfield player, and has scored over 850 official senior career goals for club and country, making him the top goalscorer of all time.
+Cristiano Ronaldo dos Santos Aveiro (born 5 February 1985) is a Portuguese
+professional footballer who plays as a forward for and captains both Saudi Pro
+League club Al Nassr and the Portugal national team.
 """
 
-# Labels for entity prediction
-# Most GLiNER models should work best when entity types are in lower case or title case
-labels = ["Person", "Award", "Date", "Competitions", "Teams"]
+labels = ["person", "date", "organization", "location"]
 
-# Perform entity prediction
 entities = model.predict_entities(text, labels, threshold=0.5)
 
-# Display predicted entities and their labels
 for entity in entities:
     print(entity["text"], "=>", entity["label"])
 ```
 
-#### Expected Output
-
+**Output:**
 ```
 Cristiano Ronaldo dos Santos Aveiro => person
 5 February 1985 => date
-Al Nassr => teams
-Portugal national team => teams
-Ballon d'Or => award
-UEFA Men's Player of the Year Awards => award
-European Golden Shoes => award
-UEFA Champions Leagues => competitions
-UEFA European Championship => competitions
-UEFA Nations League => competitions
-European Championship => competitions
+Al Nassr => organization
+Portugal => location
 ```
 
 ### Quantization and Compilation
@@ -93,48 +113,126 @@ Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU in
 
 ```python
 model = GLiNER.from_pretrained(
-    "urchade/gliner_medium-v2.1",
+    "gliner-community/gliner_small-v2.5",
     map_location="cuda",
-    quantize=True,            # or "fp16", "bf16"
+    quantize=True,
     compile_torch_model=True,
 )
 ```
 
-Or apply after loading:
+## Serving
+
+GLiNER provides a built-in serving interface for batch inference:
 
 ```python
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
-model.quantize()         # fp16 half-precision (default)
-model.quantize("bf16")   # bfloat16 — better numerical stability, slightly less speedup
-model.compile()          # torch.compile with dynamic shapes
+from gliner.serve import GLiNERFactory
+
+with GLiNERFactory(
+    model="gliner-community/gliner_small-v2.5",
+    dtype="bfloat16",
+    enable_flashdeberta=True,
+) as llm:
+    outputs = llm.predict(
+        ["John works at Google", "Paris is in France"],
+        labels=["person", "organization", "location"],
+    )
 ```
 
-Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
+---
 
-| Condition | F1 | Speedup |
-|-----------|:---:|:---:|
-| GPU fp32 (baseline) | 0.8107 | 1.00x |
-| + quantize | 0.8107 | 1.35x |
-| + compile | 0.8107 | 1.31x |
-| **+ quantize + compile** | **0.8107** | **1.94x** |
+## Training
 
-**Quantization options:**
-- `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
-- `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
-- `quantize="int8"` — int8 quantization. On CPU, uses built-in FBGEMM int8 kernels (~1.6x speedup). On GPU, uses [torchao](https://github.com/pytorch/ao) int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT). Stock DeBERTa-based models lose accuracy with int8.
-- On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
+GLiNER models are easy to fine-tune on your own data. Prepare your dataset as a JSON file and use the training script:
 
-**Compilation notes:**
-- `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).
+```bash
+python train.py --config configs/config.yaml
+```
 
-## 👨‍💻 Model Authors
+Or train programmatically:
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("gliner-community/gliner_small-v2.5")
+
+model.train_model(
+    train_dataset=train_data,
+    eval_dataset=eval_data,
+    output_dir="models",
+    max_steps=10000,
+    per_device_train_batch_size=8,
+    learning_rate=1e-5,
+    bf16=True,
+)
+```
+
+For detailed training examples, see the [example notebooks](https://github.com/urchade/GLiNER/tree/main/examples):
+- [Fine-tuning on Colab](https://colab.research.google.com/drive/1HNKd74cmfS9tGvWrKeIjSxBt01QQS7bq?usp=sharing)
+- [ONNX Conversion](https://github.com/urchade/GLiNER/blob/main/examples/convert_to_onnx.ipynb)
+- [Synthetic Data Generation](https://github.com/urchade/GLiNER/blob/main/examples/synthetic_data_generation.ipynb)
+
+---
+
+## Architectures
+
+GLiNER supports multiple architectures tailored to different use cases:
+
+| Architecture | Description |
+|---|---|
+| **Uni-encoder** | Strong zero-shot capabilities, supports up to ~50 entity types. The original GLiNER architecture. |
+| **Bi-encoder** | Scalable to massive numbers of entity types via separate text and label encoding. |
+| **RelEx** | Joint NER and relation extraction in a single model. |
+| **GLiNER Decoder** | Hybrid architecture for open NER — entity types are generated with a small decoder for maximum flexibility. |
+
+For more details, see the [documentation](https://urchade.github.io/GLiNER).
+
+---
+
+## Popular Use Cases
+
+- **Compliance & PII Redaction** — detect and mask 40+ types of personal data (SSN, credit cards, passports, emails, IBANs, etc.) across documents and data pipelines
+- **Knowledge Graph Construction** — jointly extract entities and relations to power Graph RAG, semantic search, and analytics
+- **Large-Scale Entity Extraction** — use the bi-encoder to tag millions of documents against hundreds or thousands of entity types in production
+- **Domain-Specific NER** — fine-tune on biomedical, legal, financial, or any specialized corpus with minimal labeled data
+- **Multi-lingual Information Extraction** — extract structured data from 100+ languages with a single model
+- **Search & Retrieval Augmentation** — parse queries into structured entities to improve search relevance and RAG pipelines
+
+---
+
+## Ecosystem
+
+GLiNER has a rich ecosystem of community projects and integrations:
+
+| Project | Description |
+|---|---|
+| [GLiNER2](https://github.com/fastino-ai/GLiNER2) | Unified multi-task model for NER, text classification, and structured data extraction |
+| [GLiClass](https://github.com/Knowledgator/GLiClass) | Zero-shot text classification using GLiNER-style architecture |
+| [GLinker](https://github.com/Knowledgator/GLinker) | Entity linking with GLiNER |
+| [GLiNER.cpp](https://github.com/Knowledgator/GLiNER.cpp) | C++ implementation for high-performance inference |
+| [gline-rs](https://github.com/fbilhaut/gline-rs) | Rust implementation of GLiNER |
+| [vllm-factory](https://github.com/ddickmann/vllm-factory) | vLLM integration for scalable GLiNER serving |
+| [gliner-spacy](https://github.com/theirstory/gliner-spacy) | spaCy integration for GLiNER |
+
+---
+
+## Documentation
+
+Full documentation is available at [urchade.github.io/GLiNER](https://urchade.github.io/GLiNER).
+
+---
+
+## Authors & Maintainers
+
 GLiNER was originally developed by:
-* [Urchade Zaratiana](urchade.github.io)
+* [Urchade Zaratiana](https://www.linkedin.com/in/urchade-zaratiana-36ba9814b/)
 * Nadi Tomeh
 * Pierre Holat
 * Thierry Charnois
 
-## 🌟 Maintainers
+Alternative architectures, such as bi-encoder, GLiNER-relex were developed by [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/)
+
+
+### Maintainers
 
 <div align="center">
   <table>
@@ -153,8 +251,17 @@ GLiNER was originally developed by:
   </table>
 </div>
 
+---
 
-## 📚 Citations
+## Community
+
+- [Discord — GLiNER Community](https://discord.gg/x7hQsjX2Kk)
+- [Reddit — r/GLiNER](https://www.reddit.com/r/GLiNER/)
+- [HuggingFace](https://huggingface.co/gliner-community)
+
+---
+
+## Citations
 
 If you find GLiNER useful in your research, please consider citing our papers:
 
@@ -176,7 +283,6 @@ If you find GLiNER useful in your research, please consider citing our papers:
     url = "https://aclanthology.org/2024.naacl-long.300",
     doi = "10.18653/v1/2024.naacl-long.300",
     pages = "5364--5376",
-    abstract = "Named Entity Recognition (NER) is essential in various Natural Language Processing (NLP) applications. Traditional NER models are effective but limited to a set of predefined entity types. In contrast, Large Language Models (LLMs) can extract arbitrary entities through natural language instructions, offering greater flexibility. However, their size and cost, particularly for those accessed via APIs like ChatGPT, make them impractical in resource-limited scenarios. In this paper, we introduce a compact NER model trained to identify any type of entity. Leveraging a bidirectional transformer encoder, our model, GLiNER, facilitates parallel entity extraction, an advantage over the slow sequential token generation of LLMs. Through comprehensive testing, GLiNER demonstrate strong performance, outperforming both ChatGPT and fine-tuned LLMs in zero-shot evaluations on various NER benchmarks.",
 }
 ```
 
@@ -203,7 +309,8 @@ If you find GLiNER useful in your research, please consider citing our papers:
       url={https://arxiv.org/abs/2602.18487}, 
 }
 ```
-## Support and funding
+
+## Support and Funding
 
 This project has been supported and funded by **F.initiatives** and **Laboratoire Informatique de Paris Nord**.
 
@@ -213,4 +320,10 @@ F.initiatives has been an expert in public funding strategies for R&D, Innovatio
   <img src="logo/FI_COMPLET_CW.png" alt="FI Group" width="300"/>
 </p>
 
-We also extend our heartfelt gratitude to the open-source community for their invaluable contributions, which have been instrumental in the success of this project.
+We also extend our heartfelt gratitude to the open-source community for their invaluable contributions, which have been instrumental in the success of this project. ❤️
+
+---
+
+<div align="center">
+<sub>GLiNER — open-source named entity recognition, zero-shot NER, relation extraction, PII detection, information extraction, knowledge graph construction, NLP, natural language processing, token classification, text mining, lightweight NER model, transformer-based NER</sub>
+</div>
