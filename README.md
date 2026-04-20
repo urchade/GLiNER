@@ -261,6 +261,25 @@ Alternative architectures, such as bi-encoder, GLiNER-relex were developed by [I
 
 ---
 
+## Contributing
+
+We welcome contributions from the community! Here's how to get started:
+
+1. **Fork** the repository and create a new branch from `main`.
+2. **Install** the development dependencies: `pip install -e ".[dev]"`.
+3. **Make your changes** — bug fixes, new features, documentation improvements, and new examples are all appreciated.
+4. **Lint and format** your code with [Ruff](https://docs.astral.sh/ruff/) before committing:
+   ```bash
+   ruff check . --fix
+   ruff format .
+   ```
+5. **Write tests** for any new functionality and make sure existing tests pass.
+6. **Submit a pull request** with a clear description of what you changed and why.
+
+For bug reports and feature requests, please [open an issue](https://github.com/urchade/GLiNER/issues). For questions and discussions, join us on [Discord](https://discord.gg/x7hQsjX2Kk).
+
+---
+
 ## Citations
 
 If you find GLiNER useful in your research, please consider citing our papers:
