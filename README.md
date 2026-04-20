@@ -40,7 +40,7 @@ Other tasks such as text classification, entity linking, and schema extraction a
 <table>
 <tr>
 <td width="33%" align="center">
-<h3>Zero-shot Recognition</h3>
+<b>Zero-shot Recognition</b>
 <p>Extract any entity type — no labeled data or task-specific training required</p>
 </td>
 <td width="33%" align="center">
