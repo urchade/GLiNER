@@ -179,6 +179,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def resize_embeddings(self):
         pass
 
+
     @abstractmethod
     def inference(self):
         pass
@@ -1486,47 +1487,30 @@ class BaseEncoderGLiNER(BaseGLiNER):
         return all_entities
 
     def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, return_class_probs=False, word_input_spans=None, **external_inputs):
-        """Shared batch processing logic."""
+        """Shared batch processing logic using modular run_batch and decode_batch."""
         outputs = []
-        is_onnx = self.onnx_model
-        device = self.device
         batch_offset = 0
 
         for batch in data_loader:
-            # Move to device once (outside condition)
-            if not is_onnx:
-                batch = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
-
-            # Prepare model inputs
-            model_inputs = (
-                batch.copy()
-                if packing_config is None
-                else {**batch, **external_inputs, "packing_config": packing_config}
+            model_output = self.run_batch(
+                batch,
+                threshold=threshold,
+                packing_config=packing_config,
+                move_to_device=True,
+                **external_inputs,
             )
 
-            # Get predictions
-            model_output = self.model(**model_inputs, threshold=threshold)
-            model_logits = model_output[0]
-            if not isinstance(model_logits, torch.Tensor):
-                model_logits = torch.from_numpy(model_logits)
-
-            # Slice input_spans for this batch
             batch_input_spans = None
             if word_input_spans is not None:
                 current_batch_size = len(batch["tokens"])
                 batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
                 batch_offset += current_batch_size
 
-            # Decode
-            decoded = self.decoder.decode(
-                batch["tokens"],
-                batch["id_to_classes"],
-                model_logits,
-                span_idx=model_output.span_idx,
-                span_mask=model_output.span_mask,
-                span_logits=model_output.span_logits,
-                flat_ner=flat_ner,
+            decoded = self.decode_batch(
+                model_output,
+                batch,
                 threshold=threshold,
+                flat_ner=flat_ner,
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
                 input_spans=batch_input_spans,
@@ -1534,6 +1518,241 @@ class BaseEncoderGLiNER(BaseGLiNER):
             outputs.extend(decoded)
 
         return outputs
+
+    def prepare_batch(
+        self,
+        texts: Union[str, List[str]],
+        labels: Union[str, List[str], List[List[str]]],
+        input_spans: Optional[List[List[Dict]]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Prepare raw inputs for inference (tokenization and normalization).
+
+        This method handles text normalization, tokenization, and span conversion.
+        Use this as the first step in the inference pipeline.
+
+        Args:
+            texts: Single text string or list of texts.
+            labels: Entity labels - string, list of strings, or per-text label lists.
+            input_spans: Optional pre-defined spans to classify (character positions).
+
+        Returns:
+            Dictionary containing:
+                - input_x: List of input dicts ready for collation
+                - tokens: Tokenized texts
+                - start_token_map: Per-text mapping from token idx to char start
+                - end_token_map: Per-text mapping from token idx to char end
+                - word_input_spans: Spans converted to word indices (or None)
+                - entity_types: Normalized entity types
+                - valid_texts: Non-empty texts that will be processed
+                - valid_to_orig_idx: Mapping from valid indices to original indices
+                - num_original: Total number of original texts
+        """
+        if isinstance(texts, str):
+            texts = [texts]
+
+        num_original = len(texts)
+        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+
+        if not valid_texts:
+            return {
+                "input_x": [],
+                "tokens": [],
+                "start_token_map": [],
+                "end_token_map": [],
+                "word_input_spans": None,
+                "entity_types": [],
+                "valid_texts": [],
+                "valid_to_orig_idx": [],
+                "num_original": num_original,
+            }
+
+        if isinstance(labels, str):
+            entity_types = list(dict.fromkeys([labels]))
+        elif labels and isinstance(labels[0], list):
+            entity_types = [list(dict.fromkeys(lbls)) for lbls in labels]
+        else:
+            entity_types = list(dict.fromkeys(labels))
+
+        tokens, start_token_map, end_token_map = self.prepare_inputs(valid_texts)
+
+        word_input_spans = None
+        if input_spans is not None:
+            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
+            word_input_spans = self._convert_spans_to_word_indices(
+                valid_input_spans, start_token_map, end_token_map
+            )
+
+        input_x = self.prepare_base_input(tokens)
+
+        return {
+            "input_x": input_x,
+            "tokens": tokens,
+            "start_token_map": start_token_map,
+            "end_token_map": end_token_map,
+            "word_input_spans": word_input_spans,
+            "entity_types": entity_types,
+            "valid_texts": valid_texts,
+            "valid_to_orig_idx": valid_to_orig_idx,
+            "num_original": num_original,
+        }
+
+    def collate_batch(
+        self,
+        input_x: List[Dict[str, Any]],
+        entity_types: Union[List[str], List[List[str]]],
+        collator: Optional[Any] = None,
+    ) -> Dict[str, Any]:
+        """Collate prepared inputs into a tensor batch.
+
+        Args:
+            input_x: List of input dicts from prepare_batch.
+            entity_types: Entity type labels.
+            collator: Optional pre-created collator instance. If None, creates one.
+
+        Returns:
+            Collated batch dictionary with tensors ready for the model.
+        """
+        if collator is None:
+            collator = self.data_collator_class(
+                self.config,
+                data_processor=self.data_processor,
+                return_tokens=True,
+                return_entities=True,
+                return_id_to_classes=True,
+                prepare_labels=False,
+            )
+
+        batch = collator(input_x, entity_types=entity_types)
+        return batch
+
+    @torch.inference_mode()
+    def run_batch(
+        self,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        packing_config: Optional[InferencePackingConfig] = None,
+        move_to_device: bool = True,
+        **external_inputs,
+    ) -> Any:
+        """Run model forward pass on a collated batch.
+
+        Args:
+            batch: Collated batch from collate_batch.
+            threshold: Confidence threshold for predictions.
+            packing_config: Optional inference packing configuration.
+            move_to_device: Whether to move tensors to model device.
+            **external_inputs: Additional inputs to pass to the model.
+
+        Returns:
+            Model output containing logits and span information.
+        """
+        if move_to_device and not self.onnx_model:
+            batch = {
+                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
+                for k, v in batch.items()
+            }
+
+        if packing_config is not None or external_inputs:
+            model_inputs = {**batch, **external_inputs}
+            if packing_config is not None:
+                model_inputs["packing_config"] = packing_config
+        else:
+            model_inputs = batch
+
+        model_output = self.model(**model_inputs, threshold=threshold)
+        return model_output
+
+    def decode_batch(
+        self,
+        model_output: Any,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+        return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+    ) -> List[List[Any]]:
+        """Decode model output into entity predictions.
+
+        Args:
+            model_output: Output from run_batch.
+            batch: The collated batch (needs 'tokens' and 'id_to_classes').
+            threshold: Confidence threshold for predictions.
+            flat_ner: Whether to use flat NER (no overlapping entities).
+            multi_label: Whether to allow multiple labels per span.
+            return_class_probs: Whether to include class probabilities.
+            input_spans: Optional word-level input spans to classify.
+
+        Returns:
+            List of entity lists (one per text in batch).
+        """
+        model_logits = model_output[0]
+        if not isinstance(model_logits, torch.Tensor):
+            model_logits = torch.from_numpy(model_logits)
+
+        decoded = self.decoder.decode(
+            batch["tokens"],
+            batch["id_to_classes"],
+            model_logits,
+            span_idx=model_output.span_idx,
+            span_mask=model_output.span_mask,
+            span_logits=model_output.span_logits,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            return_class_probs=return_class_probs,
+            input_spans=input_spans,
+        )
+        return decoded
+
+    def map_entities_to_text(
+        self,
+        decoded: List[List[Any]],
+        valid_texts: List[str],
+        valid_to_orig_idx: List[int],
+        start_token_map: List[List[int]],
+        end_token_map: List[List[int]],
+        num_original: int,
+    ) -> List[List[Dict[str, Any]]]:
+        """Map decoded entities back to character positions in original texts.
+
+        Args:
+            decoded: Decoded entity spans from decode_batch.
+            valid_texts: List of valid (non-empty) texts.
+            valid_to_orig_idx: Mapping from valid indices to original indices.
+            start_token_map: Per-text token-to-char-start mapping.
+            end_token_map: Per-text token-to-char-end mapping.
+            num_original: Total number of original texts.
+
+        Returns:
+            List of entity dicts aligned with original input texts.
+        """
+        return self._map_entities_to_original(
+            decoded,
+            valid_to_orig_idx,
+            start_token_map,
+            end_token_map,
+            valid_texts,
+            num_original,
+        )
+
+    def create_collator(self) -> Any:
+        """Create a data collator instance for batch collation.
+
+        Useful for serve.py to create a reusable collator.
+
+        Returns:
+            Configured data collator instance.
+        """
+        return self.data_collator_class(
+            self.config,
+            data_processor=self.data_processor,
+            return_tokens=True,
+            return_entities=True,
+            return_id_to_classes=True,
+            prepare_labels=False,
+        )
 
     @torch.no_grad()
     def inference(
@@ -1575,46 +1794,18 @@ class BaseEncoderGLiNER(BaseGLiNER):
         """
         self.eval()
 
-        # Normalize input
-        if isinstance(texts, str):
-            texts = [texts]
+        prepared = self.prepare_batch(texts, labels, input_spans)
 
-        # Filter out empty/whitespace-only strings
-        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+        if not prepared["valid_texts"]:
+            return [[] for _ in range(prepared["num_original"])]
 
-        # Early exit: nothing valid to process
-        if not valid_texts:
-            return [[] for _ in texts]
+        collator = self.create_collator()
 
-        entity_types = list(dict.fromkeys(labels))
-
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = \
-            self.prepare_inputs(valid_texts)
-
-        # Convert input_spans from character positions to word indices
-        word_input_spans = None
-        if input_spans is not None:
-            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            word_input_spans = self._convert_spans_to_word_indices(
-                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
-            )
-
-        input_x = self.prepare_base_input(tokens)
-
-        collator = self.data_collator_class(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
-        )
-
-        def collate_fn(batch, entity_types=entity_types):
-            return collator(batch, entity_types=entity_types)
+        def collate_fn(batch):
+            return self.collate_batch(batch, prepared["entity_types"], collator)
 
         data_loader = torch.utils.data.DataLoader(
-            input_x,
+            prepared["input_x"],
             batch_size=batch_size,
             shuffle=False,
             collate_fn=collate_fn,
@@ -1629,18 +1820,17 @@ class BaseEncoderGLiNER(BaseGLiNER):
             multi_label,
             packing_config=active_packing,
             return_class_probs=return_class_probs,
-            word_input_spans=word_input_spans,
+            word_input_spans=prepared["word_input_spans"],
             **external_inputs,
         )
 
-        # Map results back to original indices
-        all_entities = self._map_entities_to_original(
+        all_entities = self.map_entities_to_text(
             outputs,
-            valid_to_orig_idx,
-            all_start_token_idx_to_text_idx,
-            all_end_token_idx_to_text_idx,
-            valid_texts,
-            len(texts),
+            prepared["valid_texts"],
+            prepared["valid_to_orig_idx"],
+            prepared["start_token_map"],
+            prepared["end_token_map"],
+            prepared["num_original"],
         )
 
         return all_entities
@@ -2528,6 +2718,199 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         gen_texts = self.data_processor.decoder_tokenizer.batch_decode(gen_ids, skip_special_tokens=True)
         return gen_texts
 
+    @torch.inference_mode()
+    def run_batch(
+        self,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        packing_config: Optional[InferencePackingConfig] = None,
+        move_to_device: bool = True,
+        gen_constraints: Optional[List[str]] = None,
+        num_gen_sequences: int = 1,
+        **gen_kwargs,
+    ) -> Any:
+        """Run model forward pass on a collated batch with label generation.
+
+        Args:
+            batch: Collated batch from collate_batch.
+            threshold: Confidence threshold for predictions.
+            packing_config: Optional inference packing configuration.
+            move_to_device: Whether to move tensors to model device.
+            gen_constraints: Labels to constrain generation.
+            num_gen_sequences: Number of label sequences to generate per span.
+            **gen_kwargs: Additional generation parameters.
+
+        Returns:
+            Model output with generated labels attached.
+        """
+        if move_to_device and not self.onnx_model:
+            batch = {
+                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
+                for k, v in batch.items()
+            }
+
+        model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
+        model_output = self.model(**model_inputs, threshold=threshold)
+
+        # Generate labels if decoder is available
+        gen_labels = None
+        if self.config.labels_decoder is not None:
+            labels_trie = self.set_labels_trie(gen_constraints) if gen_constraints else None
+            gen_kwargs_copy = gen_kwargs.copy()
+            gen_labels = self.generate_labels(
+                model_output, labels_trie=labels_trie, num_return_sequences=num_gen_sequences, **gen_kwargs_copy
+            )
+
+        # Attach generated labels to model output for decode_batch
+        model_output.gen_labels = gen_labels
+        model_output.num_gen_sequences = num_gen_sequences
+
+        return model_output
+
+    def decode_batch(
+        self,
+        model_output: Any,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+        return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+    ) -> List[List[Any]]:
+        """Decode model output into entity predictions with generated labels.
+
+        Args:
+            model_output: Output from run_batch (includes gen_labels).
+            batch: The collated batch (needs 'tokens' and 'id_to_classes').
+            threshold: Confidence threshold for predictions.
+            flat_ner: Whether to use flat NER (no overlapping entities).
+            multi_label: Whether to allow multiple labels per span.
+            return_class_probs: Whether to include class probabilities.
+            input_spans: Optional word-level input spans to classify.
+
+        Returns:
+            List of entity lists (one per text in batch).
+        """
+        model_logits = model_output.logits
+        if not isinstance(model_logits, torch.Tensor):
+            model_logits = torch.from_numpy(model_logits)
+
+        decoded = self.decoder.decode(
+            batch["tokens"],
+            batch["id_to_classes"],
+            model_logits,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            gen_labels=model_output.gen_labels,
+            sel_idx=model_output.decoder_span_idx,
+            num_gen_sequences=model_output.num_gen_sequences,
+            return_class_probs=return_class_probs,
+            input_spans=input_spans,
+        )
+        return decoded
+
+    def _process_batches(
+        self,
+        data_loader,
+        threshold,
+        flat_ner,
+        multi_label,
+        packing_config=None,
+        return_class_probs=False,
+        word_input_spans=None,
+        gen_constraints=None,
+        num_gen_sequences=1,
+        **gen_kwargs,
+    ):
+        """Batch processing logic with label generation support."""
+        outputs = []
+        batch_offset = 0
+
+        for batch in data_loader:
+            model_output = self.run_batch(
+                batch,
+                threshold=threshold,
+                packing_config=packing_config,
+                move_to_device=True,
+                gen_constraints=gen_constraints,
+                num_gen_sequences=num_gen_sequences,
+                **gen_kwargs,
+            )
+
+            batch_input_spans = None
+            if word_input_spans is not None:
+                current_batch_size = len(batch["tokens"])
+                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_offset += current_batch_size
+
+            decoded = self.decode_batch(
+                model_output,
+                batch,
+                threshold=threshold,
+                flat_ner=flat_ner,
+                multi_label=multi_label,
+                return_class_probs=return_class_probs,
+                input_spans=batch_input_spans,
+            )
+            outputs.extend(decoded)
+
+        return outputs
+
+    def map_entities_to_text(
+        self,
+        decoded: List[List[Any]],
+        valid_texts: List[str],
+        valid_to_orig_idx: List[int],
+        start_token_map: List[List[int]],
+        end_token_map: List[List[int]],
+        num_original: int,
+    ) -> List[List[Dict[str, Any]]]:
+        """Map decoded entities back to character positions with generated labels.
+
+        Args:
+            decoded: Decoded entity spans from decode_batch.
+            valid_texts: List of valid (non-empty) texts.
+            valid_to_orig_idx: Mapping from valid indices to original indices.
+            start_token_map: Per-text token-to-char-start mapping.
+            end_token_map: Per-text token-to-char-end mapping.
+            num_original: Total number of original texts.
+
+        Returns:
+            List of entity dicts aligned with original input texts.
+        """
+        all_entities = [[] for _ in range(num_original)]
+
+        for valid_i, output in enumerate(decoded):
+            orig_i = valid_to_orig_idx[valid_i]
+            start_token_idx_to_text_idx = start_token_map[valid_i]
+            end_token_idx_to_text_idx = end_token_map[valid_i]
+            entities = []
+
+            for span in output:
+                start_text_idx = start_token_idx_to_text_idx[span.start]
+                end_text_idx = end_token_idx_to_text_idx[span.end]
+
+                entity = {
+                    "start": start_text_idx,
+                    "end": end_text_idx,
+                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
+                    "label": span.entity_type,
+                    "score": span.score,
+                }
+
+                if span.generated_labels is not None:
+                    entity["generated_labels"] = span.generated_labels
+
+                if span.class_probs is not None:
+                    entity["class_probs"] = span.class_probs
+
+                entities.append(entity)
+
+            all_entities[orig_i] = entities
+
+        return all_entities
+
     @torch.no_grad()
     def inference(
         self,
@@ -2566,123 +2949,82 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         """
         self.eval()
 
-        # Normalize input
-        if isinstance(texts, str):
-            texts = [texts]
+        prepared = self.prepare_batch(texts, labels, input_spans)
 
-        # Filter out empty/whitespace-only strings
-        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+        if not prepared["valid_texts"]:
+            return [[] for _ in range(prepared["num_original"])]
 
-        # Early exit: nothing valid to process
-        if not valid_texts:
-            return [[] for _ in texts]
+        collator = self.create_collator()
 
-        entity_types = list(dict.fromkeys(labels))
+        def collate_fn(batch):
+            return self.collate_batch(batch, prepared["entity_types"], collator)
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
-
-        # Convert input_spans from character positions to word indices
-        word_input_spans = None
-        if input_spans is not None:
-            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            word_input_spans = self._convert_spans_to_word_indices(
-                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
-            )
-
-        input_x = self.prepare_base_input(tokens)
-
-        collator = self.data_collator_class(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
+        data_loader = torch.utils.data.DataLoader(
+            prepared["input_x"],
+            batch_size=batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
         )
-
-        def collate_fn(batch, entity_types=entity_types):
-            batch_out = collator(batch, entity_types=entity_types)
-            return batch_out
-
-        data_loader = torch.utils.data.DataLoader(input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         active_packing = packing_config if packing_config is not None else self._inference_packing_config
 
-        outputs = []
-        batch_offset = 0
-        for batch in data_loader:
-            if not self.onnx_model:
-                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+        outputs = self._process_batches(
+            data_loader,
+            threshold,
+            flat_ner,
+            multi_label,
+            packing_config=active_packing,
+            return_class_probs=return_class_probs,
+            word_input_spans=prepared["word_input_spans"],
+            gen_constraints=gen_constraints,
+            num_gen_sequences=num_gen_sequences,
+            **gen_kwargs,
+        )
 
-            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
-            model_output = self.model(**model_inputs, threshold=threshold)
-
-            model_logits = model_output.logits
-            if not isinstance(model_logits, torch.Tensor):
-                model_logits = torch.from_numpy(model_logits)
-
-            # Generate labels if decoder is available
-            gen_labels = None
-            if self.config.labels_decoder is not None:
-                labels_trie = self.set_labels_trie(gen_constraints) if gen_constraints else None
-                gen_labels = self.generate_labels(
-                    model_output, labels_trie=labels_trie, num_return_sequences=num_gen_sequences, **gen_kwargs
-                )
-
-            # Slice input_spans for this batch
-            batch_input_spans = None
-            if word_input_spans is not None:
-                current_batch_size = len(batch["tokens"])
-                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
-                batch_offset += current_batch_size
-
-            decoded = self.decoder.decode(
-                batch["tokens"],
-                batch["id_to_classes"],
-                model_logits,
-                flat_ner=flat_ner,
-                threshold=threshold,
-                multi_label=multi_label,
-                gen_labels=gen_labels,
-                sel_idx=model_output.decoder_span_idx,
-                num_gen_sequences=num_gen_sequences,
-                return_class_probs=return_class_probs,
-                input_spans=batch_input_spans,
-            )
-            outputs.extend(decoded)
-
-        # Convert to entity format with mapping to original indices
-        all_entities = [[] for _ in texts]
-        for valid_i, output in enumerate(outputs):
-            orig_i = valid_to_orig_idx[valid_i]
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
-            entities = []
-
-            for span in output:
-                # Use Span object attributes
-                start_text_idx = start_token_idx_to_text_idx[span.start]
-                end_text_idx = end_token_idx_to_text_idx[span.end]
-
-                ent_details = {
-                    "start": start_text_idx,
-                    "end": end_text_idx,
-                    "text": valid_texts[valid_i][start_text_idx:end_text_idx],
-                    "label": span.entity_type,
-                    "score": span.score,
-                }
-
-                if span.generated_labels is not None:
-                    ent_details["generated_labels"] = span.generated_labels
-
-                if span.class_probs is not None:
-                    ent_details["class_probs"] = span.class_probs
-
-                entities.append(ent_details)
-
-            all_entities[orig_i] = entities
+        all_entities = self.map_entities_to_text(
+            outputs,
+            prepared["valid_texts"],
+            prepared["valid_to_orig_idx"],
+            prepared["start_token_map"],
+            prepared["end_token_map"],
+            prepared["num_original"],
+        )
 
         return all_entities
+
+    def predict_entities(
+        self,
+        text: str,
+        labels: List[str],
+        flat_ner: bool = True,
+        threshold: float = 0.5,
+        multi_label: bool = False,
+        gen_constraints: Optional[List[str]] = None,
+        num_gen_sequences: int = 1,
+        return_class_probs: bool = False,
+        **gen_kwargs,
+    ) -> List[Dict[str, Any]]:
+        """Predict entities for a single text input with optional label generation.
+
+        Args:
+            text: The input text to predict entities for.
+            labels: The labels to predict.
+            flat_ner: Whether to use flat NER. Defaults to True.
+            threshold: Confidence threshold for predictions. Defaults to 0.5.
+            multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            gen_constraints: Labels to constrain generation.
+            num_gen_sequences: Number of label sequences to generate per span.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            **gen_kwargs: Additional generation parameters.
+
+        Returns:
+            List of entity predictions as dictionaries.
+        """
+        return self.inference(
+            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
+            gen_constraints=gen_constraints, num_gen_sequences=num_gen_sequences,
+            return_class_probs=return_class_probs, **gen_kwargs
+        )[0]
 
     def export_to_onnx(
         self,
@@ -2767,82 +3109,74 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         self.config.rel_token_index = len(self.data_processor.transformer_tokenizer) - 1
 
-    @torch.no_grad()
-    def inference(
+    def prepare_batch(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
-        relations: List[str] = [],
-        flat_ner: bool = True,
-        threshold: float = 0.5,
-        adjacency_threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
-        multi_label: bool = False,
-        batch_size: int = 8,
-        packing_config: Optional[InferencePackingConfig] = None,
-        input_spans: List[List[Dict]] = None,
-        return_relations: bool = True,
-        return_class_probs: bool = False,
-    ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
-        """Predict entities and relations.
+        labels: Union[str, List[str], List[List[str]]],
+        input_spans: Optional[List[List[Dict]]] = None,
+        relations: Optional[Union[str, List[str], List[List[str]]]] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Prepare raw inputs for inference including relation types.
 
         Args:
-            texts: Input texts (str or List[str]).
-            labels: Entity type labels (List[str]).
-            relations: Relation type labels (List[str]).
-            flat_ner: Whether to use flat NER (no nested entities).
-            threshold: Confidence threshold for entities.
-            adjacency_threshold: Confidence threshold for adjacency matrix reconstruction (defaults to threshold).
-            relation_threshold: Confidence threshold for relations (defaults to threshold).
-            multi_label: Allow multiple labels per span.
-            batch_size: Batch size for processing.
-            packing_config: Inference packing configuration.
-            input_spans: Input entity spans to limit predictions to. Each span is a dict
-                with 'start' and 'end' character positions.
-            return_relations: Whether to return relation predictions.
-            return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            texts: Single text string or list of texts.
+            labels: Entity labels - string, list of strings, or per-text label lists.
+            input_spans: Optional pre-defined spans to classify (character positions).
+            relations: Relation type labels - string, list of strings, or per-text label lists.
 
         Returns:
-            Tuple of (entities, relations) if return_relations=True, else just entities.
+            Dictionary containing prepared inputs plus relation_types.
         """
-        self.eval()
+        prepared = super().prepare_batch(texts, labels, input_spans)
 
-        # Normalize input
-        if isinstance(texts, str):
-            texts = [texts]
+        if relations is None:
+            relation_types = []
+        elif isinstance(relations, str):
+            relation_types = list(dict.fromkeys([relations]))
+        elif relations and isinstance(relations[0], list):
+            relation_types = [list(dict.fromkeys(rels)) for rels in relations]
+        else:
+            relation_types = list(dict.fromkeys(relations))
 
-        # Filter out empty/whitespace-only strings
-        valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+        prepared["relation_types"] = relation_types
 
-        # Early exit: nothing valid to process
-        if not valid_texts:
-            if return_relations:
-                return [[] for _ in texts], [[] for _ in texts]
-            return [[] for _ in texts]
+        return prepared
 
-        if relation_threshold is None:
-            relation_threshold = threshold
+    def collate_batch(
+        self,
+        input_x: List[Dict[str, Any]],
+        entity_types: Union[List[str], List[List[str]]],
+        collator: Optional[Any] = None,
+        relation_types: Optional[Union[List[str], List[List[str]]]] = None,
+    ) -> Dict[str, Any]:
+        """Collate prepared inputs into a tensor batch with relation types.
 
-        if adjacency_threshold is None:
-            adjacency_threshold = threshold
+        Args:
+            input_x: List of input dicts from prepare_batch.
+            entity_types: Entity type labels.
+            collator: Optional pre-created collator instance.
+            relation_types: Relation type labels (list or per-text lists).
 
-        # Prepare entity and relation types
-        entity_types = list(dict.fromkeys(labels))
-        relation_types = list(dict.fromkeys(relations))
+        Returns:
+            Collated batch dictionary with tensors ready for the model.
+        """
+        if collator is None:
+            collator = self.create_collator()
 
-        tokens, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx = self.prepare_inputs(valid_texts)
+        if relation_types is None:
+            relation_types = []
 
-        # Convert input_spans from character positions to word indices
-        word_input_spans = None
-        if input_spans is not None:
-            valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            word_input_spans = self._convert_spans_to_word_indices(
-                valid_input_spans, all_start_token_idx_to_text_idx, all_end_token_idx_to_text_idx
-            )
+        batch = collator(input_x, entity_types=entity_types, relation_types=relation_types)
+        return batch
 
-        input_x = self.prepare_base_input(tokens)
+    def create_collator(self) -> Any:
+        """Create a data collator instance for relation extraction.
 
-        collator = self.data_collator_class(
+        Returns:
+            Configured data collator instance.
+        """
+        return self.data_collator_class(
             self.config,
             data_processor=self.data_processor,
             return_tokens=True,
@@ -2852,95 +3186,206 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             prepare_labels=False,
         )
 
-        def collate_fn(batch):
-            batch_out = collator(batch, entity_types=entity_types, relation_types=relation_types)
-            return batch_out
+    @torch.inference_mode()
+    def run_batch(
+        self,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
+        packing_config: Optional[InferencePackingConfig] = None,
+        move_to_device: bool = True,
+        **external_inputs,
+    ) -> Any:
+        """Run model forward pass on a collated batch.
 
-        data_loader = torch.utils.data.DataLoader(input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
+        Args:
+            batch: Collated batch from collate_batch.
+            threshold: Confidence threshold for predictions.
+            adjacency_threshold: Threshold for adjacency matrix reconstruction.
+            packing_config: Optional inference packing configuration.
+            move_to_device: Whether to move tensors to model device.
+            **external_inputs: Additional inputs to pass to the model.
 
-        active_packing = packing_config if packing_config is not None else self._inference_packing_config
+        Returns:
+            Model output containing logits and relation information.
+        """
+        if adjacency_threshold is None:
+            adjacency_threshold = threshold
 
+        if move_to_device and not self.onnx_model:
+            batch = {
+                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
+                for k, v in batch.items()
+            }
+
+        if packing_config is not None or external_inputs:
+            model_inputs = {**batch, **external_inputs}
+            if packing_config is not None:
+                model_inputs["packing_config"] = packing_config
+        else:
+            model_inputs = batch
+
+        model_output = self.model(**model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold)
+        return model_output
+
+    def decode_batch(
+        self,
+        model_output: Any,
+        batch: Dict[str, Any],
+        threshold: float = 0.5,
+        relation_threshold: Optional[float] = None,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+        return_class_probs: bool = False,
+        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+    ) -> Tuple[List[List[Any]], List[List[Any]]]:
+        """Decode model output into entity and relation predictions.
+
+        Args:
+            model_output: Output from run_batch.
+            batch: The collated batch.
+            threshold: Confidence threshold for entity predictions.
+            relation_threshold: Confidence threshold for relation predictions.
+            flat_ner: Whether to use flat NER.
+            multi_label: Whether to allow multiple labels per span.
+            return_class_probs: Whether to include class probabilities.
+            input_spans: Optional word-level input spans to classify.
+
+        Returns:
+            Tuple of (entity_outputs, relation_outputs) where each is a list per text.
+        """
+        if relation_threshold is None:
+            relation_threshold = threshold
+
+        model_logits = model_output.logits
+        if not isinstance(model_logits, torch.Tensor):
+            model_logits = torch.from_numpy(model_logits)
+
+        rel_idx = model_output.rel_idx
+        if not isinstance(rel_idx, torch.Tensor):
+            rel_idx = torch.from_numpy(rel_idx)
+
+        rel_logits = model_output.rel_logits
+        if not isinstance(rel_logits, torch.Tensor):
+            rel_logits = torch.from_numpy(rel_logits)
+
+        rel_mask = model_output.rel_mask
+        if not isinstance(rel_mask, torch.Tensor):
+            rel_mask = torch.from_numpy(rel_mask)
+
+        entity_spans = getattr(model_output, "entity_spans", None)
+        if entity_spans is not None and not isinstance(entity_spans, torch.Tensor):
+            entity_spans = torch.from_numpy(entity_spans)
+
+        decoded_results = self.decoder.decode(
+            batch["tokens"],
+            batch["id_to_classes"],
+            model_logits,
+            rel_idx=rel_idx,
+            rel_logits=rel_logits,
+            rel_mask=rel_mask,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            relation_threshold=relation_threshold,
+            multi_label=multi_label,
+            rel_id_to_classes=batch["rel_id_to_classes"],
+            entity_spans=entity_spans,
+        )
+
+        if len(decoded_results) == 2:
+            decoded_entities, decoded_relations = decoded_results
+        else:
+            decoded_entities = decoded_results
+            decoded_relations = [[] for _ in range(len(batch["tokens"]))]
+
+        return decoded_entities, decoded_relations
+
+    def _process_batches(
+        self,
+        data_loader,
+        threshold,
+        flat_ner,
+        multi_label,
+        packing_config=None,
+        return_class_probs=False,
+        word_input_spans=None,
+        adjacency_threshold=None,
+        relation_threshold=None,
+        return_relations=True,
+        **external_inputs,
+    ):
+        """Batch processing logic for entity and relation extraction."""
         all_entity_outputs = []
         all_relation_outputs = []
-        all_id_to_classes = []
-        all_rel_id_to_classes = []
         batch_offset = 0
 
         for batch in data_loader:
-            if not self.onnx_model:
-                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
-
-            # Store id_to_classes before model forward pass
-            batch_id_to_classes = batch.get("id_to_classes", [])
-            batch_rel_id_to_classes = batch.get("rel_id_to_classes", [])
-
-            model_inputs = batch.copy() if active_packing is None else {**batch, "packing_config": active_packing}
-            model_output = self.model(**model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold)
-
-            # Decode entities
-            model_logits = model_output.logits
-            if not isinstance(model_logits, torch.Tensor):
-                model_logits = torch.from_numpy(model_logits)
-
-            rel_idx = model_output.rel_idx
-            if not isinstance(rel_idx, torch.Tensor):
-                rel_idx = torch.from_numpy(rel_idx)
-
-            rel_logits = model_output.rel_logits
-            if not isinstance(rel_logits, torch.Tensor):
-                rel_logits = torch.from_numpy(rel_logits)
-
-            rel_mask = model_output.rel_mask
-            if not isinstance(rel_mask, torch.Tensor):
-                rel_mask = torch.from_numpy(rel_mask)
-
-            entity_spans = getattr(model_output, "entity_spans", None)
-            if entity_spans is not None and not isinstance(entity_spans, torch.Tensor):
-                entity_spans = torch.from_numpy(entity_spans)
-
-            decoded_results = self.decoder.decode(
-                batch["tokens"],
-                batch["id_to_classes"],
-                model_logits,
-                rel_idx=rel_idx,
-                rel_logits=rel_logits,
-                rel_mask=rel_mask,
-                flat_ner=flat_ner,
+            model_output = self.run_batch(
+                batch,
                 threshold=threshold,
-                relation_threshold=relation_threshold,
-                multi_label=multi_label,
-                rel_id_to_classes=batch["rel_id_to_classes"],
-                entity_spans=entity_spans,
+                adjacency_threshold=adjacency_threshold,
+                packing_config=packing_config,
+                move_to_device=True,
+                **external_inputs,
             )
 
-            if len(decoded_results) == 1:
-                decoded_entities = decoded_results
-                decoded_relations = None
-            else:
-                decoded_entities, decoded_relations = decoded_results
+            batch_input_spans = None
+            if word_input_spans is not None:
+                current_batch_size = len(batch["tokens"])
+                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_offset += current_batch_size
+
+            decoded_entities, decoded_relations = self.decode_batch(
+                model_output,
+                batch,
+                threshold=threshold,
+                relation_threshold=relation_threshold,
+                flat_ner=flat_ner,
+                multi_label=multi_label,
+                return_class_probs=return_class_probs,
+                input_spans=batch_input_spans,
+            )
 
             all_entity_outputs.extend(decoded_entities)
-            all_id_to_classes.extend(batch_id_to_classes)
-            all_rel_id_to_classes.extend(batch_rel_id_to_classes)
-
-            # Store relation outputs if available
-            if return_relations and decoded_results is not None:
+            if return_relations:
                 all_relation_outputs.extend(decoded_relations)
             else:
-                # Append empty relation outputs for each batch item
                 for _ in range(len(batch["tokens"])):
                     all_relation_outputs.append(None)
 
-        # Convert entities to standard format with mapping to original indices
-        all_entities = [[] for _ in texts]
-        for valid_i, output in enumerate(all_entity_outputs):
+        return all_entity_outputs, all_relation_outputs
+
+    def map_entities_to_text(
+        self,
+        decoded: List[List[Any]],
+        valid_texts: List[str],
+        valid_to_orig_idx: List[int],
+        start_token_map: List[List[int]],
+        end_token_map: List[List[int]],
+        num_original: int,
+    ) -> List[List[Dict[str, Any]]]:
+        """Map decoded entities back to character positions in original texts.
+
+        Args:
+            decoded: Decoded entity spans from decode_batch.
+            valid_texts: List of valid (non-empty) texts.
+            valid_to_orig_idx: Mapping from valid indices to original indices.
+            start_token_map: Per-text token-to-char-start mapping.
+            end_token_map: Per-text token-to-char-end mapping.
+            num_original: Total number of original texts.
+
+        Returns:
+            List of entity dicts aligned with original input texts.
+        """
+        all_entities = [[] for _ in range(num_original)]
+
+        for valid_i, output in enumerate(decoded):
             orig_i = valid_to_orig_idx[valid_i]
-            start_token_idx_to_text_idx = all_start_token_idx_to_text_idx[valid_i]
-            end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
+            start_token_idx_to_text_idx = start_token_map[valid_i]
+            end_token_idx_to_text_idx = end_token_map[valid_i]
             entities = []
 
             for span in output:
-                # Use Span object attributes
                 start_text_idx = start_token_idx_to_text_idx[span.start]
                 end_text_idx = end_token_idx_to_text_idx[span.end]
 
@@ -2959,20 +3404,215 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
             all_entities[orig_i] = entities
 
+        return all_entities
+
+    def map_relations_to_text(
+        self,
+        relation_outputs: List[List[Any]],
+        entity_outputs: List[List[Any]],
+        valid_texts: List[str],
+        valid_to_orig_idx: List[int],
+        start_token_map: List[List[int]],
+        end_token_map: List[List[int]],
+        num_original: int,
+    ) -> List[List[Dict[str, Any]]]:
+        """Map relation predictions back to character positions.
+
+        Args:
+            relation_outputs: Decoded relations per text.
+            entity_outputs: Decoded entities per text (for getting span info).
+            valid_texts: List of valid (non-empty) texts.
+            valid_to_orig_idx: Mapping from valid indices to original indices.
+            start_token_map: Per-text token-to-char-start mapping.
+            end_token_map: Per-text token-to-char-end mapping.
+            num_original: Total number of original texts.
+
+        Returns:
+            List of relation dicts aligned with original input texts.
+        """
+        return self._process_relations(
+            relation_outputs,
+            entity_outputs,
+            start_token_map,
+            end_token_map,
+            valid_texts,
+            valid_to_orig_idx,
+            num_original,
+        )
+
+    @torch.no_grad()
+    def inference(
+        self,
+        texts: Union[str, List[str]],
+        labels: Union[str, List[str], List[List[str]]],
+        relations: Union[str, List[str], List[List[str]]] = [],
+        flat_ner: bool = True,
+        threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
+        relation_threshold: Optional[float] = None,
+        multi_label: bool = False,
+        batch_size: int = 8,
+        packing_config: Optional[InferencePackingConfig] = None,
+        input_spans: List[List[Dict]] = None,
+        return_relations: bool = True,
+        return_class_probs: bool = False,
+    ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
+        """Predict entities and relations.
+
+        Args:
+            texts: Input texts (str or List[str]).
+            labels: Entity type labels - string, list of strings, or per-text label lists.
+            relations: Relation type labels - string, list of strings, or per-text label lists.
+            flat_ner: Whether to use flat NER (no nested entities).
+            threshold: Confidence threshold for entities.
+            adjacency_threshold: Confidence threshold for adjacency matrix reconstruction (defaults to threshold).
+            relation_threshold: Confidence threshold for relations (defaults to threshold).
+            multi_label: Allow multiple labels per span.
+            batch_size: Batch size for processing.
+            packing_config: Inference packing configuration.
+            input_spans: Input entity spans to limit predictions to. Each span is a dict
+                with 'start' and 'end' character positions.
+            return_relations: Whether to return relation predictions.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
+
+        Returns:
+            Tuple of (entities, relations) if return_relations=True, else just entities.
+        """
+        self.eval()
+
+        prepared = self.prepare_batch(texts, labels, input_spans, relations)
+
+        if not prepared["valid_texts"]:
+            if return_relations:
+                return [[] for _ in range(prepared["num_original"])], [[] for _ in range(prepared["num_original"])]
+            return [[] for _ in range(prepared["num_original"])]
+
+        if relation_threshold is None:
+            relation_threshold = threshold
+
+        if adjacency_threshold is None:
+            adjacency_threshold = threshold
+
+        collator = self.create_collator()
+
+        def collate_fn(batch):
+            return self.collate_batch(
+                batch, prepared["entity_types"], collator, prepared["relation_types"]
+            )
+
+        data_loader = torch.utils.data.DataLoader(
+            prepared["input_x"],
+            batch_size=batch_size,
+            shuffle=False,
+            collate_fn=collate_fn,
+        )
+
+        active_packing = packing_config if packing_config is not None else self._inference_packing_config
+
+        entity_outputs, relation_outputs = self._process_batches(
+            data_loader,
+            threshold,
+            flat_ner,
+            multi_label,
+            packing_config=active_packing,
+            return_class_probs=return_class_probs,
+            word_input_spans=prepared["word_input_spans"],
+            adjacency_threshold=adjacency_threshold,
+            relation_threshold=relation_threshold,
+            return_relations=return_relations,
+        )
+
+        all_entities = self.map_entities_to_text(
+            entity_outputs,
+            prepared["valid_texts"],
+            prepared["valid_to_orig_idx"],
+            prepared["start_token_map"],
+            prepared["end_token_map"],
+            prepared["num_original"],
+        )
+
         if return_relations:
-            # Process relations with mapping to original indices
-            all_relations = self._process_relations(
-                all_relation_outputs,
-                all_entity_outputs,
-                all_start_token_idx_to_text_idx,
-                all_end_token_idx_to_text_idx,
-                valid_texts,
-                valid_to_orig_idx,
-                len(texts),
+            all_relations = self.map_relations_to_text(
+                relation_outputs,
+                entity_outputs,
+                prepared["valid_texts"],
+                prepared["valid_to_orig_idx"],
+                prepared["start_token_map"],
+                prepared["end_token_map"],
+                prepared["num_original"],
             )
             return all_entities, all_relations
 
         return all_entities
+
+    def predict_entities(
+        self,
+        text: str,
+        labels: List[str],
+        relations: List[str] = [],
+        flat_ner: bool = True,
+        threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
+        multi_label: bool = False,
+        return_class_probs: bool = False,
+        **kwargs,
+    ) -> List[Dict[str, Any]]:
+        """Predict entities for a single text input.
+
+        Args:
+            text: The input text to predict entities for.
+            labels: The entity labels to predict.
+            relations: The relation labels (used for context but entities only returned).
+            flat_ner: Whether to use flat NER. Defaults to True.
+            threshold: Confidence threshold for predictions. Defaults to 0.5.
+            adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
+            multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            **kwargs: Additional arguments passed to inference.
+
+        Returns:
+            List of entity predictions as dictionaries.
+        """
+        return self.inference(
+            [text], labels, relations=relations, flat_ner=flat_ner, threshold=threshold,
+            adjacency_threshold=adjacency_threshold, multi_label=multi_label,
+            return_relations=False, return_class_probs=return_class_probs, **kwargs
+        )[0]
+
+    def predict_relations(
+        self,
+        text: str,
+        labels: List[str],
+        relations: List[str],
+        flat_ner: bool = True,
+        threshold: float = 0.5,
+        adjacency_threshold: Optional[float] = None,
+        relation_threshold: Optional[float] = None,
+        multi_label: bool = False,
+        **kwargs,
+    ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+        """Predict entities and relations for a single text input.
+
+        Args:
+            text: The input text to predict entities and relations for.
+            labels: The entity labels to predict.
+            relations: The relation labels to predict.
+            flat_ner: Whether to use flat NER. Defaults to True.
+            threshold: Confidence threshold for entities. Defaults to 0.5.
+            adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
+            relation_threshold: Confidence threshold for relations. Defaults to threshold.
+            multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            **kwargs: Additional arguments passed to inference.
+
+        Returns:
+            Tuple of (entities, relations) for the single text.
+        """
+        entities, rels = self.inference(
+            [text], labels, relations=relations, flat_ner=flat_ner, threshold=threshold,
+            adjacency_threshold=adjacency_threshold, relation_threshold=relation_threshold,
+            multi_label=multi_label, return_relations=True, **kwargs
+        )
+        return entities[0], rels[0]
 
     def _process_relations(
         self,

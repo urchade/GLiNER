@@ -41,8 +41,20 @@ Explore various examples including finetuning, ONNX conversion, and synthetic da
 ## 🛠 Installation & Usage
 
 ### Installation
+
+**With pip:**
 ```bash
-!pip install gliner
+pip install gliner
+```
+
+**With uv (faster):**
+```bash
+uv pip install gliner
+```
+
+**With serving support (Ray Serve):**
+```bash
+uv pip install gliner[serve]  # or: pip install gliner ray[serve]
 ```
 
 ### Usage
@@ -87,45 +99,49 @@ UEFA Nations League => competitions
 European Championship => competitions
 ```
 
-### Quantization and Compilation
+## 🚀 Serving
 
-Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
+GLiNER ships with a production-ready Ray Serve deployment that adds dynamic batching, memory-aware batch sizing, precompiled power-of-two batch sizes, and multi-replica scaling. Install with `pip install gliner[serve]`.
 
-```python
-model = GLiNER.from_pretrained(
-    "urchade/gliner_medium-v2.1",
-    map_location="cuda",
-    quantize=True,            # or "fp16", "bf16"
-    compile_torch_model=True,
-)
-```
-
-Or apply after loading:
+**In-process (vLLM-style):**
 
 ```python
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
-model.quantize()         # fp16 half-precision (default)
-model.quantize("bf16")   # bfloat16 — better numerical stability, slightly less speedup
-model.compile()          # torch.compile with dynamic shapes
+from gliner.serve import GLiNERFactory
+
+with GLiNERFactory(
+    model="urchade/gliner_medium-v2.1",
+    dtype="bfloat16",
+    enable_flashdeberta=True,
+) as llm:
+    outputs = llm.predict(
+        ["John works at Google", "Paris is in France"],
+        labels=["person", "organization", "location"],
+    )
 ```
 
-Benchmarked on CoNLL-2003 (strict F1, `gliner_medium-v2.1`, RTX 5090):
+Passing a list of texts preserves dynamic batching — each text is dispatched as a separate request so Ray Serve's `@serve.batch` accumulates them into a single forward pass. Use `predict_async` for concurrent `asyncio` calls and `.handle` to reach the underlying Ray Serve handle.
 
-| Condition | F1 | Speedup |
-|-----------|:---:|:---:|
-| GPU fp32 (baseline) | 0.8107 | 1.00x |
-| + quantize | 0.8107 | 1.35x |
-| + compile | 0.8107 | 1.31x |
-| **+ quantize + compile** | **0.8107** | **1.94x** |
+**Standalone HTTP server:**
 
-**Quantization options:**
-- `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
-- `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
-- `quantize="int8"` — int8 quantization. On CPU, uses built-in FBGEMM int8 kernels (~1.6x speedup). On GPU, uses [torchao](https://github.com/pytorch/ao) int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT). Stock DeBERTa-based models lose accuracy with int8.
-- On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
+```bash
+python -m gliner.serve --model urchade/gliner_small-v2.1 --enable-flashdeberta
+```
 
-**Compilation notes:**
-- `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).
+```bash
+curl -X POST http://localhost:8000/gliner \
+  -H "Content-Type: application/json" \
+  -d '{"text": "John works at Google", "labels": ["person", "organization"]}'
+```
+
+**Attach a remote client to a running server:**
+
+```python
+from gliner.serve import GLiNERClient
+client = GLiNERClient()
+result = client.predict("John works at Google", labels=["person", "organization"])
+```
+
+For all CLI flags, Docker usage, relation-extraction examples, and tuning knobs (memory fractions, precompiled batch sizes, sequence packing), see the [Serving guide](docs/serving.md).
 
 ## 👨‍💻 Model Authors
 GLiNER was originally developed by:

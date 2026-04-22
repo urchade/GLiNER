@@ -344,9 +344,9 @@ class GLiNERConfig(BaseGLiNERConfig):
         self.labels_encoder = labels_encoder
         self.labels_decoder = labels_decoder
         self.relations_layer = relations_layer
+        self.model_type = self._resolve_model_type()
 
-    @property
-    def model_type(self):
+    def _resolve_model_type(self):
         """Auto-detect model type based on configuration."""
         if self.labels_decoder:
             if self.span_mode == "token-level":

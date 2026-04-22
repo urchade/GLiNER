@@ -823,7 +823,7 @@ class UniEncoderTokenProcessor(BaseProcessor):
             dimension contains [start_marker, end_marker, inside_marker].
         """
         batch_size = len(batch["tokens"])
-        seq_len = batch["seq_length"].max().item()
+        seq_len = int(batch["seq_length"].max())
         num_classes = max([len(cid) for cid in batch["classes_to_id"]])
 
         word_labels = torch.zeros(batch_size, seq_len, num_classes, 3, dtype=torch.float)
@@ -876,10 +876,14 @@ class UniEncoderTokenProcessor(BaseProcessor):
         # Initialize one-hot labels (batch_size, max_spans, num_classes)
         labels_one_hot = torch.zeros(batch_size, max_spans, num_classes, dtype=torch.float)
 
+        # Batch CPU transfer to avoid per-element .item() sync
+        span_label_cpu = span_label.tolist()
+        span_mask_cpu = span_mask.tolist()
+
         for i in range(batch_size):
             for j in range(max_spans):
-                if span_mask[i, j]:  # Valid span
-                    class_id = span_label[i, j].item()
+                if span_mask_cpu[i][j]:  # Valid span
+                    class_id = span_label_cpu[i][j]
 
                     if class_id > 0:
                         # Convert from 1-indexed to 0-indexed
@@ -1863,7 +1867,10 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             batch_ents = (batch["span_label"] > 0).sum(-1)
         else:
             batch_ents = span_mask.long().squeeze(-1).sum(-1)
-        max_En = max(batch_ents.max().item(), 1)
+
+        # Batch CPU transfer to avoid per-element .item() sync
+        batch_ents_cpu = batch_ents.tolist()
+        max_En = max(max(batch_ents_cpu), 1)
 
         rel_class_to_ids = batch["rel_class_to_ids"]
         if isinstance(rel_class_to_ids, list):
@@ -1879,7 +1886,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             return torch.zeros(B, max_En, max_En, dtype=torch.float), torch.zeros(B, 1, 1, dtype=torch.float)
 
         if single_step:
-            return self._create_single_step_relation_labels(batch, batch_ents, C)
+            return self._create_single_step_relation_labels(batch, batch_ents_cpu, C)
 
         adj_matrix = torch.zeros(B, max_En, max_En, dtype=torch.float)
 
@@ -1887,25 +1894,25 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         max_total_pairs = 0
 
         for i in range(B):
-            N = batch_ents[i].item()
-            rel_idx_i = batch["rel_idx"][i]
-            rel_label_i = batch["rel_label"][i]
+            N = batch_ents_cpu[i]
+            rel_idx_i = batch["rel_idx"][i].tolist()
+            rel_label_i = batch["rel_label"][i].tolist()
 
             pair_to_relations = {}
             positive_pairs = set()
 
             # Collect positive pairs
-            for k in range(rel_label_i.shape[0]):
+            for k in range(len(rel_label_i)):
                 if rel_label_i[k] > 0:
-                    e1 = rel_idx_i[k, 0].item()
-                    e2 = rel_idx_i[k, 1].item()
+                    e1 = rel_idx_i[k][0]
+                    e2 = rel_idx_i[k][1]
 
                     if e1 < N and e2 < N:
                         pair_key = (e1, e2)
                         positive_pairs.add(pair_key)
                         if pair_key not in pair_to_relations:
                             pair_to_relations[pair_key] = []
-                        pair_to_relations[pair_key].append(rel_label_i[k].item())
+                        pair_to_relations[pair_key].append(rel_label_i[k])
 
             # Generate negative pairs
             negative_pairs = set()
@@ -1951,7 +1958,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         rel_matrix = torch.zeros(B, max_total_pairs, C, dtype=torch.float)
 
         for i in range(B):
-            N = batch_ents[i].item()
+            N = batch_ents_cpu[i]
             pair_info = all_pairs_info[i]
             adj = torch.zeros(max(N, 1), max(N, 1))
 
@@ -1967,7 +1974,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
 
         return adj_matrix, rel_matrix
 
-    def _create_single_step_relation_labels(self, batch, batch_ents, C):
+    def _create_single_step_relation_labels(self, batch, batch_ents_cpu, C):
         """Create relation labels for single-step mode (all entity pair combinations).
 
         Generates labels for ALL directed pairs (i, j) where i != j among entities,
@@ -1975,7 +1982,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
 
         Args:
             batch: Batch dictionary containing entities and relations.
-            batch_ents: Tensor of entity counts per example.
+            batch_ents_cpu: List of entity counts per example (already on CPU).
             C: Number of relation classes.
 
         Returns:
@@ -1989,7 +1996,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         all_pair_maps = []
 
         for i in range(B):
-            N = batch_ents[i].item()
+            N = batch_ents_cpu[i]
             # All (e1, e2) pairs where e1 != e2, ordered as build_all_entity_pairs produces:
             # (0,1), (0,2), ..., (1,0), (1,2), ..., i.e., sorted by (e1, e2)
             pair_to_idx = {}
@@ -2006,18 +2013,18 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         rel_matrix = torch.zeros(B, max_total_pairs, C, dtype=torch.float)
 
         for i in range(B):
-            N = batch_ents[i].item()
-            rel_idx_i = batch["rel_idx"][i]
-            rel_label_i = batch["rel_label"][i]
+            N = batch_ents_cpu[i]
+            rel_idx_i = batch["rel_idx"][i].tolist()
+            rel_label_i = batch["rel_label"][i].tolist()
             pair_to_idx = all_pair_maps[i]
 
-            for k in range(rel_label_i.shape[0]):
+            for k in range(len(rel_label_i)):
                 if rel_label_i[k] > 0:
-                    e1 = rel_idx_i[k, 0].item()
-                    e2 = rel_idx_i[k, 1].item()
+                    e1 = rel_idx_i[k][0]
+                    e2 = rel_idx_i[k][1]
                     pair_key = (e1, e2)
                     if pair_key in pair_to_idx:
-                        rel_matrix[i, pair_to_idx[pair_key], rel_label_i[k].item() - 1] = 1.0
+                        rel_matrix[i, pair_to_idx[pair_key], rel_label_i[k] - 1] = 1.0
 
         return None, rel_matrix
 
