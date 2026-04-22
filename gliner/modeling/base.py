@@ -354,6 +354,7 @@ class BaseUniEncoderModel(BaseModel):
                 - words_embedding: Word embeddings of shape (B, W, D).
                 - mask: Mask for words of shape (B, W).
         """
+        word_lengths = kwargs.pop("word_lengths", None)
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
 
         use_precomputed = (
@@ -377,7 +378,7 @@ class BaseUniEncoderModel(BaseModel):
             )
 
         if hasattr(self, "rnn"):
-            words_embedding = self.rnn(words_embedding, mask)
+            words_embedding = self.rnn(words_embedding, mask, lengths=word_lengths)
 
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
@@ -447,7 +448,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -644,7 +645,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, embeddings, and span-level outputs.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -848,6 +849,10 @@ class BaseBiEncoderModel(BaseModel):
                 - words_embedding: Word embeddings of shape (B, W, D).
                 - mask: Mask for words of shape (B, W).
         """
+        # word_lengths is only consumed by the RNN path; drop it here so it does
+        # not leak into the label encoder's forward as an unexpected kwarg.
+        kwargs.pop("word_lengths", None)
+
         if labels_embeds is not None:
             token_embeds = self.token_rep_layer.encode_text(input_ids, attention_mask, **kwargs)
         else:
@@ -944,7 +949,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids,
@@ -1121,7 +1126,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids,
@@ -1233,9 +1238,18 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
                 - sel_idx: LongTensor of shape (B, M) with original column indices
                   (-1 for padding positions).
         """
-        B, _, D = representations.shape
+        B, N, D = representations.shape
         lengths = rep_mask.sum(dim=-1)
-        max_len = lengths.max().item()
+
+        # Determining ``max_len`` via ``lengths.max().item()`` forces a GPU→CPU sync.
+        # Under ``torch.compile`` with ``capture_scalar_outputs=True`` the ``.item()``
+        # is traced symbolically; in eager execution we fall back to the upper bound
+        # ``N`` so we never block. The mask-based scatter below is correct either way —
+        # padding positions stay zero and are flagged by ``target_mask``/``sel_idx``.
+        if torch.compiler.is_compiling():
+            max_len = lengths.max().item()
+        else:
+            max_len = N
 
         target_rep = representations.new_zeros(B, max_len, D)
         target_mask = rep_mask.new_zeros(B, max_len)
@@ -1533,7 +1547,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         Returns:
             GLiNERDecoderOutput containing logits, losses, and decoder information.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -1881,7 +1895,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
         Returns:
             GLiNERDecoderOutput containing logits, losses, and decoder information.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
 
         prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -2172,8 +2186,17 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 - target_mask: Packed mask of shape (B, M).
         """
         B, N, D = representations.shape
-        lengths = rep_mask.sum(dim=-1)
-        max_len = lengths.max().item()
+
+        # ``lengths.max().item()`` would force a GPU→CPU sync to compress the output
+        # from ``N`` to ``max_len``. Under ``torch.compile`` with ``capture_scalar_outputs``
+        # the sync is traced symbolically and we keep the packing benefit; in eager
+        # execution we skip packing (use the full ``N``) to stay sync-free, at the cost
+        # of some downstream compute that masked positions would have saved.
+        if torch.compiler.is_compiling():
+            lengths = rep_mask.sum(dim=-1)
+            max_len = lengths.max().item()
+        else:
+            max_len = N
 
         if max_len != N:
             target_rep = representations.new_zeros(B, max_len, D)
@@ -2258,7 +2281,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         Returns:
             GLiNERRelexOutput containing entity and relation predictions.
         """
-        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask") if key in kwargs}
+        encoder_kwargs = {key: kwargs[key] for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths") if key in kwargs}
+        word_lengths = encoder_kwargs.pop("word_lengths", None)
 
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **encoder_kwargs)
 
@@ -2284,7 +2308,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             )
 
         if hasattr(self, "rnn"):
-            words_embedding = self.rnn(words_embedding, mask)
+            words_embedding = self.rnn(words_embedding, mask, lengths=word_lengths)
 
         if self.config.span_mode == "token_level":
             if labels is not None:

@@ -70,8 +70,19 @@ Other tasks such as text classification, entity linking, and schema extraction a
 
 ### Installation
 
+**With pip:**
 ```bash
 pip install gliner
+```
+
+**With uv (faster):**
+```bash
+uv pip install gliner
+```
+
+**With serving support (Ray Serve):**
+```bash
+uv pip install gliner[serve]  # or: pip install gliner ray[serve]
 ```
 
 ### Basic Usage
@@ -103,7 +114,7 @@ Al Nassr => organization
 Portugal => location
 ```
 
-### Quantization and Compilation
+## 🚀 Optimizations
 
 GLiNER models are already small, but quantization and compilation can make them significantly faster and more memory-efficient, important when running on edge devices, serving at high throughput, or keeping GPU costs low.
 

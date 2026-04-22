@@ -746,6 +746,7 @@ class Encoder(nn.Module):
         """
         packing_config: Optional[InferencePackingConfig] = kwargs.pop("packing_config", None)
         pair_attention_mask = kwargs.pop("pair_attention_mask", None)
+        token_lengths = kwargs.pop("token_lengths", None)
 
         if (
             packing_config is not None
@@ -760,6 +761,7 @@ class Encoder(nn.Module):
                 packing_config,
                 pair_attention_mask,
                 *args,
+                token_lengths=token_lengths,
                 **kwargs,
             )
         else:
@@ -784,6 +786,7 @@ class Encoder(nn.Module):
         packing_config: InferencePackingConfig,
         pair_attention_mask: Optional[torch.Tensor],
         *args: Any,
+        token_lengths: Optional[List[int]] = None,
         **kwargs: Any,
     ) -> torch.Tensor:
         """Encodes sequences using inference-time packing for efficiency.
@@ -798,13 +801,19 @@ class Encoder(nn.Module):
             packing_config: Configuration for packing behavior.
             pair_attention_mask: Optional pairwise attention mask.
             *args: Additional positional arguments.
+            token_lengths: Optional precomputed CPU-side per-sample token counts.
+                When provided by the collator, avoids an ``attention_mask.sum().tolist()``
+                GPU→CPU sync on every forward.
             **kwargs: Additional keyword arguments.
 
         Returns:
             Token embeddings of shape (batch_size, seq_len, hidden_size) with
             proper unpacking to restore original batch structure.
         """
-        lengths = attention_mask.sum(dim=-1, dtype=torch.int64).tolist()
+        if token_lengths is not None:
+            lengths = token_lengths
+        else:
+            lengths = attention_mask.sum(dim=-1, dtype=torch.int64).tolist()
         seq_len = int(input_ids.size(1))
         if not lengths or all(int(ln) == seq_len for ln in lengths):
             bert_kwargs = dict(kwargs)
@@ -813,12 +822,14 @@ class Encoder(nn.Module):
                 bert_kwargs["pair_attention_mask"] = pair_attention_mask
             return self.bert_layer(input_ids=input_ids, **bert_kwargs)
 
+        # One bulk tolist() is cheaper than N per-row tolist() calls.
+        all_ids = input_ids.tolist()
         requests = []
-        for row, length in zip(input_ids, lengths):
+        for ids_row, length in zip(all_ids, lengths):
             if length <= 0:
                 requests.append({"input_ids": []})
             else:
-                requests.append({"input_ids": row[:length].tolist()})
+                requests.append({"input_ids": ids_row[:length]})
 
         pad_token_id = self.bert_layer.model.config.pad_token_id
         if pad_token_id is None:
