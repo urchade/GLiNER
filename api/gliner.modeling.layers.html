@@ -64,6 +64,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
 <ul class="current">
@@ -272,7 +273,7 @@ Must have a <cite>hidden_size</cite> attribute.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.modeling.layers.LstmSeq2SeqEncoder.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/layers.html#LstmSeq2SeqEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.layers.LstmSeq2SeqEncoder.forward" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hidden</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/layers.html#LstmSeq2SeqEncoder.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.layers.LstmSeq2SeqEncoder.forward" title="Link to this definition">¶</a></dt>
 <dd><p>Encodes input sequences through the LSTM.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -281,6 +282,9 @@ Must have a <cite>hidden_size</cite> attribute.</p></li>
 <li><p><strong>mask</strong> (<em>Tensor</em>) – Binary mask tensor of shape (batch_size, seq_len) where 1 indicates
 valid positions and 0 indicates padding.</p></li>
 <li><p><strong>hidden</strong> (<em>Tuple</em><em>[</em><em>Tensor</em><em>, </em><em>Tensor</em><em>] </em><em>| </em><em>None</em>) – Optional initial hidden state tuple (h_0, c_0). Defaults to None.</p></li>
+<li><p><strong>lengths</strong> (<em>List</em><em>[</em><em>int</em><em>] </em><em>| </em><em>Tensor</em><em> | </em><em>None</em>) – Optional precomputed per-sample valid lengths. When provided by
+the collator as a CPU list/tensor, avoids a <code class="docutils literal notranslate"><span class="pre">mask.sum(dim=1).cpu()</span></code>
+GPU→CPU sync on every forward.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>

@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="violet" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.model module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.config module" href="gliner.config.html" /><link rel="prev" title="ONNX Export &amp; Deployment" href="../convert_to_onnx.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.model module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.config module" href="gliner.config.html" /><link rel="prev" title="Serving" href="../serving.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
@@ -64,6 +64,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
 <ul class="current">
@@ -162,6 +163,12 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.resize_embeddings"><code class="docutils literal notranslate">resize_embeddings()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.prepare_inputs"><code class="docutils literal notranslate">prepare_inputs()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.prepare_base_input"><code class="docutils literal notranslate">prepare_base_input()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.prepare_batch"><code class="docutils literal notranslate">prepare_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.collate_batch"><code class="docutils literal notranslate">collate_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.run_batch"><code class="docutils literal notranslate">run_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.decode_batch"><code class="docutils literal notranslate">decode_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.map_entities_to_text"><code class="docutils literal notranslate">map_entities_to_text()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.create_collator"><code class="docutils literal notranslate">create_collator()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.inference"><code class="docutils literal notranslate">inference()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.predict_entities"><code class="docutils literal notranslate">predict_entities()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseEncoderGLiNER.batch_predict_entities"><code class="docutils literal notranslate">batch_predict_entities()</span></code></a></li>
@@ -221,7 +228,11 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.set_labels_trie"><code class="docutils literal notranslate">set_labels_trie()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.generate_labels"><code class="docutils literal notranslate">generate_labels()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.run_batch"><code class="docutils literal notranslate">run_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.decode_batch"><code class="docutils literal notranslate">decode_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.map_entities_to_text"><code class="docutils literal notranslate">map_entities_to_text()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.inference"><code class="docutils literal notranslate">inference()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.predict_entities"><code class="docutils literal notranslate">predict_entities()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.export_to_onnx"><code class="docutils literal notranslate">export_to_onnx()</span></code></a></li>
 </ul>
 </li>
@@ -242,7 +253,16 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.set_class_indices"><code class="docutils literal notranslate">set_class_indices()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.prepare_batch"><code class="docutils literal notranslate">prepare_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.collate_batch"><code class="docutils literal notranslate">collate_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.create_collator"><code class="docutils literal notranslate">create_collator()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.run_batch"><code class="docutils literal notranslate">run_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.decode_batch"><code class="docutils literal notranslate">decode_batch()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.map_entities_to_text"><code class="docutils literal notranslate">map_entities_to_text()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.map_relations_to_text"><code class="docutils literal notranslate">map_relations_to_text()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.inference"><code class="docutils literal notranslate">inference()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.predict_entities"><code class="docutils literal notranslate">predict_entities()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.predict_relations"><code class="docutils literal notranslate">predict_relations()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.evaluate"><code class="docutils literal notranslate">evaluate()</span></code></a></li>
 </ul>
 </li>
@@ -789,6 +809,148 @@ layers are always randomly initialized.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>List</em>[<em>Dict</em>[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.prepare_batch">
+<span class="sig-name descname"><span class="pre">prepare_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.prepare_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.prepare_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare raw inputs for inference (tokenization and normalization).</p>
+<p>This method handles text normalization, tokenization, and span conversion.
+Use this as the first step in the inference pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – Single text string or list of texts.</p></li>
+<li><p><strong>labels</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity labels - string, list of strings, or per-text label lists.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional pre-defined spans to classify (character positions).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>input_x: List of input dicts ready for collation</p></li>
+<li><p>tokens: Tokenized texts</p></li>
+<li><p>start_token_map: Per-text mapping from token idx to char start</p></li>
+<li><p>end_token_map: Per-text mapping from token idx to char end</p></li>
+<li><p>word_input_spans: Spans converted to word indices (or None)</p></li>
+<li><p>entity_types: Normalized entity types</p></li>
+<li><p>valid_texts: Non-empty texts that will be processed</p></li>
+<li><p>valid_to_orig_idx: Mapping from valid indices to original indices</p></li>
+<li><p>num_original: Total number of original texts</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Dictionary containing</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.collate_batch">
+<span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.collate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.collate_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Collate prepared inputs into a tensor batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_x</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of input dicts from prepare_batch.</p></li>
+<li><p><strong>entity_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity type labels.</p></li>
+<li><p><strong>collator</strong> (<em>Any</em><em> | </em><em>None</em>) – Optional pre-created collator instance. If None, creates one.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Collated batch dictionary with tensors ready for the model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.run_batch">
+<span class="sig-name descname"><span class="pre">run_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packing_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to_device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">external_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.run_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.run_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Run model forward pass on a collated batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Collated batch from collate_batch.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Optional inference packing configuration.</p></li>
+<li><p><strong>move_to_device</strong> (<em>bool</em>) – Whether to move tensors to model device.</p></li>
+<li><p><strong>**external_inputs</strong> – Additional inputs to pass to the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model output containing logits and span information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.decode_batch">
+<span class="sig-name descname"><span class="pre">decode_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.decode_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.decode_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Decode model output into entity predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch.</p></li>
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch (needs ‘tokens’ and ‘id_to_classes’).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER (no overlapping entities).</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity lists (one per text in batch).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.map_entities_to_text">
+<span class="sig-name descname"><span class="pre">map_entities_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decoded</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_to_orig_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_original</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.map_entities_to_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.map_entities_to_text" title="Link to this definition">¶</a></dt>
+<dd><p>Map decoded entities back to character positions in original texts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decoded</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Decoded entity spans from decode_batch.</p></li>
+<li><p><strong>valid_texts</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of valid (non-empty) texts.</p></li>
+<li><p><strong>valid_to_orig_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Mapping from valid indices to original indices.</p></li>
+<li><p><strong>start_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-start mapping.</p></li>
+<li><p><strong>end_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-end mapping.</p></li>
+<li><p><strong>num_original</strong> (<em>int</em>) – Total number of original texts.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity dicts aligned with original input texts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseEncoderGLiNER.create_collator">
+<span class="sig-name descname"><span class="pre">create_collator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseEncoderGLiNER.create_collator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseEncoderGLiNER.create_collator" title="Link to this definition">¶</a></dt>
+<dd><p>Create a data collator instance for batch collation.</p>
+<p>Useful for serve.py to create a reusable collator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured data collator instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Any</em></p>
 </dd>
 </dl>
 </dd></dl>
@@ -1362,6 +1524,80 @@ with ‘start’ and ‘end’ character positions.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.run_batch">
+<span class="sig-name descname"><span class="pre">run_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packing_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to_device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gen_sequences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">gen_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanDecoderGLiNER.run_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.run_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Run model forward pass on a collated batch with label generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Collated batch from collate_batch.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Optional inference packing configuration.</p></li>
+<li><p><strong>move_to_device</strong> (<em>bool</em>) – Whether to move tensors to model device.</p></li>
+<li><p><strong>gen_constraints</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Labels to constrain generation.</p></li>
+<li><p><strong>num_gen_sequences</strong> (<em>int</em>) – Number of label sequences to generate per span.</p></li>
+<li><p><strong>**gen_kwargs</strong> – Additional generation parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model output with generated labels attached.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.decode_batch">
+<span class="sig-name descname"><span class="pre">decode_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanDecoderGLiNER.decode_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.decode_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Decode model output into entity predictions with generated labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch (includes gen_labels).</p></li>
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch (needs ‘tokens’ and ‘id_to_classes’).</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER (no overlapping entities).</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity lists (one per text in batch).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.map_entities_to_text">
+<span class="sig-name descname"><span class="pre">map_entities_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decoded</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_to_orig_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_original</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanDecoderGLiNER.map_entities_to_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.map_entities_to_text" title="Link to this definition">¶</a></dt>
+<dd><p>Map decoded entities back to character positions with generated labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decoded</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Decoded entity spans from decode_batch.</p></li>
+<li><p><strong>valid_texts</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of valid (non-empty) texts.</p></li>
+<li><p><strong>valid_to_orig_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Mapping from valid indices to original indices.</p></li>
+<li><p><strong>start_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-start mapping.</p></li>
+<li><p><strong>end_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-end mapping.</p></li>
+<li><p><strong>num_original</strong> (<em>int</em>) – Total number of original texts.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity dicts aligned with original input texts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.inference">
 <span class="sig-name descname"><span class="pre">inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gen_sequences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packing_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">gen_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanDecoderGLiNER.inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.inference" title="Link to this definition">¶</a></dt>
 <dd><p>Predict entities with optional label generation.</p>
@@ -1388,6 +1624,33 @@ with ‘start’ and ‘end’ character positions.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.predict_entities">
+<span class="sig-name descname"><span class="pre">predict_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gen_constraints</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gen_sequences</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">gen_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanDecoderGLiNER.predict_entities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.predict_entities" title="Link to this definition">¶</a></dt>
+<dd><p>Predict entities for a single text input with optional label generation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The input text to predict entities for.</p></li>
+<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – The labels to predict.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER. Defaults to True.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions. Defaults to 0.5.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per entity. Defaults to False.</p></li>
+<li><p><strong>gen_constraints</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Labels to constrain generation.</p></li>
+<li><p><strong>num_gen_sequences</strong> (<em>int</em>) – Number of label sequences to generate per span.</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>
+<li><p><strong>**gen_kwargs</strong> – Additional generation parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity predictions as dictionaries.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>Dict</em>[str, <em>Any</em>]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1527,6 +1790,163 @@ detect entities and the relationships between them in a single forward pass.</p>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.prepare_batch">
+<span class="sig-name descname"><span class="pre">prepare_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.prepare_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.prepare_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Prepare raw inputs for inference including relation types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>texts</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – Single text string or list of texts.</p></li>
+<li><p><strong>labels</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity labels - string, list of strings, or per-text label lists.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional pre-defined spans to classify (character positions).</p></li>
+<li><p><strong>relations</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Relation type labels - string, list of strings, or per-text label lists.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Dictionary containing prepared inputs plus relation_types.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.collate_batch">
+<span class="sig-name descname"><span class="pre">collate_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_types</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_types</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.collate_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.collate_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Collate prepared inputs into a tensor batch with relation types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_x</strong> (<em>List</em><em>[</em><em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em><em>]</em>) – List of input dicts from prepare_batch.</p></li>
+<li><p><strong>entity_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity type labels.</p></li>
+<li><p><strong>collator</strong> (<em>Any</em><em> | </em><em>None</em>) – Optional pre-created collator instance.</p></li>
+<li><p><strong>relation_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Relation type labels (list or per-text lists).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Collated batch dictionary with tensors ready for the model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.create_collator">
+<span class="sig-name descname"><span class="pre">create_collator</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.create_collator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.create_collator" title="Link to this definition">¶</a></dt>
+<dd><p>Create a data collator instance for relation extraction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Configured data collator instance.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.run_batch">
+<span class="sig-name descname"><span class="pre">run_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packing_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">move_to_device</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">external_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.run_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.run_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Run model forward pass on a collated batch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – Collated batch from collate_batch.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>adjacency_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Threshold for adjacency matrix reconstruction.</p></li>
+<li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Optional inference packing configuration.</p></li>
+<li><p><strong>move_to_device</strong> (<em>bool</em>) – Whether to move tensors to model device.</p></li>
+<li><p><strong>**external_inputs</strong> – Additional inputs to pass to the model.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Model output containing logits and relation information.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Any</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.decode_batch">
+<span class="sig-name descname"><span class="pre">decode_batch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.decode_batch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.decode_batch" title="Link to this definition">¶</a></dt>
+<dd><p>Decode model output into entity and relation predictions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch.</p></li>
+<li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for entity predictions.</p></li>
+<li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for relation predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of (entity_outputs, relation_outputs) where each is a list per text.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>List</em>[<em>List</em>[<em>Any</em>]], <em>List</em>[<em>List</em>[<em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.map_entities_to_text">
+<span class="sig-name descname"><span class="pre">map_entities_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decoded</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_to_orig_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_original</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.map_entities_to_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.map_entities_to_text" title="Link to this definition">¶</a></dt>
+<dd><p>Map decoded entities back to character positions in original texts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decoded</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Decoded entity spans from decode_batch.</p></li>
+<li><p><strong>valid_texts</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of valid (non-empty) texts.</p></li>
+<li><p><strong>valid_to_orig_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Mapping from valid indices to original indices.</p></li>
+<li><p><strong>start_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-start mapping.</p></li>
+<li><p><strong>end_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-end mapping.</p></li>
+<li><p><strong>num_original</strong> (<em>int</em>) – Total number of original texts.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity dicts aligned with original input texts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.map_relations_to_text">
+<span class="sig-name descname"><span class="pre">map_relations_to_text</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">relation_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">valid_to_orig_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_token_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_original</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.map_relations_to_text"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.map_relations_to_text" title="Link to this definition">¶</a></dt>
+<dd><p>Map relation predictions back to character positions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>relation_outputs</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Decoded relations per text.</p></li>
+<li><p><strong>entity_outputs</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Any</em><em>]</em><em>]</em>) – Decoded entities per text (for getting span info).</p></li>
+<li><p><strong>valid_texts</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – List of valid (non-empty) texts.</p></li>
+<li><p><strong>valid_to_orig_idx</strong> (<em>List</em><em>[</em><em>int</em><em>]</em>) – Mapping from valid indices to original indices.</p></li>
+<li><p><strong>start_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-start mapping.</p></li>
+<li><p><strong>end_token_map</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>int</em><em>]</em><em>]</em>) – Per-text token-to-char-end mapping.</p></li>
+<li><p><strong>num_original</strong> (<em>int</em>) – Total number of original texts.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of relation dicts aligned with original input texts.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.inference">
 <span class="sig-name descname"><span class="pre">inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">packing_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_spans</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.inference" title="Link to this definition">¶</a></dt>
 <dd><p>Predict entities and relations.</p>
@@ -1534,8 +1954,8 @@ detect entities and the relationships between them in a single forward pass.</p>
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>texts</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – Input texts (str or List[str]).</p></li>
-<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Entity type labels (List[str]).</p></li>
-<li><p><strong>relations</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Relation type labels (List[str]).</p></li>
+<li><p><strong>labels</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity type labels - string, list of strings, or per-text label lists.</p></li>
+<li><p><strong>relations</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Relation type labels - string, list of strings, or per-text label lists.</p></li>
 <li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER (no nested entities).</p></li>
 <li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for entities.</p></li>
 <li><p><strong>adjacency_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for adjacency matrix reconstruction (defaults to threshold).</p></li>
@@ -1554,6 +1974,60 @@ with ‘start’ and ‘end’ character positions.</p></li>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]] | <em>Tuple</em>[<em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]], <em>List</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.predict_entities">
+<span class="sig-name descname"><span class="pre">predict_entities</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.predict_entities"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.predict_entities" title="Link to this definition">¶</a></dt>
+<dd><p>Predict entities for a single text input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The input text to predict entities for.</p></li>
+<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – The entity labels to predict.</p></li>
+<li><p><strong>relations</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – The relation labels (used for context but entities only returned).</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER. Defaults to True.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions. Defaults to 0.5.</p></li>
+<li><p><strong>adjacency_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Threshold for adjacency matrix reconstruction. Defaults to threshold.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per entity. Defaults to False.</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments passed to inference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of entity predictions as dictionaries.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>List</em>[<em>Dict</em>[str, <em>Any</em>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.predict_relations">
+<span class="sig-name descname"><span class="pre">predict_relations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjacency_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#UniEncoderSpanRelexGLiNER.predict_relations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.predict_relations" title="Link to this definition">¶</a></dt>
+<dd><p>Predict entities and relations for a single text input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<em>str</em>) – The input text to predict entities and relations for.</p></li>
+<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – The entity labels to predict.</p></li>
+<li><p><strong>relations</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – The relation labels to predict.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER. Defaults to True.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for entities. Defaults to 0.5.</p></li>
+<li><p><strong>adjacency_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Threshold for adjacency matrix reconstruction. Defaults to threshold.</p></li>
+<li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for relations. Defaults to threshold.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per entity. Defaults to False.</p></li>
+<li><p><strong>**kwargs</strong> – Additional arguments passed to inference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tuple of (entities, relations) for the single text.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tuple</em>[<em>List</em>[<em>Dict</em>[str, <em>Any</em>]], <em>List</em>[<em>Dict</em>[str, <em>Any</em>]]]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1858,10 +2332,10 @@ and delegates to that variant’s from_pretrained method.</p>
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="../convert_to_onnx.html">
+    <a href="../serving.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">ONNX Export &amp; Deployment</div></div>
+        <span>Previous</span><div class="title">Serving</div></div>
     </a>
   </div><div class="navigation-next">
     <a href="gliner.config.html">

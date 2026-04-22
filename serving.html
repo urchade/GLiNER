@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="./">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Serving - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="gliner.model module" href="api/gliner.model.html" /><link rel="prev" title="ONNX Export &amp; Deployment" href="convert_to_onnx.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="Serving"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Serving</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#installation">Installation</a></li>
+<li><a class="reference internal" href="#quick-start">Quick Start</a><ul>
+<li><a class="reference internal" href="#start-server">Start Server</a></li>
+<li><a class="reference internal" href="#make-predictions">Make Predictions</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#configuration-options">Configuration Options</a><ul>
+<li><a class="reference internal" href="#basic">Basic</a></li>
+<li><a class="reference internal" href="#performance">Performance</a></li>
+<li><a class="reference internal" href="#multi-replica">Multi-replica</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#programmatic-usage">Programmatic Usage</a></li>
+<li><a class="reference internal" href="#relation-extraction">Relation Extraction</a></li>
+<li><a class="reference internal" href="#all-cli-options">All CLI Options</a></li>
+<li><a class="reference internal" href="#docker">Docker</a></li>
+<li><a class="reference internal" href="#shutdown">Shutdown</a></li>
+</ul>
+</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">Serving</strong>
+        <meta itemprop="position" content="2" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <section id="serving">
+<h1>Serving<a class="headerlink" href="#serving" title="Link to this heading">¶</a></h1>
+<p>Production deployment for GLiNER via <a class="reference external" href="https://docs.ray.io/en/latest/serve/index.html">Ray Serve</a>, with dynamic batching, memory-aware batch sizing, precompiled power-of-two batch sizes, and multi-replica scaling. Source lives under <a class="reference external" href="https://github.com/urchade/GLiNER/tree/main/gliner/serve"><code class="docutils literal notranslate"><span class="pre">gliner/serve/</span></code></a>.</p>
+<section id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
+<p><strong>With uv (recommended):</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>serve<span class="o">]</span>
+</span></pre></div>
+</div>
+<p><strong>With pip:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="w"> </span>ray<span class="o">[</span>serve<span class="o">]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="quick-start">
+<h2>Quick Start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
+<section id="start-server">
+<h3>Start Server<a class="headerlink" href="#start-server" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>gliner.serve<span class="w"> </span>--model<span class="w"> </span>urchade/gliner_small-v2.1
+</span></pre></div>
+</div>
+</section>
+<section id="make-predictions">
+<h3>Make Predictions<a class="headerlink" href="#make-predictions" title="Link to this heading">¶</a></h3>
+<p><strong>In-process (vLLM-style, recommended):</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERFactory</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">with</span> <span class="n">GLiNERFactory</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+</span><span data-line="4">    <span class="n">outputs</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="5">        <span class="p">[</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris is in France&quot;</span><span class="p">],</span>
+</span><span data-line="6">        <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="7">    <span class="p">)</span>
+</span><span data-line="8">    <span class="nb">print</span><span class="p">(</span><span class="n">outputs</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">GLiNERFactory</span></code> bundles config → deploy → client into one lifecycle-managed
+object. Passing a list of texts preserves dynamic batching — each text is
+dispatched as a separate request so Ray Serve’s <code class="docutils literal notranslate"><span class="pre">&#64;serve.batch</span></code> accumulates
+them into a single forward pass. Use <code class="docutils literal notranslate"><span class="pre">predict_async</span></code> for concurrent calls
+from <code class="docutils literal notranslate"><span class="pre">asyncio</span></code>.</p>
+<p><strong>Remote Python client</strong> (attach to a running deployment):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
+</span><span data-line="4"><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="5">    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="7"><span class="p">)</span>
+</span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+</span><span data-line="9"><span class="c1"># {&#39;entities&#39;: [</span>
+</span><span data-line="10"><span class="c1">#     {&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, &#39;score&#39;: 0.95},</span>
+</span><span data-line="11"><span class="c1">#     {&#39;start&#39;: 15, &#39;end&#39;: 21, &#39;text&#39;: &#39;Google&#39;, &#39;label&#39;: &#39;organization&#39;, &#39;score&#39;: 0.92},</span>
+</span><span data-line="12"><span class="c1">#     {&#39;start&#39;: 25, &#39;end&#39;: 38, &#39;text&#39;: &#39;Mountain View&#39;, &#39;label&#39;: &#39;location&#39;, &#39;score&#39;: 0.89}</span>
+</span><span data-line="13"><span class="c1"># ]}</span>
+</span></pre></div>
+</div>
+<p><strong>HTTP request:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/gliner<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;text&quot;: &quot;John works at Google&quot;, &quot;labels&quot;: [&quot;person&quot;, &quot;organization&quot;]}&#39;</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="configuration-options">
+<h2>Configuration Options<a class="headerlink" href="#configuration-options" title="Link to this heading">¶</a></h2>
+<section id="basic">
+<h3>Basic<a class="headerlink" href="#basic" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>gliner.serve<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model<span class="w"> </span>urchade/gliner_small-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--device<span class="w"> </span>cuda<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--dtype<span class="w"> </span>bfloat16
+</span></pre></div>
+</div>
+</section>
+<section id="performance">
+<h3>Performance<a class="headerlink" href="#performance" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>gliner.serve<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model<span class="w"> </span>urchade/gliner_small-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--enable-flashdeberta<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--enable-sequence-packing<span class="w"> </span><span class="se">\</span>
+</span><span data-line="5"><span class="w">    </span>--max-batch-size<span class="w"> </span><span class="m">64</span>
+</span></pre></div>
+</div>
+</section>
+<section id="multi-replica">
+<h3>Multi-replica<a class="headerlink" href="#multi-replica" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>gliner.serve<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model<span class="w"> </span>urchade/gliner_small-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--num-replicas<span class="w"> </span><span class="m">4</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--num-gpus-per-replica<span class="w"> </span><span class="m">1</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+<section id="programmatic-usage">
+<h2>Programmatic Usage<a class="headerlink" href="#programmatic-usage" title="Link to this heading">¶</a></h2>
+<p>Preferred (vLLM-style):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERFactory</span><span class="p">,</span> <span class="n">GLiNERServeConfig</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERServeConfig</span><span class="p">(</span>
+</span><span data-line="4">    <span class="n">model</span><span class="o">=</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">device</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bfloat16&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">enable_compilation</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">enable_flashdeberta</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="10"><span class="p">)</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">llm</span> <span class="o">=</span> <span class="n">GLiNERFactory</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="13"><span class="k">try</span><span class="p">:</span>
+</span><span data-line="14">    <span class="n">result</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">])</span>
+</span><span data-line="15"><span class="k">finally</span><span class="p">:</span>
+</span><span data-line="16">    <span class="n">llm</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span></pre></div>
+</div>
+<p>Low-level (direct handle, for advanced use — returns Ray ObjectRefs):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERServeConfig</span><span class="p">,</span> <span class="n">serve</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">handle</span> <span class="o">=</span> <span class="n">serve</span><span class="p">(</span><span class="n">GLiNERServeConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">))</span>
+</span><span data-line="4"><span class="n">ref</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">])</span>
+</span><span data-line="5"><span class="n">result</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+</span></pre></div>
+</div>
+</section>
+<section id="relation-extraction">
+<h2>Relation Extraction<a class="headerlink" href="#relation-extraction" title="Link to this heading">¶</a></h2>
+<p>For models that support relation extraction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="2">    <span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>
+</span><span data-line="4">    <span class="n">relations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_by&quot;</span><span class="p">]</span>
+</span><span data-line="5"><span class="p">)</span>
+</span><span data-line="6"><span class="c1"># {&#39;entities&#39;: [...], &#39;relations&#39;: [...]}</span>
+</span></pre></div>
+</div>
+</section>
+<section id="all-cli-options">
+<h2>All CLI Options<a class="headerlink" href="#all-cli-options" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">Model</span> <span class="n">Configuration</span><span class="p">:</span>
+</span><span data-line="2">  <span class="o">--</span><span class="n">model</span>               <span class="n">Model</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">path</span> <span class="p">(</span><span class="n">required</span><span class="p">)</span>
+</span><span data-line="3">  <span class="o">--</span><span class="n">device</span>              <span class="n">cuda</span> <span class="ow">or</span> <span class="n">cpu</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">cuda</span><span class="p">)</span>
+</span><span data-line="4">  <span class="o">--</span><span class="n">dtype</span>               <span class="n">float32</span><span class="p">,</span> <span class="n">float16</span><span class="p">,</span> <span class="n">bfloat16</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="n">bfloat16</span><span class="p">)</span>
+</span><span data-line="5">  <span class="o">--</span><span class="n">quantization</span>        <span class="n">fp16</span><span class="p">,</span> <span class="n">bf16</span><span class="p">,</span> <span class="n">int8</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="n">Batching</span><span class="p">:</span>
+</span><span data-line="8">  <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">batch</span><span class="o">-</span><span class="n">size</span>      <span class="n">Max</span> <span class="n">batch</span> <span class="n">size</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
+</span><span data-line="9">  <span class="o">--</span><span class="n">batch</span><span class="o">-</span><span class="n">wait</span><span class="o">-</span><span class="n">timeout</span><span class="o">-</span><span class="n">ms</span>  <span class="n">Batch</span> <span class="n">wait</span> <span class="n">timeout</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">50</span><span class="p">)</span>
+</span><span data-line="10">  <span class="o">--</span><span class="n">precompiled</span><span class="o">-</span><span class="n">batch</span><span class="o">-</span><span class="n">sizes</span>  <span class="n">Comma</span><span class="o">-</span><span class="n">separated</span> <span class="n">sizes</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">32</span><span class="p">)</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">Replicas</span><span class="p">:</span>
+</span><span data-line="13">  <span class="o">--</span><span class="n">num</span><span class="o">-</span><span class="n">replicas</span>        <span class="n">Number</span> <span class="n">of</span> <span class="n">replicas</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="14">  <span class="o">--</span><span class="n">num</span><span class="o">-</span><span class="n">gpus</span><span class="o">-</span><span class="n">per</span><span class="o">-</span><span class="n">replica</span>  <span class="n">GPUs</span> <span class="n">per</span> <span class="n">replica</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="n">Performance</span><span class="p">:</span>
+</span><span data-line="17">  <span class="o">--</span><span class="n">enable</span><span class="o">-</span><span class="n">flashdeberta</span>    <span class="n">Use</span> <span class="n">FlashDeBERTa</span> <span class="n">backend</span>
+</span><span data-line="18">  <span class="o">--</span><span class="n">enable</span><span class="o">-</span><span class="n">sequence</span><span class="o">-</span><span class="n">packing</span>  <span class="n">Enable</span> <span class="n">sequence</span> <span class="n">packing</span>
+</span><span data-line="19">  <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="nb">compile</span>             <span class="n">Disable</span> <span class="n">torch</span><span class="o">.</span><span class="n">compile</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="n">Memory</span><span class="p">:</span>
+</span><span data-line="22">  <span class="o">--</span><span class="n">target</span><span class="o">-</span><span class="n">memory</span><span class="o">-</span><span class="n">fraction</span>  <span class="n">GPU</span> <span class="n">memory</span> <span class="n">fraction</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">)</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="n">Server</span><span class="p">:</span>
+</span><span data-line="25">  <span class="o">--</span><span class="n">route</span><span class="o">-</span><span class="n">prefix</span>        <span class="n">HTTP</span> <span class="n">route</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="o">/</span><span class="n">gliner</span><span class="p">)</span>
+</span><span data-line="26">  <span class="o">--</span><span class="n">ray</span><span class="o">-</span><span class="n">address</span>         <span class="n">Ray</span> <span class="n">cluster</span> <span class="n">address</span>
+</span></pre></div>
+</div>
+</section>
+<section id="docker">
+<h2>Docker<a class="headerlink" href="#docker" title="Link to this heading">¶</a></h2>
+<p><strong>Build:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>build<span class="w"> </span>-t<span class="w"> </span>gliner-serve<span class="w"> </span>-f<span class="w"> </span>gliner/serve/Dockerfile<span class="w"> </span>.
+</span></pre></div>
+</div>
+<p><strong>Run:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>run<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span>gliner-serve
+</span></pre></div>
+</div>
+<p><strong>With custom model:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">docker<span class="w"> </span>run<span class="w"> </span>--gpus<span class="w"> </span>all<span class="w"> </span>-p<span class="w"> </span><span class="m">8000</span>:8000<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>-e<span class="w"> </span><span class="nv">GLINER_MODEL</span><span class="o">=</span>urchade/gliner_medium-v2.1<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>-e<span class="w"> </span><span class="nv">GLINER_ENABLE_FLASHDEBERTA</span><span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">  </span>gliner-serve
+</span></pre></div>
+</div>
+<p><strong>Environment variables:</strong></p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Default</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_MODEL</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">urchade/gliner_small-v2.1</span></code></p></td>
+<td><p>Model name or path</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_DEVICE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cuda</span></code></p></td>
+<td><p>Device (cuda/cpu)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_DTYPE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bfloat16</span></code></p></td>
+<td><p>Data type</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_MAX_BATCH_SIZE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">32</span></code></p></td>
+<td><p>Max batch size</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_NUM_REPLICAS</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">1</span></code></p></td>
+<td><p>Number of replicas</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_MEMORY_FRACTION</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">0.8</span></code></p></td>
+<td><p>GPU memory fraction</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_QUANTIZATION</span></code></p></td>
+<td><p>-</p></td>
+<td><p>Quantization (fp16/bf16/int8)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_ENABLE_FLASHDEBERTA</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enable FlashDeBERTa</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_ENABLE_PACKING</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Enable sequence packing</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_DISABLE_COMPILE</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">false</span></code></p></td>
+<td><p>Disable torch.compile</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GLINER_ROUTE_PREFIX</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">/gliner</span></code></p></td>
+<td><p>HTTP route prefix</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="shutdown">
+<h2>Shutdown<a class="headerlink" href="#shutdown" title="Link to this heading">¶</a></h2>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">shutdown</span>
+</span><span data-line="2"><span class="n">shutdown</span><span class="p">()</span>
+</span></pre></div>
+</div>
+</section>
+</section>
+
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"><div class="navigation-prev">
+    <a href="convert_to_onnx.html">
+      <i class="i-lucide chevron-left"></i>
+      <div class="page-info">
+        <span>Previous</span><div class="title">ONNX Export &amp; Deployment</div></div>
+    </a>
+  </div><div class="navigation-next">
+    <a href="api/gliner.model.html">
+      <div class="page-info">
+        <span>Next</span>
+        <div class="title">gliner.model module</div>
+      </div>
+      <i class="i-lucide chevron-right"></i>
+    </a>
+  </div></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="_static/documentation_options.js?v=dc91f075"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

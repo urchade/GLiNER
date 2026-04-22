@@ -64,6 +64,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -933,259 +934,270 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="746"><span class="sd">        &quot;&quot;&quot;</span>
 </span><span data-line="747">        <span class="n">packing_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InferencePackingConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="748">        <span class="n">pair_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="749">
-</span><span data-line="750">        <span class="k">if</span> <span class="p">(</span>
-</span><span data-line="751">            <span class="n">packing_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="752">            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
-</span><span data-line="753">            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-</span><span data-line="754">            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attention_mask</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
-</span><span data-line="755">            <span class="ow">and</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span>
-</span><span data-line="756">        <span class="p">):</span>
-</span><span data-line="757">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_with_packing</span><span class="p">(</span>
-</span><span data-line="758">                <span class="n">input_ids</span><span class="p">,</span>
-</span><span data-line="759">                <span class="n">attention_mask</span><span class="p">,</span>
-</span><span data-line="760">                <span class="n">packing_config</span><span class="p">,</span>
-</span><span data-line="761">                <span class="n">pair_attention_mask</span><span class="p">,</span>
-</span><span data-line="762">                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
-</span><span data-line="763">                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
-</span><span data-line="764">            <span class="p">)</span>
-</span><span data-line="765">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="766">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="767">            <span class="k">if</span> <span class="n">attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="768">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
-</span><span data-line="769">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="770">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
-</span><span data-line="771">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
-</span><span data-line="772">                <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
-</span><span data-line="773">                <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">,</span>
-</span><span data-line="774">            <span class="p">)</span>
-</span><span data-line="775">
-</span><span data-line="776">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;projection&quot;</span><span class="p">):</span>
-</span><span data-line="777">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">(</span><span class="n">token_embeddings</span><span class="p">)</span>
-</span><span data-line="778">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
+</span><span data-line="749">        <span class="n">token_lengths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;token_lengths&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="750">
+</span><span data-line="751">        <span class="k">if</span> <span class="p">(</span>
+</span><span data-line="752">            <span class="n">packing_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="753">            <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">training</span>
+</span><span data-line="754">            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+</span><span data-line="755">            <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attention_mask</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span>
+</span><span data-line="756">            <span class="ow">and</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">dim</span><span class="p">()</span> <span class="o">==</span> <span class="mi">2</span>
+</span><span data-line="757">        <span class="p">):</span>
+</span><span data-line="758">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_encode_with_packing</span><span class="p">(</span>
+</span><span data-line="759">                <span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="760">                <span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="761">                <span class="n">packing_config</span><span class="p">,</span>
+</span><span data-line="762">                <span class="n">pair_attention_mask</span><span class="p">,</span>
+</span><span data-line="763">                <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+</span><span data-line="764">                <span class="n">token_lengths</span><span class="o">=</span><span class="n">token_lengths</span><span class="p">,</span>
+</span><span data-line="765">                <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="766">            <span class="p">)</span>
+</span><span data-line="767">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="768">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="769">            <span class="k">if</span> <span class="n">attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="770">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="771">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="772">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
+</span><span data-line="773">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
+</span><span data-line="774">                <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="775">                <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">,</span>
+</span><span data-line="776">            <span class="p">)</span>
+</span><span data-line="777">
+</span><span data-line="778">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;projection&quot;</span><span class="p">):</span>
+</span><span data-line="779">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">(</span><span class="n">token_embeddings</span><span class="p">)</span>
+</span><span data-line="780">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
 
-</span><span data-line="779">
-</span><span data-line="780">    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_with_packing</span><span class="p">(</span>
-</span><span data-line="781">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="782">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="783">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="784">        <span class="n">packing_config</span><span class="p">:</span> <span class="n">InferencePackingConfig</span><span class="p">,</span>
-</span><span data-line="785">        <span class="n">pair_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
-</span><span data-line="786">        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="787">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="788">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="789"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes sequences using inference-time packing for efficiency.</span>
-</span><span data-line="790">
-</span><span data-line="791"><span class="sd">        Packs multiple variable-length sequences into fewer, more efficient batches</span>
-</span><span data-line="792"><span class="sd">        to maximize GPU utilization during inference. Short sequences are combined</span>
-</span><span data-line="793"><span class="sd">        into single packed sequences.</span>
-</span><span data-line="794">
-</span><span data-line="795"><span class="sd">        Args:</span>
-</span><span data-line="796"><span class="sd">            input_ids: Input token IDs of shape (batch_size, seq_len).</span>
-</span><span data-line="797"><span class="sd">            attention_mask: Attention mask of shape (batch_size, seq_len).</span>
-</span><span data-line="798"><span class="sd">            packing_config: Configuration for packing behavior.</span>
-</span><span data-line="799"><span class="sd">            pair_attention_mask: Optional pairwise attention mask.</span>
-</span><span data-line="800"><span class="sd">            *args: Additional positional arguments.</span>
-</span><span data-line="801"><span class="sd">            **kwargs: Additional keyword arguments.</span>
-</span><span data-line="802">
-</span><span data-line="803"><span class="sd">        Returns:</span>
-</span><span data-line="804"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size) with</span>
-</span><span data-line="805"><span class="sd">            proper unpacking to restore original batch structure.</span>
-</span><span data-line="806"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="807">        <span class="n">lengths</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
-</span><span data-line="808">        <span class="n">seq_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
-</span><span data-line="809">        <span class="k">if</span> <span class="ow">not</span> <span class="n">lengths</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">==</span> <span class="n">seq_len</span> <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">):</span>
-</span><span data-line="810">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="811">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
-</span><span data-line="812">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="813">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
-</span><span data-line="814">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">)</span>
-</span><span data-line="815">
-</span><span data-line="816">        <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
-</span><span data-line="817">        <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
-</span><span data-line="818">            <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="819">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[]})</span>
-</span><span data-line="820">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="821">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">row</span><span class="p">[:</span><span class="n">length</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()})</span>
-</span><span data-line="822">
-</span><span data-line="823">        <span class="n">pad_token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pad_token_id</span>
-</span><span data-line="824">        <span class="k">if</span> <span class="n">pad_token_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="825">            <span class="n">pad_token_id</span> <span class="o">=</span> <span class="mi">0</span>
-</span><span data-line="826">
-</span><span data-line="827">        <span class="n">packed</span> <span class="o">=</span> <span class="n">pack_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">packing_config</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="p">)</span>
-</span><span data-line="828">
-</span><span data-line="829">        <span class="n">device</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">device</span>
-</span><span data-line="830">        <span class="n">packed_ids</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">input_ids</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="831">        <span class="n">packed_mask</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">pair_attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="832">        <span class="n">packed_fallback</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="781">
+</span><span data-line="782">    <span class="k">def</span><span class="w"> </span><span class="nf">_encode_with_packing</span><span class="p">(</span>
+</span><span data-line="783">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="784">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="785">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="786">        <span class="n">packing_config</span><span class="p">:</span> <span class="n">InferencePackingConfig</span><span class="p">,</span>
+</span><span data-line="787">        <span class="n">pair_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
+</span><span data-line="788">        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="789">        <span class="n">token_lengths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="790">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="791">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="792"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes sequences using inference-time packing for efficiency.</span>
+</span><span data-line="793">
+</span><span data-line="794"><span class="sd">        Packs multiple variable-length sequences into fewer, more efficient batches</span>
+</span><span data-line="795"><span class="sd">        to maximize GPU utilization during inference. Short sequences are combined</span>
+</span><span data-line="796"><span class="sd">        into single packed sequences.</span>
+</span><span data-line="797">
+</span><span data-line="798"><span class="sd">        Args:</span>
+</span><span data-line="799"><span class="sd">            input_ids: Input token IDs of shape (batch_size, seq_len).</span>
+</span><span data-line="800"><span class="sd">            attention_mask: Attention mask of shape (batch_size, seq_len).</span>
+</span><span data-line="801"><span class="sd">            packing_config: Configuration for packing behavior.</span>
+</span><span data-line="802"><span class="sd">            pair_attention_mask: Optional pairwise attention mask.</span>
+</span><span data-line="803"><span class="sd">            *args: Additional positional arguments.</span>
+</span><span data-line="804"><span class="sd">            token_lengths: Optional precomputed CPU-side per-sample token counts.</span>
+</span><span data-line="805"><span class="sd">                When provided by the collator, avoids an ``attention_mask.sum().tolist()``</span>
+</span><span data-line="806"><span class="sd">                GPU→CPU sync on every forward.</span>
+</span><span data-line="807"><span class="sd">            **kwargs: Additional keyword arguments.</span>
+</span><span data-line="808">
+</span><span data-line="809"><span class="sd">        Returns:</span>
+</span><span data-line="810"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size) with</span>
+</span><span data-line="811"><span class="sd">            proper unpacking to restore original batch structure.</span>
+</span><span data-line="812"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="813">        <span class="k">if</span> <span class="n">token_lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="814">            <span class="n">lengths</span> <span class="o">=</span> <span class="n">token_lengths</span>
+</span><span data-line="815">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="816">            <span class="n">lengths</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span data-line="817">        <span class="n">seq_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="818">        <span class="k">if</span> <span class="ow">not</span> <span class="n">lengths</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">==</span> <span class="n">seq_len</span> <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">):</span>
+</span><span data-line="819">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="820">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="821">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="822">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
+</span><span data-line="823">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">)</span>
+</span><span data-line="824">
+</span><span data-line="825">        <span class="c1"># One bulk tolist() is cheaper than N per-row tolist() calls.</span>
+</span><span data-line="826">        <span class="n">all_ids</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span data-line="827">        <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="828">        <span class="k">for</span> <span class="n">ids_row</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_ids</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
+</span><span data-line="829">            <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="830">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+</span><span data-line="831">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="832">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">ids_row</span><span class="p">[:</span><span class="n">length</span><span class="p">]})</span>
 </span><span data-line="833">
-</span><span data-line="834">        <span class="n">attn_to_use</span> <span class="o">=</span> <span class="n">packed_mask</span> <span class="k">if</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">else</span> <span class="n">packed_fallback</span>
-</span><span data-line="835">        <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="836">
-</span><span data-line="837">        <span class="k">if</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">():</span>
-</span><span data-line="838">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_fallback</span>
-</span><span data-line="839">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_mask</span>
-</span><span data-line="840">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="841">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_to_use</span>
-</span><span data-line="842">
-</span><span data-line="843">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
-</span><span data-line="844">            <span class="n">input_ids</span><span class="o">=</span><span class="n">packed_ids</span><span class="p">,</span>
-</span><span data-line="845">            <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">,</span>
-</span><span data-line="846">        <span class="p">)</span>
+</span><span data-line="834">        <span class="n">pad_token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pad_token_id</span>
+</span><span data-line="835">        <span class="k">if</span> <span class="n">pad_token_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="836">            <span class="n">pad_token_id</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="837">
+</span><span data-line="838">        <span class="n">packed</span> <span class="o">=</span> <span class="n">pack_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">,</span> <span class="n">packing_config</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="p">)</span>
+</span><span data-line="839">
+</span><span data-line="840">        <span class="n">device</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">device</span>
+</span><span data-line="841">        <span class="n">packed_ids</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">input_ids</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="842">        <span class="n">packed_mask</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">pair_attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="843">        <span class="n">packed_fallback</span> <span class="o">=</span> <span class="n">packed</span><span class="o">.</span><span class="n">attention_mask</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="844">
+</span><span data-line="845">        <span class="n">attn_to_use</span> <span class="o">=</span> <span class="n">packed_mask</span> <span class="k">if</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">else</span> <span class="n">packed_fallback</span>
+</span><span data-line="846">        <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="847">
-</span><span data-line="848">        <span class="n">unpacked</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">unpack_spans</span><span class="p">(</span><span class="n">token_embeddings</span><span class="p">,</span> <span class="n">packed</span><span class="p">)</span>
-</span><span data-line="849">        <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">token_embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="850">        <span class="n">batch</span><span class="p">,</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
-</span><span data-line="851">        <span class="n">output</span> <span class="o">=</span> <span class="n">token_embeddings</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
-</span><span data-line="852">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unpacked</span><span class="p">):</span>
-</span><span data-line="853">            <span class="n">tgt_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
-</span><span data-line="854">            <span class="k">if</span> <span class="n">tgt_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="855">                <span class="k">continue</span>
-</span><span data-line="856">            <span class="n">output</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:</span><span class="n">tgt_len</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
-</span><span data-line="857">        <span class="k">return</span> <span class="n">output</span>
+</span><span data-line="848">        <span class="k">if</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">():</span>
+</span><span data-line="849">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_fallback</span>
+</span><span data-line="850">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_mask</span>
+</span><span data-line="851">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="852">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_to_use</span>
+</span><span data-line="853">
+</span><span data-line="854">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
+</span><span data-line="855">            <span class="n">input_ids</span><span class="o">=</span><span class="n">packed_ids</span><span class="p">,</span>
+</span><span data-line="856">            <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">,</span>
+</span><span data-line="857">        <span class="p">)</span>
 </span><span data-line="858">
+</span><span data-line="859">        <span class="n">unpacked</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="n">unpack_spans</span><span class="p">(</span><span class="n">token_embeddings</span><span class="p">,</span> <span class="n">packed</span><span class="p">)</span>
+</span><span data-line="860">        <span class="n">hidden_size</span> <span class="o">=</span> <span class="n">token_embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="861">        <span class="n">batch</span><span class="p">,</span> <span class="n">seq</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
+</span><span data-line="862">        <span class="n">output</span> <span class="o">=</span> <span class="n">token_embeddings</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">seq</span><span class="p">,</span> <span class="n">hidden_size</span><span class="p">)</span>
+</span><span data-line="863">        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">unpacked</span><span class="p">):</span>
+</span><span data-line="864">            <span class="n">tgt_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+</span><span data-line="865">            <span class="k">if</span> <span class="n">tgt_len</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="866">                <span class="k">continue</span>
+</span><span data-line="867">            <span class="n">output</span><span class="p">[</span><span class="n">idx</span><span class="p">,</span> <span class="p">:</span><span class="n">tgt_len</span><span class="p">]</span> <span class="o">=</span> <span class="n">target</span>
+</span><span data-line="868">        <span class="k">return</span> <span class="n">output</span>
+</span><span data-line="869">
 <div class="viewcode-block" id="Encoder.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder.forward">[docs]</a>
-</span><span data-line="859">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="860"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the encoder.</span>
-</span><span data-line="861">
-</span><span data-line="862"><span class="sd">        Args:</span>
-</span><span data-line="863"><span class="sd">            *args: Positional arguments passed to encode_text.</span>
-</span><span data-line="864"><span class="sd">            **kwargs: Keyword arguments passed to encode_text.</span>
-</span><span data-line="865">
-</span><span data-line="866"><span class="sd">        Returns:</span>
-</span><span data-line="867"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="868"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="869">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="870">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
+</span><span data-line="870">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="871"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the encoder.</span>
+</span><span data-line="872">
+</span><span data-line="873"><span class="sd">        Args:</span>
+</span><span data-line="874"><span class="sd">            *args: Positional arguments passed to encode_text.</span>
+</span><span data-line="875"><span class="sd">            **kwargs: Keyword arguments passed to encode_text.</span>
+</span><span data-line="876">
+</span><span data-line="877"><span class="sd">        Returns:</span>
+</span><span data-line="878"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size).</span>
+</span><span data-line="879"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="880">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="881">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
 </div>
 
-</span><span data-line="871">
-</span><span data-line="872">
+</span><span data-line="882">
+</span><span data-line="883">
 <div class="viewcode-block" id="BiEncoder">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder">[docs]</a>
-</span><span data-line="873"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoder</span><span class="p">(</span><span class="n">Encoder</span><span class="p">):</span>
-</span><span data-line="874"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bi-encoder architecture with separate encoders for text and labels.</span>
-</span><span data-line="875">
-</span><span data-line="876"><span class="sd">    This encoder processes text sequences and label sequences through potentially</span>
-</span><span data-line="877"><span class="sd">    different transformer models, producing aligned representations for both. The</span>
-</span><span data-line="878"><span class="sd">    label representations are mean-pooled to create fixed-size embeddings.</span>
-</span><span data-line="879">
-</span><span data-line="880"><span class="sd">    Attributes:</span>
-</span><span data-line="881"><span class="sd">        bert_layer: Inherited text encoder from Encoder.</span>
-</span><span data-line="882"><span class="sd">        projection: Inherited optional projection from Encoder.</span>
-</span><span data-line="883"><span class="sd">        labels_encoder: Separate Transformer instance for encoding labels.</span>
-</span><span data-line="884"><span class="sd">        labels_projection: Optional projection for label embeddings when label</span>
-</span><span data-line="885"><span class="sd">            encoder hidden size differs from config.hidden_size.</span>
-</span><span data-line="886"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="887">
+</span><span data-line="884"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoder</span><span class="p">(</span><span class="n">Encoder</span><span class="p">):</span>
+</span><span data-line="885"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bi-encoder architecture with separate encoders for text and labels.</span>
+</span><span data-line="886">
+</span><span data-line="887"><span class="sd">    This encoder processes text sequences and label sequences through potentially</span>
+</span><span data-line="888"><span class="sd">    different transformer models, producing aligned representations for both. The</span>
+</span><span data-line="889"><span class="sd">    label representations are mean-pooled to create fixed-size embeddings.</span>
+</span><span data-line="890">
+</span><span data-line="891"><span class="sd">    Attributes:</span>
+</span><span data-line="892"><span class="sd">        bert_layer: Inherited text encoder from Encoder.</span>
+</span><span data-line="893"><span class="sd">        projection: Inherited optional projection from Encoder.</span>
+</span><span data-line="894"><span class="sd">        labels_encoder: Separate Transformer instance for encoding labels.</span>
+</span><span data-line="895"><span class="sd">        labels_projection: Optional projection for label embeddings when label</span>
+</span><span data-line="896"><span class="sd">            encoder hidden size differs from config.hidden_size.</span>
+</span><span data-line="897"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="898">
 <div class="viewcode-block" id="BiEncoder.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.__init__">[docs]</a>
-</span><span data-line="888">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="889">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="890">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="891"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the bi-encoder.</span>
-</span><span data-line="892">
-</span><span data-line="893"><span class="sd">        Args:</span>
-</span><span data-line="894"><span class="sd">            config: Configuration object containing model hyperparameters including</span>
-</span><span data-line="895"><span class="sd">                `labels_encoder` (model name for label encoder) and `hidden_size`.</span>
-</span><span data-line="896"><span class="sd">            from_pretrained: If True, loads pretrained weights for both encoders.</span>
-</span><span data-line="897"><span class="sd">                Defaults to False.</span>
-</span><span data-line="898"><span class="sd">            cache_dir: Optional directory for caching downloaded models. Defaults to None.</span>
-</span><span data-line="899"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="900">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">)</span>
-</span><span data-line="901">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="902">            <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
-</span><span data-line="903">            <span class="n">le_hidden_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span>
-</span><span data-line="904">
-</span><span data-line="905">            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">!=</span> <span class="n">le_hidden_size</span><span class="p">:</span>
-</span><span data-line="906">                <span class="bp">self</span><span class="o">.</span><span class="n">labels_projection</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">le_hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">)</span></div>
+</span><span data-line="899">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="900">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="901">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="902"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the bi-encoder.</span>
+</span><span data-line="903">
+</span><span data-line="904"><span class="sd">        Args:</span>
+</span><span data-line="905"><span class="sd">            config: Configuration object containing model hyperparameters including</span>
+</span><span data-line="906"><span class="sd">                `labels_encoder` (model name for label encoder) and `hidden_size`.</span>
+</span><span data-line="907"><span class="sd">            from_pretrained: If True, loads pretrained weights for both encoders.</span>
+</span><span data-line="908"><span class="sd">                Defaults to False.</span>
+</span><span data-line="909"><span class="sd">            cache_dir: Optional directory for caching downloaded models. Defaults to None.</span>
+</span><span data-line="910"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="911">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">)</span>
+</span><span data-line="912">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="913">            <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="914">            <span class="n">le_hidden_size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span>
+</span><span data-line="915">
+</span><span data-line="916">            <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span> <span class="o">!=</span> <span class="n">le_hidden_size</span><span class="p">:</span>
+</span><span data-line="917">                <span class="bp">self</span><span class="o">.</span><span class="n">labels_projection</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">le_hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">)</span></div>
 
-</span><span data-line="907">
+</span><span data-line="918">
 <div class="viewcode-block" id="BiEncoder.mean_pooling">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.mean_pooling">[docs]</a>
-</span><span data-line="908">    <span class="k">def</span><span class="w"> </span><span class="nf">mean_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="909"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies mean pooling over token embeddings using attention mask.</span>
-</span><span data-line="910">
-</span><span data-line="911"><span class="sd">        Computes the average of token embeddings weighted by the attention mask,</span>
-</span><span data-line="912"><span class="sd">        ignoring padded positions.</span>
-</span><span data-line="913">
-</span><span data-line="914"><span class="sd">        Args:</span>
-</span><span data-line="915"><span class="sd">            token_embeddings: Token-level embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="916"><span class="sd">            attention_mask: Binary mask of shape (batch_size, seq_len) where 1 indicates</span>
-</span><span data-line="917"><span class="sd">                valid tokens and 0 indicates padding.</span>
-</span><span data-line="918">
-</span><span data-line="919"><span class="sd">        Returns:</span>
-</span><span data-line="920"><span class="sd">            Pooled embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="921"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="922">        <span class="n">input_mask_expanded</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">token_embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">())</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
-</span><span data-line="923">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">token_embeddings</span> <span class="o">*</span> <span class="n">input_mask_expanded</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">input_mask_expanded</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span></div>
-
+</span><span data-line="919">    <span class="k">def</span><span class="w"> </span><span class="nf">mean_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="920"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies mean pooling over token embeddings using attention mask.</span>
+</span><span data-line="921">
+</span><span data-line="922"><span class="sd">        Computes the average of token embeddings weighted by the attention mask,</span>
+</span><span data-line="923"><span class="sd">        ignoring padded positions.</span>
 </span><span data-line="924">
+</span><span data-line="925"><span class="sd">        Args:</span>
+</span><span data-line="926"><span class="sd">            token_embeddings: Token-level embeddings of shape (batch_size, seq_len, hidden_size).</span>
+</span><span data-line="927"><span class="sd">            attention_mask: Binary mask of shape (batch_size, seq_len) where 1 indicates</span>
+</span><span data-line="928"><span class="sd">                valid tokens and 0 indicates padding.</span>
+</span><span data-line="929">
+</span><span data-line="930"><span class="sd">        Returns:</span>
+</span><span data-line="931"><span class="sd">            Pooled embeddings of shape (batch_size, hidden_size).</span>
+</span><span data-line="932"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="933">        <span class="n">input_mask_expanded</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">token_embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">())</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
+</span><span data-line="934">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">token_embeddings</span> <span class="o">*</span> <span class="n">input_mask_expanded</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">input_mask_expanded</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span></div>
+
+</span><span data-line="935">
 <div class="viewcode-block" id="BiEncoder.encode_labels">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.encode_labels">[docs]</a>
-</span><span data-line="925">    <span class="k">def</span><span class="w"> </span><span class="nf">encode_labels</span><span class="p">(</span>
-</span><span data-line="926">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
-</span><span data-line="927">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="928"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes label sequences into fixed-size embeddings.</span>
-</span><span data-line="929">
-</span><span data-line="930"><span class="sd">        Processes labels through the dedicated labels encoder and applies mean pooling</span>
-</span><span data-line="931"><span class="sd">        to produce sentence-level representations.</span>
-</span><span data-line="932">
-</span><span data-line="933"><span class="sd">        Args:</span>
-</span><span data-line="934"><span class="sd">            input_ids: Label token IDs of shape (batch_size, seq_len).</span>
-</span><span data-line="935"><span class="sd">            attention_mask: Attention mask of shape (batch_size, seq_len).</span>
-</span><span data-line="936"><span class="sd">            *args: Additional positional arguments.</span>
-</span><span data-line="937"><span class="sd">            **kwargs: Additional keyword arguments (packing_config and pair_attention_mask</span>
-</span><span data-line="938"><span class="sd">                are removed as they&#39;re not supported for labels).</span>
-</span><span data-line="939">
-</span><span data-line="940"><span class="sd">        Returns:</span>
-</span><span data-line="941"><span class="sd">            Pooled label embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="942"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="943">        <span class="n">label_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="944">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="945">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="946">        <span class="n">label_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
-</span><span data-line="947">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">label_kwargs</span><span class="p">)</span>
-</span><span data-line="948">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;labels_projection&quot;</span><span class="p">):</span>
-</span><span data-line="949">            <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_projection</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">)</span>
-</span><span data-line="950">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_pooling</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
-</span><span data-line="951">        <span class="k">return</span> <span class="n">labels_embeddings</span></div>
+</span><span data-line="936">    <span class="k">def</span><span class="w"> </span><span class="nf">encode_labels</span><span class="p">(</span>
+</span><span data-line="937">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+</span><span data-line="938">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="939"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes label sequences into fixed-size embeddings.</span>
+</span><span data-line="940">
+</span><span data-line="941"><span class="sd">        Processes labels through the dedicated labels encoder and applies mean pooling</span>
+</span><span data-line="942"><span class="sd">        to produce sentence-level representations.</span>
+</span><span data-line="943">
+</span><span data-line="944"><span class="sd">        Args:</span>
+</span><span data-line="945"><span class="sd">            input_ids: Label token IDs of shape (batch_size, seq_len).</span>
+</span><span data-line="946"><span class="sd">            attention_mask: Attention mask of shape (batch_size, seq_len).</span>
+</span><span data-line="947"><span class="sd">            *args: Additional positional arguments.</span>
+</span><span data-line="948"><span class="sd">            **kwargs: Additional keyword arguments (packing_config and pair_attention_mask</span>
+</span><span data-line="949"><span class="sd">                are removed as they&#39;re not supported for labels).</span>
+</span><span data-line="950">
+</span><span data-line="951"><span class="sd">        Returns:</span>
+</span><span data-line="952"><span class="sd">            Pooled label embeddings of shape (batch_size, hidden_size).</span>
+</span><span data-line="953"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="954">        <span class="n">label_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="955">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="956">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="957">        <span class="n">label_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="958">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">label_kwargs</span><span class="p">)</span>
+</span><span data-line="959">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;labels_projection&quot;</span><span class="p">):</span>
+</span><span data-line="960">            <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_projection</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">)</span>
+</span><span data-line="961">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_pooling</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
+</span><span data-line="962">        <span class="k">return</span> <span class="n">labels_embeddings</span></div>
 
-</span><span data-line="952">
+</span><span data-line="963">
 <div class="viewcode-block" id="BiEncoder.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.forward">[docs]</a>
-</span><span data-line="953">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
-</span><span data-line="954">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="955">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="956">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="957">        <span class="n">labels_input_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="958">        <span class="n">labels_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="959">        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="960">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="961">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="962"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the bi-encoder.</span>
-</span><span data-line="963">
-</span><span data-line="964"><span class="sd">        Encodes both text sequences (token-level) and label sequences (pooled) to</span>
-</span><span data-line="965"><span class="sd">        produce aligned representations.</span>
-</span><span data-line="966">
-</span><span data-line="967"><span class="sd">        Args:</span>
-</span><span data-line="968"><span class="sd">            input_ids: Text token IDs of shape (batch_size, seq_len).</span>
-</span><span data-line="969"><span class="sd">            attention_mask: Text attention mask of shape (batch_size, seq_len).</span>
-</span><span data-line="970"><span class="sd">            labels_input_ids: Label token IDs of shape (batch_size, label_seq_len).</span>
-</span><span data-line="971"><span class="sd">            labels_attention_mask: Label attention mask of shape (batch_size, label_seq_len).</span>
-</span><span data-line="972"><span class="sd">            *args: Additional positional arguments.</span>
-</span><span data-line="973"><span class="sd">            **kwargs: Additional keyword arguments.</span>
+</span><span data-line="964">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+</span><span data-line="965">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="966">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="967">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="968">        <span class="n">labels_input_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="969">        <span class="n">labels_attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="970">        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="971">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="972">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
+</span><span data-line="973"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the bi-encoder.</span>
 </span><span data-line="974">
-</span><span data-line="975"><span class="sd">        Returns:</span>
-</span><span data-line="976"><span class="sd">            A tuple containing:</span>
-</span><span data-line="977"><span class="sd">                - token_embeddings: Text embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="978"><span class="sd">                - labels_embeddings: Pooled label embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="979"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="980">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="981">
-</span><span data-line="982">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels_input_ids</span><span class="p">,</span> <span class="n">labels_attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="983">        <span class="k">return</span> <span class="n">token_embeddings</span><span class="p">,</span> <span class="n">labels_embeddings</span></div>
+</span><span data-line="975"><span class="sd">        Encodes both text sequences (token-level) and label sequences (pooled) to</span>
+</span><span data-line="976"><span class="sd">        produce aligned representations.</span>
+</span><span data-line="977">
+</span><span data-line="978"><span class="sd">        Args:</span>
+</span><span data-line="979"><span class="sd">            input_ids: Text token IDs of shape (batch_size, seq_len).</span>
+</span><span data-line="980"><span class="sd">            attention_mask: Text attention mask of shape (batch_size, seq_len).</span>
+</span><span data-line="981"><span class="sd">            labels_input_ids: Label token IDs of shape (batch_size, label_seq_len).</span>
+</span><span data-line="982"><span class="sd">            labels_attention_mask: Label attention mask of shape (batch_size, label_seq_len).</span>
+</span><span data-line="983"><span class="sd">            *args: Additional positional arguments.</span>
+</span><span data-line="984"><span class="sd">            **kwargs: Additional keyword arguments.</span>
+</span><span data-line="985">
+</span><span data-line="986"><span class="sd">        Returns:</span>
+</span><span data-line="987"><span class="sd">            A tuple containing:</span>
+</span><span data-line="988"><span class="sd">                - token_embeddings: Text embeddings of shape (batch_size, seq_len, hidden_size).</span>
+</span><span data-line="989"><span class="sd">                - labels_embeddings: Pooled label embeddings of shape (batch_size, hidden_size).</span>
+</span><span data-line="990"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="991">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="992">
+</span><span data-line="993">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels_input_ids</span><span class="p">,</span> <span class="n">labels_attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="994">        <span class="k">return</span> <span class="n">token_embeddings</span><span class="p">,</span> <span class="n">labels_embeddings</span></div>
 </div>
 
 </span></pre></div>

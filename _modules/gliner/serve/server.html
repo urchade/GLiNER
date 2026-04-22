@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en" data-accent-color="violet" data-content_root="../../../">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.serve.server - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../../../genindex.html" /><link rel="search" title="Search" href="../../../search.html" /><script>
+    function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
+    setColorMode(localStorage._theme||"auto");
+  </script><link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=e1a1ceaf" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/shibuya.css?v=d140fbf8" />
+    <link media="print" rel="stylesheet" type="text/css" href="../../../_static/print.css?v=20ff2c19" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --sy-f-text: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+  --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
+}
+</style>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.serve.server"/>
+<meta name="twitter:card" content="summary"/>
+  </head>
+<body><div class="sy-head">
+  <div class="sy-head-blur"></div>
+  <div class="sy-head-inner sy-container mx-auto">
+    <a class="sy-head-brand" href="../../../index.html">
+      
+      
+      <strong>Home</strong>
+    </a>
+    <div class="sy-head-nav" id="head-nav">
+      <nav class="sy-head-links"></nav>
+      <div class="sy-head-extra flex items-center print:hidden"><form class="searchbox flex items-center" action="../../../search.html" method="get">
+  <input type="text" name="q" placeholder="Search" />
+  <kbd>/</kbd>
+</form><div class="sy-head-socials"></div></div>
+    </div>
+    <div class="sy-head-actions flex items-center shrink-0 print:hidden"><button class="js-theme theme-switch flex items-center"
+data-aria-auto="Switch to light color mode"
+data-aria-light="Switch to dark color mode"
+data-aria-dark="Switch to auto color mode">
+<i class="i-lucide theme-icon"></i>
+</button><button class="md:hidden flex items-center js-menu" aria-label="Menu" type="button" aria-controls="head-nav" aria-expanded="false">
+        <div class="hamburger">
+          <span class="hamburger_1"></span>
+          <span class="hamburger_2"></span>
+          <span class="hamburger_3"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="sy-page sy-container flex mx-auto">
+  <aside id="lside" class="sy-lside md:w-72 md:shrink-0 print:hidden">
+    <div class="sy-lside-inner md:sticky">
+      <div class="sy-scrollbar p-6">
+        <div class="globaltoc" data-expand-depth="0"><p class="caption" role="heading" aria-level="3"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">Introduction to 👑 GLiNER</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instalation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../quickstart.html">Quickstart</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Advanced Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../configs.html">Components &amp; Configs</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../training.html">Training</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../architectures.html">Architectures</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../serving.html">Serving</a></li>
+</ul>
+<p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.model.html">gliner.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.config.html">gliner.config module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.training.html">gliner.training package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.training.trainer.html">gliner.training.trainer module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.modeling.html">gliner.modeling package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.multitask.html">gliner.modeling.multitask package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.relations_layers.html">gliner.modeling.multitask.relations_layers module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.modeling.multitask.triples_layers.html">gliner.modeling.multitask.triples_layers module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.layers.html">gliner.modeling.layers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.loss_functions.html">gliner.modeling.loss_functions module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.outputs.html">gliner.modeling.outputs module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.scorers.html">gliner.modeling.scorers module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.span_rep.html">gliner.modeling.span_rep module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.modeling.utils.html">gliner.modeling.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.data_processing.html">gliner.data_processing package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.collator.html">gliner.data_processing.collator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.processor.html">gliner.data_processing.processor module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.tokenizer.html">gliner.data_processing.tokenizer module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.data_processing.utils.html">gliner.data_processing.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.evaluation.html">gliner.evaluation package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluate_ner.html">gliner.evaluation.evaluate_ner module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.evaluator.html">gliner.evaluation.evaluator module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.onnx.html">gliner.onnx package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.decoding.html">gliner.decoding package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.trie.html">gliner.decoding.trie package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.labels_trie.html">gliner.decoding.trie.labels_trie module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../api/gliner.decoding.trie.python_labels_trie.html">gliner.decoding.trie.python_labels_trie module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.decoder.html">gliner.decoding.decoder module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../api/gliner.decoding.utils.html">gliner.decoding.utils module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/gliner.utils.html">gliner.utils module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="lside-overlay js-menu" role="button" aria-label="Close left sidebar" aria-controls="lside" aria-expanded="false"></div>
+  <aside id="rside" class="sy-rside pb-3 w-64 shrink-0 order-last">
+    <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
+      <i class="i-lucide close"></i>
+    </button>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+  </aside>
+  <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
+  <main class="sy-main w-full max-sm:max-w-full print:pt-6">
+<div class="sy-breadcrumbs" role="navigation">
+  <div class="sy-breadcrumbs-inner flex items-center">
+    <div class="md:hidden mr-3">
+      <button class="js-menu" aria-label="Menu" type="button" aria-controls="lside" aria-expanded="false">
+        <i class="i-lucide menu"></i>
+      </button>
+    </div>
+    <ol class="flex-1" itemscope itemtype="https://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../../index.html"><span itemprop="name">Home</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="1" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <a itemprop="item" href="../../index.html"><span itemprop="name">Module code</span></a>
+        <span>/</span>
+        <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.serve.server</strong>
+        <meta itemprop="position" content="3" />
+      </li></ol>
+    <div class="xl:hidden ml-1">
+      <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
+        aria-expanded="false">
+        <i class="i-lucide outdent"></i>
+      </button>
+    </div>
+  </div>
+</div><div class="flex flex-col break-words justify-between">
+      <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
+        <article class="yue" role="main">
+          <h1>Source code for gliner.serve.server</h1><div class="highlight"><pre>
+<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Ray Serve deployment for GLiNER with dynamic batching and memory-aware batch sizing.&quot;&quot;&quot;</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span data-line="4"><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+</span><span data-line="5"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="kn">from</span><span class="w"> </span><span class="nn">.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERServeConfig</span>
+</span><span data-line="10"><span class="kn">from</span><span class="w"> </span><span class="nn">.memory</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERMemoryEstimator</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14">
+<div class="viewcode-block" id="GLiNERServer">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERServer">[docs]</a>
+</span><span data-line="15"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERServer</span><span class="p">:</span>
+</span><span data-line="16"><span class="w">    </span><span class="sd">&quot;&quot;&quot;GLiNER Ray Serve deployment with dynamic batching.</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="sd">    Supports both entity extraction (NER) and relation extraction.</span>
+</span><span data-line="19"><span class="sd">    Automatically detects model type and adjusts behavior accordingly.</span>
+</span><span data-line="20">
+</span><span data-line="21"><span class="sd">    Uses low-level batch methods (prepare_batch, collate_batch, run_batch,</span>
+</span><span data-line="22"><span class="sd">    decode_batch) to avoid DataLoader initialization overhead on each call.</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="sd">    Features:</span>
+</span><span data-line="25"><span class="sd">        - Dynamic batching with Ray Serve&#39;s @serve.batch</span>
+</span><span data-line="26"><span class="sd">        - Memory-aware batch size estimation to prevent CUDA OOM</span>
+</span><span data-line="27"><span class="sd">        - Precompilation for power-of-two batch sizes</span>
+</span><span data-line="28"><span class="sd">        - Support for both NER and relation extraction models</span>
+</span><span data-line="29"><span class="sd">        - FlashDeBERTa support for faster inference</span>
+</span><span data-line="30"><span class="sd">        - Sequence packing for improved throughput</span>
+</span><span data-line="31"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="32">
+<div class="viewcode-block" id="GLiNERServer.__init__">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERServer.__init__">[docs]</a>
+</span><span data-line="33">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">GLiNERServeConfig</span><span class="p">):</span>
+</span><span data-line="34"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the GLiNER server deployment.</span>
+</span><span data-line="35">
+</span><span data-line="36"><span class="sd">        Args:</span>
+</span><span data-line="37"><span class="sd">            config: Server configuration with model and serving parameters.</span>
+</span><span data-line="38"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="39">        <span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span><span class="p">,</span> <span class="n">InferencePackingConfig</span>
+</span><span data-line="40">
+</span><span data-line="41">        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span data-line="42">
+</span><span data-line="43">        <span class="n">env_vars</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">to_env_vars</span><span class="p">()</span>
+</span><span data-line="44">        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">env_vars</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="45">            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+</span><span data-line="46">
+</span><span data-line="47">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">tokenizer_threads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="48">            <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TOKENIZERS_PARALLELISM&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+</span><span data-line="49">            <span class="n">torch</span><span class="o">.</span><span class="n">set_num_threads</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">tokenizer_threads</span><span class="p">)</span>
+</span><span data-line="50">
+</span><span data-line="51">        <span class="n">torch</span><span class="o">.</span><span class="n">set_float32_matmul_precision</span><span class="p">(</span><span class="s2">&quot;high&quot;</span><span class="p">)</span>
+</span><span data-line="52">
+</span><span data-line="53">        <span class="n">dtype_map</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="54">            <span class="s2">&quot;float32&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span>
+</span><span data-line="55">            <span class="s2">&quot;float16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+</span><span data-line="56">            <span class="s2">&quot;fp16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">,</span>
+</span><span data-line="57">            <span class="s2">&quot;bfloat16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+</span><span data-line="58">            <span class="s2">&quot;bf16&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span>
+</span><span data-line="59">        <span class="p">}</span>
+</span><span data-line="60">        <span class="bp">self</span><span class="o">.</span><span class="n">torch_dtype</span> <span class="o">=</span> <span class="n">dtype_map</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">)</span>
+</span><span data-line="61">
+</span><span data-line="62">        <span class="bp">self</span><span class="o">.</span><span class="n">memory_estimator</span> <span class="o">=</span> <span class="n">GLiNERMemoryEstimator</span><span class="p">(</span>
+</span><span data-line="63">            <span class="n">safety_factor</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">memory_overhead_factor</span><span class="p">,</span>
+</span><span data-line="64">            <span class="n">target_memory_fraction</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">target_memory_fraction</span><span class="p">,</span>
+</span><span data-line="65">            <span class="n">calibration_probe_batch_size</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">calibration_probe_batch_size</span><span class="p">,</span>
+</span><span data-line="66">        <span class="p">)</span>
+</span><span data-line="67">
+</span><span data-line="68">        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="69">            <span class="bp">self</span><span class="o">.</span><span class="n">memory_estimator</span><span class="o">.</span><span class="n">measure_cuda_context</span><span class="p">()</span>
+</span><span data-line="70">
+</span><span data-line="71">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Loading model: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="72">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">enable_flashdeberta</span><span class="p">:</span>
+</span><span data-line="73">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;FlashDeBERTa enabled&quot;</span><span class="p">)</span>
+</span><span data-line="74">
+</span><span data-line="75">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+</span><span data-line="76">                        <span class="n">max_length</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_model_len</span><span class="p">,</span>
+</span><span data-line="77">                        <span class="n">max_width</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_span_width</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span>
+</span><span data-line="78">                        <span class="n">device</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">torch_dtype</span><span class="p">,</span>
+</span><span data-line="79">        <span class="p">)</span>
+</span><span data-line="80">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+</span><span data-line="81">
+</span><span data-line="82">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">quantization</span><span class="p">:</span>
+</span><span data-line="83">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Applying quantization: </span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">quantization</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="84">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">quantization</span><span class="p">)</span>
+</span><span data-line="85">
+</span><span data-line="86">        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="87">            <span class="bp">self</span><span class="o">.</span><span class="n">memory_estimator</span><span class="o">.</span><span class="n">measure_model_memory</span><span class="p">()</span>
+</span><span data-line="88">
+</span><span data-line="89">        <span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_detect_relation_support</span><span class="p">()</span>
+</span><span data-line="90">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Relation extraction support: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="91">
+</span><span data-line="92">        <span class="bp">self</span><span class="o">.</span><span class="n">collator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">create_collator</span><span class="p">()</span>
+</span><span data-line="93">
+</span><span data-line="94">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">enable_sequence_packing</span><span class="p">:</span>
+</span><span data-line="95">            <span class="bp">self</span><span class="o">.</span><span class="n">packing_config</span> <span class="o">=</span> <span class="n">InferencePackingConfig</span><span class="p">(</span>
+</span><span data-line="96">                <span class="n">max_length</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_model_len</span><span class="p">,</span>
+</span><span data-line="97">            <span class="p">)</span>
+</span><span data-line="98">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Sequence packing enabled&quot;</span><span class="p">)</span>
+</span><span data-line="99">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="100">            <span class="bp">self</span><span class="o">.</span><span class="n">packing_config</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="101">
+</span><span data-line="102">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">enable_compilation</span><span class="p">:</span>
+</span><span data-line="103">            <span class="bp">self</span><span class="o">.</span><span class="n">_precompile</span><span class="p">()</span>
+</span><span data-line="104">
+</span><span data-line="105">        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="106">            <span class="bp">self</span><span class="o">.</span><span class="n">_calibrate_memory</span><span class="p">()</span></div>
+
+</span><span data-line="107">
+</span><span data-line="108">    <span class="k">def</span><span class="w"> </span><span class="nf">_detect_relation_support</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+</span><span data-line="109"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Detect if the model supports relation extraction.&quot;&quot;&quot;</span>
+</span><span data-line="110">        <span class="n">model_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+</span><span data-line="111">        <span class="k">return</span> <span class="s2">&quot;relex&quot;</span> <span class="ow">in</span> <span class="n">model_type</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+</span><span data-line="112">
+</span><span data-line="113">    <span class="k">def</span><span class="w"> </span><span class="nf">_precompile</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="114"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Precompile model for configured batch sizes.&quot;&quot;&quot;</span>
+</span><span data-line="115">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Precompiling model for batch sizes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="116">
+</span><span data-line="117">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>
+</span><span data-line="118">
+</span><span data-line="119">        <span class="n">dummy_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="120">        <span class="n">dummy_relations</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="121">
+</span><span data-line="122">        <span class="k">for</span> <span class="n">batch_size</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">:</span>
+</span><span data-line="123">            <span class="n">dummy_texts</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="124">                <span class="sa">f</span><span class="s2">&quot;Sample text number </span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2"> for precompilation warmup.&quot;</span>
+</span><span data-line="125">                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">batch_size</span><span class="p">)</span>
+</span><span data-line="126">            <span class="p">]</span>
+</span><span data-line="127">
+</span><span data-line="128">            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">warmup_iterations</span><span class="p">):</span>
+</span><span data-line="129">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span> <span class="ow">and</span> <span class="n">dummy_relations</span><span class="p">:</span>
+</span><span data-line="130">                    <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_internal</span><span class="p">(</span>
+</span><span data-line="131">                        <span class="n">dummy_texts</span><span class="p">,</span>
+</span><span data-line="132">                        <span class="n">dummy_labels</span><span class="p">,</span>
+</span><span data-line="133">                        <span class="n">relations</span><span class="o">=</span><span class="n">dummy_relations</span><span class="p">,</span>
+</span><span data-line="134">                        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="135">                        <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="136">                        <span class="n">flat_ner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="137">                        <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="138">                    <span class="p">)</span>
+</span><span data-line="139">                <span class="k">else</span><span class="p">:</span>
+</span><span data-line="140">                    <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_internal</span><span class="p">(</span>
+</span><span data-line="141">                        <span class="n">dummy_texts</span><span class="p">,</span>
+</span><span data-line="142">                        <span class="n">dummy_labels</span><span class="p">,</span>
+</span><span data-line="143">                        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="144">                        <span class="n">flat_ner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="145">                        <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="146">                    <span class="p">)</span>
+</span><span data-line="147">
+</span><span data-line="148">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Batch size </span><span class="si">{</span><span class="n">batch_size</span><span class="si">}</span><span class="s2">: compiled&quot;</span><span class="p">)</span>
+</span><span data-line="149">
+</span><span data-line="150">        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="151">            <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+</span><span data-line="152">
+</span><span data-line="153">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Precompilation complete.&quot;</span><span class="p">)</span>
+</span><span data-line="154">
+</span><span data-line="155">    <span class="k">def</span><span class="w"> </span><span class="nf">_calibrate_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="156"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build the memory calibration table across power-of-two seq lengths.&quot;&quot;&quot;</span>
+</span><span data-line="157">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calibrating memory table...&quot;</span><span class="p">)</span>
+</span><span data-line="158">
+</span><span data-line="159">        <span class="bp">self</span><span class="o">.</span><span class="n">memory_estimator</span><span class="o">.</span><span class="n">calibrate</span><span class="p">(</span>
+</span><span data-line="160">            <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_internal</span><span class="p">,</span>
+</span><span data-line="161">            <span class="n">max_seq_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_model_len</span><span class="p">,</span>
+</span><span data-line="162">            <span class="n">min_seq_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">calibration_min_seq_len</span><span class="p">,</span>
+</span><span data-line="163">        <span class="p">)</span>
+</span><span data-line="164">
+</span><span data-line="165">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Memory calibration complete.&quot;</span><span class="p">)</span>
+</span><span data-line="166">
+<div class="viewcode-block" id="GLiNERServer.batch_size_fn">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERServer.batch_size_fn">[docs]</a>
+</span><span data-line="167">    <span class="k">def</span><span class="w"> </span><span class="nf">batch_size_fn</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="168"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Largest precompiled batch size that fits at ``seq_len``.</span>
+</span><span data-line="169">
+</span><span data-line="170"><span class="sd">        With no arguments, returns the worst-case answer (``max_model_len``),</span>
+</span><span data-line="171"><span class="sd">        suitable for the deployment&#39;s initial ``max_batch_size``. Called again</span>
+</span><span data-line="172"><span class="sd">        from ``_infer_batch`` with the observed seq length (text + label +</span>
+</span><span data-line="173"><span class="sd">        relation words) to re-size Ray&#39;s batcher for the next accumulation.</span>
+</span><span data-line="174"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="175">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="176">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="177">
+</span><span data-line="178">        <span class="k">if</span> <span class="n">seq_len</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="179">            <span class="n">seq_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_model_len</span>
+</span><span data-line="180">
+</span><span data-line="181">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">memory_estimator</span><span class="o">.</span><span class="n">batch_size_fn</span><span class="p">(</span>
+</span><span data-line="182">            <span class="n">seq_len</span><span class="o">=</span><span class="n">seq_len</span><span class="p">,</span>
+</span><span data-line="183">            <span class="n">precompiled_sizes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">,</span>
+</span><span data-line="184">        <span class="p">)</span></div>
+
+</span><span data-line="185">
+<div class="viewcode-block" id="GLiNERServer.observed_seq_len">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERServer.observed_seq_len">[docs]</a>
+</span><span data-line="186">    <span class="k">def</span><span class="w"> </span><span class="nf">observed_seq_len</span><span class="p">(</span>
+</span><span data-line="187">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="188">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="189">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="190">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="191">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="192"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Total input word count: longest text + all label/relation words.</span>
+</span><span data-line="193">
+</span><span data-line="194"><span class="sd">        Labels and relations are concatenated into the input by the model, so</span>
+</span><span data-line="195"><span class="sd">        they extend the effective sequence length for every sample in the</span>
+</span><span data-line="196"><span class="sd">        batch.</span>
+</span><span data-line="197"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="198">        <span class="n">max_text_words</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+</span><span data-line="199">            <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">texts</span> <span class="k">if</span> <span class="n">t</span><span class="o">.</span><span class="n">strip</span><span class="p">()),</span> <span class="n">default</span><span class="o">=</span><span class="mi">0</span>
+</span><span data-line="200">        <span class="p">)</span>
+</span><span data-line="201">        <span class="n">prompt_words</span> <span class="o">=</span> <span class="mi">0</span>
+</span><span data-line="202">        <span class="k">if</span> <span class="n">labels</span><span class="p">:</span>
+</span><span data-line="203">            <span class="n">prompt_words</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">l</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="204">        <span class="k">if</span> <span class="n">relations</span><span class="p">:</span>
+</span><span data-line="205">            <span class="n">prompt_words</span> <span class="o">+=</span> <span class="nb">sum</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">split</span><span class="p">())</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">)</span>
+</span><span data-line="206">        <span class="n">total</span> <span class="o">=</span> <span class="n">max_text_words</span> <span class="o">+</span> <span class="n">prompt_words</span>
+</span><span data-line="207">        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">total</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">calibration_min_seq_len</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_model_len</span><span class="p">)</span></div>
+
+</span><span data-line="208">
+</span><span data-line="209">    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="210"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Filter labels based on max_labels config.&quot;&quot;&quot;</span>
+</span><span data-line="211">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_labels</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_labels</span><span class="p">:</span>
+</span><span data-line="212">            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+</span><span data-line="213">                <span class="sa">f</span><span class="s2">&quot;Truncating labels from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_labels</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="214">            <span class="p">)</span>
+</span><span data-line="215">            <span class="k">return</span> <span class="n">labels</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_labels</span><span class="p">]</span>
+</span><span data-line="216">        <span class="k">return</span> <span class="n">labels</span>
+</span><span data-line="217">
+</span><span data-line="218">    <span class="nd">@torch</span><span class="o">.</span><span class="n">inference_mode</span><span class="p">()</span>
+</span><span data-line="219">    <span class="k">def</span><span class="w"> </span><span class="nf">_run_batch_internal</span><span class="p">(</span>
+</span><span data-line="220">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="221">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="222">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="223">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="224">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="225">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="226">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="227">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="228">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]]:</span>
+</span><span data-line="229"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run batch inference using low-level methods (no DataLoader).</span>
+</span><span data-line="230">
+</span><span data-line="231"><span class="sd">        This is the core inference method that avoids DataLoader initialization</span>
+</span><span data-line="232"><span class="sd">        overhead by directly using prepare_batch, collate_batch, run_batch,</span>
+</span><span data-line="233"><span class="sd">        decode_batch, and map_entities_to_text.</span>
+</span><span data-line="234">
+</span><span data-line="235"><span class="sd">        Args:</span>
+</span><span data-line="236"><span class="sd">            texts: List of input texts.</span>
+</span><span data-line="237"><span class="sd">            labels: Entity type labels.</span>
+</span><span data-line="238"><span class="sd">            relations: Relation type labels (for relex models).</span>
+</span><span data-line="239"><span class="sd">            threshold: Entity confidence threshold.</span>
+</span><span data-line="240"><span class="sd">            relation_threshold: Relation confidence threshold.</span>
+</span><span data-line="241"><span class="sd">            flat_ner: Whether to use flat NER.</span>
+</span><span data-line="242"><span class="sd">            multi_label: Whether to allow multiple labels per span.</span>
+</span><span data-line="243">
+</span><span data-line="244"><span class="sd">        Returns:</span>
+</span><span data-line="245"><span class="sd">            For NER models: List of entity lists.</span>
+</span><span data-line="246"><span class="sd">            For relex models: Tuple of (entities, relations) lists.</span>
+</span><span data-line="247"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="248">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span><span class="p">:</span>
+</span><span data-line="249">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_relex</span><span class="p">(</span>
+</span><span data-line="250">                <span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
+</span><span data-line="251">            <span class="p">)</span>
+</span><span data-line="252">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="253">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_ner</span><span class="p">(</span>
+</span><span data-line="254">                <span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
+</span><span data-line="255">            <span class="p">)</span>
+</span><span data-line="256">
+</span><span data-line="257">    <span class="k">def</span><span class="w"> </span><span class="nf">_run_batch_ner</span><span class="p">(</span>
+</span><span data-line="258">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="259">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="260">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="261">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="262">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="263">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="264">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</span><span data-line="265"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run NER batch inference using low-level methods.&quot;&quot;&quot;</span>
+</span><span data-line="266">        <span class="n">prepared</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="267">
+</span><span data-line="268">        <span class="k">if</span> <span class="ow">not</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_texts&quot;</span><span class="p">]:</span>
+</span><span data-line="269">            <span class="k">return</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;num_original&quot;</span><span class="p">])]</span>
+</span><span data-line="270">
+</span><span data-line="271">        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">(</span>
+</span><span data-line="272">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;input_x&quot;</span><span class="p">],</span>
+</span><span data-line="273">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;entity_types&quot;</span><span class="p">],</span>
+</span><span data-line="274">            <span class="bp">self</span><span class="o">.</span><span class="n">collator</span><span class="p">,</span>
+</span><span data-line="275">        <span class="p">)</span>
+</span><span data-line="276">
+</span><span data-line="277">        <span class="n">model_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">run_batch</span><span class="p">(</span>
+</span><span data-line="278">            <span class="n">batch</span><span class="p">,</span>
+</span><span data-line="279">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="280">            <span class="n">packing_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">packing_config</span><span class="p">,</span>
+</span><span data-line="281">            <span class="n">move_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="282">        <span class="p">)</span>
+</span><span data-line="283">
+</span><span data-line="284">        <span class="n">decoded</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">decode_batch</span><span class="p">(</span>
+</span><span data-line="285">            <span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="286">            <span class="n">batch</span><span class="p">,</span>
+</span><span data-line="287">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="288">            <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="289">            <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="290">        <span class="p">)</span>
+</span><span data-line="291">
+</span><span data-line="292">        <span class="n">entity_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map_entities_to_text</span><span class="p">(</span>
+</span><span data-line="293">            <span class="n">decoded</span><span class="p">,</span>
+</span><span data-line="294">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_texts&quot;</span><span class="p">],</span>
+</span><span data-line="295">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_to_orig_idx&quot;</span><span class="p">],</span>
+</span><span data-line="296">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;start_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="297">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;end_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="298">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;num_original&quot;</span><span class="p">],</span>
+</span><span data-line="299">        <span class="p">)</span>
+</span><span data-line="300">
+</span><span data-line="301">        <span class="k">return</span> <span class="n">entity_results</span>
+</span><span data-line="302">
+</span><span data-line="303">    <span class="k">def</span><span class="w"> </span><span class="nf">_run_batch_relex</span><span class="p">(</span>
+</span><span data-line="304">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="305">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="306">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="307">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="308">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="309">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span>
+</span><span data-line="310">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="311">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="312">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]]:</span>
+</span><span data-line="313"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run relation extraction batch inference using low-level methods.&quot;&quot;&quot;</span>
+</span><span data-line="314">        <span class="n">prepared</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="o">=</span><span class="n">relations</span><span class="p">)</span>
+</span><span data-line="315">
+</span><span data-line="316">        <span class="k">if</span> <span class="ow">not</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_texts&quot;</span><span class="p">]:</span>
+</span><span data-line="317">            <span class="n">num_orig</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;num_original&quot;</span><span class="p">]</span>
+</span><span data-line="318">            <span class="k">return</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_orig</span><span class="p">)],</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_orig</span><span class="p">)]</span>
+</span><span data-line="319">
+</span><span data-line="320">        <span class="n">batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">(</span>
+</span><span data-line="321">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;input_x&quot;</span><span class="p">],</span>
+</span><span data-line="322">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;entity_types&quot;</span><span class="p">],</span>
+</span><span data-line="323">            <span class="bp">self</span><span class="o">.</span><span class="n">collator</span><span class="p">,</span>
+</span><span data-line="324">            <span class="n">relation_types</span><span class="o">=</span><span class="n">prepared</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;relation_types&quot;</span><span class="p">,</span> <span class="p">[]),</span>
+</span><span data-line="325">        <span class="p">)</span>
+</span><span data-line="326">
+</span><span data-line="327">        <span class="n">model_output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">run_batch</span><span class="p">(</span>
+</span><span data-line="328">            <span class="n">batch</span><span class="p">,</span>
+</span><span data-line="329">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="330">            <span class="n">packing_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">packing_config</span><span class="p">,</span>
+</span><span data-line="331">            <span class="n">move_to_device</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="332">        <span class="p">)</span>
+</span><span data-line="333">
+</span><span data-line="334">        <span class="n">decoded_entities</span><span class="p">,</span> <span class="n">decoded_relations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">decode_batch</span><span class="p">(</span>
+</span><span data-line="335">            <span class="n">model_output</span><span class="p">,</span>
+</span><span data-line="336">            <span class="n">batch</span><span class="p">,</span>
+</span><span data-line="337">            <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="338">            <span class="n">relation_threshold</span><span class="o">=</span><span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="339">            <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="340">            <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="341">        <span class="p">)</span>
+</span><span data-line="342">
+</span><span data-line="343">        <span class="n">entity_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map_entities_to_text</span><span class="p">(</span>
+</span><span data-line="344">            <span class="n">decoded_entities</span><span class="p">,</span>
+</span><span data-line="345">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_texts&quot;</span><span class="p">],</span>
+</span><span data-line="346">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_to_orig_idx&quot;</span><span class="p">],</span>
+</span><span data-line="347">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;start_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="348">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;end_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="349">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;num_original&quot;</span><span class="p">],</span>
+</span><span data-line="350">        <span class="p">)</span>
+</span><span data-line="351">
+</span><span data-line="352">        <span class="n">relation_results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">map_relations_to_text</span><span class="p">(</span>
+</span><span data-line="353">            <span class="n">decoded_relations</span><span class="p">,</span>
+</span><span data-line="354">            <span class="n">decoded_entities</span><span class="p">,</span>
+</span><span data-line="355">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_texts&quot;</span><span class="p">],</span>
+</span><span data-line="356">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;valid_to_orig_idx&quot;</span><span class="p">],</span>
+</span><span data-line="357">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;start_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="358">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;end_token_map&quot;</span><span class="p">],</span>
+</span><span data-line="359">            <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;num_original&quot;</span><span class="p">],</span>
+</span><span data-line="360">        <span class="p">)</span>
+</span><span data-line="361">
+</span><span data-line="362">        <span class="k">return</span> <span class="n">entity_results</span><span class="p">,</span> <span class="n">relation_results</span>
+</span><span data-line="363">
+<div class="viewcode-block" id="GLiNERServer.predict">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERServer.predict">[docs]</a>
+</span><span data-line="364">    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+</span><span data-line="365">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="366">        <span class="n">texts</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="367">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="368">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="369">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="370">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="371">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="372">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="373">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+</span><span data-line="374"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Predict entities and optionally relations.</span>
+</span><span data-line="375">
+</span><span data-line="376"><span class="sd">        Args:</span>
+</span><span data-line="377"><span class="sd">            texts: Input text(s) to process.</span>
+</span><span data-line="378"><span class="sd">            labels: Entity type labels to extract.</span>
+</span><span data-line="379"><span class="sd">            relations: Relation type labels (only for relex models).</span>
+</span><span data-line="380"><span class="sd">            threshold: Confidence threshold for entities.</span>
+</span><span data-line="381"><span class="sd">            relation_threshold: Confidence threshold for relations.</span>
+</span><span data-line="382"><span class="sd">            flat_ner: Whether to use flat NER (no overlapping entities).</span>
+</span><span data-line="383"><span class="sd">            multi_label: Whether to allow multiple labels per span.</span>
+</span><span data-line="384">
+</span><span data-line="385"><span class="sd">        Returns:</span>
+</span><span data-line="386"><span class="sd">            List of result dicts, one per input text. Each dict contains:</span>
+</span><span data-line="387"><span class="sd">                - &quot;entities&quot;: List of entity dicts with start, end, text, label, score</span>
+</span><span data-line="388"><span class="sd">                - &quot;relations&quot;: List of relation dicts (only if model supports relations)</span>
+</span><span data-line="389"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="390">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+</span><span data-line="391">            <span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="n">texts</span><span class="p">]</span>
+</span><span data-line="392">
+</span><span data-line="393">        <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="394">            <span class="n">threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_threshold</span>
+</span><span data-line="395">        <span class="k">if</span> <span class="n">relation_threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="396">            <span class="n">relation_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_relation_threshold</span>
+</span><span data-line="397">
+</span><span data-line="398">        <span class="n">labels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+</span><span data-line="399">
+</span><span data-line="400">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supports_relations</span> <span class="ow">and</span> <span class="n">relations</span><span class="p">:</span>
+</span><span data-line="401">            <span class="n">entities</span><span class="p">,</span> <span class="n">rels</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_internal</span><span class="p">(</span>
+</span><span data-line="402">                <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="403">                <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="404">                <span class="n">relations</span><span class="o">=</span><span class="n">relations</span><span class="p">,</span>
+</span><span data-line="405">                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="406">                <span class="n">relation_threshold</span><span class="o">=</span><span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="407">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="408">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="409">            <span class="p">)</span>
+</span><span data-line="410">            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="411">                <span class="p">{</span><span class="s2">&quot;entities&quot;</span><span class="p">:</span> <span class="n">ents</span><span class="p">,</span> <span class="s2">&quot;relations&quot;</span><span class="p">:</span> <span class="n">r</span><span class="p">}</span>
+</span><span data-line="412">                <span class="k">for</span> <span class="n">ents</span><span class="p">,</span> <span class="n">r</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">rels</span><span class="p">)</span>
+</span><span data-line="413">            <span class="p">]</span>
+</span><span data-line="414">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="415">            <span class="n">entities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_batch_internal</span><span class="p">(</span>
+</span><span data-line="416">                <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="417">                <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="418">                <span class="n">threshold</span><span class="o">=</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="419">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="420">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="421">            <span class="p">)</span>
+</span><span data-line="422">            <span class="n">results</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;entities&quot;</span><span class="p">:</span> <span class="n">ents</span><span class="p">}</span> <span class="k">for</span> <span class="n">ents</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">]</span>
+</span><span data-line="423">
+</span><span data-line="424">        <span class="k">return</span> <span class="n">results</span></div>
+</div>
+
+</span><span data-line="425">
+</span><span data-line="426">
+</span><span data-line="427"><span class="k">def</span><span class="w"> </span><span class="nf">_build_deployment</span><span class="p">(</span><span class="n">config</span><span class="p">:</span> <span class="n">GLiNERServeConfig</span><span class="p">):</span>
+</span><span data-line="428"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build Ray Serve deployment from config.&quot;&quot;&quot;</span>
+</span><span data-line="429">    <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span>
+</span><span data-line="430">
+</span><span data-line="431">    <span class="n">batch_wait_s</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">batch_wait_timeout_ms</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1000.0</span>
+</span><span data-line="432">    <span class="n">initial_max_batch_size</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">max_batch_size</span>
+</span><span data-line="433">
+</span><span data-line="434">    <span class="nd">@serve</span><span class="o">.</span><span class="n">deployment</span><span class="p">(</span>
+</span><span data-line="435">        <span class="n">num_replicas</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">num_replicas</span><span class="p">,</span>
+</span><span data-line="436">        <span class="n">ray_actor_options</span><span class="o">=</span><span class="p">{</span>
+</span><span data-line="437">            <span class="s2">&quot;num_gpus&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_gpus_per_replica</span><span class="p">,</span>
+</span><span data-line="438">            <span class="s2">&quot;num_cpus&quot;</span><span class="p">:</span> <span class="n">config</span><span class="o">.</span><span class="n">num_cpus_per_replica</span><span class="p">,</span>
+</span><span data-line="439">        <span class="p">},</span>
+</span><span data-line="440">        <span class="n">max_ongoing_requests</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">max_ongoing_requests</span><span class="p">,</span>
+</span><span data-line="441">    <span class="p">)</span>
+</span><span data-line="442">    <span class="k">class</span><span class="w"> </span><span class="nc">GLiNERDeployment</span><span class="p">:</span>
+</span><span data-line="443">        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serve_config</span><span class="p">:</span> <span class="n">GLiNERServeConfig</span><span class="p">):</span>
+</span><span data-line="444">            <span class="bp">self</span><span class="o">.</span><span class="n">server</span> <span class="o">=</span> <span class="n">GLiNERServer</span><span class="p">(</span><span class="n">serve_config</span><span class="p">)</span>
+</span><span data-line="445">            <span class="c1"># Seed Ray&#39;s batcher with the pessimistic worst-case size so the</span>
+</span><span data-line="446">            <span class="c1"># first batch is safe. ``_infer_batch`` re-calls ``batch_size_fn``</span>
+</span><span data-line="447">            <span class="c1"># on every dispatch to re-size the batcher based on observed</span>
+</span><span data-line="448">            <span class="c1"># sequence lengths.</span>
+</span><span data-line="449">            <span class="bp">self</span><span class="o">.</span><span class="n">_infer_batch</span><span class="o">.</span><span class="n">set_max_batch_size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">batch_size_fn</span><span class="p">())</span>
+</span><span data-line="450">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+</span><span data-line="451">                <span class="sa">f</span><span class="s2">&quot;Ray Serve batch size initialized to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">batch_size_fn</span><span class="p">()</span><span class="si">}</span><span class="s2"> &quot;</span>
+</span><span data-line="452">                <span class="sa">f</span><span class="s2">&quot;(precompiled: </span><span class="si">{</span><span class="n">serve_config</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="si">}</span><span class="s2">)&quot;</span>
+</span><span data-line="453">            <span class="p">)</span>
+</span><span data-line="454">
+</span><span data-line="455">        <span class="nd">@serve</span><span class="o">.</span><span class="n">batch</span><span class="p">(</span>
+</span><span data-line="456">            <span class="n">max_batch_size</span><span class="o">=</span><span class="n">initial_max_batch_size</span><span class="p">,</span>
+</span><span data-line="457">            <span class="n">batch_wait_timeout_s</span><span class="o">=</span><span class="n">batch_wait_s</span><span class="p">,</span>
+</span><span data-line="458">        <span class="p">)</span>
+</span><span data-line="459">        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">_infer_batch</span><span class="p">(</span>
+</span><span data-line="460">            <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="461">            <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="462">            <span class="n">labels_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="463">            <span class="n">relations_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]],</span>
+</span><span data-line="464">            <span class="n">thresholds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+</span><span data-line="465">            <span class="n">relation_thresholds</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+</span><span data-line="466">            <span class="n">flat_ner_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span data-line="467">            <span class="n">multi_label_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">bool</span><span class="p">],</span>
+</span><span data-line="468">        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
+</span><span data-line="469"><span class="w">            </span><span class="sd">&quot;&quot;&quot;Single forward pass over the Ray-accumulated batch.</span>
+</span><span data-line="470">
+</span><span data-line="471"><span class="sd">            Before dispatch, re-sizes Ray&#39;s batcher via ``set_max_batch_size``</span>
+</span><span data-line="472"><span class="sd">            using ``batch_size_fn`` on the observed seq length — so the next</span>
+</span><span data-line="473"><span class="sd">            accumulation picks the largest precompiled size that fits.</span>
+</span><span data-line="474">
+</span><span data-line="475"><span class="sd">            Assumes batch requests are homogeneous — labels/thresholds/flags</span>
+</span><span data-line="476"><span class="sd">            are taken from the first request.</span>
+</span><span data-line="477"><span class="sd">            &quot;&quot;&quot;</span>
+</span><span data-line="478">            <span class="n">next_max_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">batch_size_fn</span><span class="p">(</span>
+</span><span data-line="479">                <span class="n">seq_len</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">observed_seq_len</span><span class="p">(</span>
+</span><span data-line="480">                    <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="481">                    <span class="n">labels</span><span class="o">=</span><span class="n">labels_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">labels_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="482">                    <span class="n">relations</span><span class="o">=</span><span class="n">relations_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">relations_list</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="483">                <span class="p">)</span>
+</span><span data-line="484">            <span class="p">)</span>
+</span><span data-line="485">            <span class="bp">self</span><span class="o">.</span><span class="n">_infer_batch</span><span class="o">.</span><span class="n">set_max_batch_size</span><span class="p">(</span><span class="n">next_max_batch</span><span class="p">)</span>
+</span><span data-line="486">
+</span><span data-line="487">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="488">                <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="489">                <span class="n">labels_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="490">                <span class="n">relations</span><span class="o">=</span><span class="n">relations_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="491">                <span class="n">threshold</span><span class="o">=</span><span class="n">thresholds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="492">                <span class="n">relation_threshold</span><span class="o">=</span><span class="n">relation_thresholds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="493">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">flat_ner_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="494">                <span class="n">multi_label</span><span class="o">=</span><span class="n">multi_label_list</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+</span><span data-line="495">            <span class="p">)</span>
+</span><span data-line="496">
+</span><span data-line="497">        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+</span><span data-line="498">            <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="499">            <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="500">            <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="501">            <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="502">            <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="503">            <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="504">            <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="505">            <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="506">        <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="507"><span class="w">            </span><span class="sd">&quot;&quot;&quot;Single prediction endpoint.&quot;&quot;&quot;</span>
+</span><span data-line="508">            <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="509">                <span class="n">threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_threshold</span>
+</span><span data-line="510">            <span class="k">if</span> <span class="n">relation_threshold</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="511">                <span class="n">relation_threshold</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">server</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">default_relation_threshold</span>
+</span><span data-line="512">
+</span><span data-line="513">            <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_infer_batch</span><span class="p">(</span>
+</span><span data-line="514">                <span class="n">text</span><span class="p">,</span>
+</span><span data-line="515">                <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="516">                <span class="n">relations</span><span class="p">,</span>
+</span><span data-line="517">                <span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="518">                <span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="519">                <span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="520">                <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="521">            <span class="p">)</span>
+</span><span data-line="522">            <span class="k">return</span> <span class="n">results</span>
+</span><span data-line="523">
+</span><span data-line="524">        <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="525"><span class="w">            </span><span class="sd">&quot;&quot;&quot;Handle HTTP requests.&quot;&quot;&quot;</span>
+</span><span data-line="526">            <span class="n">payload</span> <span class="o">=</span> <span class="k">await</span> <span class="n">request</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+</span><span data-line="527">            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="528">                <span class="n">text</span><span class="o">=</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">],</span>
+</span><span data-line="529">                <span class="n">labels</span><span class="o">=</span><span class="n">payload</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span>
+</span><span data-line="530">                <span class="n">relations</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;relations&quot;</span><span class="p">),</span>
+</span><span data-line="531">                <span class="n">threshold</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;threshold&quot;</span><span class="p">),</span>
+</span><span data-line="532">                <span class="n">relation_threshold</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;relation_threshold&quot;</span><span class="p">),</span>
+</span><span data-line="533">                <span class="n">flat_ner</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;flat_ner&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span>
+</span><span data-line="534">                <span class="n">multi_label</span><span class="o">=</span><span class="n">payload</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;multi_label&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">),</span>
+</span><span data-line="535">            <span class="p">)</span>
+</span><span data-line="536">
+</span><span data-line="537">    <span class="k">return</span> <span class="n">GLiNERDeployment</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="538">
+</span><span data-line="539">
+<div class="viewcode-block" id="serve">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.serve">[docs]</a>
+</span><span data-line="540"><span class="k">def</span><span class="w"> </span><span class="nf">serve</span><span class="p">(</span>
+</span><span data-line="541">    <span class="n">config</span><span class="p">:</span> <span class="n">GLiNERServeConfig</span><span class="p">,</span>
+</span><span data-line="542">    <span class="n">blocking</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="543"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span>
+</span><span data-line="544"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Start GLiNER Ray Serve deployment.</span>
+</span><span data-line="545">
+</span><span data-line="546"><span class="sd">    Args:</span>
+</span><span data-line="547"><span class="sd">        config: Server configuration.</span>
+</span><span data-line="548"><span class="sd">        blocking: If True, blocks until the server is shut down.</span>
+</span><span data-line="549">
+</span><span data-line="550"><span class="sd">    Returns:</span>
+</span><span data-line="551"><span class="sd">        Ray Serve deployment handle for making predictions.</span>
+</span><span data-line="552">
+</span><span data-line="553"><span class="sd">    Example:</span>
+</span><span data-line="554"><span class="sd">        &gt;&gt;&gt; from gliner.serve import GLiNERServeConfig, serve</span>
+</span><span data-line="555"><span class="sd">        &gt;&gt;&gt; config = GLiNERServeConfig(model=&quot;urchade/gliner_small-v2.1&quot;)</span>
+</span><span data-line="556"><span class="sd">        &gt;&gt;&gt; handle = serve(config)</span>
+</span><span data-line="557"><span class="sd">        &gt;&gt;&gt; # Make predictions</span>
+</span><span data-line="558"><span class="sd">        &gt;&gt;&gt; ref = handle.predict.remote(&quot;John works at Google&quot;, [&quot;person&quot;, &quot;org&quot;])</span>
+</span><span data-line="559"><span class="sd">        &gt;&gt;&gt; print(ref.result())</span>
+</span><span data-line="560"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="561">    <span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+</span><span data-line="562">    <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span> <span class="k">as</span> <span class="n">ray_serve</span>
+</span><span data-line="563">
+</span><span data-line="564">    <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
+</span><span data-line="565">        <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">ray_address</span><span class="p">,</span> <span class="n">ignore_reinit_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="566">
+</span><span data-line="567">    <span class="n">ray_serve</span><span class="o">.</span><span class="n">start</span><span class="p">(</span><span class="n">detached</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span><span data-line="568">
+</span><span data-line="569">    <span class="n">app</span> <span class="o">=</span> <span class="n">_build_deployment</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+</span><span data-line="570">    <span class="n">handle</span> <span class="o">=</span> <span class="n">ray_serve</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">app</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gliner&quot;</span><span class="p">,</span> <span class="n">route_prefix</span><span class="o">=</span><span class="n">config</span><span class="o">.</span><span class="n">route_prefix</span><span class="p">)</span>
+</span><span data-line="571">
+</span><span data-line="572">    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;GLiNER server running at http://localhost:8000</span><span class="si">{</span><span class="n">config</span><span class="o">.</span><span class="n">route_prefix</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="573">
+</span><span data-line="574">    <span class="k">if</span> <span class="n">blocking</span><span class="p">:</span>
+</span><span data-line="575">        <span class="kn">import</span><span class="w"> </span><span class="nn">signal</span>
+</span><span data-line="576">        <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+</span><span data-line="577">
+</span><span data-line="578">        <span class="n">shutdown_event</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="579">
+</span><span data-line="580">        <span class="k">def</span><span class="w"> </span><span class="nf">handle_signal</span><span class="p">(</span><span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+</span><span data-line="581">            <span class="k">nonlocal</span> <span class="n">shutdown_event</span>
+</span><span data-line="582">            <span class="n">shutdown_event</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="583">
+</span><span data-line="584">        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span> <span class="n">handle_signal</span><span class="p">)</span>
+</span><span data-line="585">        <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">handle_signal</span><span class="p">)</span>
+</span><span data-line="586">
+</span><span data-line="587">        <span class="k">while</span> <span class="ow">not</span> <span class="n">shutdown_event</span><span class="p">:</span>
+</span><span data-line="588">            <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="589">
+</span><span data-line="590">        <span class="n">ray_serve</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="591">
+</span><span data-line="592">    <span class="k">return</span> <span class="n">handle</span></div>
+
+</span><span data-line="593">
+</span><span data-line="594">
+<div class="viewcode-block" id="shutdown">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.shutdown">[docs]</a>
+</span><span data-line="595"><span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="596"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Shutdown the GLiNER Ray Serve deployment.&quot;&quot;&quot;</span>
+</span><span data-line="597">    <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span> <span class="k">as</span> <span class="n">ray_serve</span>
+</span><span data-line="598">
+</span><span data-line="599">    <span class="n">ray_serve</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span></div>
+
+</span><span data-line="600">
+</span><span data-line="601">
+<div class="viewcode-block" id="GLiNERFactory">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory">[docs]</a>
+</span><span data-line="602"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERFactory</span><span class="p">:</span>
+</span><span data-line="603"><span class="w">    </span><span class="sd">&quot;&quot;&quot;vLLM-style synchronous facade over a GLiNER Ray Serve deployment.</span>
+</span><span data-line="604">
+</span><span data-line="605"><span class="sd">    Bundles config → deploy → client into one lifecycle-managed object so</span>
+</span><span data-line="606"><span class="sd">    callers never see Ray&#39;s ObjectRefs.</span>
+</span><span data-line="607">
+</span><span data-line="608"><span class="sd">    Pass a list of texts to ``predict`` to preserve dynamic batching: each</span>
+</span><span data-line="609"><span class="sd">    text is dispatched as a separate request so Ray Serve&#39;s ``@serve.batch``</span>
+</span><span data-line="610"><span class="sd">    can accumulate them into a single forward pass. A Python loop of</span>
+</span><span data-line="611"><span class="sd">    single-text calls would serialize and defeat batching.</span>
+</span><span data-line="612">
+</span><span data-line="613"><span class="sd">    Example:</span>
+</span><span data-line="614"><span class="sd">        &gt;&gt;&gt; from gliner.serve import GLiNERFactory</span>
+</span><span data-line="615"><span class="sd">        &gt;&gt;&gt; llm = GLiNERFactory(model=&quot;urchade/gliner_small-v2.1&quot;)</span>
+</span><span data-line="616"><span class="sd">        &gt;&gt;&gt; outputs = llm.predict(</span>
+</span><span data-line="617"><span class="sd">        ...     [&quot;John works at Google&quot;, &quot;Paris is in France&quot;],</span>
+</span><span data-line="618"><span class="sd">        ...     labels=[&quot;person&quot;, &quot;organization&quot;, &quot;location&quot;],</span>
+</span><span data-line="619"><span class="sd">        ... )</span>
+</span><span data-line="620"><span class="sd">        &gt;&gt;&gt; llm.shutdown()</span>
+</span><span data-line="621">
+</span><span data-line="622"><span class="sd">        Or as a context manager:</span>
+</span><span data-line="623"><span class="sd">        &gt;&gt;&gt; with GLiNERFactory(model=&quot;urchade/gliner_small-v2.1&quot;) as llm:</span>
+</span><span data-line="624"><span class="sd">        ...     out = llm.predict(&quot;John works at Google&quot;, [&quot;person&quot;, &quot;org&quot;])</span>
+</span><span data-line="625"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="626">
+<div class="viewcode-block" id="GLiNERFactory.__init__">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory.__init__">[docs]</a>
+</span><span data-line="627">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="628">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="629">        <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="630">        <span class="o">*</span><span class="p">,</span>
+</span><span data-line="631">        <span class="n">config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">GLiNERServeConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="632">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+</span><span data-line="633">    <span class="p">):</span>
+</span><span data-line="634"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Build a config (if not provided) and start the Ray Serve deployment.</span>
+</span><span data-line="635">
+</span><span data-line="636"><span class="sd">        Args:</span>
+</span><span data-line="637"><span class="sd">            model: Model name or path. Ignored if ``config`` is provided.</span>
+</span><span data-line="638"><span class="sd">            config: Prebuilt ``GLiNERServeConfig``. Mutually exclusive with</span>
+</span><span data-line="639"><span class="sd">                ``model``/``kwargs``.</span>
+</span><span data-line="640"><span class="sd">            **kwargs: Forwarded to ``GLiNERServeConfig`` when building one.</span>
+</span><span data-line="641"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="642">        <span class="k">if</span> <span class="n">config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="643">            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">kwargs</span><span class="p">:</span>
+</span><span data-line="644">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="645">                    <span class="s2">&quot;Pass either `config` or `model`/kwargs, not both.&quot;</span>
+</span><span data-line="646">                <span class="p">)</span>
+</span><span data-line="647">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="648">            <span class="k">if</span> <span class="n">model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="649">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Must provide either `model` or `config`.&quot;</span><span class="p">)</span>
+</span><span data-line="650">            <span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERServeConfig</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="651">
+</span><span data-line="652">        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+</span><span data-line="653">        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="n">serve</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">blocking</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</span><span data-line="654">        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+</span><span data-line="655">
+</span><span data-line="656">    <span class="nd">@property</span>
+</span><span data-line="657">    <span class="k">def</span><span class="w"> </span><span class="nf">handle</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="658"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Underlying Ray Serve deployment handle — for async/advanced use.&quot;&quot;&quot;</span>
+</span><span data-line="659">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span>
+</span><span data-line="660">
+<div class="viewcode-block" id="GLiNERFactory.predict">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory.predict">[docs]</a>
+</span><span data-line="661">    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+</span><span data-line="662">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="663">        <span class="n">texts</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="664">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="665">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="666">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="667">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="668">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="669">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="670">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</span><span data-line="671"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Blocking prediction. Returns a dict for ``str`` input, list for list input.&quot;&quot;&quot;</span>
+</span><span data-line="672">        <span class="n">single</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+</span><span data-line="673">        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">texts</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+</span><span data-line="674">
+</span><span data-line="675">        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="676">            <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
+</span><span data-line="677">                <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="678">                <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="679">            <span class="p">)</span>
+</span><span data-line="680">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">items</span>
+</span><span data-line="681">        <span class="p">]</span>
+</span><span data-line="682">        <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">]</span>
+</span><span data-line="683">        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="n">results</span></div>
+
+</span><span data-line="684">
+<div class="viewcode-block" id="GLiNERFactory.predict_async">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory.predict_async">[docs]</a>
+</span><span data-line="685">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict_async</span><span class="p">(</span>
+</span><span data-line="686">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="687">        <span class="n">texts</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="688">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="689">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="690">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="691">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="692">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="693">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="694">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</span><span data-line="695"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Async prediction. Concurrent calls accumulate into one batch.&quot;&quot;&quot;</span>
+</span><span data-line="696">        <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span data-line="697">
+</span><span data-line="698">        <span class="n">single</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+</span><span data-line="699">        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">texts</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
+</span><span data-line="700">
+</span><span data-line="701">        <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="702">            <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
+</span><span data-line="703">                <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="704">                <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="705">            <span class="p">)</span>
+</span><span data-line="706">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">items</span>
+</span><span data-line="707">        <span class="p">]</span>
+</span><span data-line="708">        <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="n">refs</span><span class="p">))</span>
+</span><span data-line="709">        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="n">results</span></div>
+
+</span><span data-line="710">
+<div class="viewcode-block" id="GLiNERFactory.shutdown">
+<a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory.shutdown">[docs]</a>
+</span><span data-line="711">    <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="712"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Tear down the Ray Serve deployment. Idempotent.&quot;&quot;&quot;</span>
+</span><span data-line="713">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+</span><span data-line="714">            <span class="k">return</span>
+</span><span data-line="715">        <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span> <span class="k">as</span> <span class="n">ray_serve</span>
+</span><span data-line="716">        <span class="n">ray_serve</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="717">        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+</span><span data-line="718">
+</span><span data-line="719">    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="720">        <span class="k">return</span> <span class="bp">self</span>
+</span><span data-line="721">
+</span><span data-line="722">    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+</span><span data-line="723">        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="724">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="725">
+</span><span data-line="726">    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="727">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="728">            <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="729">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span data-line="730">            <span class="k">pass</span></div>
+
+</span></pre></div>
+        </article><button class="back-to-top" type="button">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+    <path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12z"></path>
+  </svg>
+  <span>Back to top</span>
+</button><div class="navigation flex print:hidden"></div></div>
+    </div>
+  </main>
+</div>
+<footer class="sy-foot">
+  <div class="sy-foot-inner sy-container mx-auto">
+    <div class="sy-foot-reserved md:flex justify-between items-center">
+      <div class="sy-foot-copyright"><p>2025, GLiNER community</p>
+  
+  <p>
+    Made with
+    
+    <a href="https://www.sphinx-doc.org/">Sphinx</a> and
+    
+    <a href="https://shibuya.lepture.com">Shibuya theme</a>.
+  </p>
+</div>
+      <div class="sy-foot-socials"></div>
+    </div>
+  </div>
+</footer>
+      <script src="../../../_static/documentation_options.js?v=dc91f075"></script>
+      <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../../_static/shibuya.js?v=9b0e4dde"></script></body>
+</html>

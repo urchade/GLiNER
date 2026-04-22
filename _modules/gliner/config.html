@@ -64,6 +64,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
 <ul>
@@ -584,11 +585,11 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="343">
 </span><span data-line="344">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">labels_encoder</span>
 </span><span data-line="345">        <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span> <span class="o">=</span> <span class="n">labels_decoder</span>
-</span><span data-line="346">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span></div>
+</span><span data-line="346">        <span class="bp">self</span><span class="o">.</span><span class="n">relations_layer</span> <span class="o">=</span> <span class="n">relations_layer</span>
+</span><span data-line="347">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_resolve_model_type</span><span class="p">()</span></div>
 
-</span><span data-line="347">
-</span><span data-line="348">    <span class="nd">@property</span>
-</span><span data-line="349">    <span class="k">def</span><span class="w"> </span><span class="nf">model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="348">
+</span><span data-line="349">    <span class="k">def</span><span class="w"> </span><span class="nf">_resolve_model_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span data-line="350"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Auto-detect model type based on configuration.&quot;&quot;&quot;</span>
 </span><span data-line="351">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_decoder</span><span class="p">:</span>
 </span><span data-line="352">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token-level&quot;</span><span class="p">:</span>

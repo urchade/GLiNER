@@ -18,6 +18,7 @@ Subpackages
    gliner.modeling
    gliner.multitask
    gliner.onnx
+   gliner.serve
    gliner.training
 
 Submodules

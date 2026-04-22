@@ -1,0 +1,7 @@
+gliner.serve.client module
+==========================
+
+.. automodule:: gliner.serve.client
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,18 @@
+gliner.serve package
+====================
+
+.. automodule:: gliner.serve
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.serve.client
+   gliner.serve.config
+   gliner.serve.memory
+   gliner.serve.server
