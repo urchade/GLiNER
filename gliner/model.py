@@ -265,6 +265,30 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         "int8": "int8",
     }
 
+    _DTYPE_MAP = {
+        "fp16": torch.float16,
+        "float16": torch.float16,
+        "half": torch.float16,
+        "bf16": torch.bfloat16,
+        "bfloat16": torch.bfloat16,
+        "fp32": torch.float32,
+        "float32": torch.float32,
+        "float": torch.float32,
+    }
+
+    @classmethod
+    def _parse_dtype(cls, dtype) -> Optional[torch.dtype]:
+        if dtype is None:
+            return None
+        if isinstance(dtype, torch.dtype):
+            return dtype
+        if isinstance(dtype, str):
+            key = dtype.lower()
+            if key not in cls._DTYPE_MAP:
+                raise ValueError(f"Unknown dtype {dtype!r}. Supported: {sorted(cls._DTYPE_MAP.keys())}")
+            return cls._DTYPE_MAP[key]
+        raise TypeError(f"dtype must be str or torch.dtype, got {type(dtype).__name__}")
+
     def quantize(self, dtype: str = "fp16") -> None:
         """Apply quantization to the model.
 
@@ -506,13 +530,21 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
     @classmethod
-    def _load_state_dict(cls, model_file: Path, map_location: str = "cpu"):
+    def _load_state_dict(
+        cls,
+        model_file: Path,
+        map_location: str = "cpu",
+        dtype: Optional[torch.dtype] = None,
+    ):
         """
         Load state dict from file.
 
         Args:
             model_file: Path to model file
             map_location: Device to map tensors to
+            dtype: If set, floating-point tensors are cast to this dtype during
+                loading so the state dict never fully materializes at the
+                on-disk precision.
 
         Returns:
             State dict
@@ -521,9 +553,16 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             state_dict = {}
             with safe_open(model_file, framework="pt", device=map_location) as f:
                 for key in f.keys():
-                    state_dict[key] = f.get_tensor(key)
+                    tensor = f.get_tensor(key)
+                    if dtype is not None and tensor.is_floating_point() and tensor.dtype != dtype:
+                        tensor = tensor.to(dtype)
+                    state_dict[key] = tensor
         else:
             state_dict = torch.load(model_file, map_location=torch.device(map_location), weights_only=True)
+            if dtype is not None:
+                for k, v in state_dict.items():
+                    if torch.is_tensor(v) and v.is_floating_point() and v.dtype != dtype:
+                        state_dict[k] = v.to(dtype)
         return state_dict
 
     @classmethod
@@ -717,6 +756,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
         quantize: Union[bool, str] = False,
+        dtype: Optional[Union[str, torch.dtype]] = None,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         session_options=None,
@@ -747,6 +787,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
                 ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
                 (requires ``torchao``). ``False`` to disable.
+            dtype: Target floating-point dtype for the loaded weights (e.g.
+                ``torch.bfloat16``, ``"bf16"``, ``"fp16"``). When set, the model
+                shell is pre-cast and each state-dict tensor is cast during
+                reading, so the full fp32 copy is never materialized — peak
+                host memory is roughly half of the default path for bf16/fp16.
+                Prefer this over ``quantize`` for plain precision changes.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -802,9 +848,17 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
 
-            # Load state dict
-            state_dict = cls._load_state_dict(model_file, map_location)
+            torch_dtype = cls._parse_dtype(dtype)
+            if torch_dtype is not None:
+                # Pre-cast the random-init shell so the model never exists at
+                # fp32 alongside the loaded state dict. ``.to(floating_dtype)``
+                # only touches floating-point params/buffers.
+                instance.model.to(torch_dtype)
+
+            # Load state dict (tensors cast to ``torch_dtype`` during read when set)
+            state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
             instance.model.load_state_dict(state_dict, strict=strict)
+            del state_dict
             instance.model.to(map_location)
 
             if compile_torch_model:
@@ -815,8 +869,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     warnings.warn("Cannot compile model on CPU. Set `map_location='cuda'` to compile.", stacklevel=2)
 
             if quantize:
-                dtype = quantize if isinstance(quantize, str) else "fp16"
-                instance.quantize(dtype)
+                quantize_dtype = quantize if isinstance(quantize, str) else "fp16"
+                instance.quantize(quantize_dtype)
 
             instance.eval()
         else:
@@ -4117,6 +4171,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         resize_token_embeddings: Optional[bool] = True,
         compile_torch_model: Optional[bool] = False,
         quantize: Union[bool, str] = False,
+        dtype: Optional[Union[str, torch.dtype]] = None,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
@@ -4148,6 +4203,11 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             quantize: Quantization dtype. ``True`` or ``"fp16"`` for float16,
                 ``"bf16"`` for bfloat16, ``"int8"`` for int8 dynamic quantization
                 (requires ``torchao``). ``False`` to disable.
+            dtype: Target floating-point dtype for the loaded weights (e.g.
+                ``torch.bfloat16``, ``"bf16"``, ``"fp16"``). When set, weights
+                are cast during the state-dict read so the fp32 copy is never
+                fully materialized; prefer this over ``quantize`` for plain
+                precision changes.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -4163,6 +4223,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
             >>> model = GLiNER.from_pretrained("knowledgator/gliner-bi-small-v1.0")
             >>> model = GLiNER.from_pretrained("path/to/local/model", quantize=True)
+            >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", dtype="bf16")
         """
         model_dir = Path(model_id)
         if not model_dir.exists():
@@ -4212,6 +4273,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             resize_token_embeddings=resize_token_embeddings,
             compile_torch_model=compile_torch_model,
             quantize=quantize,
+            dtype=dtype,
             max_length=max_length,
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
