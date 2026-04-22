@@ -366,6 +366,32 @@ model = GLiNER.from_pretrained(
 print(f"Model is on: {model.device}")
 ```
 
+### Reduced-precision loading (`dtype`)
+
+Pass `dtype` to `from_pretrained` to load the weights directly at the target floating-point precision — no intermediate fp32 copy, no post-load cast:
+
+```python
+from gliner import GLiNER
+import torch
+
+# Either a string or a torch.dtype
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", dtype="bf16", map_location="cuda")
+model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", dtype=torch.bfloat16, map_location="cuda")
+```
+
+Accepted values: `"fp16"` / `"float16"` / `"half"`, `"bf16"` / `"bfloat16"`, `"fp32"` / `"float32"` / `"float"`, or any `torch.dtype`. Int/bool buffers are left untouched.
+
+**Why use `dtype` instead of `quantize="bf16"`:**
+- `quantize` casts *after* the full fp32 state dict + fp32 model are already in memory.
+- `dtype` casts each tensor *as it is read* from the safetensors file and pre-casts the model shell before `load_state_dict`, so the fp32 copy is never fully materialized. Peak host memory during load drops from ~2× fp32 to ~1× fp32 for bf16/fp16, and the separate cast pass is skipped.
+
+**When it matters:** cold starts and scalable serverless deployments (AWS Lambda, Cloud Run, Modal, RunPod serverless, autoscaled Kubernetes pods, etc.) — startup latency and peak memory directly drive cost and SLA:
+- Shorter cold-start on every new container (one pass instead of load + cast).
+- Lower peak memory lets instances fit on smaller memory tiers and reduces boot-time OOMs under memory pressure.
+- Faster first-inference latency after a scale-from-zero event.
+
+`dtype` covers plain precision changes (bf16/fp16/fp32). For int8 / torchao / CPU dynamic quantization, keep using `quantize` (see below). The two can be combined if desired.
+
 ### Quantization, Compilation & FlashDeBERTa
 
 Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
