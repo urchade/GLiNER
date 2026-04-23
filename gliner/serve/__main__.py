@@ -49,8 +49,9 @@ def main():
         "--quantization",
         type=str,
         default=None,
-        choices=["fp16", "bf16", "int8", None],
-        help="Quantization type to apply",
+        choices=["int8", None],
+        help="Real quantization to apply. Only 'int8' is accepted; for precision "
+        "changes (fp16/bf16) use --dtype instead.",
     )
 
     limits_group = parser.add_argument_group("Model Limits")

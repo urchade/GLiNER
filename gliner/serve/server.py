@@ -72,10 +72,12 @@ class GLiNERServer:
         if config.enable_flashdeberta:
             logger.info("FlashDeBERTa enabled")
 
-        self.model = GLiNER.from_pretrained(config.model,
-                        max_length=config.max_model_len,
-                        max_width=config.max_span_width).to(
-                        device=config.device, dtype=self.torch_dtype,
+        self.model = GLiNER.from_pretrained(
+            config.model,
+            max_length=config.max_model_len,
+            max_width=config.max_span_width,
+            map_location=config.device,
+            dtype=self.torch_dtype,
         )
         self.model.eval()
 
