@@ -281,13 +281,23 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if dtype is None:
             return None
         if isinstance(dtype, torch.dtype):
-            return dtype
-        if isinstance(dtype, str):
+            resolved = dtype
+        elif isinstance(dtype, str):
             key = dtype.lower()
             if key not in cls._DTYPE_MAP:
                 raise ValueError(f"Unknown dtype {dtype!r}. Supported: {sorted(cls._DTYPE_MAP.keys())}")
-            return cls._DTYPE_MAP[key]
-        raise TypeError(f"dtype must be str or torch.dtype, got {type(dtype).__name__}")
+            resolved = cls._DTYPE_MAP[key]
+        else:
+            raise TypeError(f"dtype must be str or torch.dtype, got {type(dtype).__name__}")
+        # ``instance.model.to(dtype)`` only accepts floating-point/complex dtypes;
+        # reject e.g. torch.int8 / torch.bool up front with a clearer error than
+        # the one PyTorch raises deep in the load path.
+        if not resolved.is_floating_point:
+            raise ValueError(
+                f"dtype must be a floating-point dtype (e.g. torch.bfloat16, torch.float16, "
+                f"torch.float32), got {resolved}. For int8 quantization use `quantize='int8'`."
+            )
+        return resolved
 
     def quantize(self, dtype: str = "fp16") -> None:
         """Apply quantization to the model.
@@ -870,6 +880,19 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             if quantize:
                 quantize_dtype = quantize if isinstance(quantize, str) else "fp16"
+                if torch_dtype is not None and quantize_dtype.lower() in {
+                    "fp16", "float16", "half", "bf16", "bfloat16",
+                }:
+                    # ``quantize`` in these cases is just a downcast and will
+                    # overwrite the precision chosen via ``dtype``. Warn rather
+                    # than silently resolve one way.
+                    warnings.warn(
+                        f"Both `dtype={dtype!r}` and `quantize={quantize!r}` were passed; "
+                        f"`quantize` will override the loaded precision by casting to "
+                        f"{quantize_dtype!r}. Pass only `dtype=` for plain precision changes, "
+                        f"or only `quantize='int8'` for real quantization.",
+                        stacklevel=2,
+                    )
                 instance.quantize(quantize_dtype)
 
             instance.eval()
