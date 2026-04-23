@@ -394,7 +394,7 @@ Accepted values: `"fp16"` / `"float16"` / `"half"`, `"bf16"` / `"bfloat16"`, `"f
 
 ### Quantization, Compilation & FlashDeBERTa
 
-Use `quantize=True` and `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
+Combine `dtype="fp16"` (or `"bf16"`) with `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
 
 ```python
 from gliner import GLiNER
@@ -402,7 +402,7 @@ from gliner import GLiNER
 model = GLiNER.from_pretrained(
     "urchade/gliner_medium-v2.1",
     map_location="cuda",
-    quantize=True,            # or "fp16", "bf16"
+    dtype="fp16",             # or "bf16" — see "Reduced-precision loading" above
     compile_torch_model=True,
 )
 ```
@@ -410,9 +410,9 @@ model = GLiNER.from_pretrained(
 Or apply after loading:
 
 ```python
+import torch
 model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1", map_location="cuda")
-model.quantize()         # fp16 half-precision (default)
-model.quantize("bf16")   # bfloat16 — better numerical stability, slightly less speedup
+model.to(torch.float16)  # fp16 half-precision
 model.compile()          # torch.compile with dynamic shapes
 ```
 
@@ -423,15 +423,15 @@ Compilation is especially beneficial for short sequences, where the overhead of 
 | Condition | F1 | Speedup |
 |-----------|:---:|:---:|
 | GPU fp32 (baseline) | 0.8107 | 1.00x |
-| + quantize (fp16) | 0.8107 | 1.35x |
+| + `dtype="fp16"` | 0.8107 | 1.35x |
 | + compile | 0.8107 | 1.31x |
-| **+ quantize + compile** | **0.8107** | **1.94x** |
+| **+ `dtype="fp16"` + compile** | **0.8107** | **1.94x** |
 
-**Quantization options:**
-- `quantize=True` or `quantize="fp16"` — float16 half-precision. Best GPU speedup (~1.35x).
-- `quantize="bf16"` — bfloat16. Better numerical stability, slightly less speedup (~1.2x).
-- `quantize="int8"` — int8 quantization. On CPU, uses built-in FBGEMM int8 kernels (~1.6x speedup). On GPU, uses [torchao](https://github.com/pytorch/ao) int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT). Stock DeBERTa-based models lose accuracy with int8.
-- On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.
+**`quantize=` vs `dtype=`:**
+- `dtype="fp16"` / `"bf16"` — plain precision change via efficient load (see the dedicated section above). This is the recommended way to get half-precision inference.
+- `quantize="int8"` — real int8 quantization. On CPU, built-in FBGEMM kernels (~1.6x speedup). On GPU, [torchao](https://github.com/pytorch/ao) int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT); stock DeBERTa-based models lose accuracy with int8.
+- `quantize=True` / `"fp16"` / `"bf16"` — **deprecated** for precision-only changes on GPU (and for `"bf16"` on CPU) because these paths are just a downcast with an extra fp32 intermediate. They still work and emit a `DeprecationWarning` pointing at `dtype=`. `quantize="fp16"` on CPU is preserved as the only non-deprecated path there — it performs real dynamic quantization of `nn.Linear` layers (reduces memory, no speed benefit).
+- Passing both `dtype=` and a downcast `quantize=` emits a warning because `quantize` runs after the load and will overwrite the precision.
 
 **Compilation notes:**
 - `compile_torch_model=True` uses [torch.compile](https://pytorch.org/docs/stable/torch.compiler.html) which JIT-compiles the model via [Triton](https://github.com/triton-lang/triton) kernels. The first inference call will be slower due to compilation, but all subsequent calls benefit from the compiled graph. This is only available on **Linux and WSL** (not native Windows or macOS).

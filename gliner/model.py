@@ -304,18 +304,22 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         Args:
             dtype: Quantization type. Options:
-                - ``"fp16"`` (default): float16 half-precision. On GPU, uses Tensor Core
-                  acceleration for ~1.4x speedup. On CPU, applies dynamic quantization
-                  (reduces memory, no speed benefit).
-                - ``"bf16"``: bfloat16 half-precision. Better numerical stability than
-                  fp16 with slightly less speedup (~1.2x).
-                - ``"int8"``: int8 quantization (GPU and CPU). On CPU, uses PyTorch's
-                  built-in dynamic quantization with FBGEMM int8 kernels (~1.6x
-                  speedup). On GPU, uses ``torchao`` int8 weight-only quantization
+                - ``"int8"`` (recommended): int8 quantization (GPU and CPU). On CPU,
+                  uses PyTorch's built-in dynamic quantization with FBGEMM int8 kernels
+                  (~1.6x speedup). On GPU, uses ``torchao`` int8 weight-only quantization
                   (~50% memory reduction, no speed gain; requires the ``torchao``
                   package). Stock DeBERTa-based models lose accuracy with int8;
                   use this with models that have been fine-tuned with
                   quantization-aware training (QAT).
+                - ``"fp16"`` (default): float16. **Deprecated on GPU** — it's a pure
+                  downcast equivalent to ``model.to(torch.float16)``; prefer
+                  ``dtype="fp16"`` on ``GLiNER.from_pretrained`` or
+                  ``model.to(torch.float16)`` post-load. On CPU this is the only
+                  non-deprecated path and applies real dynamic quantization to
+                  ``nn.Linear`` layers (reduces memory, no speed benefit).
+                - ``"bf16"``: bfloat16. **Deprecated on both devices** — it's a pure
+                  downcast; prefer ``dtype="bf16"`` on ``GLiNER.from_pretrained`` or
+                  ``model.to(torch.bfloat16)`` post-load.
 
         Raises:
             RuntimeError: If the model is an ONNX model (use ONNX quantization instead).
@@ -324,9 +328,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         Examples:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", map_location="cuda")
-            >>> model.quantize()           # fp16 half-precision on GPU — ~1.4x faster
-            >>> model.quantize("bf16")     # bfloat16 on GPU — ~1.2x faster
             >>> model.quantize("int8")     # int8 quantization (torchao on GPU, FBGEMM on CPU)
+            >>> # For precision-only changes, prefer:
+            >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", dtype="bf16")
         """
         if self.onnx_model:
             raise RuntimeError(
@@ -345,6 +349,22 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if torch_dtype == "int8":
             self._apply_int8_quantization()
             return
+
+        # Pure-downcast paths (bf16 on any device, fp16 on GPU) are equivalent to
+        # ``model.to(torch_dtype)``. Steer users at the cheaper ``dtype=`` load path.
+        # CPU fp16 is real dynamic quantization of ``nn.Linear`` and stays as-is.
+        is_pure_downcast = (self.device.type == "cuda") or (torch_dtype == torch.bfloat16)
+        if is_pure_downcast:
+            warnings.warn(
+                f"`quantize({dtype!r})` on {self.device.type} is a pure downcast to "
+                f"{torch_dtype}, not real quantization. This overload is deprecated and "
+                f"will be removed in a future release; use `model.to({torch_dtype})` "
+                f"post-load, or pass `dtype={dtype!r}` to `GLiNER.from_pretrained(...)` "
+                f"for a cheaper load. `quantize('int8')` remains the recommended path "
+                f"for real quantization.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         if self.device.type == "cuda":
             if torch_dtype == torch.bfloat16:
