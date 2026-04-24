@@ -385,7 +385,11 @@ single-text calls would serialize and defeat batching.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.server.GLiNERFactory.shutdown">
 <span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.shutdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.server.GLiNERFactory.shutdown" title="Link to this definition">¶</a></dt>
-<dd><p>Tear down the Ray Serve deployment. Idempotent.</p>
+<dd><p>Tear down the Ray Serve deployment and the Ray runtime it booted.</p>
+<p>Idempotent. Shutting down Ray after Serve avoids leaving the driver
+attached to a detached Serve instance — the latter produces noisy
+<code class="docutils literal notranslate"><span class="pre">ServeController</span> <span class="pre">...</span> <span class="pre">killed</span> <span class="pre">by</span> <span class="pre">ray.kill</span></code> retry warnings in the
+raylet log when the process exits.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>

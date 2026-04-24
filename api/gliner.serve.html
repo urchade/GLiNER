@@ -580,7 +580,11 @@ single-text calls would serialize and defeat batching.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.shutdown">
 <span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.shutdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.shutdown" title="Link to this definition">¶</a></dt>
-<dd><p>Tear down the Ray Serve deployment. Idempotent.</p>
+<dd><p>Tear down the Ray Serve deployment and the Ray runtime it booted.</p>
+<p>Idempotent. Shutting down Ray after Serve avoids leaving the driver
+attached to a detached Serve instance — the latter produces noisy
+<code class="docutils literal notranslate"><span class="pre">ServeController</span> <span class="pre">...</span> <span class="pre">killed</span> <span class="pre">by</span> <span class="pre">ray.kill</span></code> retry warnings in the
+raylet log when the process exits.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -680,40 +684,45 @@ batch.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deployment_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Client for accessing a running GLiNER Ray Serve deployment.</p>
-<p>This client can be used from any Python process (same machine or remote)
-to make predictions against a running GLiNER server.</p>
+<p>HTTP client for a running GLiNER Ray Serve deployment.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
 </span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span>
-</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
 </span><span data-line="6"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</span><span data-line="8"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, &#39;score&#39;: 0.95}, ...]}</span>
+</span><span data-line="7"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
 </span></pre></div>
 </div>
-<p>Initialize client connection to GLiNER deployment.</p>
+<p>Initialize the HTTP client.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>deployment_name</strong> (<em>str</em>) – Name of the Ray Serve deployment.</p></li>
-<li><p><strong>ray_address</strong> (<em>str</em><em> | </em><em>None</em>) – Ray cluster address. If None, connects to local cluster.</p></li>
+<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
+<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
+match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
+<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
+on a list of texts. Bounds the client-side thread pool.</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERClient.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deployment_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize client connection to GLiNER deployment.</p>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the HTTP client.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>deployment_name</strong> (<em>str</em>) – Name of the Ray Serve deployment.</p></li>
-<li><p><strong>ray_address</strong> (<em>str</em><em> | </em><em>None</em>) – Ray cluster address. If None, connects to local cluster.</p></li>
+<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
+<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
+match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
+<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
+on a list of texts. Bounds the client-side thread pool.</p></li>
 </ul>
 </dd>
 </dl>
@@ -722,36 +731,15 @@ to make predictions against a running GLiNER server.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict" title="Link to this definition">¶</a></dt>
-<dd><p>Make predictions using the GLiNER server.</p>
+<dd><p>Blocking prediction. <code class="docutils literal notranslate"><span class="pre">str</span></code> in → <code class="docutils literal notranslate"><span class="pre">dict</span></code> out; <code class="docutils literal notranslate"><span class="pre">list</span></code> in → <code class="docutils literal notranslate"><span class="pre">list</span></code> out.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>text</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – Input text or list of texts.</p></li>
-<li><p><strong>labels</strong> (<em>List</em><em>[</em><em>str</em><em>]</em>) – Entity type labels to extract.</p></li>
-<li><p><strong>relations</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Relation type labels (for relex models).</p></li>
-<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for entities.</p></li>
-<li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for relations.</p></li>
-<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER.</p></li>
-<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p>“entities”: List of entity dicts</p></li>
-<li><p>”relations”: List of relation dicts (if model supports)</p></li>
-</ul>
-</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>Single result dict or list of result dicts containing</p>
-</dd>
 </dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict_async">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict_async" title="Link to this definition">¶</a></dt>
-<dd><p>Async version of predict.</p>
+<dd><p>Async prediction. Concurrent calls coalesce into one server-side batch.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -797,21 +785,9 @@ to make predictions against a running GLiNER server.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="gliner.serve.get_client">
-<span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">deployment_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#get_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.get_client" title="Link to this definition">¶</a></dt>
-<dd><p>Get a client for the GLiNER Ray Serve deployment.</p>
+<span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#get_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.get_client" title="Link to this definition">¶</a></dt>
+<dd><p>Convenience constructor for <a class="reference internal" href="#gliner.serve.GLiNERClient" title="gliner.serve.GLiNERClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">GLiNERClient</span></code></a>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>deployment_name</strong> (<em>str</em>) – Name of the Ray Serve deployment.</p></li>
-<li><p><strong>ray_address</strong> (<em>str</em><em> | </em><em>None</em>) – Ray cluster address. If None, connects to local cluster.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>GLiNERClient instance for making predictions.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><a class="reference internal" href="gliner.serve.client.html#gliner.serve.client.GLiNERClient" title="gliner.serve.client.GLiNERClient"><em>GLiNERClient</em></a></p>
-</dd>
 </dl>
 </dd></dl>
 

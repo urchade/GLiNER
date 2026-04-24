@@ -144,7 +144,13 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#programmatic-usage">Programmatic Usage</a></li>
-<li><a class="reference internal" href="#relation-extraction">Relation Extraction</a></li>
+<li><a class="reference internal" href="#relation-extraction">Relation Extraction</a><ul>
+<li><a class="reference internal" href="#start-a-relex-server">Start a RelEx server</a></li>
+<li><a class="reference internal" href="#predict-via-the-client">Predict via the client</a></li>
+<li><a class="reference internal" href="#in-process-glinerfactory">In-process (GLiNERFactory)</a></li>
+<li><a class="reference internal" href="#http-curl">HTTP (curl)</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#all-cli-options">All CLI Options</a></li>
 <li><a class="reference internal" href="#docker">Docker</a></li>
 <li><a class="reference internal" href="#shutdown">Shutdown</a></li>
@@ -221,10 +227,10 @@ from <code class="docutils literal notranslate"><span class="pre">asyncio</span>
 <p><strong>Remote Python client</strong> (attach to a running deployment):</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
+</span><span data-line="3"><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>  <span class="c1"># defaults to http://localhost:8000/gliner</span>
 </span><span data-line="4"><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
 </span><span data-line="5">    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="6">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
 </span><span data-line="7"><span class="p">)</span>
 </span><span data-line="8"><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
 </span><span data-line="9"><span class="c1"># {&#39;entities&#39;: [</span>
@@ -234,7 +240,30 @@ from <code class="docutils literal notranslate"><span class="pre">asyncio</span>
 </span><span data-line="13"><span class="c1"># ]}</span>
 </span></pre></div>
 </div>
-<p><strong>HTTP request:</strong></p>
+<p><code class="docutils literal notranslate"><span class="pre">GLiNERClient</span></code> is a pure HTTP client built on the Python standard library —
+it does <strong>not</strong> import <code class="docutils literal notranslate"><span class="pre">ray</span></code> and does <strong>not</strong> join the Ray cluster, so it
+runs from any Python process (including environments where <code class="docutils literal notranslate"><span class="pre">ray</span></code> is not
+installed). Construct it with a custom URL/prefix or timeout as needed:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;http://gliner.internal:8000&quot;</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">route_prefix</span><span class="o">=</span><span class="s2">&quot;/gliner&quot;</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">timeout</span><span class="o">=</span><span class="mf">30.0</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">max_concurrency</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>   <span class="c1"># bound on concurrent in-flight HTTP requests</span>
+</span><span data-line="6"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Passing a list of texts preserves server-side dynamic batching — each text
+is dispatched as its own HTTP request concurrently (threads for <code class="docutils literal notranslate"><span class="pre">predict</span></code>,
+<code class="docutils literal notranslate"><span class="pre">asyncio.gather</span></code> for <code class="docutils literal notranslate"><span class="pre">predict_async</span></code>) so Ray Serve’s <code class="docutils literal notranslate"><span class="pre">&#64;serve.batch</span></code>
+coalesces them into a single forward pass:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">outputs</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="2">    <span class="p">[</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris is in France&quot;</span><span class="p">],</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="4"><span class="p">)</span>  <span class="c1"># → list[dict], one per input text</span>
+</span></pre></div>
+</div>
+<p>Network or server errors surface as <code class="docutils literal notranslate"><span class="pre">gliner.serve.client.GLiNERClientError</span></code>.</p>
+<p><strong>HTTP request (no client library):</strong></p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/gliner<span class="w"> </span><span class="se">\</span>
 </span><span data-line="2"><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
 </span><span data-line="3"><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{&quot;text&quot;: &quot;John works at Google&quot;, &quot;labels&quot;: [&quot;person&quot;, &quot;organization&quot;]}&#39;</span>
@@ -305,15 +334,97 @@ from <code class="docutils literal notranslate"><span class="pre">asyncio</span>
 </section>
 <section id="relation-extraction">
 <h2>Relation Extraction<a class="headerlink" href="#relation-extraction" title="Link to this heading">¶</a></h2>
-<p>For models that support relation extraction:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-</span><span data-line="2">    <span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span>
-</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">],</span>
-</span><span data-line="4">    <span class="n">relations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_by&quot;</span><span class="p">]</span>
-</span><span data-line="5"><span class="p">)</span>
-</span><span data-line="6"><span class="c1"># {&#39;entities&#39;: [...], &#39;relations&#39;: [...]}</span>
+<p>GLiNER-RelEx models (e.g. <code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-relex-large-v0.5</span></code>,
+<code class="docutils literal notranslate"><span class="pre">knowledgator/gliner-token-relex-v1.0</span></code>) jointly extract entities and the
+relations between them in a single forward pass. The server auto-detects
+relation support by inspecting <code class="docutils literal notranslate"><span class="pre">model.config.model_type</span></code> and enables the
+relex code path when it contains <code class="docutils literal notranslate"><span class="pre">&quot;relex&quot;</span></code> — no extra flag is needed.</p>
+<section id="start-a-relex-server">
+<h3>Start a RelEx server<a class="headerlink" href="#start-a-relex-server" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>-m<span class="w"> </span>gliner.serve<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--model<span class="w"> </span>knowledgator/gliner-relex-large-v1.0<span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">    </span>--dtype<span class="w"> </span>bfloat16<span class="w"> </span><span class="se">\</span>
+</span><span data-line="4"><span class="w">    </span>--max-batch-size<span class="w"> </span><span class="m">16</span>
 </span></pre></div>
 </div>
+</section>
+<section id="predict-via-the-client">
+<h3>Predict via the client<a class="headerlink" href="#predict-via-the-client" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>  <span class="c1"># http://localhost:8000/gliner</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Bill Gates founded Microsoft in 1975. The company is headquartered in Redmond.&quot;</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="n">result</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="8">    <span class="n">text</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="10">    <span class="n">relations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_in&quot;</span><span class="p">,</span> <span class="s2">&quot;headquartered_in&quot;</span><span class="p">],</span>
+</span><span data-line="11">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="13"><span class="p">)</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="k">for</span> <span class="n">ent</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;entities&quot;</span><span class="p">]:</span>
+</span><span data-line="16">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">ent</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">ent</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="17">
+</span><span data-line="18"><span class="k">for</span> <span class="n">rel</span> <span class="ow">in</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;relations&quot;</span><span class="p">]:</span>
+</span><span data-line="19">    <span class="n">head</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;entities&quot;</span><span class="p">][</span><span class="n">rel</span><span class="p">[</span><span class="s2">&quot;head&quot;</span><span class="p">][</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">]]</span>
+</span><span data-line="20">    <span class="n">tail</span> <span class="o">=</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;entities&quot;</span><span class="p">][</span><span class="n">rel</span><span class="p">[</span><span class="s2">&quot;tail&quot;</span><span class="p">][</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">]]</span>
+</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">rel</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For a batched call, pass a list of texts — each one dispatches as its own
+request so the server can coalesce them into a single relex forward pass:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="2">    <span class="p">[</span>
+</span><span data-line="3">        <span class="s2">&quot;Bill Gates founded Microsoft in 1975.&quot;</span><span class="p">,</span>
+</span><span data-line="4">        <span class="s2">&quot;Apple is headquartered in Cupertino.&quot;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="p">],</span>
+</span><span data-line="6">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">],</span>
+</span><span data-line="7">    <span class="n">relations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_in&quot;</span><span class="p">,</span> <span class="s2">&quot;headquartered_in&quot;</span><span class="p">],</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9"><span class="c1"># results == [ {&quot;entities&quot;: [...], &quot;relations&quot;: [...]}, {...} ]</span>
+</span></pre></div>
+</div>
+</section>
+<section id="in-process-glinerfactory">
+<h3>In-process (GLiNERFactory)<a class="headerlink" href="#in-process-glinerfactory" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERFactory</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="k">with</span> <span class="n">GLiNERFactory</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;knowledgator/gliner-relex-large-v0.5&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">llm</span><span class="p">:</span>
+</span><span data-line="4">    <span class="n">out</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="5">        <span class="s2">&quot;Bill Gates founded Microsoft in 1975.&quot;</span><span class="p">,</span>
+</span><span data-line="6">        <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">],</span>
+</span><span data-line="7">        <span class="n">relations</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_in&quot;</span><span class="p">],</span>
+</span><span data-line="8">    <span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="http-curl">
+<h3>HTTP (curl)<a class="headerlink" href="#http-curl" title="Link to this heading">¶</a></h3>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>http://localhost:8000/gliner<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">  </span>-H<span class="w"> </span><span class="s2">&quot;Content-Type: application/json&quot;</span><span class="w"> </span><span class="se">\</span>
+</span><span data-line="3"><span class="w">  </span>-d<span class="w"> </span><span class="s1">&#39;{</span>
+</span><span data-line="4"><span class="s1">        &quot;text&quot;: &quot;Bill Gates founded Microsoft in 1975.&quot;,</span>
+</span><span data-line="5"><span class="s1">        &quot;labels&quot;: [&quot;person&quot;, &quot;organization&quot;, &quot;date&quot;],</span>
+</span><span data-line="6"><span class="s1">        &quot;relations&quot;: [&quot;founded&quot;, &quot;founded_in&quot;],</span>
+</span><span data-line="7"><span class="s1">        &quot;threshold&quot;: 0.5,</span>
+</span><span data-line="8"><span class="s1">        &quot;relation_threshold&quot;: 0.5</span>
+</span><span data-line="9"><span class="s1">      }&#39;</span>
+</span></pre></div>
+</div>
+<p><strong>Response shape for RelEx models:</strong></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s2">&quot;entities&quot;</span><span class="p">:</span>  <span class="p">[{</span><span class="s2">&quot;start&quot;</span><span class="p">,</span> <span class="s2">&quot;end&quot;</span><span class="p">,</span> <span class="s2">&quot;text&quot;</span><span class="p">,</span> <span class="s2">&quot;label&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">},</span> <span class="o">...</span><span class="p">],</span>
+</span><span data-line="3">    <span class="s2">&quot;relations&quot;</span><span class="p">:</span> <span class="p">[{</span><span class="s2">&quot;relation&quot;</span><span class="p">,</span> <span class="s2">&quot;score&quot;</span><span class="p">,</span>
+</span><span data-line="4">                   <span class="s2">&quot;head&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">},</span>
+</span><span data-line="5">                   <span class="s2">&quot;tail&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">}},</span> <span class="o">...</span><span class="p">],</span>
+</span><span data-line="6"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>For NER-only models the <code class="docutils literal notranslate"><span class="pre">&quot;relations&quot;</span></code> key is omitted; passing <code class="docutils literal notranslate"><span class="pre">relations=</span></code>
+to such a model is a no-op.</p>
+</section>
 </section>
 <section id="all-cli-options">
 <h2>All CLI Options<a class="headerlink" href="#all-cli-options" title="Link to this heading">¶</a></h2>
@@ -327,7 +438,7 @@ from <code class="docutils literal notranslate"><span class="pre">asyncio</span>
 </span><span data-line="8">
 </span><span data-line="9"><span class="n">Batching</span><span class="p">:</span>
 </span><span data-line="10">  <span class="o">--</span><span class="nb">max</span><span class="o">-</span><span class="n">batch</span><span class="o">-</span><span class="n">size</span>      <span class="n">Max</span> <span class="n">batch</span> <span class="n">size</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">32</span><span class="p">)</span>
-</span><span data-line="11">  <span class="o">--</span><span class="n">batch</span><span class="o">-</span><span class="n">wait</span><span class="o">-</span><span class="n">timeout</span><span class="o">-</span><span class="n">ms</span>  <span class="n">Batch</span> <span class="n">wait</span> <span class="n">timeout</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">50</span><span class="p">)</span>
+</span><span data-line="11">  <span class="o">--</span><span class="n">batch</span><span class="o">-</span><span class="n">wait</span><span class="o">-</span><span class="n">timeout</span><span class="o">-</span><span class="n">ms</span>  <span class="n">Batch</span> <span class="n">wait</span> <span class="n">timeout</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">10</span><span class="p">)</span>
 </span><span data-line="12">  <span class="o">--</span><span class="n">precompiled</span><span class="o">-</span><span class="n">batch</span><span class="o">-</span><span class="n">sizes</span>  <span class="n">Comma</span><span class="o">-</span><span class="n">separated</span> <span class="n">sizes</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">16</span><span class="p">,</span><span class="mi">32</span><span class="p">)</span>
 </span><span data-line="13">
 </span><span data-line="14"><span class="n">Replicas</span><span class="p">:</span>
@@ -340,11 +451,12 @@ from <code class="docutils literal notranslate"><span class="pre">asyncio</span>
 </span><span data-line="21">  <span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="nb">compile</span>             <span class="n">Disable</span> <span class="n">torch</span><span class="o">.</span><span class="n">compile</span>
 </span><span data-line="22">
 </span><span data-line="23"><span class="n">Memory</span><span class="p">:</span>
-</span><span data-line="24">  <span class="o">--</span><span class="n">target</span><span class="o">-</span><span class="n">memory</span><span class="o">-</span><span class="n">fraction</span>  <span class="n">GPU</span> <span class="n">memory</span> <span class="n">fraction</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mf">0.8</span><span class="p">)</span>
-</span><span data-line="25">
-</span><span data-line="26"><span class="n">Server</span><span class="p">:</span>
-</span><span data-line="27">  <span class="o">--</span><span class="n">route</span><span class="o">-</span><span class="n">prefix</span>        <span class="n">HTTP</span> <span class="n">route</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="o">/</span><span class="n">gliner</span><span class="p">)</span>
-</span><span data-line="28">  <span class="o">--</span><span class="n">ray</span><span class="o">-</span><span class="n">address</span>         <span class="n">Ray</span> <span class="n">cluster</span> <span class="n">address</span>
+</span><span data-line="24">  <span class="o">--</span><span class="n">target</span><span class="o">-</span><span class="n">memory</span><span class="o">-</span><span class="n">fraction</span>  <span class="n">GPU</span> <span class="n">memory</span> <span class="n">fraction</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mf">0.9</span><span class="p">)</span>
+</span><span data-line="25">  <span class="o">--</span><span class="n">memory</span><span class="o">-</span><span class="n">overhead</span><span class="o">-</span><span class="n">factor</span>  <span class="n">Safety</span> <span class="n">margin</span> <span class="n">on</span> <span class="n">memory</span> <span class="n">estimates</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="mf">1.3</span><span class="p">)</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="n">Server</span><span class="p">:</span>
+</span><span data-line="28">  <span class="o">--</span><span class="n">route</span><span class="o">-</span><span class="n">prefix</span>        <span class="n">HTTP</span> <span class="n">route</span> <span class="p">(</span><span class="n">default</span><span class="p">:</span> <span class="o">/</span><span class="n">gliner</span><span class="p">)</span>
+</span><span data-line="29">  <span class="o">--</span><span class="n">ray</span><span class="o">-</span><span class="n">address</span>         <span class="n">Ray</span> <span class="n">cluster</span> <span class="n">address</span>
 </span></pre></div>
 </div>
 </section>

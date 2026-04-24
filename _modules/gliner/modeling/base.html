@@ -2494,532 +2494,523 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="2186"><span class="sd">                - target_mask: Packed mask of shape (B, M).</span>
 </span><span data-line="2187"><span class="sd">        &quot;&quot;&quot;</span>
 </span><span data-line="2188">        <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">representations</span><span class="o">.</span><span class="n">shape</span>
-</span><span data-line="2189">
-</span><span data-line="2190">        <span class="c1"># ``lengths.max().item()`` would force a GPU→CPU sync to compress the output</span>
-</span><span data-line="2191">        <span class="c1"># from ``N`` to ``max_len``. Under ``torch.compile`` with ``capture_scalar_outputs``</span>
-</span><span data-line="2192">        <span class="c1"># the sync is traced symbolically and we keep the packing benefit; in eager</span>
-</span><span data-line="2193">        <span class="c1"># execution we skip packing (use the full ``N``) to stay sync-free, at the cost</span>
-</span><span data-line="2194">        <span class="c1"># of some downstream compute that masked positions would have saved.</span>
-</span><span data-line="2195">        <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">compiler</span><span class="o">.</span><span class="n">is_compiling</span><span class="p">():</span>
-</span><span data-line="2196">            <span class="n">lengths</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2197">            <span class="n">max_len</span> <span class="o">=</span> <span class="n">lengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
-</span><span data-line="2198">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2199">            <span class="n">max_len</span> <span class="o">=</span> <span class="n">N</span>
-</span><span data-line="2200">
-</span><span data-line="2201">        <span class="k">if</span> <span class="n">max_len</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
-</span><span data-line="2202">            <span class="n">target_rep</span> <span class="o">=</span> <span class="n">representations</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2203">            <span class="n">target_mask</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_len</span><span class="p">)</span>
-</span><span data-line="2204">
-</span><span data-line="2205">            <span class="n">new_col_idx</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
-</span><span data-line="2206">            <span class="n">keep</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+</span><span data-line="2189">        <span class="n">lengths</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2190">        <span class="n">max_len</span> <span class="o">=</span> <span class="n">lengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+</span><span data-line="2191">
+</span><span data-line="2192">        <span class="k">if</span> <span class="n">max_len</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
+</span><span data-line="2193">            <span class="n">target_rep</span> <span class="o">=</span> <span class="n">representations</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_len</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2194">            <span class="n">target_mask</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">max_len</span><span class="p">)</span>
+</span><span data-line="2195">
+</span><span data-line="2196">            <span class="n">new_col_idx</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
+</span><span data-line="2197">            <span class="n">keep</span> <span class="o">=</span> <span class="n">rep_mask</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span>
+</span><span data-line="2198">
+</span><span data-line="2199">            <span class="n">batch_idx</span><span class="p">,</span> <span class="n">old_col_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span>
+</span><span data-line="2200">            <span class="n">new_col_idx</span> <span class="o">=</span> <span class="n">new_col_idx</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+</span><span data-line="2201">
+</span><span data-line="2202">            <span class="n">target_rep</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">new_col_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">representations</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">old_col_idx</span><span class="p">]</span>
+</span><span data-line="2203">            <span class="n">target_mask</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">new_col_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+</span><span data-line="2204">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2205">            <span class="n">target_rep</span> <span class="o">=</span> <span class="n">representations</span>
+</span><span data-line="2206">            <span class="n">target_mask</span> <span class="o">=</span> <span class="n">rep_mask</span>
 </span><span data-line="2207">
-</span><span data-line="2208">            <span class="n">batch_idx</span><span class="p">,</span> <span class="n">old_col_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">keep</span><span class="p">)</span>
-</span><span data-line="2209">            <span class="n">new_col_idx</span> <span class="o">=</span> <span class="n">new_col_idx</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
-</span><span data-line="2210">
-</span><span data-line="2211">            <span class="n">target_rep</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">new_col_idx</span><span class="p">]</span> <span class="o">=</span> <span class="n">representations</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">old_col_idx</span><span class="p">]</span>
-</span><span data-line="2212">            <span class="n">target_mask</span><span class="p">[</span><span class="n">batch_idx</span><span class="p">,</span> <span class="n">new_col_idx</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
-</span><span data-line="2213">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2214">            <span class="n">target_rep</span> <span class="o">=</span> <span class="n">representations</span>
-</span><span data-line="2215">            <span class="n">target_mask</span> <span class="o">=</span> <span class="n">rep_mask</span>
-</span><span data-line="2216">
-</span><span data-line="2217">        <span class="k">return</span> <span class="n">target_rep</span><span class="p">,</span> <span class="n">target_mask</span></div>
+</span><span data-line="2208">        <span class="k">return</span> <span class="n">target_rep</span><span class="p">,</span> <span class="n">target_mask</span></div>
 
-</span><span data-line="2218">
+</span><span data-line="2209">
 <div class="viewcode-block" id="UniEncoderSpanRelexModel.represent_spans">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel.represent_spans">[docs]</a>
-</span><span data-line="2219">    <span class="k">def</span><span class="w"> </span><span class="nf">represent_spans</span><span class="p">(</span>
-</span><span data-line="2220">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2221">        <span class="n">words_embeddings</span><span class="p">,</span>
-</span><span data-line="2222">        <span class="n">words_mask</span><span class="p">,</span>
-</span><span data-line="2223">        <span class="n">prompts_embeddings</span><span class="p">,</span>
-</span><span data-line="2224">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2225">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2226">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2227">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="2228">    <span class="p">):</span>
-</span><span data-line="2229">        <span class="n">span_idx</span> <span class="o">=</span> <span class="n">span_idx</span> <span class="o">*</span> <span class="n">span_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
-</span><span data-line="2230">        <span class="n">span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">)</span>
-</span><span data-line="2231">        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;BLKD,BCD-&gt;BLKC&quot;</span><span class="p">,</span> <span class="n">span_rep</span><span class="p">,</span> <span class="n">prompts_embeddings</span><span class="p">)</span>
-</span><span data-line="2232">
-</span><span data-line="2233">        <span class="n">has_relex</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">)</span>
-</span><span data-line="2234">        <span class="k">if</span> <span class="n">has_relex</span><span class="p">:</span>
-</span><span data-line="2235">            <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_span_target_embedding</span><span class="p">(</span>
-</span><span data-line="2236">                <span class="n">span_rep</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">span_idx</span><span class="o">=</span><span class="n">span_idx</span>
-</span><span data-line="2237">            <span class="p">)</span>
-</span><span data-line="2238">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2239">            <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-</span><span data-line="2240">        <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span></div>
+</span><span data-line="2210">    <span class="k">def</span><span class="w"> </span><span class="nf">represent_spans</span><span class="p">(</span>
+</span><span data-line="2211">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2212">        <span class="n">words_embeddings</span><span class="p">,</span>
+</span><span data-line="2213">        <span class="n">words_mask</span><span class="p">,</span>
+</span><span data-line="2214">        <span class="n">prompts_embeddings</span><span class="p">,</span>
+</span><span data-line="2215">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2216">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2217">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2218">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="2219">    <span class="p">):</span>
+</span><span data-line="2220">        <span class="n">span_idx</span> <span class="o">=</span> <span class="n">span_idx</span> <span class="o">*</span> <span class="n">span_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+</span><span data-line="2221">        <span class="n">span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">)</span>
+</span><span data-line="2222">        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;BLKD,BCD-&gt;BLKC&quot;</span><span class="p">,</span> <span class="n">span_rep</span><span class="p">,</span> <span class="n">prompts_embeddings</span><span class="p">)</span>
+</span><span data-line="2223">
+</span><span data-line="2224">        <span class="n">has_relex</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">)</span>
+</span><span data-line="2225">        <span class="k">if</span> <span class="n">has_relex</span><span class="p">:</span>
+</span><span data-line="2226">            <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">select_span_target_embedding</span><span class="p">(</span>
+</span><span data-line="2227">                <span class="n">span_rep</span><span class="p">,</span> <span class="n">scores</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">span_idx</span><span class="o">=</span><span class="n">span_idx</span>
+</span><span data-line="2228">            <span class="p">)</span>
+</span><span data-line="2229">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2230">            <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</span><span data-line="2231">        <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span></div>
 
-</span><span data-line="2241">
+</span><span data-line="2232">
 <div class="viewcode-block" id="UniEncoderSpanRelexModel.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel.forward">[docs]</a>
-</span><span data-line="2242">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
-</span><span data-line="2243">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2244">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2245">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2246">        <span class="n">words_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2247">        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2248">        <span class="n">prompts_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2249">        <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2250">        <span class="n">words_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2251">        <span class="n">text_lengths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2252">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2253">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2254">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2255">        <span class="n">adj_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2256">        <span class="n">rel_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2257">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="2258">        <span class="n">adjacency_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="2259">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="2260">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GLiNERRelexOutput</span><span class="p">:</span>
-</span><span data-line="2261"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the relation extraction model.</span>
-</span><span data-line="2262">
-</span><span data-line="2263"><span class="sd">        Args:</span>
-</span><span data-line="2264"><span class="sd">            input_ids: Input token IDs of shape (B, L).</span>
-</span><span data-line="2265"><span class="sd">            attention_mask: Attention mask of shape (B, L).</span>
-</span><span data-line="2266"><span class="sd">            words_embedding: Pre-computed word embeddings.</span>
-</span><span data-line="2267"><span class="sd">            mask: Mask for words.</span>
-</span><span data-line="2268"><span class="sd">            prompts_embedding: Pre-computed entity type embeddings.</span>
-</span><span data-line="2269"><span class="sd">            prompts_embedding_mask: Mask for entity types.</span>
-</span><span data-line="2270"><span class="sd">            words_mask: Word boundary mask.</span>
-</span><span data-line="2271"><span class="sd">            text_lengths: Length of each text sequence.</span>
-</span><span data-line="2272"><span class="sd">            span_idx: Span indices of shape (B, L*K, 2).</span>
-</span><span data-line="2273"><span class="sd">            span_mask: Mask for valid spans of shape (B, L, K).</span>
-</span><span data-line="2274"><span class="sd">            labels: Ground truth entity labels of shape (B, L, K, C).</span>
-</span><span data-line="2275"><span class="sd">            adj_matrix: Ground truth adjacency matrix of shape (B, E, E).</span>
-</span><span data-line="2276"><span class="sd">            rel_matrix: Ground truth relation labels of shape (B, N, C_rel).</span>
-</span><span data-line="2277"><span class="sd">            threshold: Confidence threshold for entity selection.</span>
-</span><span data-line="2278"><span class="sd">            adjacency_threshold: Threshold for relation adjacency.</span>
-</span><span data-line="2279"><span class="sd">            **kwargs: Additional arguments.</span>
-</span><span data-line="2280">
-</span><span data-line="2281"><span class="sd">        Returns:</span>
-</span><span data-line="2282"><span class="sd">            GLiNERRelexOutput containing entity and relation predictions.</span>
-</span><span data-line="2283"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="2284">        <span class="n">encoder_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="s2">&quot;token_lengths&quot;</span><span class="p">,</span> <span class="s2">&quot;word_lengths&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">}</span>
-</span><span data-line="2285">        <span class="n">word_lengths</span> <span class="o">=</span> <span class="n">encoder_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;word_lengths&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="2286">
-</span><span data-line="2287">        <span class="n">token_embeds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_rep_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">encoder_kwargs</span><span class="p">)</span>
-</span><span data-line="2288">
-</span><span data-line="2289">        <span class="n">use_precomputed</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="2290">            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;precomputed_prompts_mode&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-</span><span data-line="2291">            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;precomputed_prompts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="2292">        <span class="p">)</span>
-</span><span data-line="2293">        <span class="k">if</span> <span class="n">use_precomputed</span><span class="p">:</span>
-</span><span data-line="2294">            <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">embed_dim_e</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">shape</span>
-</span><span data-line="2295">            <span class="n">max_text_length</span> <span class="o">=</span> <span class="n">text_lengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-</span><span data-line="2296">            <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">extract_word_embeddings</span><span class="p">(</span>
-</span><span data-line="2297">                <span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span>
-</span><span data-line="2298">                <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim_e</span><span class="p">,</span> <span class="n">text_lengths</span><span class="p">,</span>
+</span><span data-line="2233">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span>
+</span><span data-line="2234">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2235">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2236">        <span class="n">attention_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2237">        <span class="n">words_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2238">        <span class="n">mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2239">        <span class="n">prompts_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2240">        <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2241">        <span class="n">words_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2242">        <span class="n">text_lengths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2243">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2244">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2245">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2246">        <span class="n">adj_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2247">        <span class="n">rel_matrix</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2248">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="2249">        <span class="n">adjacency_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="2250">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="2251">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GLiNERRelexOutput</span><span class="p">:</span>
+</span><span data-line="2252"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the relation extraction model.</span>
+</span><span data-line="2253">
+</span><span data-line="2254"><span class="sd">        Args:</span>
+</span><span data-line="2255"><span class="sd">            input_ids: Input token IDs of shape (B, L).</span>
+</span><span data-line="2256"><span class="sd">            attention_mask: Attention mask of shape (B, L).</span>
+</span><span data-line="2257"><span class="sd">            words_embedding: Pre-computed word embeddings.</span>
+</span><span data-line="2258"><span class="sd">            mask: Mask for words.</span>
+</span><span data-line="2259"><span class="sd">            prompts_embedding: Pre-computed entity type embeddings.</span>
+</span><span data-line="2260"><span class="sd">            prompts_embedding_mask: Mask for entity types.</span>
+</span><span data-line="2261"><span class="sd">            words_mask: Word boundary mask.</span>
+</span><span data-line="2262"><span class="sd">            text_lengths: Length of each text sequence.</span>
+</span><span data-line="2263"><span class="sd">            span_idx: Span indices of shape (B, L*K, 2).</span>
+</span><span data-line="2264"><span class="sd">            span_mask: Mask for valid spans of shape (B, L, K).</span>
+</span><span data-line="2265"><span class="sd">            labels: Ground truth entity labels of shape (B, L, K, C).</span>
+</span><span data-line="2266"><span class="sd">            adj_matrix: Ground truth adjacency matrix of shape (B, E, E).</span>
+</span><span data-line="2267"><span class="sd">            rel_matrix: Ground truth relation labels of shape (B, N, C_rel).</span>
+</span><span data-line="2268"><span class="sd">            threshold: Confidence threshold for entity selection.</span>
+</span><span data-line="2269"><span class="sd">            adjacency_threshold: Threshold for relation adjacency.</span>
+</span><span data-line="2270"><span class="sd">            **kwargs: Additional arguments.</span>
+</span><span data-line="2271">
+</span><span data-line="2272"><span class="sd">        Returns:</span>
+</span><span data-line="2273"><span class="sd">            GLiNERRelexOutput containing entity and relation predictions.</span>
+</span><span data-line="2274"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="2275">        <span class="n">encoder_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="s2">&quot;token_lengths&quot;</span><span class="p">,</span> <span class="s2">&quot;word_lengths&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">}</span>
+</span><span data-line="2276">        <span class="n">word_lengths</span> <span class="o">=</span> <span class="n">encoder_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;word_lengths&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="2277">
+</span><span data-line="2278">        <span class="n">token_embeds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">token_rep_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">encoder_kwargs</span><span class="p">)</span>
+</span><span data-line="2279">
+</span><span data-line="2280">        <span class="n">use_precomputed</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="2281">            <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;precomputed_prompts_mode&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="2282">            <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;precomputed_prompts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="2283">        <span class="p">)</span>
+</span><span data-line="2284">        <span class="k">if</span> <span class="n">use_precomputed</span><span class="p">:</span>
+</span><span data-line="2285">            <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">embed_dim_e</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="2286">            <span class="n">max_text_length</span> <span class="o">=</span> <span class="n">text_lengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+</span><span data-line="2287">            <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">extract_word_embeddings</span><span class="p">(</span>
+</span><span data-line="2288">                <span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="2289">                <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim_e</span><span class="p">,</span> <span class="n">text_lengths</span><span class="p">,</span>
+</span><span data-line="2290">            <span class="p">)</span>
+</span><span data-line="2291">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_precomputed_prompts</span><span class="p">(</span>
+</span><span data-line="2292">                <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">token_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">rel</span><span class="o">=</span><span class="kc">False</span>
+</span><span data-line="2293">            <span class="p">)</span>
+</span><span data-line="2294">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2295">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="2296">                <span class="bp">self</span><span class="o">.</span><span class="n">_extract_prompt_features_and_word_embeddings</span><span class="p">(</span>
+</span><span data-line="2297">                    <span class="n">token_embeds</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">text_lengths</span><span class="p">,</span> <span class="n">words_mask</span>
+</span><span data-line="2298">                <span class="p">)</span>
 </span><span data-line="2299">            <span class="p">)</span>
-</span><span data-line="2300">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_precomputed_prompts</span><span class="p">(</span>
-</span><span data-line="2301">                <span class="n">batch_size_e</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">token_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">rel</span><span class="o">=</span><span class="kc">False</span>
-</span><span data-line="2302">            <span class="p">)</span>
-</span><span data-line="2303">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2304">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="2305">                <span class="bp">self</span><span class="o">.</span><span class="n">_extract_prompt_features_and_word_embeddings</span><span class="p">(</span>
-</span><span data-line="2306">                    <span class="n">token_embeds</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">text_lengths</span><span class="p">,</span> <span class="n">words_mask</span>
-</span><span data-line="2307">                <span class="p">)</span>
-</span><span data-line="2308">            <span class="p">)</span>
-</span><span data-line="2309">
-</span><span data-line="2310">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">):</span>
-</span><span data-line="2311">            <span class="n">words_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rnn</span><span class="p">(</span><span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="n">word_lengths</span><span class="p">)</span>
-</span><span data-line="2312">
-</span><span data-line="2313">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="2300">
+</span><span data-line="2301">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;rnn&quot;</span><span class="p">):</span>
+</span><span data-line="2302">            <span class="n">words_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rnn</span><span class="p">(</span><span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="n">word_lengths</span><span class="p">)</span>
+</span><span data-line="2303">
+</span><span data-line="2304">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">&quot;token_level&quot;</span><span class="p">:</span>
+</span><span data-line="2305">            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2306">                <span class="n">target_W</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="2307">                <span class="n">target_C</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="2308">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2309">                <span class="n">target_W</span> <span class="o">=</span> <span class="n">words_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2310">                <span class="n">target_C</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2311">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2312">            <span class="n">target_W</span> <span class="o">=</span> <span class="n">span_idx</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_width</span>
+</span><span data-line="2313">            <span class="n">target_C</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="2314">            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2315">                <span class="n">target_W</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-</span><span data-line="2316">                <span class="n">target_C</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">))</span>
-</span><span data-line="2317">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2318">                <span class="n">target_W</span> <span class="o">=</span> <span class="n">words_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2319">                <span class="n">target_C</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2320">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2321">            <span class="n">target_W</span> <span class="o">=</span> <span class="n">span_idx</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_width</span>
-</span><span data-line="2322">            <span class="n">target_C</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2323">            <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2324">                <span class="n">target_C</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">target_C</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="2315">                <span class="n">target_C</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">target_C</span><span class="p">,</span> <span class="n">labels</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+</span><span data-line="2316">
+</span><span data-line="2317">        <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_length</span><span class="p">(</span><span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">target_W</span><span class="p">)</span>
+</span><span data-line="2318">
+</span><span data-line="2319">        <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_length</span><span class="p">(</span>
+</span><span data-line="2320">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">target_C</span>
+</span><span data-line="2321">        <span class="p">)</span>
+</span><span data-line="2322">
+</span><span data-line="2323">        <span class="n">prompts_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_rep_layer</span><span class="p">(</span><span class="n">prompts_embedding</span><span class="p">)</span>
+</span><span data-line="2324">        <span class="n">batch_size</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">embed_dim</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="2325">
-</span><span data-line="2326">        <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_length</span><span class="p">(</span><span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">target_W</span><span class="p">)</span>
-</span><span data-line="2327">
-</span><span data-line="2328">        <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_length</span><span class="p">(</span>
-</span><span data-line="2329">            <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">target_C</span>
-</span><span data-line="2330">        <span class="p">)</span>
-</span><span data-line="2331">
-</span><span data-line="2332">        <span class="n">prompts_embedding</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prompt_rep_layer</span><span class="p">(</span><span class="n">prompts_embedding</span><span class="p">)</span>
-</span><span data-line="2333">        <span class="n">batch_size</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">embed_dim</span> <span class="o">=</span> <span class="n">prompts_embedding</span><span class="o">.</span><span class="n">shape</span>
-</span><span data-line="2334">
-</span><span data-line="2335">        <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_spans</span><span class="p">(</span>
-</span><span data-line="2336">            <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span>
-</span><span data-line="2337">        <span class="p">)</span>
-</span><span data-line="2338">
-</span><span data-line="2339">        <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">pair_scores</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-</span><span data-line="2340">        <span class="n">rel_prompts_embedding</span> <span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
-</span><span data-line="2341">        <span class="n">pred_adj_matrix</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="2342">
-</span><span data-line="2343">        <span class="n">has_relex</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">)</span>
-</span><span data-line="2344">
-</span><span data-line="2345">        <span class="k">if</span> <span class="n">has_relex</span><span class="p">:</span>
-</span><span data-line="2346">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">):</span>
-</span><span data-line="2347">                <span class="n">pred_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations_rep_layer</span><span class="p">(</span><span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">)</span>
-</span><span data-line="2348">
-</span><span data-line="2349">            <span class="k">if</span> <span class="n">use_precomputed</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;precomputed_rel_prompts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2350">                <span class="n">rel_prompts_embedding</span><span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_precomputed_prompts</span><span class="p">(</span>
-</span><span data-line="2351">                    <span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">token_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">rel</span><span class="o">=</span><span class="kc">True</span>
-</span><span data-line="2352">                <span class="p">)</span>
-</span><span data-line="2353">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2354">                <span class="n">rel_prompts_embedding</span><span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="n">extract_prompt_features</span><span class="p">(</span>
-</span><span data-line="2355">                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rel_token_index</span><span class="p">,</span>
-</span><span data-line="2356">                    <span class="n">token_embeds</span><span class="p">,</span>
-</span><span data-line="2357">                    <span class="n">input_ids</span><span class="p">,</span>
-</span><span data-line="2358">                    <span class="n">attention_mask</span><span class="p">,</span>
-</span><span data-line="2359">                    <span class="n">batch_size</span><span class="p">,</span>
-</span><span data-line="2360">                    <span class="n">embed_dim</span><span class="p">,</span>
-</span><span data-line="2361">                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">embed_rel_token</span><span class="p">,</span>
+</span><span data-line="2326">        <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">,</span> <span class="n">entity_spans</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">represent_spans</span><span class="p">(</span>
+</span><span data-line="2327">            <span class="n">words_embedding</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">prompts_embedding</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span>
+</span><span data-line="2328">        <span class="p">)</span>
+</span><span data-line="2329">
+</span><span data-line="2330">        <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">pair_scores</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</span><span data-line="2331">        <span class="n">rel_prompts_embedding</span> <span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+</span><span data-line="2332">        <span class="n">pred_adj_matrix</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="2333">
+</span><span data-line="2334">        <span class="n">has_relex</span> <span class="o">=</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">)</span>
+</span><span data-line="2335">
+</span><span data-line="2336">        <span class="k">if</span> <span class="n">has_relex</span><span class="p">:</span>
+</span><span data-line="2337">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">):</span>
+</span><span data-line="2338">                <span class="n">pred_adj_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">relations_rep_layer</span><span class="p">(</span><span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span><span class="p">)</span>
+</span><span data-line="2339">
+</span><span data-line="2340">            <span class="k">if</span> <span class="n">use_precomputed</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;precomputed_rel_prompts&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2341">                <span class="n">rel_prompts_embedding</span><span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lookup_precomputed_prompts</span><span class="p">(</span>
+</span><span data-line="2342">                    <span class="n">batch_size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">token_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">rel</span><span class="o">=</span><span class="kc">True</span>
+</span><span data-line="2343">                <span class="p">)</span>
+</span><span data-line="2344">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2345">                <span class="n">rel_prompts_embedding</span><span class="p">,</span> <span class="n">rel_prompts_embedding_mask</span> <span class="o">=</span> <span class="n">extract_prompt_features</span><span class="p">(</span>
+</span><span data-line="2346">                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">rel_token_index</span><span class="p">,</span>
+</span><span data-line="2347">                    <span class="n">token_embeds</span><span class="p">,</span>
+</span><span data-line="2348">                    <span class="n">input_ids</span><span class="p">,</span>
+</span><span data-line="2349">                    <span class="n">attention_mask</span><span class="p">,</span>
+</span><span data-line="2350">                    <span class="n">batch_size</span><span class="p">,</span>
+</span><span data-line="2351">                    <span class="n">embed_dim</span><span class="p">,</span>
+</span><span data-line="2352">                    <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">embed_rel_token</span><span class="p">,</span>
+</span><span data-line="2353">                <span class="p">)</span>
+</span><span data-line="2354">
+</span><span data-line="2355">            <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">target_span_rep</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="2356">            <span class="n">C_rel</span> <span class="o">=</span> <span class="n">rel_prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2357">
+</span><span data-line="2358">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">):</span>
+</span><span data-line="2359">                <span class="n">adj_for_selection</span> <span class="o">=</span> <span class="n">adj_matrix</span> <span class="k">if</span> <span class="p">(</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">adj_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="k">else</span> <span class="n">pred_adj_matrix</span>
+</span><span data-line="2360">                <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span> <span class="o">=</span> <span class="n">build_entity_pairs</span><span class="p">(</span>
+</span><span data-line="2361">                    <span class="n">adj_for_selection</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">adjacency_threshold</span>
 </span><span data-line="2362">                <span class="p">)</span>
-</span><span data-line="2363">
-</span><span data-line="2364">            <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">target_span_rep</span><span class="o">.</span><span class="n">shape</span>
-</span><span data-line="2365">            <span class="n">C_rel</span> <span class="o">=</span> <span class="n">rel_prompts_embedding</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2366">
-</span><span data-line="2367">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">):</span>
-</span><span data-line="2368">                <span class="n">adj_for_selection</span> <span class="o">=</span> <span class="n">adj_matrix</span> <span class="k">if</span> <span class="p">(</span><span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">adj_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="k">else</span> <span class="n">pred_adj_matrix</span>
-</span><span data-line="2369">                <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span> <span class="o">=</span> <span class="n">build_entity_pairs</span><span class="p">(</span>
-</span><span data-line="2370">                    <span class="n">adj_for_selection</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="n">adjacency_threshold</span>
-</span><span data-line="2371">                <span class="p">)</span>
-</span><span data-line="2372">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2373">                <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span> <span class="o">=</span> <span class="n">build_all_entity_pairs</span><span class="p">(</span>
-</span><span data-line="2374">                    <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span>
-</span><span data-line="2375">                <span class="p">)</span>
-</span><span data-line="2376">
-</span><span data-line="2377">            <span class="n">N</span> <span class="o">=</span> <span class="n">head_rep_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2378">
-</span><span data-line="2379">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">):</span>
-</span><span data-line="2380">                <span class="n">pair_rep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2381">                <span class="n">pair_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pair_rep_layer</span><span class="p">(</span><span class="n">pair_rep</span><span class="p">)</span>
-</span><span data-line="2382">                <span class="n">pair_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;BND,BCD-&gt;BNC&quot;</span><span class="p">,</span> <span class="n">pair_rep</span><span class="p">,</span> <span class="n">rel_prompts_embedding</span><span class="p">)</span>
+</span><span data-line="2363">            <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2364">                <span class="n">pair_idx</span><span class="p">,</span> <span class="n">pair_mask</span><span class="p">,</span> <span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span> <span class="o">=</span> <span class="n">build_all_entity_pairs</span><span class="p">(</span>
+</span><span data-line="2365">                    <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">target_span_mask</span>
+</span><span data-line="2366">                <span class="p">)</span>
+</span><span data-line="2367">
+</span><span data-line="2368">            <span class="n">N</span> <span class="o">=</span> <span class="n">head_rep_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2369">
+</span><span data-line="2370">            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;pair_rep_layer&quot;</span><span class="p">):</span>
+</span><span data-line="2371">                <span class="n">pair_rep</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">((</span><span class="n">head_rep_selected</span><span class="p">,</span> <span class="n">tail_rep_selected</span><span class="p">),</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2372">                <span class="n">pair_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pair_rep_layer</span><span class="p">(</span><span class="n">pair_rep</span><span class="p">)</span>
+</span><span data-line="2373">                <span class="n">pair_scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;BND,BCD-&gt;BNC&quot;</span><span class="p">,</span> <span class="n">pair_rep</span><span class="p">,</span> <span class="n">rel_prompts_embedding</span><span class="p">)</span>
+</span><span data-line="2374">
+</span><span data-line="2375">            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">):</span>
+</span><span data-line="2376">                <span class="n">h</span> <span class="o">=</span> <span class="n">head_rep_selected</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2377">                <span class="n">t</span> <span class="o">=</span> <span class="n">tail_rep_selected</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2378">                <span class="n">r</span> <span class="o">=</span> <span class="n">rel_prompts_embedding</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2379">
+</span><span data-line="2380">                <span class="n">h_flat</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2381">                <span class="n">t_flat</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2382">                <span class="n">r_flat</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
 </span><span data-line="2383">
-</span><span data-line="2384">            <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;triples_score_layer&quot;</span><span class="p">):</span>
-</span><span data-line="2385">                <span class="n">h</span> <span class="o">=</span> <span class="n">head_rep_selected</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2386">                <span class="n">t</span> <span class="o">=</span> <span class="n">tail_rep_selected</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2387">                <span class="n">r</span> <span class="o">=</span> <span class="n">rel_prompts_embedding</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2388">
-</span><span data-line="2389">                <span class="n">h_flat</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2390">                <span class="n">t_flat</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-</span><span data-line="2391">                <span class="n">r_flat</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">B</span> <span class="o">*</span> <span class="n">N</span> <span class="o">*</span> <span class="n">C_rel</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
+</span><span data-line="2384">                <span class="n">triple_scores_flat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">triples_score_layer</span><span class="p">(</span><span class="n">h_flat</span><span class="p">,</span> <span class="n">r_flat</span><span class="p">,</span> <span class="n">t_flat</span><span class="p">)</span>
+</span><span data-line="2385">                <span class="n">pair_scores</span> <span class="o">=</span> <span class="n">triple_scores_flat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
+</span><span data-line="2386">
+</span><span data-line="2387">        <span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="2388">        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2389">            <span class="n">num_ner_classes</span> <span class="o">=</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span><span data-line="2390">            <span class="k">if</span> <span class="n">num_ner_classes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="2391">                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">span_mask</span><span class="o">=</span><span class="n">span_mask</span><span class="p">,</span> <span class="n">word_mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="2392">
-</span><span data-line="2393">                <span class="n">triple_scores_flat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">triples_score_layer</span><span class="p">(</span><span class="n">h_flat</span><span class="p">,</span> <span class="n">r_flat</span><span class="p">,</span> <span class="n">t_flat</span><span class="p">)</span>
-</span><span data-line="2394">                <span class="n">pair_scores</span> <span class="o">=</span> <span class="n">triple_scores_flat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
-</span><span data-line="2395">
-</span><span data-line="2396">        <span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="2397">        <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2398">            <span class="n">num_ner_classes</span> <span class="o">=</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</span><span data-line="2399">            <span class="k">if</span> <span class="n">num_ner_classes</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="2400">                <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">prompts_embedding_mask</span><span class="p">,</span> <span class="n">span_mask</span><span class="o">=</span><span class="n">span_mask</span><span class="p">,</span> <span class="n">word_mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="2401">
-</span><span data-line="2402">            <span class="k">if</span> <span class="n">has_relex</span> <span class="ow">and</span> <span class="n">rel_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">C_rel</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="2403">                <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_matrix</span>
-</span><span data-line="2404">                <span class="c1"># Align rel_labels_selected to N (pairs from build_entity_pairs / build_all_entity_pairs).</span>
-</span><span data-line="2405">                <span class="c1"># They should match by construction, but can differ by 1 in edge cases.</span>
-</span><span data-line="2406">                <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
-</span><span data-line="2407">                    <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">N</span><span class="p">:</span>
-</span><span data-line="2408">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="p">[:,</span> <span class="p">:</span><span class="n">N</span><span class="p">,</span> <span class="p">:]</span>
+</span><span data-line="2393">            <span class="k">if</span> <span class="n">has_relex</span> <span class="ow">and</span> <span class="n">rel_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">C_rel</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="2394">                <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_matrix</span>
+</span><span data-line="2395">                <span class="c1"># Align rel_labels_selected to N (pairs from build_entity_pairs / build_all_entity_pairs).</span>
+</span><span data-line="2396">                <span class="c1"># They should match by construction, but can differ by 1 in edge cases.</span>
+</span><span data-line="2397">                <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">!=</span> <span class="n">N</span><span class="p">:</span>
+</span><span data-line="2398">                    <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">N</span><span class="p">:</span>
+</span><span data-line="2399">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="p">[:,</span> <span class="p">:</span><span class="n">N</span><span class="p">,</span> <span class="p">:]</span>
+</span><span data-line="2400">                    <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2401">                        <span class="n">pad</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="2402">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">pad</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2403">
+</span><span data-line="2404">                <span class="c1"># Align rel_labels_selected to C_rel (relation classes from prompt embeddings).</span>
+</span><span data-line="2405">                <span class="c1"># rel_matrix uses C from rel_class_to_ids which can differ from C_rel.</span>
+</span><span data-line="2406">                <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">C_rel</span><span class="p">:</span>
+</span><span data-line="2407">                    <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">C_rel</span><span class="p">:</span>
+</span><span data-line="2408">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">C_rel</span><span class="p">]</span>
 </span><span data-line="2409">                    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2410">                        <span class="n">pad</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span> <span class="o">-</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-</span><span data-line="2411">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">pad</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2410">                        <span class="n">pad</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">C_rel</span> <span class="o">-</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
+</span><span data-line="2411">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">pad</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </span><span data-line="2412">
-</span><span data-line="2413">                <span class="c1"># Align rel_labels_selected to C_rel (relation classes from prompt embeddings).</span>
-</span><span data-line="2414">                <span class="c1"># rel_matrix uses C from rel_class_to_ids which can differ from C_rel.</span>
-</span><span data-line="2415">                <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">!=</span> <span class="n">C_rel</span><span class="p">:</span>
-</span><span data-line="2416">                    <span class="k">if</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">C_rel</span><span class="p">:</span>
-</span><span data-line="2417">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:</span><span class="n">C_rel</span><span class="p">]</span>
-</span><span data-line="2418">                    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2419">                        <span class="n">pad</span> <span class="o">=</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">C_rel</span> <span class="o">-</span> <span class="n">rel_labels_selected</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">2</span><span class="p">))</span>
-</span><span data-line="2420">                        <span class="n">rel_labels_selected</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">pad</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="2413">                <span class="n">rel_mask_selected</span> <span class="o">=</span> <span class="n">pair_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
+</span><span data-line="2414">                <span class="n">class_mask</span> <span class="o">=</span> <span class="n">rel_prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
+</span><span data-line="2415">
+</span><span data-line="2416">                <span class="n">rel_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="2417">                <span class="n">rel_kwargs</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rel_alpha&#39;</span><span class="p">,</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
+</span><span data-line="2418">                <span class="n">rel_kwargs</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rel_gamma&#39;</span><span class="p">,</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+</span><span data-line="2419">
+</span><span data-line="2420">                <span class="n">rel_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rel_loss</span><span class="p">(</span><span class="n">pair_scores</span><span class="p">,</span> <span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">rel_mask_selected</span><span class="p">,</span> <span class="n">class_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">rel_kwargs</span><span class="p">)</span>
 </span><span data-line="2421">
-</span><span data-line="2422">                <span class="n">rel_mask_selected</span> <span class="o">=</span> <span class="n">pair_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
-</span><span data-line="2423">                <span class="n">class_mask</span> <span class="o">=</span> <span class="n">rel_prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">C_rel</span><span class="p">)</span>
-</span><span data-line="2424">
-</span><span data-line="2425">                <span class="n">rel_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="2426">                <span class="n">rel_kwargs</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rel_alpha&#39;</span><span class="p">,</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">))</span>
-</span><span data-line="2427">                <span class="n">rel_kwargs</span><span class="p">[</span><span class="s1">&#39;gamma&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;rel_gamma&#39;</span><span class="p">,</span> <span class="n">rel_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;gamma&#39;</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-</span><span data-line="2428">
-</span><span data-line="2429">                <span class="n">rel_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rel_loss</span><span class="p">(</span><span class="n">pair_scores</span><span class="p">,</span> <span class="n">rel_labels_selected</span><span class="p">,</span> <span class="n">rel_mask_selected</span><span class="p">,</span> <span class="n">class_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">rel_kwargs</span><span class="p">)</span>
-</span><span data-line="2430">
-</span><span data-line="2431">                <span class="n">span_loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">span_loss_coef</span> <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
-</span><span data-line="2432">
-</span><span data-line="2433">                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">adj_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2434">                    <span class="n">adj_mask</span> <span class="o">=</span> <span class="n">target_span_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">target_span_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
-</span><span data-line="2435">                    <span class="n">adj_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_loss</span><span class="p">(</span><span class="n">pred_adj_matrix</span><span class="p">,</span> <span class="n">adj_matrix</span><span class="p">,</span> <span class="n">adj_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">rel_kwargs</span><span class="p">)</span>
-</span><span data-line="2436">
-</span><span data-line="2437">                    <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="2438">                        <span class="n">span_loss</span>
-</span><span data-line="2439">                        <span class="o">+</span> <span class="n">adj_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">adjacency_loss_coef</span>
-</span><span data-line="2440">                        <span class="o">+</span> <span class="n">rel_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">relation_loss_coef</span>
-</span><span data-line="2441">                    <span class="p">)</span>
-</span><span data-line="2442">                <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2443">                    <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="2444">                        <span class="n">span_loss</span>
-</span><span data-line="2445">                        <span class="o">+</span> <span class="n">rel_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">relation_loss_coef</span>
-</span><span data-line="2446">                    <span class="p">)</span>
-</span><span data-line="2447">
-</span><span data-line="2448">        <span class="c1"># During training, rel_logits/rel_idx/rel_mask/entity_spans can have</span>
-</span><span data-line="2449">        <span class="c1"># variable sizes across batch splits (different C_rel or N per GPU),</span>
-</span><span data-line="2450">        <span class="c1"># which causes DataParallel gather to fail. Only loss is needed for</span>
-</span><span data-line="2451">        <span class="c1"># training, so skip these tensors when labels are provided.</span>
-</span><span data-line="2452">        <span class="n">is_training</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-</span><span data-line="2453">        <span class="n">output</span> <span class="o">=</span> <span class="n">GLiNERRelexOutput</span><span class="p">(</span>
-</span><span data-line="2454">            <span class="n">logits</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
-</span><span data-line="2455">            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
-</span><span data-line="2456">            <span class="n">prompts_embedding</span><span class="o">=</span><span class="n">prompts_embedding</span><span class="p">,</span>
-</span><span data-line="2457">            <span class="n">prompts_embedding_mask</span><span class="o">=</span><span class="n">prompts_embedding_mask</span><span class="p">,</span>
-</span><span data-line="2458">            <span class="n">words_embedding</span><span class="o">=</span><span class="n">words_embedding</span><span class="p">,</span>
-</span><span data-line="2459">            <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
-</span><span data-line="2460">            <span class="n">rel_idx</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_idx</span><span class="p">,</span>
-</span><span data-line="2461">            <span class="n">rel_logits</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_scores</span><span class="p">,</span>
-</span><span data-line="2462">            <span class="n">rel_mask</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_mask</span><span class="p">,</span>
-</span><span data-line="2463">            <span class="n">rel_prompts_embedding</span><span class="o">=</span><span class="n">rel_prompts_embedding</span><span class="p">,</span>
-</span><span data-line="2464">            <span class="n">rel_prompts_embedding_mask</span><span class="o">=</span><span class="n">rel_prompts_embedding_mask</span><span class="p">,</span>
-</span><span data-line="2465">            <span class="n">entity_spans</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">entity_spans</span><span class="p">,</span>
-</span><span data-line="2466">        <span class="p">)</span>
-</span><span data-line="2467">        <span class="k">return</span> <span class="n">output</span></div>
+</span><span data-line="2422">                <span class="n">span_loss</span> <span class="o">=</span> <span class="n">loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">span_loss_coef</span> <span class="k">if</span> <span class="n">loss</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mf">0.0</span>
+</span><span data-line="2423">
+</span><span data-line="2424">                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;relations_rep_layer&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">adj_matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2425">                    <span class="n">adj_mask</span> <span class="o">=</span> <span class="n">target_span_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">target_span_mask</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="2426">                    <span class="n">adj_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adj_loss</span><span class="p">(</span><span class="n">pred_adj_matrix</span><span class="p">,</span> <span class="n">adj_matrix</span><span class="p">,</span> <span class="n">adj_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">rel_kwargs</span><span class="p">)</span>
+</span><span data-line="2427">
+</span><span data-line="2428">                    <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="2429">                        <span class="n">span_loss</span>
+</span><span data-line="2430">                        <span class="o">+</span> <span class="n">adj_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">adjacency_loss_coef</span>
+</span><span data-line="2431">                        <span class="o">+</span> <span class="n">rel_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">relation_loss_coef</span>
+</span><span data-line="2432">                    <span class="p">)</span>
+</span><span data-line="2433">                <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2434">                    <span class="n">loss</span> <span class="o">=</span> <span class="p">(</span>
+</span><span data-line="2435">                        <span class="n">span_loss</span>
+</span><span data-line="2436">                        <span class="o">+</span> <span class="n">rel_loss</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">relation_loss_coef</span>
+</span><span data-line="2437">                    <span class="p">)</span>
+</span><span data-line="2438">
+</span><span data-line="2439">        <span class="c1"># During training, rel_logits/rel_idx/rel_mask/entity_spans can have</span>
+</span><span data-line="2440">        <span class="c1"># variable sizes across batch splits (different C_rel or N per GPU),</span>
+</span><span data-line="2441">        <span class="c1"># which causes DataParallel gather to fail. Only loss is needed for</span>
+</span><span data-line="2442">        <span class="c1"># training, so skip these tensors when labels are provided.</span>
+</span><span data-line="2443">        <span class="n">is_training</span> <span class="o">=</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+</span><span data-line="2444">        <span class="n">output</span> <span class="o">=</span> <span class="n">GLiNERRelexOutput</span><span class="p">(</span>
+</span><span data-line="2445">            <span class="n">logits</span><span class="o">=</span><span class="n">scores</span><span class="p">,</span>
+</span><span data-line="2446">            <span class="n">loss</span><span class="o">=</span><span class="n">loss</span><span class="p">,</span>
+</span><span data-line="2447">            <span class="n">prompts_embedding</span><span class="o">=</span><span class="n">prompts_embedding</span><span class="p">,</span>
+</span><span data-line="2448">            <span class="n">prompts_embedding_mask</span><span class="o">=</span><span class="n">prompts_embedding_mask</span><span class="p">,</span>
+</span><span data-line="2449">            <span class="n">words_embedding</span><span class="o">=</span><span class="n">words_embedding</span><span class="p">,</span>
+</span><span data-line="2450">            <span class="n">mask</span><span class="o">=</span><span class="n">mask</span><span class="p">,</span>
+</span><span data-line="2451">            <span class="n">rel_idx</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_idx</span><span class="p">,</span>
+</span><span data-line="2452">            <span class="n">rel_logits</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_scores</span><span class="p">,</span>
+</span><span data-line="2453">            <span class="n">rel_mask</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">pair_mask</span><span class="p">,</span>
+</span><span data-line="2454">            <span class="n">rel_prompts_embedding</span><span class="o">=</span><span class="n">rel_prompts_embedding</span><span class="p">,</span>
+</span><span data-line="2455">            <span class="n">rel_prompts_embedding_mask</span><span class="o">=</span><span class="n">rel_prompts_embedding_mask</span><span class="p">,</span>
+</span><span data-line="2456">            <span class="n">entity_spans</span><span class="o">=</span><span class="kc">None</span> <span class="k">if</span> <span class="n">is_training</span> <span class="k">else</span> <span class="n">entity_spans</span><span class="p">,</span>
+</span><span data-line="2457">        <span class="p">)</span>
+</span><span data-line="2458">        <span class="k">return</span> <span class="n">output</span></div>
 
-</span><span data-line="2468">
+</span><span data-line="2459">
 <div class="viewcode-block" id="UniEncoderSpanRelexModel.adj_loss">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel.adj_loss">[docs]</a>
-</span><span data-line="2469">    <span class="k">def</span><span class="w"> </span><span class="nf">adj_loss</span><span class="p">(</span>
-</span><span data-line="2470">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2471">        <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2472">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2473">        <span class="n">adj_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2474">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2475">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2476">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2477">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2478">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
-</span><span data-line="2479">        <span class="n">masking</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;span&quot;</span><span class="p">,</span>
-</span><span data-line="2480">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2481">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="2482">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="2483"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix loss for entity pair relations.</span>
-</span><span data-line="2484">
-</span><span data-line="2485"><span class="sd">        Args:</span>
-</span><span data-line="2486"><span class="sd">            logits: Predicted adjacency scores of shape (B, E, E).</span>
-</span><span data-line="2487"><span class="sd">            labels: Ground truth adjacency of shape (B, E, E).</span>
-</span><span data-line="2488"><span class="sd">            adj_mask: Mask for valid entity pairs of shape (B, E, E).</span>
-</span><span data-line="2489"><span class="sd">            alpha: Focal loss alpha parameter.</span>
-</span><span data-line="2490"><span class="sd">            gamma: Focal loss gamma parameter.</span>
-</span><span data-line="2491"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
-</span><span data-line="2492"><span class="sd">            label_smoothing: Label smoothing factor.</span>
-</span><span data-line="2493"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
-</span><span data-line="2494"><span class="sd">            masking: Masking strategy for negative sampling.</span>
-</span><span data-line="2495"><span class="sd">            negatives: Negative sampling probability.</span>
-</span><span data-line="2496"><span class="sd">            **kwargs: Additional arguments.</span>
-</span><span data-line="2497">
-</span><span data-line="2498"><span class="sd">        Returns:</span>
-</span><span data-line="2499"><span class="sd">            Scalar adjacency loss tensor.</span>
-</span><span data-line="2500"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="2501">        <span class="n">B</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</span><span data-line="2502">
-</span><span data-line="2503">        <span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2504">        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2505">
-</span><span data-line="2506">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span>
-</span><span data-line="2507">            <span class="n">logits</span><span class="p">,</span>
-</span><span data-line="2508">            <span class="n">labels</span><span class="p">,</span>
-</span><span data-line="2509">            <span class="n">alpha</span><span class="p">,</span>
-</span><span data-line="2510">            <span class="n">gamma</span><span class="p">,</span>
-</span><span data-line="2511">            <span class="n">prob_margin</span><span class="p">,</span>
-</span><span data-line="2512">            <span class="n">label_smoothing</span><span class="p">,</span>
-</span><span data-line="2513">            <span class="n">negatives</span><span class="o">=</span><span class="n">negatives</span><span class="p">,</span>
-</span><span data-line="2514">            <span class="n">masking</span><span class="o">=</span><span class="n">masking</span><span class="p">,</span>
-</span><span data-line="2515">            <span class="n">normalize_prob</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="2516">        <span class="p">)</span>
-</span><span data-line="2517">
-</span><span data-line="2518">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="n">adj_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2519">
-</span><span data-line="2520">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
-</span><span data-line="2521">            <span class="n">num_valid</span> <span class="o">=</span> <span class="n">adj_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2522">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="2523">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
-</span><span data-line="2524">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2525">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2526">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span data-line="2527">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
-</span><span data-line="2528">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
-</span><span data-line="2529">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span data-line="2530">            <span class="p">)</span>
-</span><span data-line="2531">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2532">        <span class="k">return</span> <span class="n">loss</span></div>
+</span><span data-line="2460">    <span class="k">def</span><span class="w"> </span><span class="nf">adj_loss</span><span class="p">(</span>
+</span><span data-line="2461">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2462">        <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2463">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2464">        <span class="n">adj_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2465">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2466">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2467">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2468">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2469">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="2470">        <span class="n">masking</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;span&quot;</span><span class="p">,</span>
+</span><span data-line="2471">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2472">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="2473">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="2474"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute adjacency matrix loss for entity pair relations.</span>
+</span><span data-line="2475">
+</span><span data-line="2476"><span class="sd">        Args:</span>
+</span><span data-line="2477"><span class="sd">            logits: Predicted adjacency scores of shape (B, E, E).</span>
+</span><span data-line="2478"><span class="sd">            labels: Ground truth adjacency of shape (B, E, E).</span>
+</span><span data-line="2479"><span class="sd">            adj_mask: Mask for valid entity pairs of shape (B, E, E).</span>
+</span><span data-line="2480"><span class="sd">            alpha: Focal loss alpha parameter.</span>
+</span><span data-line="2481"><span class="sd">            gamma: Focal loss gamma parameter.</span>
+</span><span data-line="2482"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
+</span><span data-line="2483"><span class="sd">            label_smoothing: Label smoothing factor.</span>
+</span><span data-line="2484"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
+</span><span data-line="2485"><span class="sd">            masking: Masking strategy for negative sampling.</span>
+</span><span data-line="2486"><span class="sd">            negatives: Negative sampling probability.</span>
+</span><span data-line="2487"><span class="sd">            **kwargs: Additional arguments.</span>
+</span><span data-line="2488">
+</span><span data-line="2489"><span class="sd">        Returns:</span>
+</span><span data-line="2490"><span class="sd">            Scalar adjacency loss tensor.</span>
+</span><span data-line="2491"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="2492">        <span class="n">B</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span><span data-line="2493">
+</span><span data-line="2494">        <span class="n">logits</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2495">        <span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2496">
+</span><span data-line="2497">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span>
+</span><span data-line="2498">            <span class="n">logits</span><span class="p">,</span>
+</span><span data-line="2499">            <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="2500">            <span class="n">alpha</span><span class="p">,</span>
+</span><span data-line="2501">            <span class="n">gamma</span><span class="p">,</span>
+</span><span data-line="2502">            <span class="n">prob_margin</span><span class="p">,</span>
+</span><span data-line="2503">            <span class="n">label_smoothing</span><span class="p">,</span>
+</span><span data-line="2504">            <span class="n">negatives</span><span class="o">=</span><span class="n">negatives</span><span class="p">,</span>
+</span><span data-line="2505">            <span class="n">masking</span><span class="o">=</span><span class="n">masking</span><span class="p">,</span>
+</span><span data-line="2506">            <span class="n">normalize_prob</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="2507">        <span class="p">)</span>
+</span><span data-line="2508">
+</span><span data-line="2509">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="n">adj_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2510">
+</span><span data-line="2511">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+</span><span data-line="2512">            <span class="n">num_valid</span> <span class="o">=</span> <span class="n">adj_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2513">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="2514">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+</span><span data-line="2515">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2516">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2517">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span data-line="2518">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
+</span><span data-line="2519">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
+</span><span data-line="2520">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span data-line="2521">            <span class="p">)</span>
+</span><span data-line="2522">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2523">        <span class="k">return</span> <span class="n">loss</span></div>
 
-</span><span data-line="2533">
+</span><span data-line="2524">
 <div class="viewcode-block" id="UniEncoderSpanRelexModel.rel_loss">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel.rel_loss">[docs]</a>
-</span><span data-line="2534">    <span class="k">def</span><span class="w"> </span><span class="nf">rel_loss</span><span class="p">(</span>
-</span><span data-line="2535">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2536">        <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2537">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2538">        <span class="n">pair_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2539">        <span class="n">class_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2540">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2541">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2542">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2543">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2544">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
-</span><span data-line="2545">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2546">        <span class="n">masking</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;span&quot;</span><span class="p">,</span>
-</span><span data-line="2547">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="2548">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="2549"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute relation classification loss for selected entity pairs.</span>
-</span><span data-line="2550">
-</span><span data-line="2551"><span class="sd">        Args:</span>
-</span><span data-line="2552"><span class="sd">            logits: Predicted relation scores of shape (B, N, C).</span>
-</span><span data-line="2553"><span class="sd">            labels: Ground truth relation labels of shape (B, N, C).</span>
-</span><span data-line="2554"><span class="sd">            pair_mask: Mask for valid pairs of shape (B, N, C).</span>
-</span><span data-line="2555"><span class="sd">            class_mask: Mask for valid relation classes of shape (B, N, C).</span>
-</span><span data-line="2556"><span class="sd">            alpha: Focal loss alpha parameter.</span>
-</span><span data-line="2557"><span class="sd">            gamma: Focal loss gamma parameter.</span>
-</span><span data-line="2558"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
-</span><span data-line="2559"><span class="sd">            label_smoothing: Label smoothing factor.</span>
-</span><span data-line="2560"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
-</span><span data-line="2561"><span class="sd">            negatives: Negative sampling probability.</span>
-</span><span data-line="2562"><span class="sd">            masking: Masking strategy for negative sampling.</span>
-</span><span data-line="2563"><span class="sd">            **kwargs: Additional arguments.</span>
+</span><span data-line="2525">    <span class="k">def</span><span class="w"> </span><span class="nf">rel_loss</span><span class="p">(</span>
+</span><span data-line="2526">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2527">        <span class="n">logits</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2528">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2529">        <span class="n">pair_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2530">        <span class="n">class_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2531">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2532">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2533">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2534">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2535">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="2536">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2537">        <span class="n">masking</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;span&quot;</span><span class="p">,</span>
+</span><span data-line="2538">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="2539">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="2540"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute relation classification loss for selected entity pairs.</span>
+</span><span data-line="2541">
+</span><span data-line="2542"><span class="sd">        Args:</span>
+</span><span data-line="2543"><span class="sd">            logits: Predicted relation scores of shape (B, N, C).</span>
+</span><span data-line="2544"><span class="sd">            labels: Ground truth relation labels of shape (B, N, C).</span>
+</span><span data-line="2545"><span class="sd">            pair_mask: Mask for valid pairs of shape (B, N, C).</span>
+</span><span data-line="2546"><span class="sd">            class_mask: Mask for valid relation classes of shape (B, N, C).</span>
+</span><span data-line="2547"><span class="sd">            alpha: Focal loss alpha parameter.</span>
+</span><span data-line="2548"><span class="sd">            gamma: Focal loss gamma parameter.</span>
+</span><span data-line="2549"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
+</span><span data-line="2550"><span class="sd">            label_smoothing: Label smoothing factor.</span>
+</span><span data-line="2551"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
+</span><span data-line="2552"><span class="sd">            negatives: Negative sampling probability.</span>
+</span><span data-line="2553"><span class="sd">            masking: Masking strategy for negative sampling.</span>
+</span><span data-line="2554"><span class="sd">            **kwargs: Additional arguments.</span>
+</span><span data-line="2555">
+</span><span data-line="2556"><span class="sd">        Returns:</span>
+</span><span data-line="2557"><span class="sd">            Scalar relation classification loss tensor.</span>
+</span><span data-line="2558"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="2559">        <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span>
+</span><span data-line="2560">
+</span><span data-line="2561">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span>
+</span><span data-line="2562">            <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">prob_margin</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="p">,</span> <span class="n">negatives</span><span class="o">=</span><span class="n">negatives</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">masking</span>
+</span><span data-line="2563">        <span class="p">)</span>
 </span><span data-line="2564">
-</span><span data-line="2565"><span class="sd">        Returns:</span>
-</span><span data-line="2566"><span class="sd">            Scalar relation classification loss tensor.</span>
-</span><span data-line="2567"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="2568">        <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">C</span> <span class="o">=</span> <span class="n">logits</span><span class="o">.</span><span class="n">shape</span>
-</span><span data-line="2569">
-</span><span data-line="2570">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span>
-</span><span data-line="2571">            <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">prob_margin</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="p">,</span> <span class="n">negatives</span><span class="o">=</span><span class="n">negatives</span><span class="p">,</span> <span class="n">masking</span><span class="o">=</span><span class="n">masking</span>
-</span><span data-line="2572">        <span class="p">)</span>
-</span><span data-line="2573">
-</span><span data-line="2574">        <span class="n">combined_mask</span> <span class="o">=</span> <span class="n">pair_mask</span> <span class="o">*</span> <span class="n">class_mask</span>
-</span><span data-line="2575">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="n">combined_mask</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
-</span><span data-line="2576">
-</span><span data-line="2577">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
-</span><span data-line="2578">            <span class="n">num_valid</span> <span class="o">=</span> <span class="n">combined_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2579">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="2580">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
-</span><span data-line="2581">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2582">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2583">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span data-line="2584">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
-</span><span data-line="2585">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
-</span><span data-line="2586">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span data-line="2587">            <span class="p">)</span>
-</span><span data-line="2588">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2589">
-</span><span data-line="2590">        <span class="k">return</span> <span class="n">loss</span></div>
+</span><span data-line="2565">        <span class="n">combined_mask</span> <span class="o">=</span> <span class="n">pair_mask</span> <span class="o">*</span> <span class="n">class_mask</span>
+</span><span data-line="2566">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="n">combined_mask</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">C</span><span class="p">)</span>
+</span><span data-line="2567">
+</span><span data-line="2568">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+</span><span data-line="2569">            <span class="n">num_valid</span> <span class="o">=</span> <span class="n">combined_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2570">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">logits</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="2571">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+</span><span data-line="2572">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2573">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2574">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span data-line="2575">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
+</span><span data-line="2576">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
+</span><span data-line="2577">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span data-line="2578">            <span class="p">)</span>
+</span><span data-line="2579">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2580">
+</span><span data-line="2581">        <span class="k">return</span> <span class="n">loss</span></div>
 </div>
 
-</span><span data-line="2591">
-</span><span data-line="2592">
+</span><span data-line="2582">
+</span><span data-line="2583">
 <div class="viewcode-block" id="UniEncoderTokenRelexModel">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenRelexModel">[docs]</a>
-</span><span data-line="2593"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenRelexModel</span><span class="p">(</span><span class="n">UniEncoderSpanRelexModel</span><span class="p">):</span>
-</span><span data-line="2594"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Token-level NER model with relation extraction capabilities.</span>
-</span><span data-line="2595">
-</span><span data-line="2596"><span class="sd">    This model extends token-based NER to also extract relations between</span>
-</span><span data-line="2597"><span class="sd">    identified entities, predicting both entity types and relation types</span>
-</span><span data-line="2598"><span class="sd">    in a joint model.</span>
+</span><span data-line="2584"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenRelexModel</span><span class="p">(</span><span class="n">UniEncoderSpanRelexModel</span><span class="p">):</span>
+</span><span data-line="2585"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Token-level NER model with relation extraction capabilities.</span>
+</span><span data-line="2586">
+</span><span data-line="2587"><span class="sd">    This model extends token-based NER to also extract relations between</span>
+</span><span data-line="2588"><span class="sd">    identified entities, predicting both entity types and relation types</span>
+</span><span data-line="2589"><span class="sd">    in a joint model.</span>
+</span><span data-line="2590">
+</span><span data-line="2591"><span class="sd">    Attributes:</span>
+</span><span data-line="2592"><span class="sd">        relations_rep_layer (Optional[RelationsRepLayer]): Layer for computing</span>
+</span><span data-line="2593"><span class="sd">            pairwise entity relations (adjacency matrix).</span>
+</span><span data-line="2594"><span class="sd">        triples_score_layer (Optional[TriplesScoreLayer]): Layer for scoring</span>
+</span><span data-line="2595"><span class="sd">            (head, relation, tail) triples.</span>
+</span><span data-line="2596"><span class="sd">        pair_rep_layer (Optional[nn.Module]): Alternative layer for relation</span>
+</span><span data-line="2597"><span class="sd">            scoring via concatenation.</span>
+</span><span data-line="2598"><span class="sd">    &quot;&quot;&quot;</span>
 </span><span data-line="2599">
-</span><span data-line="2600"><span class="sd">    Attributes:</span>
-</span><span data-line="2601"><span class="sd">        relations_rep_layer (Optional[RelationsRepLayer]): Layer for computing</span>
-</span><span data-line="2602"><span class="sd">            pairwise entity relations (adjacency matrix).</span>
-</span><span data-line="2603"><span class="sd">        triples_score_layer (Optional[TriplesScoreLayer]): Layer for scoring</span>
-</span><span data-line="2604"><span class="sd">            (head, relation, tail) triples.</span>
-</span><span data-line="2605"><span class="sd">        pair_rep_layer (Optional[nn.Module]): Alternative layer for relation</span>
-</span><span data-line="2606"><span class="sd">            scoring via concatenation.</span>
-</span><span data-line="2607"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="2608">
 <div class="viewcode-block" id="UniEncoderTokenRelexModel.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenRelexModel.__init__">[docs]</a>
-</span><span data-line="2609">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="2610">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="2611">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2612"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the span-based relation extraction model.</span>
-</span><span data-line="2613">
-</span><span data-line="2614"><span class="sd">        Args:</span>
-</span><span data-line="2615"><span class="sd">            config: Model configuration object.</span>
-</span><span data-line="2616"><span class="sd">            from_pretrained: Whether to load from pretrained weights.</span>
-</span><span data-line="2617"><span class="sd">            cache_dir: Directory for caching pretrained models.</span>
-</span><span data-line="2618"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="2619">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span>
-</span><span data-line="2620">        <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="o">=</span> <span class="n">Scorer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">dropout</span><span class="p">)</span></div>
+</span><span data-line="2600">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="2601">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="2602">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2603"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the span-based relation extraction model.</span>
+</span><span data-line="2604">
+</span><span data-line="2605"><span class="sd">        Args:</span>
+</span><span data-line="2606"><span class="sd">            config: Model configuration object.</span>
+</span><span data-line="2607"><span class="sd">            from_pretrained: Whether to load from pretrained weights.</span>
+</span><span data-line="2608"><span class="sd">            cache_dir: Directory for caching pretrained models.</span>
+</span><span data-line="2609"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="2610">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span>
+</span><span data-line="2611">        <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="o">=</span> <span class="n">Scorer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">hidden_size</span><span class="p">,</span> <span class="n">config</span><span class="o">.</span><span class="n">dropout</span><span class="p">)</span></div>
 
-</span><span data-line="2621">
+</span><span data-line="2612">
 <div class="viewcode-block" id="UniEncoderTokenRelexModel.loss">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenRelexModel.loss">[docs]</a>
-</span><span data-line="2622">    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span>
-</span><span data-line="2623">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2624">        <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2625">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2626">        <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2627">        <span class="n">word_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="2628">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2629">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2630">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2631">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="2632">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
-</span><span data-line="2633">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
-</span><span data-line="2634">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
-</span><span data-line="2635">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="2636"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute token classification loss.</span>
-</span><span data-line="2637">
-</span><span data-line="2638"><span class="sd">        Args:</span>
-</span><span data-line="2639"><span class="sd">            scores: Predicted scores of shape (B, W, C).</span>
-</span><span data-line="2640"><span class="sd">            labels: Ground truth labels of shape (B, W, C).</span>
-</span><span data-line="2641"><span class="sd">            prompts_embedding_mask: Mask for valid entity types of shape (B, C).</span>
-</span><span data-line="2642"><span class="sd">            word_mask: Mask for valid tokens of shape (B, W).</span>
-</span><span data-line="2643"><span class="sd">            alpha: Focal loss alpha parameter.</span>
-</span><span data-line="2644"><span class="sd">            gamma: Focal loss gamma parameter.</span>
-</span><span data-line="2645"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
-</span><span data-line="2646"><span class="sd">            label_smoothing: Label smoothing factor.</span>
-</span><span data-line="2647"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
-</span><span data-line="2648"><span class="sd">            negatives: Negative sampling probability.</span>
-</span><span data-line="2649"><span class="sd">            **kwargs: Additional arguments.</span>
-</span><span data-line="2650">
-</span><span data-line="2651"><span class="sd">        Returns:</span>
-</span><span data-line="2652"><span class="sd">            Scalar loss tensor.</span>
-</span><span data-line="2653"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="2654">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">prob_margin</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="p">,</span> <span class="n">negatives</span><span class="p">)</span>
-</span><span data-line="2655">
-</span><span data-line="2656">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="p">(</span><span class="n">word_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
-</span><span data-line="2657">
-</span><span data-line="2658">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
-</span><span data-line="2659">            <span class="n">num_valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">word_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2660">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="2661">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
-</span><span data-line="2662">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2663">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="2664">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span data-line="2665">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
-</span><span data-line="2666">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
-</span><span data-line="2667">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-</span><span data-line="2668">            <span class="p">)</span>
-</span><span data-line="2669">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="2670">        <span class="k">return</span> <span class="n">loss</span></div>
+</span><span data-line="2613">    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span>
+</span><span data-line="2614">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2615">        <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2616">        <span class="n">labels</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2617">        <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2618">        <span class="n">word_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
+</span><span data-line="2619">        <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2620">        <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2621">        <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2622">        <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
+</span><span data-line="2623">        <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="2624">        <span class="n">negatives</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+</span><span data-line="2625">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
+</span><span data-line="2626">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
+</span><span data-line="2627"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute token classification loss.</span>
+</span><span data-line="2628">
+</span><span data-line="2629"><span class="sd">        Args:</span>
+</span><span data-line="2630"><span class="sd">            scores: Predicted scores of shape (B, W, C).</span>
+</span><span data-line="2631"><span class="sd">            labels: Ground truth labels of shape (B, W, C).</span>
+</span><span data-line="2632"><span class="sd">            prompts_embedding_mask: Mask for valid entity types of shape (B, C).</span>
+</span><span data-line="2633"><span class="sd">            word_mask: Mask for valid tokens of shape (B, W).</span>
+</span><span data-line="2634"><span class="sd">            alpha: Focal loss alpha parameter.</span>
+</span><span data-line="2635"><span class="sd">            gamma: Focal loss gamma parameter.</span>
+</span><span data-line="2636"><span class="sd">            prob_margin: Margin for probability adjustment.</span>
+</span><span data-line="2637"><span class="sd">            label_smoothing: Label smoothing factor.</span>
+</span><span data-line="2638"><span class="sd">            reduction: Loss reduction method (&#39;sum&#39; or &#39;mean&#39;).</span>
+</span><span data-line="2639"><span class="sd">            negatives: Negative sampling probability.</span>
+</span><span data-line="2640"><span class="sd">            **kwargs: Additional arguments.</span>
+</span><span data-line="2641">
+</span><span data-line="2642"><span class="sd">        Returns:</span>
+</span><span data-line="2643"><span class="sd">            Scalar loss tensor.</span>
+</span><span data-line="2644"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="2645">        <span class="n">all_losses</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loss</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">gamma</span><span class="p">,</span> <span class="n">prob_margin</span><span class="p">,</span> <span class="n">label_smoothing</span><span class="p">,</span> <span class="n">negatives</span><span class="p">)</span>
+</span><span data-line="2646">
+</span><span data-line="2647">        <span class="n">masked_loss</span> <span class="o">=</span> <span class="n">all_losses</span> <span class="o">*</span> <span class="p">(</span><span class="n">word_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="2648">
+</span><span data-line="2649">        <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+</span><span data-line="2650">            <span class="n">num_valid</span> <span class="o">=</span> <span class="p">(</span><span class="n">word_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">prompts_embedding_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2651">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">num_valid</span> <span class="k">if</span> <span class="n">num_valid</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">else</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="2652">        <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+</span><span data-line="2653">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2654">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="2655">            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+</span><span data-line="2656">                <span class="sa">f</span><span class="s2">&quot;Invalid Value for config &#39;loss_reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39; </span><span class="se">\n</span><span class="s2"> Supported reduction modes:&quot;</span>
+</span><span data-line="2657">                <span class="sa">f</span><span class="s2">&quot; &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;. It will be used &#39;sum&#39; instead.&quot;</span><span class="p">,</span>
+</span><span data-line="2658">                <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span data-line="2659">            <span class="p">)</span>
+</span><span data-line="2660">            <span class="n">loss</span> <span class="o">=</span> <span class="n">masked_loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+</span><span data-line="2661">        <span class="k">return</span> <span class="n">loss</span></div>
 
-</span><span data-line="2671">
+</span><span data-line="2662">
 <div class="viewcode-block" id="UniEncoderTokenRelexModel.represent_spans">
 <a class="viewcode-back" href="../../../api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderTokenRelexModel.represent_spans">[docs]</a>
-</span><span data-line="2672">    <span class="k">def</span><span class="w"> </span><span class="nf">represent_spans</span><span class="p">(</span>
-</span><span data-line="2673">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="2674">        <span class="n">words_embeddings</span><span class="p">,</span>
-</span><span data-line="2675">        <span class="n">words_mask</span><span class="p">,</span>
-</span><span data-line="2676">        <span class="n">prompts_embeddings</span><span class="p">,</span>
-</span><span data-line="2677">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2678">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2679">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="2680">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="2681">    <span class="p">):</span>
-</span><span data-line="2682">        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">prompts_embeddings</span><span class="p">)</span>
-</span><span data-line="2683">
-</span><span data-line="2684">        <span class="k">if</span> <span class="n">span_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="2685">            <span class="n">span_idx</span><span class="p">,</span> <span class="n">span_mask</span> <span class="o">=</span> <span class="n">extract_spans_from_tokens</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
-</span><span data-line="2686">            <span class="n">span_idx</span> <span class="o">=</span> <span class="n">span_idx</span> <span class="o">*</span> <span class="n">span_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
-</span><span data-line="2687">        <span class="n">target_span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">)</span>
-</span><span data-line="2688">
-</span><span data-line="2689">        <span class="c1"># span_idx directly corresponds to target_span_rep positions</span>
-</span><span data-line="2690">        <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">span_idx</span></div>
+</span><span data-line="2663">    <span class="k">def</span><span class="w"> </span><span class="nf">represent_spans</span><span class="p">(</span>
+</span><span data-line="2664">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="2665">        <span class="n">words_embeddings</span><span class="p">,</span>
+</span><span data-line="2666">        <span class="n">words_mask</span><span class="p">,</span>
+</span><span data-line="2667">        <span class="n">prompts_embeddings</span><span class="p">,</span>
+</span><span data-line="2668">        <span class="n">span_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2669">        <span class="n">span_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2670">        <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="2671">        <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="2672">    <span class="p">):</span>
+</span><span data-line="2673">        <span class="n">scores</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">prompts_embeddings</span><span class="p">)</span>
+</span><span data-line="2674">
+</span><span data-line="2675">        <span class="k">if</span> <span class="n">span_idx</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="2676">            <span class="n">span_idx</span><span class="p">,</span> <span class="n">span_mask</span> <span class="o">=</span> <span class="n">extract_spans_from_tokens</span><span class="p">(</span><span class="n">scores</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="p">)</span>
+</span><span data-line="2677">            <span class="n">span_idx</span> <span class="o">=</span> <span class="n">span_idx</span> <span class="o">*</span> <span class="n">span_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">long</span><span class="p">()</span>
+</span><span data-line="2678">        <span class="n">target_span_rep</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_rep_layer</span><span class="p">(</span><span class="n">words_embeddings</span><span class="p">,</span> <span class="n">span_idx</span><span class="p">)</span>
+</span><span data-line="2679">
+</span><span data-line="2680">        <span class="c1"># span_idx directly corresponds to target_span_rep positions</span>
+</span><span data-line="2681">        <span class="k">return</span> <span class="n">scores</span><span class="p">,</span> <span class="n">target_span_rep</span><span class="p">,</span> <span class="n">span_mask</span><span class="p">,</span> <span class="n">span_idx</span></div>
 </div>
 
 </span></pre></div>

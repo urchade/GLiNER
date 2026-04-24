@@ -911,26 +911,35 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="GLiNERFactory.shutdown">
 <a class="viewcode-back" href="../../../api/gliner.serve.server.html#gliner.serve.GLiNERFactory.shutdown">[docs]</a>
 </span><span data-line="713">    <span class="k">def</span><span class="w"> </span><span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="714"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Tear down the Ray Serve deployment. Idempotent.&quot;&quot;&quot;</span>
-</span><span data-line="715">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="716">            <span class="k">return</span>
-</span><span data-line="717">        <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span> <span class="k">as</span> <span class="n">ray_serve</span>
-</span><span data-line="718">        <span class="n">ray_serve</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-</span><span data-line="719">        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span></div>
+</span><span data-line="714"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Tear down the Ray Serve deployment and the Ray runtime it booted.</span>
+</span><span data-line="715">
+</span><span data-line="716"><span class="sd">        Idempotent. Shutting down Ray after Serve avoids leaving the driver</span>
+</span><span data-line="717"><span class="sd">        attached to a detached Serve instance — the latter produces noisy</span>
+</span><span data-line="718"><span class="sd">        ``ServeController ... killed by ray.kill`` retry warnings in the</span>
+</span><span data-line="719"><span class="sd">        raylet log when the process exits.</span>
+</span><span data-line="720"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="721">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
+</span><span data-line="722">            <span class="k">return</span>
+</span><span data-line="723">        <span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
+</span><span data-line="724">        <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span> <span class="k">as</span> <span class="n">ray_serve</span>
+</span><span data-line="725">        <span class="n">ray_serve</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="726">        <span class="k">if</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
+</span><span data-line="727">            <span class="n">ray</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="728">        <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-</span><span data-line="720">
-</span><span data-line="721">    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="722">        <span class="k">return</span> <span class="bp">self</span>
-</span><span data-line="723">
-</span><span data-line="724">    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
-</span><span data-line="725">        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-</span><span data-line="726">        <span class="k">return</span> <span class="kc">False</span>
-</span><span data-line="727">
-</span><span data-line="728">    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="729">        <span class="k">try</span><span class="p">:</span>
-</span><span data-line="730">            <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-</span><span data-line="731">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-</span><span data-line="732">            <span class="k">pass</span></div>
+</span><span data-line="729">
+</span><span data-line="730">    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="731">        <span class="k">return</span> <span class="bp">self</span>
+</span><span data-line="732">
+</span><span data-line="733">    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_val</span><span class="p">,</span> <span class="n">exc_tb</span><span class="p">):</span>
+</span><span data-line="734">        <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="735">        <span class="k">return</span> <span class="kc">False</span>
+</span><span data-line="736">
+</span><span data-line="737">    <span class="k">def</span><span class="w"> </span><span class="fm">__del__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="738">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="739">            <span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span><span data-line="740">        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+</span><span data-line="741">            <span class="k">pass</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">

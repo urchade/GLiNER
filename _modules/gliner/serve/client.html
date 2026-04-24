@@ -164,143 +164,203 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.serve.client</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Client for accessing GLiNER Ray Serve deployment from Python.&quot;&quot;&quot;</span>
+<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;HTTP client for the GLiNER Ray Serve deployment.</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
-</span><span data-line="4">
-</span><span data-line="5">
+</span><span data-line="3"><span class="sd">This is a thin wrapper around the server&#39;s HTTP endpoint — it does not import</span>
+</span><span data-line="4"><span class="sd">Ray and does not join the Ray cluster, so it works from any Python process</span>
+</span><span data-line="5"><span class="sd">with only the standard library available.</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="sd">To preserve server-side dynamic batching when multiple texts are submitted,</span>
+</span><span data-line="8"><span class="sd">the client dispatches each text as its own HTTP request concurrently so Ray</span>
+</span><span data-line="9"><span class="sd">Serve&#39;s ``@serve.batch`` can coalesce them into a single forward pass. A</span>
+</span><span data-line="10"><span class="sd">sequential loop of calls would serialize on the wire and defeat batching.</span>
+</span><span data-line="11"><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+</span><span data-line="14"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span>
+</span><span data-line="15"><span class="kn">from</span><span class="w"> </span><span class="nn">urllib.error</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPError</span><span class="p">,</span> <span class="n">URLError</span>
+</span><span data-line="16"><span class="kn">from</span><span class="w"> </span><span class="nn">urllib.request</span><span class="w"> </span><span class="kn">import</span> <span class="n">Request</span><span class="p">,</span> <span class="n">urlopen</span>
+</span><span data-line="17"><span class="kn">from</span><span class="w"> </span><span class="nn">concurrent.futures</span><span class="w"> </span><span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="n">DEFAULT_BASE_URL</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:8000&quot;</span>
+</span><span data-line="20"><span class="n">DEFAULT_ROUTE_PREFIX</span> <span class="o">=</span> <span class="s2">&quot;/gliner&quot;</span>
+</span><span data-line="21">
+</span><span data-line="22">
+<div class="viewcode-block" id="GLiNERClientError">
+<a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.GLiNERClientError">[docs]</a>
+</span><span data-line="23"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERClientError</span><span class="p">(</span><span class="ne">RuntimeError</span><span class="p">):</span>
+</span><span data-line="24"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when the GLiNER server returns an error or is unreachable.&quot;&quot;&quot;</span></div>
+
+</span><span data-line="25">
+</span><span data-line="26">
 <div class="viewcode-block" id="GLiNERClient">
 <a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.GLiNERClient">[docs]</a>
-</span><span data-line="6"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERClient</span><span class="p">:</span>
-</span><span data-line="7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Client for accessing a running GLiNER Ray Serve deployment.</span>
-</span><span data-line="8">
-</span><span data-line="9"><span class="sd">    This client can be used from any Python process (same machine or remote)</span>
-</span><span data-line="10"><span class="sd">    to make predictions against a running GLiNER server.</span>
-</span><span data-line="11">
-</span><span data-line="12"><span class="sd">    Example:</span>
-</span><span data-line="13"><span class="sd">        &gt;&gt;&gt; from gliner.serve import GLiNERClient</span>
-</span><span data-line="14"><span class="sd">        &gt;&gt;&gt; client = GLiNERClient()</span>
-</span><span data-line="15"><span class="sd">        &gt;&gt;&gt; results = client.predict(</span>
-</span><span data-line="16"><span class="sd">        ...     &quot;John works at Google in Mountain View&quot;,</span>
-</span><span data-line="17"><span class="sd">        ...     labels=[&quot;person&quot;, &quot;organization&quot;, &quot;location&quot;]</span>
-</span><span data-line="18"><span class="sd">        ... )</span>
-</span><span data-line="19"><span class="sd">        &gt;&gt;&gt; print(results)</span>
-</span><span data-line="20"><span class="sd">        {&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, &#39;score&#39;: 0.95}, ...]}</span>
-</span><span data-line="21"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="22">
+</span><span data-line="27"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERClient</span><span class="p">:</span>
+</span><span data-line="28"><span class="w">    </span><span class="sd">&quot;&quot;&quot;HTTP client for a running GLiNER Ray Serve deployment.</span>
+</span><span data-line="29">
+</span><span data-line="30"><span class="sd">    Example:</span>
+</span><span data-line="31"><span class="sd">        &gt;&gt;&gt; from gliner.serve import GLiNERClient</span>
+</span><span data-line="32"><span class="sd">        &gt;&gt;&gt; client = GLiNERClient()</span>
+</span><span data-line="33"><span class="sd">        &gt;&gt;&gt; client.predict(</span>
+</span><span data-line="34"><span class="sd">        ...     &quot;John works at Google in Mountain View&quot;,</span>
+</span><span data-line="35"><span class="sd">        ...     labels=[&quot;person&quot;, &quot;organization&quot;, &quot;location&quot;],</span>
+</span><span data-line="36"><span class="sd">        ... )</span>
+</span><span data-line="37"><span class="sd">        {&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
+</span><span data-line="38"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="39">
 <div class="viewcode-block" id="GLiNERClient.__init__">
 <a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.GLiNERClient.__init__">[docs]</a>
-</span><span data-line="23">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
-</span><span data-line="24">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="25">        <span class="n">deployment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gliner&quot;</span><span class="p">,</span>
-</span><span data-line="26">        <span class="n">ray_address</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="27">    <span class="p">):</span>
-</span><span data-line="28"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize client connection to GLiNER deployment.</span>
-</span><span data-line="29">
-</span><span data-line="30"><span class="sd">        Args:</span>
-</span><span data-line="31"><span class="sd">            deployment_name: Name of the Ray Serve deployment.</span>
-</span><span data-line="32"><span class="sd">            ray_address: Ray cluster address. If None, connects to local cluster.</span>
-</span><span data-line="33"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="34">        <span class="kn">import</span><span class="w"> </span><span class="nn">ray</span>
-</span><span data-line="35">        <span class="kn">from</span><span class="w"> </span><span class="nn">ray</span><span class="w"> </span><span class="kn">import</span> <span class="n">serve</span>
-</span><span data-line="36">
-</span><span data-line="37">        <span class="k">if</span> <span class="ow">not</span> <span class="n">ray</span><span class="o">.</span><span class="n">is_initialized</span><span class="p">():</span>
-</span><span data-line="38">            <span class="n">ray</span><span class="o">.</span><span class="n">init</span><span class="p">(</span><span class="n">address</span><span class="o">=</span><span class="n">ray_address</span><span class="p">,</span> <span class="n">ignore_reinit_error</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</span><span data-line="39">
-</span><span data-line="40">        <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span> <span class="o">=</span> <span class="n">serve</span><span class="o">.</span><span class="n">get_deployment_handle</span><span class="p">(</span><span class="n">deployment_name</span><span class="p">,</span> <span class="s2">&quot;gliner&quot;</span><span class="p">)</span></div>
+</span><span data-line="40">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+</span><span data-line="41">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="42">        <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_BASE_URL</span><span class="p">,</span>
+</span><span data-line="43">        <span class="n">route_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_ROUTE_PREFIX</span><span class="p">,</span>
+</span><span data-line="44">        <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span>
+</span><span data-line="45">        <span class="n">max_concurrency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+</span><span data-line="46">    <span class="p">):</span>
+</span><span data-line="47"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initialize the HTTP client.</span>
+</span><span data-line="48">
+</span><span data-line="49"><span class="sd">        Args:</span>
+</span><span data-line="50"><span class="sd">            base_url: Scheme + host + port of the Ray Serve HTTP proxy.</span>
+</span><span data-line="51"><span class="sd">            route_prefix: Route prefix the deployment is mounted under (must</span>
+</span><span data-line="52"><span class="sd">                match ``GLiNERServeConfig.route_prefix``).</span>
+</span><span data-line="53"><span class="sd">            timeout: Per-request timeout in seconds.</span>
+</span><span data-line="54"><span class="sd">            max_concurrency: Maximum in-flight HTTP requests when predicting</span>
+</span><span data-line="55"><span class="sd">                on a list of texts. Bounds the client-side thread pool.</span>
+</span><span data-line="56"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="57">        <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">base_url</span><span class="o">.</span><span class="n">rstrip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;/&quot;</span> <span class="o">+</span> <span class="n">route_prefix</span><span class="o">.</span><span class="n">strip</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)</span>
+</span><span data-line="58">        <span class="bp">self</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">timeout</span>
+</span><span data-line="59">        <span class="bp">self</span><span class="o">.</span><span class="n">max_concurrency</span> <span class="o">=</span> <span class="n">max_concurrency</span></div>
 
-</span><span data-line="41">
+</span><span data-line="60">
+</span><span data-line="61">    <span class="k">def</span><span class="w"> </span><span class="nf">_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="62">        <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">payload</span><span class="p">)</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">)</span>
+</span><span data-line="63">        <span class="n">req</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+</span><span data-line="64">            <span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+</span><span data-line="65">            <span class="n">data</span><span class="o">=</span><span class="n">data</span><span class="p">,</span>
+</span><span data-line="66">            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="s2">&quot;application/json&quot;</span><span class="p">},</span>
+</span><span data-line="67">            <span class="n">method</span><span class="o">=</span><span class="s2">&quot;POST&quot;</span><span class="p">,</span>
+</span><span data-line="68">        <span class="p">)</span>
+</span><span data-line="69">        <span class="k">try</span><span class="p">:</span>
+</span><span data-line="70">            <span class="k">with</span> <span class="n">urlopen</span><span class="p">(</span><span class="n">req</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">timeout</span><span class="p">)</span> <span class="k">as</span> <span class="n">resp</span><span class="p">:</span>
+</span><span data-line="71">                <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">))</span>
+</span><span data-line="72">        <span class="k">except</span> <span class="n">HTTPError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="73">            <span class="n">body</span> <span class="o">=</span> <span class="n">e</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;utf-8&quot;</span><span class="p">,</span> <span class="n">errors</span><span class="o">=</span><span class="s2">&quot;replace&quot;</span><span class="p">)</span>
+</span><span data-line="74">            <span class="k">raise</span> <span class="n">GLiNERClientError</span><span class="p">(</span>
+</span><span data-line="75">                <span class="sa">f</span><span class="s2">&quot;GLiNER server returned HTTP </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">code</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="76">            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span data-line="77">        <span class="k">except</span> <span class="n">URLError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span><span data-line="78">            <span class="k">raise</span> <span class="n">GLiNERClientError</span><span class="p">(</span>
+</span><span data-line="79">                <span class="sa">f</span><span class="s2">&quot;Could not reach GLiNER server at </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="o">.</span><span class="n">reason</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="80">            <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+</span><span data-line="81">
+</span><span data-line="82">    <span class="nd">@staticmethod</span>
+</span><span data-line="83">    <span class="k">def</span><span class="w"> </span><span class="nf">_build_payload</span><span class="p">(</span>
+</span><span data-line="84">        <span class="n">text</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+</span><span data-line="85">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="86">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="87">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+</span><span data-line="88">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">],</span>
+</span><span data-line="89">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="90">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+</span><span data-line="91">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+</span><span data-line="92">        <span class="n">payload</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="93">            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">text</span><span class="p">,</span>
+</span><span data-line="94">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="95">            <span class="s2">&quot;flat_ner&quot;</span><span class="p">:</span> <span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="96">            <span class="s2">&quot;multi_label&quot;</span><span class="p">:</span> <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="97">        <span class="p">}</span>
+</span><span data-line="98">        <span class="k">if</span> <span class="n">relations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="99">            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;relations&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">relations</span>
+</span><span data-line="100">        <span class="k">if</span> <span class="n">threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="101">            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">threshold</span>
+</span><span data-line="102">        <span class="k">if</span> <span class="n">relation_threshold</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="103">            <span class="n">payload</span><span class="p">[</span><span class="s2">&quot;relation_threshold&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">relation_threshold</span>
+</span><span data-line="104">        <span class="k">return</span> <span class="n">payload</span>
+</span><span data-line="105">
 <div class="viewcode-block" id="GLiNERClient.predict">
 <a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.GLiNERClient.predict">[docs]</a>
-</span><span data-line="42">    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
-</span><span data-line="43">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="44">        <span class="n">text</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
-</span><span data-line="45">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span data-line="46">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="47">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="48">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="49">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="50">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="51">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
-</span><span data-line="52"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Make predictions using the GLiNER server.</span>
-</span><span data-line="53">
-</span><span data-line="54"><span class="sd">        Args:</span>
-</span><span data-line="55"><span class="sd">            text: Input text or list of texts.</span>
-</span><span data-line="56"><span class="sd">            labels: Entity type labels to extract.</span>
-</span><span data-line="57"><span class="sd">            relations: Relation type labels (for relex models).</span>
-</span><span data-line="58"><span class="sd">            threshold: Confidence threshold for entities.</span>
-</span><span data-line="59"><span class="sd">            relation_threshold: Confidence threshold for relations.</span>
-</span><span data-line="60"><span class="sd">            flat_ner: Whether to use flat NER.</span>
-</span><span data-line="61"><span class="sd">            multi_label: Whether to allow multiple labels per span.</span>
-</span><span data-line="62">
-</span><span data-line="63"><span class="sd">        Returns:</span>
-</span><span data-line="64"><span class="sd">            Single result dict or list of result dicts containing:</span>
-</span><span data-line="65"><span class="sd">                - &quot;entities&quot;: List of entity dicts</span>
-</span><span data-line="66"><span class="sd">                - &quot;relations&quot;: List of relation dicts (if model supports)</span>
-</span><span data-line="67"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="68">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-</span><span data-line="69">            <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="70">                <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
-</span><span data-line="71">                    <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
-</span><span data-line="72">                <span class="p">)</span>
-</span><span data-line="73">                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">text</span>
-</span><span data-line="74">            <span class="p">]</span>
-</span><span data-line="75">            <span class="k">return</span> <span class="p">[</span><span class="n">ref</span><span class="o">.</span><span class="n">result</span><span class="p">()</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">]</span>
-</span><span data-line="76">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="77">            <span class="n">ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
-</span><span data-line="78">                <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
-</span><span data-line="79">            <span class="p">)</span>
-</span><span data-line="80">            <span class="k">return</span> <span class="n">ref</span><span class="o">.</span><span class="n">result</span><span class="p">()</span></div>
+</span><span data-line="106">    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span>
+</span><span data-line="107">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="108">        <span class="n">text</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="109">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="110">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="111">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="112">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="113">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="114">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="115">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</span><span data-line="116"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Blocking prediction. ``str`` in → ``dict`` out; ``list`` in → ``list`` out.&quot;&quot;&quot;</span>
+</span><span data-line="117">        <span class="n">single</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+</span><span data-line="118">        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="119">
+</span><span data-line="120">        <span class="n">payloads</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="121">            <span class="bp">self</span><span class="o">.</span><span class="n">_build_payload</span><span class="p">(</span>
+</span><span data-line="122">                <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="123">                <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="124">            <span class="p">)</span>
+</span><span data-line="125">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">items</span>
+</span><span data-line="126">        <span class="p">]</span>
+</span><span data-line="127">
+</span><span data-line="128">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">payloads</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="129">            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">(</span><span class="n">payloads</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+</span><span data-line="130">        <span class="k">else</span><span class="p">:</span>
+</span><span data-line="131">            <span class="n">workers</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">max_concurrency</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">payloads</span><span class="p">))</span>
+</span><span data-line="132">            <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">pool</span><span class="p">:</span>
+</span><span data-line="133">                <span class="n">results</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">pool</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">,</span> <span class="n">payloads</span><span class="p">))</span>
+</span><span data-line="134">
+</span><span data-line="135">        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="n">results</span></div>
 
-</span><span data-line="81">
+</span><span data-line="136">
 <div class="viewcode-block" id="GLiNERClient.predict_async">
 <a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.GLiNERClient.predict_async">[docs]</a>
-</span><span data-line="82">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict_async</span><span class="p">(</span>
-</span><span data-line="83">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="84">        <span class="n">text</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
-</span><span data-line="85">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span data-line="86">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="87">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="88">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="89">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="90">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="91">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
-</span><span data-line="92"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Async version of predict.&quot;&quot;&quot;</span>
-</span><span data-line="93">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
-</span><span data-line="94">            <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
-</span><span data-line="95">
-</span><span data-line="96">            <span class="n">refs</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="97">                <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
-</span><span data-line="98">                    <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
-</span><span data-line="99">                <span class="p">)</span>
-</span><span data-line="100">                <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">text</span>
-</span><span data-line="101">            <span class="p">]</span>
-</span><span data-line="102">            <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">ref</span> <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">refs</span><span class="p">])</span>
-</span><span data-line="103">            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
-</span><span data-line="104">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="105">            <span class="k">return</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">_handle</span><span class="o">.</span><span class="n">predict</span><span class="o">.</span><span class="n">remote</span><span class="p">(</span>
-</span><span data-line="106">                <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span> <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span>
-</span><span data-line="107">            <span class="p">)</span></div>
+</span><span data-line="137">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">predict_async</span><span class="p">(</span>
+</span><span data-line="138">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="139">        <span class="n">text</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
+</span><span data-line="140">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="141">        <span class="n">relations</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="142">        <span class="n">threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="143">        <span class="n">relation_threshold</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+</span><span data-line="144">        <span class="n">flat_ner</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="145">        <span class="n">multi_label</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+</span><span data-line="146">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
+</span><span data-line="147"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Async prediction. Concurrent calls coalesce into one server-side batch.&quot;&quot;&quot;</span>
+</span><span data-line="148">        <span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span data-line="149">
+</span><span data-line="150">        <span class="n">single</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+</span><span data-line="151">        <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="n">text</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="152">
+</span><span data-line="153">        <span class="n">payloads</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="154">            <span class="bp">self</span><span class="o">.</span><span class="n">_build_payload</span><span class="p">(</span>
+</span><span data-line="155">                <span class="n">t</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">relations</span><span class="p">,</span> <span class="n">threshold</span><span class="p">,</span> <span class="n">relation_threshold</span><span class="p">,</span>
+</span><span data-line="156">                <span class="n">flat_ner</span><span class="p">,</span> <span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="157">            <span class="p">)</span>
+</span><span data-line="158">            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">items</span>
+</span><span data-line="159">        <span class="p">]</span>
+</span><span data-line="160">
+</span><span data-line="161">        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+</span><span data-line="162">            <span class="o">*</span><span class="p">(</span><span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_post</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">payloads</span><span class="p">)</span>
+</span><span data-line="163">        <span class="p">)</span>
+</span><span data-line="164">
+</span><span data-line="165">        <span class="k">return</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">single</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="p">)</span></div>
 </div>
 
-</span><span data-line="108">
-</span><span data-line="109">
+</span><span data-line="166">
+</span><span data-line="167">
 <div class="viewcode-block" id="get_client">
 <a class="viewcode-back" href="../../../api/gliner.serve.client.html#gliner.serve.get_client">[docs]</a>
-</span><span data-line="110"><span class="k">def</span><span class="w"> </span><span class="nf">get_client</span><span class="p">(</span>
-</span><span data-line="111">    <span class="n">deployment_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;gliner&quot;</span><span class="p">,</span>
-</span><span data-line="112">    <span class="n">ray_address</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-</span><span data-line="113"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GLiNERClient</span><span class="p">:</span>
-</span><span data-line="114"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Get a client for the GLiNER Ray Serve deployment.</span>
-</span><span data-line="115">
-</span><span data-line="116"><span class="sd">    Args:</span>
-</span><span data-line="117"><span class="sd">        deployment_name: Name of the Ray Serve deployment.</span>
-</span><span data-line="118"><span class="sd">        ray_address: Ray cluster address. If None, connects to local cluster.</span>
-</span><span data-line="119">
-</span><span data-line="120"><span class="sd">    Returns:</span>
-</span><span data-line="121"><span class="sd">        GLiNERClient instance for making predictions.</span>
-</span><span data-line="122"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="123">    <span class="k">return</span> <span class="n">GLiNERClient</span><span class="p">(</span><span class="n">deployment_name</span><span class="p">,</span> <span class="n">ray_address</span><span class="p">)</span></div>
+</span><span data-line="168"><span class="k">def</span><span class="w"> </span><span class="nf">get_client</span><span class="p">(</span>
+</span><span data-line="169">    <span class="n">base_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_BASE_URL</span><span class="p">,</span>
+</span><span data-line="170">    <span class="n">route_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">DEFAULT_ROUTE_PREFIX</span><span class="p">,</span>
+</span><span data-line="171">    <span class="n">timeout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">30.0</span><span class="p">,</span>
+</span><span data-line="172">    <span class="n">max_concurrency</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+</span><span data-line="173"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">GLiNERClient</span><span class="p">:</span>
+</span><span data-line="174"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience constructor for :class:`GLiNERClient`.&quot;&quot;&quot;</span>
+</span><span data-line="175">    <span class="k">return</span> <span class="n">GLiNERClient</span><span class="p">(</span>
+</span><span data-line="176">        <span class="n">base_url</span><span class="o">=</span><span class="n">base_url</span><span class="p">,</span>
+</span><span data-line="177">        <span class="n">route_prefix</span><span class="o">=</span><span class="n">route_prefix</span><span class="p">,</span>
+</span><span data-line="178">        <span class="n">timeout</span><span class="o">=</span><span class="n">timeout</span><span class="p">,</span>
+</span><span data-line="179">        <span class="n">max_concurrency</span><span class="o">=</span><span class="n">max_concurrency</span><span class="p">,</span>
+</span><span data-line="180">    <span class="p">)</span></div>
 
 </span></pre></div>
         </article><button class="back-to-top" type="button">
