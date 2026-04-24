@@ -46,10 +46,10 @@ from `asyncio`.
 ```python
 from gliner.serve import GLiNERClient
 
-client = GLiNERClient()
+client = GLiNERClient()  # defaults to http://localhost:8000/gliner
 result = client.predict(
     "John works at Google in Mountain View",
-    labels=["person", "organization", "location"]
+    labels=["person", "organization", "location"],
 )
 print(result)
 # {'entities': [
@@ -59,7 +59,35 @@ print(result)
 # ]}
 ```
 
-**HTTP request:**
+`GLiNERClient` is a pure HTTP client built on the Python standard library —
+it does **not** import `ray` and does **not** join the Ray cluster, so it
+runs from any Python process (including environments where `ray` is not
+installed). Construct it with a custom URL/prefix or timeout as needed:
+
+```python
+client = GLiNERClient(
+    base_url="http://gliner.internal:8000",
+    route_prefix="/gliner",
+    timeout=30.0,
+    max_concurrency=32,   # bound on concurrent in-flight HTTP requests
+)
+```
+
+Passing a list of texts preserves server-side dynamic batching — each text
+is dispatched as its own HTTP request concurrently (threads for `predict`,
+`asyncio.gather` for `predict_async`) so Ray Serve's `@serve.batch`
+coalesces them into a single forward pass:
+
+```python
+outputs = client.predict(
+    ["John works at Google", "Paris is in France"],
+    labels=["person", "organization", "location"],
+)  # → list[dict], one per input text
+```
+
+Network or server errors surface as `gliner.serve.client.GLiNERClientError`.
+
+**HTTP request (no client library):**
 ```bash
 curl -X POST http://localhost:8000/gliner \
   -H "Content-Type: application/json" \
@@ -128,16 +156,100 @@ result = ref.result()
 
 ## Relation Extraction
 
-For models that support relation extraction:
+GLiNER-RelEx models (e.g. `knowledgator/gliner-relex-large-v0.5`,
+`knowledgator/gliner-token-relex-v1.0`) jointly extract entities and the
+relations between them in a single forward pass. The server auto-detects
+relation support by inspecting `model.config.model_type` and enables the
+relex code path when it contains `"relex"` — no extra flag is needed.
+
+### Start a RelEx server
+
+```bash
+python -m gliner.serve \
+    --model knowledgator/gliner-relex-large-v1.0 \
+    --dtype bfloat16 \
+    --max-batch-size 16
+```
+
+### Predict via the client
 
 ```python
+from gliner.serve import GLiNERClient
+
+client = GLiNERClient()  # http://localhost:8000/gliner
+
+text = "Bill Gates founded Microsoft in 1975. The company is headquartered in Redmond."
+
 result = client.predict(
-    "John works at Google",
-    labels=["person", "organization"],
-    relations=["works_at", "founded_by"]
+    text,
+    labels=["person", "organization", "date", "location"],
+    relations=["founded", "founded_in", "headquartered_in"],
+    threshold=0.5,
+    relation_threshold=0.5,
 )
-# {'entities': [...], 'relations': [...]}
+
+for ent in result["entities"]:
+    print(f"  {ent['text']} ({ent['label']})")
+
+for rel in result["relations"]:
+    head = result["entities"][rel["head"]["entity_idx"]]
+    tail = result["entities"][rel["tail"]["entity_idx"]]
+    print(f"  {head['text']} --[{rel['relation']}]--> {tail['text']}")
 ```
+
+For a batched call, pass a list of texts — each one dispatches as its own
+request so the server can coalesce them into a single relex forward pass:
+
+```python
+results = client.predict(
+    [
+        "Bill Gates founded Microsoft in 1975.",
+        "Apple is headquartered in Cupertino.",
+    ],
+    labels=["person", "organization", "location", "date"],
+    relations=["founded", "founded_in", "headquartered_in"],
+)
+# results == [ {"entities": [...], "relations": [...]}, {...} ]
+```
+
+### In-process (GLiNERFactory)
+
+```python
+from gliner.serve import GLiNERFactory
+
+with GLiNERFactory(model="knowledgator/gliner-relex-large-v0.5") as llm:
+    out = llm.predict(
+        "Bill Gates founded Microsoft in 1975.",
+        labels=["person", "organization", "date"],
+        relations=["founded", "founded_in"],
+    )
+```
+
+### HTTP (curl)
+
+```bash
+curl -X POST http://localhost:8000/gliner \
+  -H "Content-Type: application/json" \
+  -d '{
+        "text": "Bill Gates founded Microsoft in 1975.",
+        "labels": ["person", "organization", "date"],
+        "relations": ["founded", "founded_in"],
+        "threshold": 0.5,
+        "relation_threshold": 0.5
+      }'
+```
+
+**Response shape for RelEx models:**
+```python
+{
+    "entities":  [{"start", "end", "text", "label", "score"}, ...],
+    "relations": [{"relation", "score",
+                   "head": {"entity_idx": int, ...},
+                   "tail": {"entity_idx": int, ...}}, ...],
+}
+```
+For NER-only models the `"relations"` key is omitted; passing `relations=`
+to such a model is a no-op.
 
 ## All CLI Options
 
@@ -152,7 +264,7 @@ Model Configuration:
 
 Batching:
   --max-batch-size      Max batch size (default: 32)
-  --batch-wait-timeout-ms  Batch wait timeout (default: 50)
+  --batch-wait-timeout-ms  Batch wait timeout (default: 10)
   --precompiled-batch-sizes  Comma-separated sizes (default: 1,2,4,8,16,32)
 
 Replicas:
@@ -165,7 +277,8 @@ Performance:
   --no-compile             Disable torch.compile
 
 Memory:
-  --target-memory-fraction  GPU memory fraction (default: 0.8)
+  --target-memory-fraction  GPU memory fraction (default: 0.9)
+  --memory-overhead-factor  Safety margin on memory estimates (default: 1.3)
 
 Server:
   --route-prefix        HTTP route (default: /gliner)
