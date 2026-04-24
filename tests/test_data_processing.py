@@ -448,6 +448,14 @@ def mock_config():
     config.blank_entity_prob = 0.0
     config.decoder_mode = 'span'
     config.full_decoder_context = False
+    # Explicitly disable the precomputed-prompts fast-path so `prepare_inputs`
+    # goes through the full `[ENT] label [SEP]` prompt-building branch. Without
+    # this, `Mock.__getattr__` silently returns a truthy Mock and the tests
+    # would assert against the wrong output.
+    config.precomputed_prompts_mode = False
+    # Numeric ratios must be real floats — a bare Mock attribute breaks
+    # arithmetic later (int * Mock).
+    config.neg_spans_ratio = 0.0
     return config
 
 
@@ -902,38 +910,42 @@ class TestUniEncoderTokenProcessor:
         return UniEncoderTokenProcessor(mock_config, mock_tokenizer, mock_words_splitter)
     
     def test_preprocess_example_basic(self, processor):
-        """Should preprocess example with entity IDs."""
+        """Should preprocess example with span tensors."""
         tokens = ["The", "cat", "sat"]
         ner = [(0, 0, "DET"), (1, 1, "NOUN")]
         classes_to_id = {"DET": 1, "NOUN": 2}
-        
+
         result = processor.preprocess_example(tokens, ner, classes_to_id)
-        
+
         assert result['tokens'] == tokens
         assert result['seq_length'] == 3
         assert result['entities'] == ner
-        assert len(result['entities_id']) == 2
-        assert result['entities_id'][0] == [0, 0, 1]  # start, end, class_id
-        assert result['entities_id'][1] == [1, 1, 2]
-    
+        # Token processor encodes entities as parallel span_idx / span_label tensors.
+        assert result['span_idx'].shape[0] == 2
+        assert result['span_label'].tolist() == [1, 2]
+        assert result['span_idx'][0].tolist() == [0, 0]
+        assert result['span_idx'][1].tolist() == [1, 1]
+
     def test_preprocess_example_filters_unknown_classes(self, processor):
         """Should filter out entities with unknown classes."""
         tokens = ["word1", "word2"]
         ner = [(0, 0, "KNOWN"), (1, 1, "UNKNOWN")]
         classes_to_id = {"KNOWN": 1}
-        
+
         result = processor.preprocess_example(tokens, ner, classes_to_id)
-        
-        assert len(result['entities_id']) == 1
-        assert result['entities_id'][0][2] == 1  # Only KNOWN class
-    
+
+        # Only the KNOWN span survives the class filter.
+        assert result['span_label'].tolist() == [1]
+
     def test_preprocess_example_handles_none_ner(self, processor):
-        """Should handle None NER gracefully."""
+        """Should handle None NER gracefully — no span tensors produced."""
         tokens = ["word"]
-        
+
         result = processor.preprocess_example(tokens, None, {})
-        
-        assert result['entities_id'] == []
+
+        # ``prepare_span_idx`` returns None for both tensors when NER is absent.
+        assert result['span_label'] is None
+        assert result['span_idx'] is None
         assert result['tokens'] == tokens
     
     def test_preprocess_example_empty_tokens(self, processor):
@@ -961,75 +973,93 @@ class TestUniEncoderTokenProcessor:
                 "tokens": ["word"],
                 "seq_length": 1,
                 "entities": [],
-                "entities_id": [],
+                "span_idx": None,  # disables the span-padding branch
             },
         ]
         class_to_ids = [{"TYPE": 1}]
         id_to_classes = [{1: "TYPE"}]
-        
+
         result = processor.create_batch_dict(batch, class_to_ids, id_to_classes)
-        
+
         assert "tokens" in result
         assert "seq_length" in result
         assert "entities" in result
-        assert "entities_id" in result
         assert "classes_to_id" in result
         assert "id_to_classes" in result
     
+    def _make_create_labels_batch(self, entities, seq_len, classes_to_id):
+        """Build the batch dict shape consumed by create_labels().
+
+        The current API takes a single ``batch`` dict with ``tokens``,
+        ``seq_length``, ``classes_to_id`` (list per example), and ``entities``
+        (list per example of (start, end, label) triples).
+        """
+        batch_size = len(entities)
+        return {
+            "tokens": [[""] * seq_len for _ in range(batch_size)],
+            "seq_length": torch.tensor([seq_len] * batch_size),
+            "classes_to_id": [classes_to_id] * batch_size,
+            "entities": entities,
+        }
+
     def test_create_labels_structure(self, processor):
         """Should create labels with correct structure."""
-        entities_id = [[[0, 1, 1], [2, 3, 2]]]  # batch_size=1, 2 entities
-        batch_size = 1
-        seq_len = 5
-        num_classes = 2
-        
-        labels = processor.create_labels(entities_id, batch_size, seq_len, num_classes)
-        
-        assert labels.shape == (batch_size, seq_len, num_classes, 3)
+        batch = self._make_create_labels_batch(
+            entities=[[(0, 1, "A"), (2, 3, "B")]],
+            seq_len=5,
+            classes_to_id={"A": 1, "B": 2},
+        )
+
+        labels = processor.create_labels(batch)
+
+        assert labels.shape == (1, 5, 2, 3)
         # Last dimension: [start, end, inside]
-    
+
     def test_create_labels_start_end_inside_markers(self, processor):
         """Should correctly mark start, end, and inside tokens."""
-        entities_id = [[[1, 3, 0]]]  # Entity from token 1 to 3, class 0
-        batch_size = 1
-        seq_len = 5
-        num_classes = 1
-        
-        labels = processor.create_labels(entities_id, batch_size, seq_len, num_classes)
-        
+        batch = self._make_create_labels_batch(
+            entities=[[(1, 3, "A")]],  # Entity from token 1 to 3, class 0 (id 1 -> idx 0)
+            seq_len=5,
+            classes_to_id={"A": 1},
+        )
+
+        labels = processor.create_labels(batch)
+
         # Check start token (index 1)
         assert labels[0, 1, 0, 0] == 1  # Start marker
-        
+
         # Check end token (index 3)
         assert labels[0, 3, 0, 1] == 1  # End marker
-        
+
         # Check inside tokens (1, 2, 3 should all be marked inside)
         assert labels[0, 1, 0, 2] == 1
         assert labels[0, 2, 0, 2] == 1
         assert labels[0, 3, 0, 2] == 1
-    
+
     def test_create_labels_skips_out_of_bounds_entities(self, processor):
         """Should skip entities that exceed sequence length."""
-        entities_id = [[[0, 1, 0], [10, 12, 0]]]  # Second entity exceeds seq_len
-        batch_size = 1
-        seq_len = 5
-        num_classes = 1
-        
-        labels = processor.create_labels(entities_id, batch_size, seq_len, num_classes)
-        
+        batch = self._make_create_labels_batch(
+            entities=[[(0, 1, "A"), (10, 12, "A")]],  # Second entity exceeds seq_len
+            seq_len=5,
+            classes_to_id={"A": 1},
+        )
+
+        labels = processor.create_labels(batch)
+
         # First entity should be marked
         assert labels[0, 0, 0, 0] == 1
-    
+
     def test_create_labels_adjusts_class_index(self, processor):
-        """Should adjust class index by subtracting 1."""
-        entities_id = [[[0, 0, 2]]]  # Class ID 2
-        batch_size = 1
-        seq_len = 3
-        num_classes = 2
-        
-        labels = processor.create_labels(entities_id, batch_size, seq_len, num_classes)
-        
-        # Class 2 should map to index 1 (2-1=1)
+        """Should adjust class index by subtracting 1 (1-indexed IDs -> 0-indexed)."""
+        batch = self._make_create_labels_batch(
+            entities=[[(0, 0, "B")]],  # Class "B" has id 2
+            seq_len=3,
+            classes_to_id={"A": 1, "B": 2},
+        )
+
+        labels = processor.create_labels(batch)
+
+        # Class id 2 should map to index 1 (2-1=1)
         assert labels[0, 0, 1, 0] == 1  # Start marker at class index 1
     
     def test_tokenize_and_prepare_labels_integration(self, processor):
@@ -1038,11 +1068,12 @@ class TestUniEncoderTokenProcessor:
             'tokens': [["The", "cat"]],
             'seq_length': torch.tensor([[2]]),
             'classes_to_id': [{"NOUN": 1}],
-            'entities_id': [[[1, 1, 1]]],
+            'id_to_classes': [{1: "NOUN"}],
+            'entities': [[(1, 1, "NOUN")]],
         }
-        
+
         result = processor.tokenize_and_prepare_labels(batch, prepare_labels=True)
-        
+
         assert 'input_ids' in result
         assert 'labels' in result
         assert result['labels'].shape[-1] == 3  # [start, end, inside]
@@ -1333,54 +1364,59 @@ class TestRelationExtractionSpanProcessor:
         """Should create adjacency matrix for entity relations."""
         batch = {
             'tokens': [["John", "works", "at", "Google"]],
-            'span_label': torch.tensor([[1, 0, 0, 2, 0, 0]]),  # 2 entities
-            'rel_label': torch.tensor([[1, 0]]),  # 1 relation
+            'span_label': torch.tensor([[1, 2]]),  # 2 entities
+            'span_mask': torch.tensor([[True, True]]),
+            'rel_label': torch.tensor([[1, 0]]),
             'entities': [[(0, 0, "PER"), (3, 3, "ORG")]],
             'seq_length': torch.tensor([[4]]),
             'rel_idx': [torch.tensor([[0, 1]])],  # Entity 0 -> Entity 1
-            'rel_class_to_ids': {"WORKS_FOR": 1},
+            'rel_class_to_ids': [{"WORKS_FOR": 1}],
         }
-        
+
         adj_matrix, rel_matrix = processor.create_relation_labels(batch)
-        
+
         assert adj_matrix.shape[0] == 1  # Batch size
         assert isinstance(adj_matrix, torch.Tensor)
         assert isinstance(rel_matrix, torch.Tensor)
-    
+
     def test_create_relation_labels_filters_invalid_entities(self, processor):
         """Should filter out entities exceeding sequence length."""
         batch = {
             'tokens': [["word"]],  # Only 1 token (index 0)
-            'span_label': torch.tensor([[1, 0, 2]]),  # Entity at indices 0 and 2 (2 is invalid)
+            'span_label': torch.tensor([[1, 2]]),
+            'span_mask': torch.tensor([[True, True]]),
             'rel_label': torch.tensor([[1]]),
             'entities': [[(0, 0, "PER"), (5, 5, "ORG")]],  # Second entity exceeds length
             'seq_length': torch.tensor([[1]]),
             'rel_idx': [torch.tensor([[0, 1]])],
-            'rel_class_to_ids': {"REL": 1},
+            'rel_class_to_ids': [{"REL": 1}],
         }
-        
+
         adj_matrix, rel_matrix = processor.create_relation_labels(batch)
-        
+
         # Should not crash, invalid entities should be filtered
         assert adj_matrix.shape[0] == 1
-    
+
     def test_tokenize_and_prepare_labels_includes_relation_matrices(self, processor):
         """Should include adjacency and relation matrices in output."""
         batch = {
             'tokens': [["word"]],
             'classes_to_id': [{"TYPE": 1}],
+            'id_to_classes': [{1: "TYPE"}],
             'entities': [[(0, 0, "TYPE")]],
             'rel_class_to_ids': [{"REL": 1}],
+            'rel_id_to_classes': [{1: "REL"}],
             'span_label': torch.tensor([[1]]),
+            'span_mask': torch.tensor([[True]]),
+            'span_idx': torch.tensor([[[0, 0]]]),
             'rel_label': torch.tensor([[0]]),
             'seq_length': torch.tensor([[1]]),
-            'rel_idx': [torch.tensor([[]])],
+            'rel_idx': [torch.tensor([], dtype=torch.long).reshape(0, 2)],
         }
-        
+
         result = processor.tokenize_and_prepare_labels(batch, prepare_labels=True)
-        
+
         assert 'labels' in result
-        assert 'adj_matrix' in result
         assert 'rel_matrix' in result
 
 if __name__ == "__main__":

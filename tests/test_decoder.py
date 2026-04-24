@@ -1,6 +1,7 @@
 import pytest
 import torch
 from gliner.decoding.decoder import (
+    Span,
     SpanDecoder,
     SpanGenerativeDecoder,
     SpanRelexDecoder,
@@ -82,13 +83,12 @@ class TestSpanDecoder:
         
         for batch_spans in result:
             for span in batch_spans:
-                assert len(span) == 4
-                start, end, entity_type, score = span
-                assert isinstance(start, int)
-                assert isinstance(end, int)
-                assert isinstance(entity_type, str)
-                assert isinstance(score, float)
-    
+                assert isinstance(span, Span)
+                assert isinstance(span.start, int)
+                assert isinstance(span.end, int)
+                assert isinstance(span.entity_type, str)
+                assert isinstance(span.score, float)
+
     def test_threshold_filtering(self, basic_config, basic_inputs):
         """Should filter spans based on threshold."""
         decoder = SpanDecoder(basic_config)
@@ -127,11 +127,10 @@ class TestSpanDecoder:
         
         for i, batch_spans in enumerate(result):
             for span in batch_spans:
-                start, end, _, _ = span
                 # End should not exceed sentence length
-                assert end <= len(basic_inputs['tokens'][i])
+                assert span.end <= len(basic_inputs['tokens'][i])
                 # Start should be valid
-                assert start >= 0
+                assert span.start >= 0
     
     def test_flat_ner_removes_overlaps(self, basic_config):
         """Should remove overlapping spans when flat_ner=True."""
@@ -155,7 +154,7 @@ class TestSpanDecoder:
         
         # Should keep only the higher scoring span
         assert len(result[0]) == 1
-        assert result[0][0][2] == 'PERSON'  # Higher score wins
+        assert result[0][0].entity_type == 'PERSON'  # Higher score wins
     
     def test_nested_ner_keeps_overlaps(self, basic_config):
         """Should keep overlapping spans when flat_ner=False."""
@@ -200,8 +199,8 @@ class TestSpanDecoder:
         # Check that different classes are used
         if len(result[0]) > 0 and len(result[1]) > 0:
             # Classes should come from respective mappings
-            batch_0_types = {span[2] for span in result[0]}
-            batch_1_types = {span[2] for span in result[1]}
+            batch_0_types = {span.entity_type for span in result[0]}
+            batch_1_types = {span.entity_type for span in result[1]}
             
             assert batch_0_types.issubset({'PERSON', 'ORG'})
             assert batch_1_types.issubset({'LOCATION', 'DATE'})
@@ -294,9 +293,8 @@ class TestSpanGenerativeDecoder:
         all_types = set()
         for batch_spans in result:
             for span in batch_spans:
-                # In prompt mode, tuple is (start, end, entity_type, gen_entity_type, score)
-                # where gen_entity_type should be None and entity_type is the generated label
-                all_types.add(span[2])
+                # In prompt mode, `entity_type` holds the generated label.
+                all_types.add(span.entity_type)
         
         # Generated labels should be used
         assert all_types.intersection(set(generative_inputs['gen_labels']))
@@ -317,13 +315,12 @@ class TestSpanGenerativeDecoder:
             threshold=0.5
         )
         
-        # In span mode, tuples should have generated entity type
+        # In span mode, spans carry generated labels alongside the entity type
         for batch_spans in result:
             for span in batch_spans:
-                assert len(span) == 5
-                start, end, entity_type, gen_entity_type, score = span
-                # gen_entity_type may be None or a list of strings
-                assert gen_entity_type is None or isinstance(gen_entity_type, list)
+                assert isinstance(span, Span)
+                # generated_labels may be None or a list of strings
+                assert span.generated_labels is None or isinstance(span.generated_labels, list)
     
     def test_update_id_to_classes_with_generated(self, prompt_mode_config):
         """Should correctly map generated labels to class IDs."""
@@ -402,12 +399,11 @@ class TestSpanGenerativeDecoder:
             threshold=0.5
         )
         
-        # Should use standard decoding format
+        # Fallback path: no generated labels attached to spans
         for batch_spans in result:
             for span in batch_spans:
-                # Standard format has 5 elements but gen_entity_type is None
-                assert len(span) == 5
-                assert span[3] is None  # gen_entity_type should be None
+                assert isinstance(span, Span)
+                assert span.generated_labels is None
 
 
 class TestSpanRelexDecoder:
@@ -498,13 +494,12 @@ class TestSpanRelexDecoder:
         
         for batch_spans in spans:
             for span in batch_spans:
-                assert len(span) == 4
-                start, end, entity_type, score = span
-                assert isinstance(start, int)
-                assert isinstance(end, int)
-                assert isinstance(entity_type, str)
-                assert isinstance(score, float)
-    
+                assert isinstance(span, Span)
+                assert isinstance(span.start, int)
+                assert isinstance(span.end, int)
+                assert isinstance(span.entity_type, str)
+                assert isinstance(span.score, float)
+
     def test_relation_format(self, relex_config, relex_inputs):
         """Should return relations in format (head_idx, relation_label, tail_idx, score)."""
         decoder = SpanRelexDecoder(relex_config)
@@ -674,13 +669,12 @@ class TestTokenDecoder:
         
         for batch_spans in result:
             for span in batch_spans:
-                assert len(span) == 4
-                start, end, entity_type, score = span
-                assert isinstance(start, int)
-                assert isinstance(end, int)
-                assert isinstance(entity_type, str)
-                assert isinstance(score, float)
-    
+                assert isinstance(span, Span)
+                assert isinstance(span.start, int)
+                assert isinstance(span.end, int)
+                assert isinstance(span.entity_type, str)
+                assert isinstance(span.score, float)
+
     def test_matches_start_end_pairs(self, token_config, token_inputs):
         """Should only create spans where start and end match."""
         decoder = TokenDecoder(token_config)
@@ -699,8 +693,7 @@ class TestTokenDecoder:
         # All spans should have end >= start
         for batch_spans in result:
             for span in batch_spans:
-                start, end, _, _ = span
-                assert end >= start
+                assert span.end >= span.start
     
     def test_validates_inside_scores(self, token_config):
         """Should filter spans where inside scores are below threshold."""
@@ -762,8 +755,7 @@ class TestTokenDecoder:
         assert len(result[0]) == 1
         
         # Score should be approximately the minimum (sigmoid(2.0) ≈ 0.88)
-        _, _, _, score = result[0][0]
-        assert 0.85 < score < 0.92
+        assert 0.85 < result[0][0].score < 0.92
     
     def test_handles_empty_predictions(self, token_config):
         """Should handle case with no valid spans."""
@@ -796,54 +788,54 @@ class TestGreedySearch:
     def test_removes_lower_scoring_overlaps(self, basic_decoder):
         """Should keep higher-scoring span when overlaps exist."""
         spans = [
-            (0, 2, 'PERSON', 0.9),
-            (1, 3, 'ORG', 0.7),  # Overlaps with first span
-            (5, 7, 'LOCATION', 0.8)
+            Span(0, 2, 'PERSON', 0.9),
+            Span(1, 3, 'ORG', 0.7),  # Overlaps with first span
+            Span(5, 7, 'LOCATION', 0.8),
         ]
-        
+
         result = basic_decoder.greedy_search(spans, flat_ner=True)
-        
+
         # Should keep first and third (non-overlapping, higher scores)
         assert len(result) == 2
-        assert result[0][2] == 'PERSON'
-        assert result[1][2] == 'LOCATION'
-    
+        assert result[0].entity_type == 'PERSON'
+        assert result[1].entity_type == 'LOCATION'
+
     def test_sorts_by_start_position(self, basic_decoder):
         """Should return spans sorted by start position."""
         spans = [
-            (5, 7, 'LOCATION', 0.9),
-            (0, 2, 'PERSON', 0.8),
-            (10, 12, 'ORG', 0.7)
+            Span(5, 7, 'LOCATION', 0.9),
+            Span(0, 2, 'PERSON', 0.8),
+            Span(10, 12, 'ORG', 0.7),
         ]
-        
+
         result = basic_decoder.greedy_search(spans, flat_ner=True)
-        
+
         # Should be sorted by start position
-        assert result[0][0] == 0
-        assert result[1][0] == 5
-        assert result[2][0] == 10
-    
+        assert result[0].start == 0
+        assert result[1].start == 5
+        assert result[2].start == 10
+
     def test_handles_nested_spans(self, basic_decoder):
         """Should allow nested spans when flat_ner=False."""
         spans = [
-            (0, 5, 'PERSON', 0.9),  # Larger span
-            (1, 3, 'NAME', 0.8)      # Nested inside
+            Span(0, 5, 'PERSON', 0.9),  # Larger span
+            Span(1, 3, 'NAME', 0.8),    # Nested inside
         ]
-        
+
         result = basic_decoder.greedy_search(spans, flat_ner=False)
-        
+
         # Both spans should be kept
         assert len(result) == 2
-    
+
     def test_multi_label_same_position(self, basic_decoder):
         """Should allow multiple labels for same span when multi_label=True."""
         spans = [
-            (0, 2, 'PERSON', 0.9),
-            (0, 2, 'DOCTOR', 0.8)  # Same span, different label
+            Span(0, 2, 'PERSON', 0.9),
+            Span(0, 2, 'DOCTOR', 0.8),  # Same span, different label
         ]
-        
+
         result = basic_decoder.greedy_search(spans, flat_ner=True, multi_label=True)
-        
+
         # Both labels should be kept
         assert len(result) == 2
     

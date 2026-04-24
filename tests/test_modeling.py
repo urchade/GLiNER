@@ -918,26 +918,31 @@ class TestUniEncoderSpanDecoderModel:
     def test_select_decoder_embedding_shape(self, mock_config):
         """Should select and reshape decoder embeddings correctly."""
         model = UniEncoderSpanDecoderModel(mock_config, from_pretrained=False)
-        
+
         B, N, D = 2, 10, 64
         representations = torch.randn(B, N, D)
         rep_mask = torch.zeros(B, N, dtype=torch.long)
         rep_mask[0, :3] = 1  # First batch has 3 valid representations
         rep_mask[1, :5] = 1  # Second batch has 5 valid representations
-        
+
         target_rep, target_mask, sel_idx = model.select_decoder_embedding(
             representations, rep_mask
         )
-        
-        max_len = rep_mask.sum(dim=-1).max().item()
-        
-        assert target_rep.shape == (B, max_len, D)
-        assert target_mask.shape == (B, max_len)
-        assert sel_idx.shape == (B, max_len)
-        
+
+        # In eager mode, `select_decoder_embedding` skips the GPU→CPU sync and
+        # keeps the full N-width output, with padding positions zeroed and
+        # flagged via target_mask/sel_idx. See gliner/modeling/base.py for the
+        # rationale.
+        assert target_rep.shape == (B, N, D)
+        assert target_mask.shape == (B, N)
+        assert sel_idx.shape == (B, N)
+
         # Check that valid positions are marked correctly
         assert target_mask[0, :3].sum() == 3
         assert target_mask[1, :5].sum() == 5
+        # And padding positions are all zero
+        assert target_mask[0, 3:].sum() == 0
+        assert target_mask[1, 5:].sum() == 0
     
     def test_get_raw_decoder_inputs(self, mock_config):
         """Should extract valid span tokens for decoder input."""
@@ -1011,21 +1016,21 @@ class TestUniEncoderSpanRelexModel:
     def test_select_target_embedding(self, mock_config):
         """Should keep only representations where mask == 1."""
         model = UniEncoderSpanRelexModel(mock_config, from_pretrained=False)
-        
+
         B, N, D = 2, 10, 64
         representations = torch.randn(B, N, D)
         rep_mask = torch.zeros(B, N, dtype=torch.long)
         rep_mask[0, [1, 3, 5]] = 1  # 3 valid positions in first batch
         rep_mask[1, [0, 2]] = 1     # 2 valid positions in second batch
-        
+
         target_rep, target_mask = model.select_target_embedding(
             representations, rep_mask
         )
-        
-        max_len = rep_mask.sum(dim=-1).max().item()
-        
-        assert target_rep.shape == (B, max_len, D)
-        assert target_mask.shape == (B, max_len)
+
+        # Eager-mode output keeps the full N-width; padding stays zero (see
+        # matching `test_select_decoder_embedding_shape` note).
+        assert target_rep.shape == (B, N, D)
+        assert target_mask.shape == (B, N)
         assert target_mask[0].sum() == 3
         assert target_mask[1].sum() == 2
     
@@ -1052,20 +1057,21 @@ class TestUniEncoderSpanRelexModel:
     def test_rel_loss_computation(self, mock_config):
         """Should compute relation classification loss correctly."""
         model = UniEncoderSpanRelexModel(mock_config, from_pretrained=False)
-        
+
         B, P, C = 2, 10, 5
         logits = torch.randn(B, P, C)
         labels = torch.zeros(B, P, C)
         labels[0, 0, 0] = 1.0
-        
-        rel_mask = torch.ones(B, P, 1)
-        rel_prompts_embedding_mask = torch.ones(B, C)
-        
+
+        # Both pair_mask and class_mask are expected at shape (B, P, C).
+        pair_mask = torch.ones(B, P, C)
+        class_mask = torch.ones(B, P, C)
+
         loss = model.rel_loss(
-            logits, labels, rel_mask, rel_prompts_embedding_mask,
+            logits, labels, pair_mask, class_mask,
             alpha=-1., gamma=0.0, reduction='sum'
         )
-        
+
         assert isinstance(loss, torch.Tensor)
         assert loss.ndim == 0
         assert loss.item() >= 0
