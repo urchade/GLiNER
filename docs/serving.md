@@ -145,8 +145,10 @@ result = client.predict(
 Model Configuration:
   --model               Model name or path (required)
   --device              cuda or cpu (default: cuda)
-  --dtype               float32, float16, bfloat16 (default: bfloat16)
-  --quantization        fp16, bf16, int8 (default: None)
+  --dtype               float32, float16/fp16, bfloat16/bf16 (default: bfloat16)
+                        Weights are loaded directly at this precision; the fp32
+                        intermediate is never materialized.
+  --quantization        int8 (default: None). For precision changes use --dtype.
 
 Batching:
   --max-batch-size      Max batch size (default: 32)
@@ -199,7 +201,7 @@ docker run --gpus all -p 8000:8000 \
 | `GLINER_MAX_BATCH_SIZE` | `32` | Max batch size |
 | `GLINER_NUM_REPLICAS` | `1` | Number of replicas |
 | `GLINER_MEMORY_FRACTION` | `0.8` | GPU memory fraction |
-| `GLINER_QUANTIZATION` | - | Quantization (fp16/bf16/int8) |
+| `GLINER_QUANTIZATION` | - | Quantization (`int8` only; use `GLINER_DTYPE` for precision) |
 | `GLINER_ENABLE_FLASHDEBERTA` | `false` | Enable FlashDeBERTa |
 | `GLINER_ENABLE_PACKING` | `false` | Enable sequence packing |
 | `GLINER_DISABLE_COMPILE` | `false` | Disable torch.compile |
