@@ -151,6 +151,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#local-models-and-caching">Local Models and Caching</a><ul>
 <li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
 <li><a class="reference internal" href="#device-selection">Device Selection</a></li>
+<li><a class="reference internal" href="#reduced-precision-loading-dtype">Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)</a></li>
 <li><a class="reference internal" href="#quantization-compilation-flashdeberta">Quantization, Compilation &amp; FlashDeBERTa</a></li>
 <li><a class="reference internal" href="#accelerating-inference-with-sequence-packing">&#9889; Accelerating Inference with Sequence Packing</a></li>
 <li><a class="reference internal" href="#usage-with-spacy">&#128268; Usage with spaCy</a><ul>
@@ -584,23 +585,48 @@ data-aria-dark="Switch to auto color mode">
 </span></pre></div>
 </div>
 </section>
+<section id="reduced-precision-loading-dtype">
+<h3>Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)<a class="headerlink" href="#reduced-precision-loading-dtype" title="Link to this heading">¶</a></h3>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">dtype</span></code> to <code class="docutils literal notranslate"><span class="pre">from_pretrained</span></code> to load the weights directly at the target floating-point precision — no intermediate fp32 copy, no post-load cast:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="3">
+</span><span data-line="4"><span class="c1"># Either a string or a torch.dtype</span>
+</span><span data-line="5"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bfloat16</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Accepted values: <code class="docutils literal notranslate"><span class="pre">&quot;fp16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;float16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;half&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;bfloat16&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fp32&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;float32&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;float&quot;</span></code>, or any floating-point <code class="docutils literal notranslate"><span class="pre">torch.dtype</span></code>. Int/bool buffers are left untouched; non-floating dtypes (e.g. <code class="docutils literal notranslate"><span class="pre">torch.int8</span></code>) are rejected — use <code class="docutils literal notranslate"><span class="pre">quantize=&quot;int8&quot;</span></code> for that path.</p>
+<p><strong>Why use <code class="docutils literal notranslate"><span class="pre">dtype</span></code> instead of <code class="docutils literal notranslate"><span class="pre">quantize=&quot;bf16&quot;</span></code>:</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize</span></code> casts <em>after</em> the full fp32 state dict + fp32 model are already in memory.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> casts each tensor <em>as it is read</em> from the safetensors file and pre-casts the model shell before <code class="docutils literal notranslate"><span class="pre">load_state_dict</span></code>, so a fully-fp32 snapshot never co-exists with the loaded weights. For CPU-only loads, peak host memory during load drops from ~2× fp32 to ~1× fp32 for bf16/fp16. For <code class="docutils literal notranslate"><span class="pre">map_location=&quot;cuda&quot;</span></code>, the state dict streams to GPU while the shell is CPU-side, so the saving is avoiding a simultaneous fp32 GPU state dict + fp32 GPU model — not quite a 2×→1× total-footprint reduction, but still a meaningful win on the GPU peak and on the separate post-load cast pass.</p></li>
+</ul>
+<p><strong>When it matters:</strong> cold starts and scalable serverless deployments (AWS Lambda, Cloud Run, Modal, RunPod serverless, autoscaled Kubernetes pods, etc.) — startup latency and peak memory directly drive cost and SLA:</p>
+<ul class="simple">
+<li><p>Shorter cold-start on every new container (one pass instead of load + cast).</p></li>
+<li><p>Lower peak memory lets instances fit on smaller memory tiers and reduces boot-time OOMs under memory pressure.</p></li>
+<li><p>Faster first-inference latency after a scale-from-zero event.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> covers plain precision changes (bf16/fp16/fp32). For int8 / torchao / CPU dynamic quantization, keep using <code class="docutils literal notranslate"><span class="pre">quantize</span></code> (see below). The two can be combined if desired.</p>
+</section>
 <section id="quantization-compilation-flashdeberta">
 <h3>Quantization, Compilation &amp; FlashDeBERTa<a class="headerlink" href="#quantization-compilation-flashdeberta" title="Link to this heading">¶</a></h3>
-<p>Use <code class="docutils literal notranslate"><span class="pre">quantize=True</span></code> and <code class="docutils literal notranslate"><span class="pre">compile_torch_model=True</span></code> for up to ~1.9x faster GPU inference with zero quality loss:</p>
+<p>Combine <code class="docutils literal notranslate"><span class="pre">dtype=&quot;fp16&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code>) with <code class="docutils literal notranslate"><span class="pre">compile_torch_model=True</span></code> for up to ~1.9x faster GPU inference with zero quality loss:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
 </span><span data-line="4">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
 </span><span data-line="5">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="n">quantize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>            <span class="c1"># or &quot;fp16&quot;, &quot;bf16&quot;</span>
+</span><span data-line="6">    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;fp16&quot;</span><span class="p">,</span>             <span class="c1"># or &quot;bf16&quot; — see &quot;Reduced-precision loading&quot; above</span>
 </span><span data-line="7">    <span class="n">compile_torch_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="8"><span class="p">)</span>
 </span></pre></div>
 </div>
 <p>Or apply after loading:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">()</span>         <span class="c1"># fp16 half-precision (default)</span>
-</span><span data-line="3"><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>   <span class="c1"># bfloat16 — better numerical stability, slightly less speedup</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+</span><span data-line="2"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">float16</span><span class="p">)</span>  <span class="c1"># fp16 half-precision</span>
 </span><span data-line="4"><span class="n">model</span><span class="o">.</span><span class="n">compile</span><span class="p">()</span>          <span class="c1"># torch.compile with dynamic shapes</span>
 </span></pre></div>
 </div>
@@ -619,7 +645,7 @@ data-aria-dark="Switch to auto color mode">
 <td class="text-center"><p>0.8107</p></td>
 <td class="text-center"><p>1.00x</p></td>
 </tr>
-<tr class="row-odd"><td><p>+ quantize (fp16)</p></td>
+<tr class="row-odd"><td><p>+ <code class="docutils literal notranslate"><span class="pre">dtype=&quot;fp16&quot;</span></code></p></td>
 <td class="text-center"><p>0.8107</p></td>
 <td class="text-center"><p>1.35x</p></td>
 </tr>
@@ -627,19 +653,18 @@ data-aria-dark="Switch to auto color mode">
 <td class="text-center"><p>0.8107</p></td>
 <td class="text-center"><p>1.31x</p></td>
 </tr>
-<tr class="row-odd"><td><p><strong>+ quantize + compile</strong></p></td>
+<tr class="row-odd"><td><p><strong>+ <code class="docutils literal notranslate"><span class="pre">dtype=&quot;fp16&quot;</span></code> + compile</strong></p></td>
 <td class="text-center"><p><strong>0.8107</strong></p></td>
 <td class="text-center"><p><strong>1.94x</strong></p></td>
 </tr>
 </tbody>
 </table>
 </div>
-<p><strong>Quantization options:</strong></p>
+<p><strong><code class="docutils literal notranslate"><span class="pre">quantize=</span></code> vs <code class="docutils literal notranslate"><span class="pre">dtype=</span></code>:</strong></p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">quantize=True</span></code> or <code class="docutils literal notranslate"><span class="pre">quantize=&quot;fp16&quot;</span></code> — float16 half-precision. Best GPU speedup (~1.35x).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">quantize=&quot;bf16&quot;</span></code> — bfloat16. Better numerical stability, slightly less speedup (~1.2x).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">quantize=&quot;int8&quot;</span></code> — int8 quantization. On CPU, uses built-in FBGEMM int8 kernels (~1.6x speedup). On GPU, uses <a class="reference external" href="https://github.com/pytorch/ao">torchao</a> int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT). Stock DeBERTa-based models lose accuracy with int8.</p></li>
-<li><p>On CPU, fp16/bf16 quantization reduces memory usage but does not improve speed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">dtype=&quot;fp16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code> — plain precision change via efficient load (see the dedicated section above). This is the only way to get half-precision inference.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize=&quot;int8&quot;</span></code> — real int8 quantization. On CPU, built-in FBGEMM kernels (~1.6x speedup). On GPU, <a class="reference external" href="https://github.com/pytorch/ao">torchao</a> int8 weight-only quantization (~50% memory reduction, no speed gain). Intended for models fine-tuned with quantization-aware training (QAT); stock DeBERTa-based models lose accuracy with int8.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">quantize=</span></code> accepts only <code class="docutils literal notranslate"><span class="pre">&quot;int8&quot;</span></code> (or <code class="docutils literal notranslate"><span class="pre">None</span></code>). Passing <code class="docutils literal notranslate"><span class="pre">True</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;fp16&quot;</span></code>, or <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code> raises with a migration message — those were precision downcasts, not quantization, and are handled exclusively by <code class="docutils literal notranslate"><span class="pre">dtype=</span></code> / <code class="docutils literal notranslate"><span class="pre">model.to(...)</span></code> now.</p></li>
 </ul>
 <p><strong>Compilation notes:</strong></p>
 <ul class="simple">
