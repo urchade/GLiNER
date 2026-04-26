@@ -1,10 +1,11 @@
+import os
 import warnings
 from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
-import os
+
 import torch
 from torch import nn
-from transformers import AutoModel, AutoConfig
+from transformers import AutoModel, AutoConfig, DebertaV2Model, T5EncoderModel
 from transformers.modeling_outputs import BaseModelOutput
 
 from ..utils import MissedPackageException, is_module_available
@@ -31,11 +32,9 @@ else:
 
 if IS_TURBOT5:
     from turbot5.model.modeling import T5EncoderModel as FlashT5EncoderModel
-from transformers import T5EncoderModel
 
 if IS_FLASHDEBERTA:
     from flashdeberta import FlashDebertaV2Model
-from transformers import DebertaV2Model
 
 if IS_PEFT:
     from peft import LoraConfig, get_peft_model
@@ -104,23 +103,22 @@ class Transformer(nn.Module):
             else:
                 ModelClass = DECODER_MODEL_MAPPING[config_name]
             custom = True
-        elif config_name in {'T5Config', 'MT5Config'}:
-            custom=True
+        elif config_name in {"T5Config", "MT5Config"}:
+            custom = True
             turbot5_type = os.environ.get("TURBOT5_ATTN_TYPE", "basic")
             if turbot5_type and IS_TURBOT5:
                 ModelClass = FlashT5EncoderModel
-                kwargs = {'attention_type': turbot5_type}
-                config.encoder_config.attention_type=turbot5_type
+                kwargs = {"attention_type": turbot5_type}
+                config.encoder_config.attention_type = turbot5_type
             else:
                 ModelClass = T5EncoderModel
-        elif config_name in {'DebertaV2Config'}:
+        elif config_name in {"DebertaV2Config"}:
             custom = True
             if os.environ.get("USE_FLASHDEBERTA", "") and IS_FLASHDEBERTA:
-                print('Using FlashDeberta backend.')
                 ModelClass = FlashDebertaV2Model
             else:
                 ModelClass = DebertaV2Model
-            
+
         else:
             custom = False
             ModelClass = AutoModel

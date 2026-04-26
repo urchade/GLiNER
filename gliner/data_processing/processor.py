@@ -1368,7 +1368,8 @@ class UniEncoderTokenDecoderProcessor(UniEncoderSpanDecoderProcessor, UniEncoder
             if self.config.decoder_mode == "span":
                 # Collect entity labels in order of appearance
                 sorted_entities = sorted(ner, key=lambda x: (x[0], x[1])) if ner else []
-                for start, end, label in sorted_entities:
+                # start, end, label = entity
+                for _, end, label in sorted_entities:
                     if label in classes_to_id and end < num_tokens:
                         decoder_label_strings.append(label)
             elif self.config.decoder_mode == "prompt":
@@ -1477,8 +1478,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         rel_drop_prob = random.uniform(*self.config.augment_rel_drop_prob)
         add_other = random.random() < self.config.augment_add_other_prob
 
-        all_ent_types = set(e[-1] for e in ner)
-        all_rel_types = set(r[-1] for r in relations) if relations else set()
+        all_ent_types = {e[-1] for e in ner}
+        all_rel_types = {r[-1] for r in relations} if relations else set()
 
         # "other" is exempt from dropping since it's our replacement label
         dropped_ent_types = {t for t in all_ent_types if t != other_keyword and random.random() < ent_drop_prob}
@@ -1512,7 +1513,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             old_to_new_idx[i] = len(new_ner)
             if ent_type in dropped_ent_types and add_other:
                 # Replace dropped type with "other"
-                new_ner.append(list(ent[:-1]) + [other_keyword])
+                new_ner.append([*ent[:-1], other_keyword])
             else:
                 new_ner.append(ent)
 
@@ -1649,13 +1650,12 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             relation extraction.
         """
         # Apply data augmentation if enabled (only during dynamic mapping generation)
-        augment_prob = getattr(self.config, 'augment_data_prob', 0.0)
+        augment_prob = getattr(self.config, "augment_data_prob", 0.0)
         if augment_prob > 0.0 and class_to_ids is None and entity_types is None:
             if ner_negatives is None:
                 ner_negatives = get_negatives(batch_list, sampled_neg=100, key="ner")
             batch_list = [
-                self.augment_example(b, ner_negatives) if random.random() < augment_prob else b
-                for b in batch_list
+                self.augment_example(b, ner_negatives) if random.random() < augment_prob else b for b in batch_list
             ]
         if class_to_ids is None and entity_types is None:
             # Dynamically infer per-example mappings
@@ -1768,7 +1768,11 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 head_idx, tail_idx, rel_type = rel
 
                 # Use compact indices so rel_idx aligns with target_span_rep positions
-                if head_idx in entity_to_compact_idx and tail_idx in entity_to_compact_idx and rel_type in rel_classes_to_id:
+                if (
+                    head_idx in entity_to_compact_idx
+                    and tail_idx in entity_to_compact_idx
+                    and rel_type in rel_classes_to_id
+                ):
                     rel_idx_list.append([entity_to_compact_idx[head_idx], entity_to_compact_idx[tail_idx]])
                     rel_label_list.append(rel_classes_to_id[rel_type])
 
@@ -1833,7 +1837,9 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             "rel_id_to_classes": rel_id_to_classes,
         }
 
-    def create_relation_labels(self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=(1.0, 10.0)):
+    def create_relation_labels(
+        self, batch, add_reversed_negatives=True, add_random_negatives=True, negative_ratio=(1.0, 10.0)
+    ):
         """Create relation labels with negative pair sampling.
 
         Overrides the span-based version to work with token-level entity representations.
@@ -1870,7 +1876,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
 
         # Batch CPU transfer to avoid per-element .item() sync
         batch_ents_cpu = batch_ents.tolist()
-        max_En = max(max(batch_ents_cpu), 1)
+        max_En = max(*batch_ents_cpu, 1)
 
         rel_class_to_ids = batch["rel_class_to_ids"]
         if isinstance(rel_class_to_ids, list):

@@ -9,9 +9,8 @@ This starts a Ray Serve deployment that can be accessed via HTTP at:
 Or from Python using the GLiNERClient.
 """
 
-import argparse
 import logging
-import sys
+import argparse
 
 logging.basicConfig(
     level=logging.INFO,
@@ -213,8 +212,8 @@ def main():
 
     precompiled_sizes = [int(x.strip()) for x in args.precompiled_batch_sizes.split(",")]
 
-    from .config import GLiNERServeConfig
-    from .server import serve
+    from .config import GLiNERServeConfig  # noqa: PLC0415
+    from .server import serve  # noqa: PLC0415
 
     config = GLiNERServeConfig(
         model=args.model,
@@ -247,22 +246,22 @@ def main():
         ray_address=args.ray_address,
     )
 
-    print("=" * 60)
-    print("GLiNER Ray Serve Configuration")
-    print("=" * 60)
-    print(f"Model: {args.model}")
-    print(f"Device: {args.device}, dtype: {args.dtype}")
+    print("=" * 60)  # noqa: T201
+    print("GLiNER Ray Serve Configuration")  # noqa: T201
+    print("=" * 60)  # noqa: T201
+    print(f"Model: {args.model}")  # noqa: T201
+    print(f"Device: {args.device}, dtype: {args.dtype}")  # noqa: T201
     if args.quantization:
-        print(f"Quantization: {args.quantization}")
-    print(f"Max batch size: {args.max_batch_size}")
-    print(f"Precompiled batch sizes: {precompiled_sizes}")
-    print(f"Num replicas: {config.num_replicas}")
-    print(f"Route prefix: {args.route_prefix}")
-    print(f"Compilation: {'enabled' if not args.no_compile else 'disabled'}")
-    print(f"FlashDeBERTa: {'enabled' if args.enable_flashdeberta else 'disabled'}")
-    print(f"Sequence packing: {'enabled' if args.enable_sequence_packing else 'disabled'}")
-    print(f"Target memory fraction: {args.target_memory_fraction}")
-    print("=" * 60)
+        print(f"Quantization: {args.quantization}")  # noqa: T201
+    print(f"Max batch size: {args.max_batch_size}")  # noqa: T201
+    print(f"Precompiled batch sizes: {precompiled_sizes}")  # noqa: T201
+    print(f"Num replicas: {config.num_replicas}")  # noqa: T201
+    print(f"Route prefix: {args.route_prefix}")  # noqa: T201
+    print(f"Compilation: {'enabled' if not args.no_compile else 'disabled'}")  # noqa: T201
+    print(f"FlashDeBERTa: {'enabled' if args.enable_flashdeberta else 'disabled'}")  # noqa: T201
+    print(f"Sequence packing: {'enabled' if args.enable_sequence_packing else 'disabled'}")  # noqa: T201
+    print(f"Target memory fraction: {args.target_memory_fraction}")  # noqa: T201
+    print("=" * 60)  # noqa: T201
 
     serve(config, blocking=True)
 

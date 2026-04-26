@@ -1,6 +1,6 @@
 """Client for accessing GLiNER Ray Serve deployment from Python."""
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Union, Optional
 
 
 class GLiNERClient:
@@ -13,8 +13,7 @@ class GLiNERClient:
         >>> from gliner.serve import GLiNERClient
         >>> client = GLiNERClient()
         >>> results = client.predict(
-        ...     "John works at Google in Mountain View",
-        ...     labels=["person", "organization", "location"]
+        ...     "John works at Google in Mountain View", labels=["person", "organization", "location"]
         ... )
         >>> print(results)
         {'entities': [{'start': 0, 'end': 4, 'text': 'John', 'label': 'person', 'score': 0.95}, ...]}
@@ -31,8 +30,8 @@ class GLiNERClient:
             deployment_name: Name of the Ray Serve deployment.
             ray_address: Ray cluster address. If None, connects to local cluster.
         """
-        import ray
-        from ray import serve
+        import ray  # noqa: PLC0415
+        from ray import serve  # noqa: PLC0415
 
         if not ray.is_initialized():
             ray.init(address=ray_address, ignore_reinit_error=True)
@@ -67,9 +66,7 @@ class GLiNERClient:
         """
         if isinstance(text, list):
             refs = [
-                self._handle.predict.remote(
-                    t, labels, relations, threshold, relation_threshold, flat_ner, multi_label
-                )
+                self._handle.predict.remote(t, labels, relations, threshold, relation_threshold, flat_ner, multi_label)
                 for t in text
             ]
             return [ref.result() for ref in refs]
@@ -91,15 +88,13 @@ class GLiNERClient:
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Async version of predict."""
         if isinstance(text, list):
-            import asyncio
+            import asyncio  # noqa: PLC0415
 
             refs = [
-                self._handle.predict.remote(
-                    t, labels, relations, threshold, relation_threshold, flat_ner, multi_label
-                )
+                self._handle.predict.remote(t, labels, relations, threshold, relation_threshold, flat_ner, multi_label)
                 for t in text
             ]
-            results = await asyncio.gather(*[ref for ref in refs])
+            results = await asyncio.gather(*refs)
             return list(results)
         else:
             return await self._handle.predict.remote(

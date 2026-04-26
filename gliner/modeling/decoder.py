@@ -361,7 +361,7 @@ class Decoder(nn.Module):
         # Define prefix-constrained token function if trie is provided
         if labels_trie is not None:
 
-            def prefix_allowed_tokens(batch_idx: int, input_ids: torch.Tensor) -> List[int]:
+            def prefix_allowed_tokens(batch_idx: int, input_ids: torch.Tensor) -> List[int]:  # noqa: ARG001
                 """Callback function for constrained decoding.
 
                 Args:

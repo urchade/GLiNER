@@ -4,7 +4,7 @@ import json
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Set, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
@@ -179,7 +179,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def resize_embeddings(self):
         pass
 
-
     @abstractmethod
     def inference(self):
         pass
@@ -187,7 +186,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     @abstractmethod
     def evaluate(self):
         pass
-    
+
     def forward(self, *args, **kwargs):
         """Forward pass through the model.
 
@@ -245,7 +244,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         """
         torch._dynamo.config.capture_scalar_outputs = True
 
-        # FlashDeBERTa uses hand-written Triton kernels that torch.compile cannot trace. 
+        # FlashDeBERTa uses hand-written Triton kernels that torch.compile cannot trace.
         try:
             bert_layer = self.model.token_rep_layer.bert_layer
             model_cls = bert_layer.model.__class__.__name__
@@ -315,7 +314,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         Examples:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", map_location="cuda")
-            >>> model.quantize("int8")     # int8 (torchao on GPU, FBGEMM on CPU)
+            >>> model.quantize("int8")  # int8 (torchao on GPU, FBGEMM on CPU)
             >>> # For precision-only changes, prefer:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", dtype="bf16")
         """
@@ -357,26 +356,19 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
           Requires the ``torchao`` package.
         """
         if self.device.type == "cpu":
-            self.model = torch.ao.quantization.quantize_dynamic(
-                self.model, {nn.Linear}, dtype=torch.qint8
-            )
-            logger.info(
-                "Applied int8 dynamic quantization to all nn.Linear layers (CPU)."
-            )
+            self.model = torch.ao.quantization.quantize_dynamic(self.model, {nn.Linear}, dtype=torch.qint8)
+            logger.info("Applied int8 dynamic quantization to all nn.Linear layers (CPU).")
         else:
-            try:
-                import torchao
-                from torchao.quantization import Int8WeightOnlyConfig
-            except ImportError:
+            if is_module_available("torchao"):
+                import torchao  # noqa: PLC0415
+                from torchao.quantization import Int8WeightOnlyConfig  # noqa: PLC0415
+            else:
                 raise ImportError(
-                    "int8 quantization on GPU requires the 'torchao' package. "
-                    "Install it with: pip install torchao"
+                    "int8 quantization on GPU requires the 'torchao' package. Install it with: pip install torchao"
                 ) from None
 
             torchao.quantize_(self.model, Int8WeightOnlyConfig())
-            logger.info(
-                "Applied int8 weight-only quantization via torchao (GPU)."
-            )
+            logger.info("Applied int8 weight-only quantization via torchao (GPU).")
 
     def _get_special_tokens(self):
         """Get special tokens to add to tokenizer.
@@ -541,7 +533,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if model_file.suffix == ".safetensors" or str(model_file).endswith(".safetensors"):
             state_dict = {}
             with safe_open(model_file, framework="pt", device=map_location) as f:
-                for key in f.keys():
+                for key in f.keys():  # noqa: SIM118
                     tensor = f.get_tensor(key)
                     if dtype is not None and tensor.is_floating_point() and tensor.dtype != dtype:
                         tensor = tensor.to(dtype)
@@ -1233,6 +1225,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             others_weight_decay: Weight decay for other parameters.
             focal_loss_alpha: Alpha for focal loss.
             focal_loss_gamma: Gamma for focal loss.
+            rel_focal_loss_alpha: Alpha for relation focal loss. Defaults to entity alpha.
+            rel_focal_loss_gamma: Gamma for relation focal loss. Defaults to entity gamma.
             focal_loss_prob_margin: Probability margin for focal loss.
             loss_reduction: Loss reduction method.
             negatives: Negative sampling ratio.
@@ -1465,12 +1459,10 @@ class BaseEncoderGLiNER(BaseGLiNER):
         for text_i, spans in enumerate(input_spans):
             # Build reverse lookups: char position -> word index
             start_char_to_word = {
-                char_pos: word_idx
-                for word_idx, char_pos in enumerate(all_start_token_idx_to_text_idx[text_i])
+                char_pos: word_idx for word_idx, char_pos in enumerate(all_start_token_idx_to_text_idx[text_i])
             }
             end_char_to_word = {
-                char_pos: word_idx
-                for word_idx, char_pos in enumerate(all_end_token_idx_to_text_idx[text_i])
+                char_pos: word_idx for word_idx, char_pos in enumerate(all_end_token_idx_to_text_idx[text_i])
             }
 
             word_spans = []
@@ -1534,7 +1526,17 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         return all_entities
 
-    def _process_batches(self, data_loader, threshold, flat_ner, multi_label, packing_config=None, return_class_probs=False, word_input_spans=None, **external_inputs):
+    def _process_batches(
+        self,
+        data_loader,
+        threshold,
+        flat_ner,
+        multi_label,
+        packing_config=None,
+        return_class_probs=False,
+        word_input_spans=None,
+        **external_inputs,
+    ):
         """Shared batch processing logic using modular run_batch and decode_batch."""
         outputs = []
         batch_offset = 0
@@ -1551,7 +1553,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             batch_input_spans = None
             if word_input_spans is not None:
                 current_batch_size = len(batch["tokens"])
-                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_input_spans = word_input_spans[batch_offset : batch_offset + current_batch_size]
                 batch_offset += current_batch_size
 
             decoded = self.decode_batch(
@@ -1572,7 +1574,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         texts: Union[str, List[str]],
         labels: Union[str, List[str], List[List[str]]],
         input_spans: Optional[List[List[Dict]]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Prepare raw inputs for inference (tokenization and normalization).
 
@@ -1583,6 +1585,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             texts: Single text string or list of texts.
             labels: Entity labels - string, list of strings, or per-text label lists.
             input_spans: Optional pre-defined spans to classify (character positions).
+            **kwargs: Additional keyword arguments passed to the data processor.
 
         Returns:
             Dictionary containing:
@@ -1627,9 +1630,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         word_input_spans = None
         if input_spans is not None:
             valid_input_spans = [input_spans[i] for i in valid_to_orig_idx]
-            word_input_spans = self._convert_spans_to_word_indices(
-                valid_input_spans, start_token_map, end_token_map
-            )
+            word_input_spans = self._convert_spans_to_word_indices(valid_input_spans, start_token_map, end_token_map)
 
         input_x = self.prepare_base_input(tokens)
 
@@ -1696,10 +1697,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             Model output containing logits and span information.
         """
         if move_to_device and not self.onnx_model:
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         if packing_config is not None or external_inputs:
             model_inputs = {**batch, **external_inputs}
@@ -1812,7 +1810,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
-        input_spans: List[List[Dict]] = None,
+        input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
         **external_inputs,
     ) -> List[List[Dict[str, Any]]]:
@@ -1908,8 +1906,13 @@ class BaseEncoderGLiNER(BaseGLiNER):
             List of entity predictions as dictionaries.
         """
         return self.inference(
-            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
-            return_class_probs=return_class_probs, **kwargs
+            [text],
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            return_class_probs=return_class_probs,
+            **kwargs,
         )[0]
 
     def batch_predict_entities(
@@ -2051,17 +2054,21 @@ class BaseEncoderGLiNER(BaseGLiNER):
             self.eval()
             with torch.no_grad():
                 preds = self.inference(
-                    texts, labels, flat_ner=True,
-                    threshold=distill_threshold, batch_size=batch_size,
+                    texts,
+                    labels,
+                    flat_ner=True,
+                    threshold=distill_threshold,
+                    batch_size=batch_size,
                 )
-            distill_data = [
-                self._predictions_to_word_level(t, p) for t, p in zip(texts, preds)
-            ]
+            distill_data = [self._predictions_to_word_level(t, p) for t, p in zip(texts, preds)]
             for sample in distill_data:
                 sample["ner_labels"] = labels
 
         self._compute_prompt_embeddings(
-            texts=texts, labels=labels, rel_labels=rel_labels, batch_size=batch_size,
+            texts=texts,
+            labels=labels,
+            rel_labels=rel_labels,
+            batch_size=batch_size,
         )
 
         if distill_data:
@@ -2139,33 +2146,26 @@ class BaseEncoderGLiNER(BaseGLiNER):
             tokens, _, _ = self.prepare_inputs(texts)
             input_x = self.prepare_base_input(tokens)
 
-            collator_kwargs = dict(
-                return_tokens=True,
-                return_entities=True,
-                return_id_to_classes=True,
-                prepare_labels=False,
-            )
+            collator_kwargs = {
+                "return_tokens": True,
+                "return_entities": True,
+                "return_id_to_classes": True,
+                "prepare_labels": False,
+            }
             if rel_labels is not None:
                 collator_kwargs["return_rel_id_to_classes"] = True
 
-            collator = self.data_collator_class(
-                self.config, data_processor=self.data_processor, **collator_kwargs
-            )
+            collator = self.data_collator_class(self.config, data_processor=self.data_processor, **collator_kwargs)
 
             def collate_fn(batch):
                 if rel_labels is not None:
                     return collator(batch, entity_types=labels, relation_types=rel_labels)
                 return collator(batch, entity_types=labels)
 
-            loader = DataLoader(
-                input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn
-            )
+            loader = DataLoader(input_x, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
             for batch in tqdm(loader, desc="Compressing prompts"):
-                batch_gpu = {
-                    k: (v.to(device) if isinstance(v, torch.Tensor) else v)
-                    for k, v in batch.items()
-                }
+                batch_gpu = {k: (v.to(device) if isinstance(v, torch.Tensor) else v) for k, v in batch.items()}
                 input_ids = batch_gpu["input_ids"]
                 attention_mask = batch_gpu["attention_mask"]
 
@@ -2199,12 +2199,12 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
             avg = ent_sum / len(texts)
             self.model.set_precomputed_prompts(labels, avg, rel=False)
-            self.config.id_to_classes = {i + 1: l for i, l in enumerate(labels)}
+            self.config.id_to_classes = {i + 1: label for i, label in enumerate(labels)}
 
             if rel_labels is not None:
                 rel_avg = rel_sum / len(texts)
                 self.model.set_precomputed_prompts(rel_labels, rel_avg, rel=True)
-                self.config.rel_id_to_classes = {i + 1: l for i, l in enumerate(rel_labels)}
+                self.config.rel_id_to_classes = {i + 1: label for i, label in enumerate(rel_labels)}
 
         except Exception:
             self.config.precomputed_prompts_mode = prev_mode
@@ -2271,7 +2271,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
-        input_spans: List[List[Dict]] = None,
+        input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts using pre-computed label embeddings.
@@ -2309,8 +2309,15 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         return all_entities
 
     def predict_with_embeds(
-        self, text, labels_embeddings, labels, flat_ner=True, threshold=0.5, multi_label=False,
-        return_class_probs=False, **kwargs
+        self,
+        text,
+        labels_embeddings,
+        labels,
+        flat_ner=True,
+        threshold=0.5,
+        multi_label=False,
+        return_class_probs=False,
+        **kwargs,
     ):
         """Predict entities for a single text input using pre-computed label embeddings.
 
@@ -2328,8 +2335,14 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             List of entity predictions.
         """
         return self.batch_predict_with_embeds(
-            [text], labels_embeddings, labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
-            return_class_probs=return_class_probs, **kwargs
+            [text],
+            labels_embeddings,
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            return_class_probs=return_class_probs,
+            **kwargs,
         )[0]
 
     def _get_onnx_export_kwargs(self) -> dict[str, Any]:
@@ -2792,10 +2805,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             Model output with generated labels attached.
         """
         if move_to_device and not self.onnx_model:
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
         model_output = self.model(**model_inputs, threshold=threshold)
@@ -2889,7 +2899,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             batch_input_spans = None
             if word_input_spans is not None:
                 current_batch_size = len(batch["tokens"])
-                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_input_spans = word_input_spans[batch_offset : batch_offset + current_batch_size]
                 batch_offset += current_batch_size
 
             decoded = self.decode_batch(
@@ -2971,7 +2981,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         gen_constraints: Optional[List[str]] = None,
         num_gen_sequences: int = 1,
         packing_config: Optional[InferencePackingConfig] = None,
-        input_spans: List[List[Dict]] = None,
+        input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
         **gen_kwargs,
     ) -> List[List[Dict[str, Any]]]:
@@ -3069,9 +3079,15 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             List of entity predictions as dictionaries.
         """
         return self.inference(
-            [text], labels, flat_ner=flat_ner, threshold=threshold, multi_label=multi_label,
-            gen_constraints=gen_constraints, num_gen_sequences=num_gen_sequences,
-            return_class_probs=return_class_probs, **gen_kwargs
+            [text],
+            labels,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            gen_constraints=gen_constraints,
+            num_gen_sequences=num_gen_sequences,
+            return_class_probs=return_class_probs,
+            **gen_kwargs,
         )[0]
 
     def export_to_onnx(
@@ -3163,7 +3179,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         labels: Union[str, List[str], List[List[str]]],
         input_spans: Optional[List[List[Dict]]] = None,
         relations: Optional[Union[str, List[str], List[List[str]]]] = None,
-        **kwargs
+        **kwargs,
     ) -> Dict[str, Any]:
         """Prepare raw inputs for inference including relation types.
 
@@ -3172,6 +3188,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             labels: Entity labels - string, list of strings, or per-text label lists.
             input_spans: Optional pre-defined spans to classify (character positions).
             relations: Relation type labels - string, list of strings, or per-text label lists.
+            **kwargs: Additional keyword arguments passed to the parent prepare_batch.
 
         Returns:
             Dictionary containing prepared inputs plus relation_types.
@@ -3261,10 +3278,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold = threshold
 
         if move_to_device and not self.onnx_model:
-            batch = {
-                k: v.to(self.device) if isinstance(v, torch.Tensor) else v
-                for k, v in batch.items()
-            }
+            batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         if packing_config is not None or external_inputs:
             model_inputs = {**batch, **external_inputs}
@@ -3380,7 +3394,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             batch_input_spans = None
             if word_input_spans is not None:
                 current_batch_size = len(batch["tokens"])
-                batch_input_spans = word_input_spans[batch_offset:batch_offset + current_batch_size]
+                batch_input_spans = word_input_spans[batch_offset : batch_offset + current_batch_size]
                 batch_offset += current_batch_size
 
             decoded_entities, decoded_relations = self.decode_batch(
@@ -3501,7 +3515,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         multi_label: bool = False,
         batch_size: int = 8,
         packing_config: Optional[InferencePackingConfig] = None,
-        input_spans: List[List[Dict]] = None,
+        input_spans: Optional[List[List[Dict]]] = None,
         return_relations: bool = True,
         return_class_probs: bool = False,
     ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
@@ -3544,9 +3558,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         collator = self.create_collator()
 
         def collate_fn(batch):
-            return self.collate_batch(
-                batch, prepared["entity_types"], collator, prepared["relation_types"]
-            )
+            return self.collate_batch(batch, prepared["entity_types"], collator, prepared["relation_types"])
 
         data_loader = torch.utils.data.DataLoader(
             prepared["input_x"],
@@ -3622,9 +3634,16 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             List of entity predictions as dictionaries.
         """
         return self.inference(
-            [text], labels, relations=relations, flat_ner=flat_ner, threshold=threshold,
-            adjacency_threshold=adjacency_threshold, multi_label=multi_label,
-            return_relations=False, return_class_probs=return_class_probs, **kwargs
+            [text],
+            labels,
+            relations=relations,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            adjacency_threshold=adjacency_threshold,
+            multi_label=multi_label,
+            return_relations=False,
+            return_class_probs=return_class_probs,
+            **kwargs,
         )[0]
 
     def predict_relations(
@@ -3656,9 +3675,16 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             Tuple of (entities, relations) for the single text.
         """
         entities, rels = self.inference(
-            [text], labels, relations=relations, flat_ner=flat_ner, threshold=threshold,
-            adjacency_threshold=adjacency_threshold, relation_threshold=relation_threshold,
-            multi_label=multi_label, return_relations=True, **kwargs
+            [text],
+            labels,
+            relations=relations,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            adjacency_threshold=adjacency_threshold,
+            relation_threshold=relation_threshold,
+            multi_label=multi_label,
+            return_relations=True,
+            **kwargs,
         )
         return entities[0], rels[0]
 
@@ -3807,7 +3833,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         # Iterate over data batches
         for batch in data_loader:
             if not self.onnx_model:
-                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
+                batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}  # noqa: PLW2901
 
             # Get model predictions
             model_inputs = batch.copy()
@@ -4419,7 +4445,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             },
             "gliner_uni_encoder_token_relex": {
                 "class": UniEncoderTokenRelexGLiNER,
-                "description": "Joint entity and relation extraction with single encoder using token-level architecture",
+                "description": "Joint entity and relation extraction with single encoder, token-level",
                 "config": {"span_mode": "token_level", "labels_encoder": None, "relations_layer": "required"},
             },
         }

@@ -25,18 +25,18 @@ Features:
 See docs/serving.md for full documentation.
 """
 
+from .client import GLiNERClient, get_client
 from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
-from .server import GLiNERFactory, GLiNERServer, serve, shutdown
-from .client import GLiNERClient, get_client
+from .server import GLiNERServer, GLiNERFactory, serve, shutdown
 
 __all__ = [
-    "GLiNERServeConfig",
-    "GLiNERMemoryEstimator",
-    "GLiNERFactory",
-    "GLiNERServer",
     "GLiNERClient",
+    "GLiNERFactory",
+    "GLiNERMemoryEstimator",
+    "GLiNERServeConfig",
+    "GLiNERServer",
+    "get_client",
     "serve",
     "shutdown",
-    "get_client",
 ]

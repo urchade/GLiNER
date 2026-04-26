@@ -12,9 +12,9 @@ part of the model input, so callers must include their word count in
 ``seq_len`` when invoking ``batch_size_fn``.
 """
 
-from typing import Callable, Dict, List
-
 import logging
+from typing import Dict, List, Callable
+
 import torch
 
 logger = logging.getLogger(__name__)
@@ -58,9 +58,7 @@ class GLiNERMemoryEstimator:
         free, total = torch.cuda.mem_get_info()
         self.total_gpu_memory = total
         self.cuda_context_bytes = total - free
-        logger.info(
-            f"CUDA context: {self.cuda_context_bytes / (1024 ** 2):.1f} MiB"
-        )
+        logger.info("CUDA context: %.1f MiB", self.cuda_context_bytes / (1024**2))
 
     def measure_model_memory(self) -> None:
         """Record model weight memory. Must be called after the model loads."""
@@ -72,19 +70,13 @@ class GLiNERMemoryEstimator:
         self.total_gpu_memory = total
         used = total - free
         self.model_memory_bytes = max(0, used - self.cuda_context_bytes)
-        logger.info(
-            f"Model weights: {self.model_memory_bytes / (1024 ** 2):.1f} MiB"
-        )
+        logger.info("Model weights: %.1f MiB", self.model_memory_bytes / (1024**2))
 
     def available_memory(self) -> int:
         """Budget for a batch: ``total_gpu - cuda_context - model_weights``."""
         if not torch.cuda.is_available():
             return 0
-        budget = (
-            self.total_gpu_memory
-            - self.cuda_context_bytes
-            - self.model_memory_bytes
-        )
+        budget = self.total_gpu_memory - self.cuda_context_bytes - self.model_memory_bytes
         return max(0, int(budget * self.target_memory_fraction))
 
     def calibrate(
@@ -106,20 +98,14 @@ class GLiNERMemoryEstimator:
         dummy_labels = ["label"]
         probe_b = self.calibration_probe_batch_size
 
-        logger.info(
-            f"Calibrating memory table: seq_lens={seq_lens}, probe_batch={probe_b}"
-        )
+        logger.info("Calibrating memory table: seq_lens=%s, probe_batch=%s", seq_lens, probe_b)
 
         for seq_len in seq_lens:
             dummy_text = "word " * max(1, seq_len // 2)
-            peak = self._measure_peak(
-                batch_method, [dummy_text] * probe_b, dummy_labels
-            )
+            peak = self._measure_peak(batch_method, [dummy_text] * probe_b, dummy_labels)
             per_sample = max(1, peak // probe_b)
             self.per_sample_table[seq_len] = per_sample
-            logger.info(
-                f"  seq_len={seq_len:>5}: per_sample={per_sample / (1024 ** 2):.1f} MiB"
-            )
+            logger.info("  seq_len=%5d: per_sample=%.1f MiB", seq_len, per_sample / (1024**2))
 
     def _measure_peak(
         self,

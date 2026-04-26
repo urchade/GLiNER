@@ -230,6 +230,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
                 the per-type entity drop probability. Defaults to (0.0, 0.4).
             augment_rel_drop_prob (tuple, optional): Range (min, max) from which to sample
                 the per-type relation drop probability. Defaults to (0.0, 0.4).
+            augment_add_other_prob (float, optional): Probability of adding "other" relation to a pair with no relation.
             rel_id_to_classes (Optional[dict]): Mapping from relation class IDs to class names. Defaults to None.
             **kwargs: Additional keyword arguments passed to UniEncoderConfig.
 

@@ -64,7 +64,4 @@ jobs:
         run: pip install ruff
 
       - name: ruff check
-        # Scope to paths this PR owns end-to-end. Expanding the scope to the
-        # whole repo would re-surface pre-existing findings across files we
-        # don't touch here; that cleanup is a separate effort.
-        run: ruff check gliner/model.py gliner/serve/server.py gliner/serve/__main__.py tests/test_quantize_and_dtype.py
+        run: ruff check gliner

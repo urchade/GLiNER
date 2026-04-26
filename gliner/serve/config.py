@@ -1,7 +1,7 @@
 """Configuration for GLiNER Ray Serve deployment."""
 
-from dataclasses import dataclass, field
 from typing import List, Optional
+from dataclasses import field, dataclass
 
 
 @dataclass
@@ -44,9 +44,7 @@ class GLiNERServeConfig:
     enable_sequence_packing: bool = False
     enable_flashdeberta: bool = False
 
-    precompiled_batch_sizes: List[int] = field(
-        default_factory=lambda: [1, 2, 4, 8, 16, 32]
-    )
+    precompiled_batch_sizes: List[int] = field(default_factory=lambda: [1, 2, 4, 8, 16, 32])
 
     target_memory_fraction: float = 0.8
     memory_overhead_factor: float = 1.3
@@ -60,9 +58,7 @@ class GLiNERServeConfig:
 
     def __post_init__(self):
         if self.max_batch_size not in self.precompiled_batch_sizes:
-            self.precompiled_batch_sizes = sorted(
-                set(self.precompiled_batch_sizes) | {self.max_batch_size}
-            )
+            self.precompiled_batch_sizes = sorted(set(self.precompiled_batch_sizes) | {self.max_batch_size})
         self.precompiled_batch_sizes = sorted(self.precompiled_batch_sizes)
 
     def to_env_vars(self) -> dict:
