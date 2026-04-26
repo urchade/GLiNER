@@ -153,6 +153,12 @@ def main():
         help="HTTP route prefix",
     )
     server_group.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="HTTP port for Ray Serve",
+    )
+    server_group.add_argument(
         "--ray-address",
         type=str,
         default=None,
@@ -243,6 +249,7 @@ def main():
         target_memory_fraction=args.target_memory_fraction,
         memory_overhead_factor=args.memory_overhead_factor,
         warmup_iterations=args.warmup_iterations,
+        http_port=args.port,
         ray_address=args.ray_address,
     )
 
@@ -256,6 +263,7 @@ def main():
     print(f"Max batch size: {args.max_batch_size}")  # noqa: T201
     print(f"Precompiled batch sizes: {precompiled_sizes}")  # noqa: T201
     print(f"Num replicas: {config.num_replicas}")  # noqa: T201
+    print(f"Port: {args.port}")  # noqa: T201
     print(f"Route prefix: {args.route_prefix}")  # noqa: T201
     print(f"Compilation: {'enabled' if not args.no_compile else 'disabled'}")  # noqa: T201
     print(f"FlashDeBERTa: {'enabled' if args.enable_flashdeberta else 'disabled'}")  # noqa: T201

@@ -553,12 +553,12 @@ def serve(
     if not ray.is_initialized():
         ray.init(address=config.ray_address, ignore_reinit_error=True)
 
-    ray_serve.start(detached=True)
+    ray_serve.start(detached=True, http_options={"port": config.http_port})
 
     app = _build_deployment(config)
     handle = ray_serve.run(app, name="gliner", route_prefix=config.route_prefix)
 
-    logger.info("GLiNER server running at http://localhost:8000%s", config.route_prefix)
+    logger.info("GLiNER server running at http://localhost:%d%s", config.http_port, config.route_prefix)
 
     if blocking:
         import time  # noqa: PLC0415
@@ -715,6 +715,7 @@ class GLiNERFactory:
         """
         if self._closed:
             return
+        import ray  # noqa: PLC0415
         from ray import serve as ray_serve  # noqa: PLC0415
 
         ray_serve.shutdown()

@@ -1,4 +1,4 @@
-"""HTTP client for the GLiNER Ray Serve deployment.
+"""HTTP client for the GLiNER Ray Serve deployment."""
 
 from typing import Any, Dict, List, Union, Optional
 
@@ -39,13 +39,52 @@ class GLiNERClient:
             max_concurrency: Maximum in-flight HTTP requests when predicting
                 on a list of texts. Bounds the client-side thread pool.
         """
-        import ray  # noqa: PLC0415
-        from ray import serve  # noqa: PLC0415
+        self.url = base_url.rstrip("/") + route_prefix
+        self.timeout = timeout
+        self.max_concurrency = max_concurrency
 
-        if not ray.is_initialized():
-            ray.init(address=ray_address, ignore_reinit_error=True)
+    def _build_payload(
+        self,
+        text: str,
+        labels: List[str],
+        relations: Optional[List[str]],
+        threshold: Optional[float],
+        relation_threshold: Optional[float],
+        flat_ner: bool,
+        multi_label: bool,
+    ) -> Dict[str, Any]:
+        """Build the JSON payload for a single prediction request."""
+        payload: Dict[str, Any] = {
+            "text": text,
+            "labels": labels,
+            "flat_ner": flat_ner,
+            "multi_label": multi_label,
+        }
+        if relations is not None:
+            payload["relations"] = relations
+        if threshold is not None:
+            payload["threshold"] = threshold
+        if relation_threshold is not None:
+            payload["relation_threshold"] = relation_threshold
+        return payload
 
-        self._handle = serve.get_deployment_handle(deployment_name, "gliner")
+    def _post(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Send a single POST request to the server."""
+        import json  # noqa: PLC0415
+        import urllib.request  # noqa: PLC0415
+
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(
+            self.url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                return json.loads(resp.read())
+        except Exception as exc:
+            raise GLiNERClientError(f"Request to {self.url} failed: {exc}") from exc
 
     def predict(
         self,
@@ -57,7 +96,7 @@ class GLiNERClient:
         flat_ner: bool = True,
         multi_label: bool = False,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Blocking prediction. ``str`` in → ``dict`` out; ``list`` in → ``list`` out."""
+        """Blocking prediction. ``str`` in -> ``dict`` out; ``list`` in -> ``list`` out."""
         single = isinstance(text, str)
         items = [text] if single else list(text)
 
@@ -69,27 +108,11 @@ class GLiNERClient:
             for t in items
         ]
 
-        Args:
-            text: Input text or list of texts.
-            labels: Entity type labels to extract.
-            relations: Relation type labels (for relex models).
-            threshold: Confidence threshold for entities.
-            relation_threshold: Confidence threshold for relations.
-            flat_ner: Whether to use flat NER.
-            multi_label: Whether to allow multiple labels per span.
-
-        Returns:
-            Single result dict or list of result dicts containing:
-                - "entities": List of entity dicts
-                - "relations": List of relation dicts (if model supports)
-        """
-        if isinstance(text, list):
-            refs = [
-                self._handle.predict.remote(t, labels, relations, threshold, relation_threshold, flat_ner, multi_label)
-                for t in text
-            ]
-            return [ref.result() for ref in refs]
+        if len(payloads) == 1:
+            results = [self._post(payloads[0])]
         else:
+            from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
             workers = min(self.max_concurrency, len(payloads))
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 results = list(pool.map(self._post, payloads))
@@ -107,18 +130,15 @@ class GLiNERClient:
         multi_label: bool = False,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Async version of predict."""
-        if isinstance(text, list):
-            import asyncio  # noqa: PLC0415
+        import asyncio  # noqa: PLC0415
 
-            refs = [
-                self._handle.predict.remote(t, labels, relations, threshold, relation_threshold, flat_ner, multi_label)
-                for t in text
-            ]
-            results = await asyncio.gather(*refs)
-            return list(results)
-        else:
-            return await self._handle.predict.remote(
-                text, labels, relations, threshold, relation_threshold, flat_ner, multi_label
+        single = isinstance(text, str)
+        items = [text] if single else list(text)
+
+        payloads = [
+            self._build_payload(
+                t, labels, relations, threshold, relation_threshold,
+                flat_ner, multi_label,
             )
             for t in items
         ]

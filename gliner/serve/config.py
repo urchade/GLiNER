@@ -54,6 +54,8 @@ class GLiNERServeConfig:
 
     warmup_iterations: int = 3
 
+    http_port: int = 8000
+
     ray_address: Optional[str] = None
 
     def __post_init__(self):
