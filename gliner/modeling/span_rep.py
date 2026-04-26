@@ -672,8 +672,6 @@ class TokenMarker(nn.Module):
         Returns:
             torch.Tensor: Span representations of shape [B, L, max_width, D].
         """
-        B, L, D = h.size()
-        num_spans = span_idx.size(1)
         start_rep = self.project_start(h)
         end_rep = self.project_end(h)
 

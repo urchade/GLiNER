@@ -1,8 +1,8 @@
 """Ray Serve deployment for GLiNER with dynamic batching and memory-aware batch sizing."""
 
-import logging
 import os
-from typing import Any, Dict, List, Optional, Tuple, Union
+import logging
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import torch
 
@@ -36,7 +36,7 @@ class GLiNERServer:
         Args:
             config: Server configuration with model and serving parameters.
         """
-        from gliner import GLiNER, InferencePackingConfig
+        from gliner import GLiNER, InferencePackingConfig  # noqa: PLC0415
 
         self.config = config
 
@@ -68,7 +68,7 @@ class GLiNERServer:
         if torch.cuda.is_available():
             self.memory_estimator.measure_cuda_context()
 
-        logger.info(f"Loading model: {config.model}")
+        logger.info("Loading model: %s", config.model)
         if config.enable_flashdeberta:
             logger.info("FlashDeBERTa enabled")
 
@@ -82,14 +82,14 @@ class GLiNERServer:
         self.model.eval()
 
         if config.quantization:
-            logger.info(f"Applying quantization: {config.quantization}")
+            logger.info("Applying quantization: %s", config.quantization)
             self.model.quantize(config.quantization)
 
         if torch.cuda.is_available():
             self.memory_estimator.measure_model_memory()
 
         self._supports_relations = self._detect_relation_support()
-        logger.info(f"Relation extraction support: {self._supports_relations}")
+        logger.info("Relation extraction support: %s", self._supports_relations)
 
         self.collator = self.model.create_collator()
 
@@ -114,7 +114,7 @@ class GLiNERServer:
 
     def _precompile(self) -> None:
         """Precompile model for configured batch sizes."""
-        logger.info(f"Precompiling model for batch sizes: {self.config.precompiled_batch_sizes}")
+        logger.info("Precompiling model for batch sizes: %s", self.config.precompiled_batch_sizes)
 
         self.model.compile()
 
@@ -122,10 +122,7 @@ class GLiNERServer:
         dummy_relations = ["works_at", "located_in"] if self._supports_relations else None
 
         for batch_size in self.config.precompiled_batch_sizes:
-            dummy_texts = [
-                f"Sample text number {i} for precompilation warmup."
-                for i in range(batch_size)
-            ]
+            dummy_texts = [f"Sample text number {i} for precompilation warmup." for i in range(batch_size)]
 
             for _ in range(self.config.warmup_iterations):
                 if self._supports_relations and dummy_relations:
@@ -147,7 +144,7 @@ class GLiNERServer:
                         multi_label=False,
                     )
 
-            logger.info(f"  Batch size {batch_size}: compiled")
+            logger.info("  Batch size %d: compiled", batch_size)
 
         if torch.cuda.is_available():
             torch.cuda.synchronize()
@@ -197,12 +194,10 @@ class GLiNERServer:
         they extend the effective sequence length for every sample in the
         batch.
         """
-        max_text_words = max(
-            (len(t.split()) for t in texts if t.strip()), default=0
-        )
+        max_text_words = max((len(t.split()) for t in texts if t.strip()), default=0)
         prompt_words = 0
         if labels:
-            prompt_words += sum(len(l.split()) for l in labels)
+            prompt_words += sum(len(label.split()) for label in labels)
         if relations:
             prompt_words += sum(len(r.split()) for r in relations)
         total = max_text_words + prompt_words
@@ -211,9 +206,7 @@ class GLiNERServer:
     def _filter_labels(self, labels: List[str]) -> List[str]:
         """Filter labels based on max_labels config."""
         if self.config.max_labels > 0 and len(labels) > self.config.max_labels:
-            logger.warning(
-                f"Truncating labels from {len(labels)} to {self.config.max_labels}"
-            )
+            logger.warning("Truncating labels from %d to %d", len(labels), self.config.max_labels)
             return labels[: self.config.max_labels]
         return labels
 
@@ -248,13 +241,9 @@ class GLiNERServer:
             For relex models: Tuple of (entities, relations) lists.
         """
         if self._supports_relations:
-            return self._run_batch_relex(
-                texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label
-            )
+            return self._run_batch_relex(texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label)
         else:
-            return self._run_batch_ner(
-                texts, labels, threshold, flat_ner, multi_label
-            )
+            return self._run_batch_ner(texts, labels, threshold, flat_ner, multi_label)
 
     def _run_batch_ner(
         self,
@@ -409,10 +398,7 @@ class GLiNERServer:
                 flat_ner=flat_ner,
                 multi_label=multi_label,
             )
-            results = [
-                {"entities": ents, "relations": r}
-                for ents, r in zip(entities, rels)
-            ]
+            results = [{"entities": ents, "relations": r} for ents, r in zip(entities, rels)]
         else:
             entities = self._run_batch_internal(
                 texts,
@@ -428,7 +414,7 @@ class GLiNERServer:
 
 def _build_deployment(config: GLiNERServeConfig):
     """Build Ray Serve deployment from config."""
-    from ray import serve
+    from ray import serve  # noqa: PLC0415
 
     batch_wait_s = max(config.batch_wait_timeout_ms, 0.0) / 1000.0
     initial_max_batch_size = config.max_batch_size
@@ -450,8 +436,9 @@ def _build_deployment(config: GLiNERServeConfig):
             # sequence lengths.
             self._infer_batch.set_max_batch_size(self.server.batch_size_fn())
             logger.info(
-                f"Ray Serve batch size initialized to {self.server.batch_size_fn()} "
-                f"(precompiled: {serve_config.precompiled_batch_sizes})"
+                "Ray Serve batch size initialized to %d (precompiled: %s)",
+                self.server.batch_size_fn(),
+                serve_config.precompiled_batch_sizes,
             )
 
         @serve.batch(
@@ -560,26 +547,26 @@ def serve(
         >>> ref = handle.predict.remote("John works at Google", ["person", "org"])
         >>> print(ref.result())
     """
-    import ray
-    from ray import serve as ray_serve
+    import ray  # noqa: PLC0415
+    from ray import serve as ray_serve  # noqa: PLC0415
 
     if not ray.is_initialized():
         ray.init(address=config.ray_address, ignore_reinit_error=True)
 
-    ray_serve.start(detached=True)
+    ray_serve.start(detached=True, http_options={"port": config.http_port})
 
     app = _build_deployment(config)
     handle = ray_serve.run(app, name="gliner", route_prefix=config.route_prefix)
 
-    logger.info(f"GLiNER server running at http://localhost:8000{config.route_prefix}")
+    logger.info("GLiNER server running at http://localhost:%d%s", config.http_port, config.route_prefix)
 
     if blocking:
-        import signal
-        import time
+        import time  # noqa: PLC0415
+        import signal  # noqa: PLC0415
 
         shutdown_event = False
 
-        def handle_signal(signum, frame):
+        def handle_signal(_signum, _frame):
             nonlocal shutdown_event
             shutdown_event = True
 
@@ -596,7 +583,7 @@ def serve(
 
 def shutdown() -> None:
     """Shutdown the GLiNER Ray Serve deployment."""
-    from ray import serve as ray_serve
+    from ray import serve as ray_serve  # noqa: PLC0415
 
     ray_serve.shutdown()
 
@@ -643,9 +630,7 @@ class GLiNERFactory:
         """
         if config is not None:
             if model is not None or kwargs:
-                raise ValueError(
-                    "Pass either `config` or `model`/kwargs, not both."
-                )
+                raise ValueError("Pass either `config` or `model`/kwargs, not both.")
         else:
             if model is None:
                 raise ValueError("Must provide either `model` or `config`.")
@@ -676,8 +661,13 @@ class GLiNERFactory:
 
         refs = [
             self._handle.predict.remote(
-                t, labels, relations, threshold, relation_threshold,
-                flat_ner, multi_label,
+                t,
+                labels,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
             )
             for t in items
         ]
@@ -695,15 +685,20 @@ class GLiNERFactory:
         multi_label: bool = False,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Async prediction. Concurrent calls accumulate into one batch."""
-        import asyncio
+        import asyncio  # noqa: PLC0415
 
         single = isinstance(texts, str)
         items = [texts] if single else list(texts)
 
         refs = [
             self._handle.predict.remote(
-                t, labels, relations, threshold, relation_threshold,
-                flat_ner, multi_label,
+                t,
+                labels,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
             )
             for t in items
         ]
@@ -720,8 +715,9 @@ class GLiNERFactory:
         """
         if self._closed:
             return
-        import ray
-        from ray import serve as ray_serve
+        import ray  # noqa: PLC0415
+        from ray import serve as ray_serve  # noqa: PLC0415
+
         ray_serve.shutdown()
         if ray.is_initialized():
             ray.shutdown()

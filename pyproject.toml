@@ -74,6 +74,13 @@ dev = [
     "ruff"
 ]
 
+[tool.pytest.ini_options]
+# Put the repo root on sys.path so `tests.utils_infer` (absolute import from
+# tests/test_infer_packing.py) resolves without requiring callers to set
+# PYTHONPATH manually.
+pythonpath = ["."]
+testpaths = ["tests"]
+
 [tool.ruff]
 line-length = 120
 indent-width = 4

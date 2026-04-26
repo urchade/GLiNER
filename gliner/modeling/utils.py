@@ -250,7 +250,7 @@ def build_entity_pairs(
 
     # Generate all possible (i, j) pairs where i != j using meshgrid
     arange = torch.arange(E, device=device, dtype=torch.long)
-    grid_i, grid_j = torch.meshgrid(arange, arange, indexing='ij')
+    grid_i, grid_j = torch.meshgrid(arange, arange, indexing="ij")
     off_diag = grid_i != grid_j
     rows = grid_i[off_diag]
     cols = grid_j[off_diag]
@@ -311,7 +311,7 @@ def build_all_entity_pairs(
             - head_rep: Head entity embeddings. Shape: (B, max_pairs, embed_dim)
             - tail_rep: Tail entity embeddings. Shape: (B, max_pairs, embed_dim)
     """
-    B, E, D = span_rep.shape
+    B, _, D = span_rep.shape  # (B, num_entities, embed_dim)
     device = span_rep.device
 
     # Count valid entities per example
@@ -327,7 +327,7 @@ def build_all_entity_pairs(
         # All (i, j) pairs where i != j, both < n
         idx = torch.arange(n, device=device)
         row = idx.repeat_interleave(n - 1)
-        col = torch.cat([torch.cat([idx[:i], idx[i + 1:]]) for i in range(n)])
+        col = torch.cat([torch.cat([idx[:i], idx[i + 1 :]]) for i in range(n)])
         batch_pair_lists.append(torch.stack([row, col], dim=-1))
 
     N = max(p.shape[0] for p in batch_pair_lists) if batch_pair_lists else 0
@@ -370,7 +370,7 @@ def extract_spans_from_tokens(
         span_idx: (B, N, 2) - [start, end] indices, padded
         span_mask: (B, N) - validity mask
     """
-    B, W, C, _ = scores.shape
+    B = scores.size(0)
     device = scores.device
 
     if labels is not None:

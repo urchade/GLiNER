@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from types import SimpleNamespace
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Iterable, Optional
+from dataclasses import dataclass
 
 import torch
 from torch import nn
 
 from gliner.infer_packing import (
-    InferencePackingConfig,
     PackedBatch,
-    pack_requests,
+    InferencePackingConfig,
     unpack_spans,
+    pack_requests,
 )
 
 

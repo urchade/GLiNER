@@ -223,17 +223,13 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
                 head_data = None
                 tail_data = None
 
-                for sublist in vertex_set:
+                for current_index, sublist in enumerate(vertex_set):
                     if current_index == head_id:
                         head_data = sublist
-                    current_index += 1
 
-                current_index = 0
-
-                for sublist in vertex_set:
+                for current_index, sublist in enumerate(vertex_set):
                     if current_index == tail_id:
                         tail_data = sublist
-                    current_index += 1
 
                 head_name = head_data[0]["name"] if head_data else None
                 tail_name = tail_data[0]["name"] if tail_data else None

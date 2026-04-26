@@ -1,20 +1,6 @@
-"""HTTP client for the GLiNER Ray Serve deployment.
+"""HTTP client for the GLiNER Ray Serve deployment."""
 
-This is a thin wrapper around the server's HTTP endpoint — it does not import
-Ray and does not join the Ray cluster, so it works from any Python process
-with only the standard library available.
-
-To preserve server-side dynamic batching when multiple texts are submitted,
-the client dispatches each text as its own HTTP request concurrently so Ray
-Serve's ``@serve.batch`` can coalesce them into a single forward pass. A
-sequential loop of calls would serialize on the wire and defeat batching.
-"""
-
-import json
-from typing import Any, Dict, List, Optional, Union
-from urllib.error import HTTPError, URLError
-from urllib.request import Request, urlopen
-from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Dict, List, Union, Optional
 
 DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_ROUTE_PREFIX = "/gliner"
@@ -30,9 +16,8 @@ class GLiNERClient:
     Example:
         >>> from gliner.serve import GLiNERClient
         >>> client = GLiNERClient()
-        >>> client.predict(
-        ...     "John works at Google in Mountain View",
-        ...     labels=["person", "organization", "location"],
+        >>> results = client.predict(
+        ...     "John works at Google in Mountain View", labels=["person", "organization", "location"]
         ... )
         {'entities': [{'start': 0, 'end': 4, 'text': 'John', 'label': 'person', ...}, ...]}
     """
@@ -54,33 +39,12 @@ class GLiNERClient:
             max_concurrency: Maximum in-flight HTTP requests when predicting
                 on a list of texts. Bounds the client-side thread pool.
         """
-        self.url = base_url.rstrip("/") + "/" + route_prefix.strip("/")
+        self.url = base_url.rstrip("/") + route_prefix
         self.timeout = timeout
         self.max_concurrency = max_concurrency
 
-    def _post(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        data = json.dumps(payload).encode("utf-8")
-        req = Request(
-            self.url,
-            data=data,
-            headers={"Content-Type": "application/json"},
-            method="POST",
-        )
-        try:
-            with urlopen(req, timeout=self.timeout) as resp:
-                return json.loads(resp.read().decode("utf-8"))
-        except HTTPError as e:
-            body = e.read().decode("utf-8", errors="replace")
-            raise GLiNERClientError(
-                f"GLiNER server returned HTTP {e.code}: {body}"
-            ) from e
-        except URLError as e:
-            raise GLiNERClientError(
-                f"Could not reach GLiNER server at {self.url}: {e.reason}"
-            ) from e
-
-    @staticmethod
     def _build_payload(
+        self,
         text: str,
         labels: List[str],
         relations: Optional[List[str]],
@@ -89,6 +53,7 @@ class GLiNERClient:
         flat_ner: bool,
         multi_label: bool,
     ) -> Dict[str, Any]:
+        """Build the JSON payload for a single prediction request."""
         payload: Dict[str, Any] = {
             "text": text,
             "labels": labels,
@@ -103,6 +68,24 @@ class GLiNERClient:
             payload["relation_threshold"] = relation_threshold
         return payload
 
+    def _post(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Send a single POST request to the server."""
+        import json  # noqa: PLC0415
+        import urllib.request  # noqa: PLC0415
+
+        data = json.dumps(payload).encode()
+        req = urllib.request.Request(
+            self.url,
+            data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=self.timeout) as resp:
+                return json.loads(resp.read())
+        except Exception as exc:
+            raise GLiNERClientError(f"Request to {self.url} failed: {exc}") from exc
+
     def predict(
         self,
         text: Union[str, List[str]],
@@ -113,7 +96,7 @@ class GLiNERClient:
         flat_ner: bool = True,
         multi_label: bool = False,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Blocking prediction. ``str`` in → ``dict`` out; ``list`` in → ``list`` out."""
+        """Blocking prediction. ``str`` in -> ``dict`` out; ``list`` in -> ``list`` out."""
         single = isinstance(text, str)
         items = [text] if single else list(text)
 
@@ -128,6 +111,8 @@ class GLiNERClient:
         if len(payloads) == 1:
             results = [self._post(payloads[0])]
         else:
+            from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415
+
             workers = min(self.max_concurrency, len(payloads))
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 results = list(pool.map(self._post, payloads))
@@ -144,8 +129,8 @@ class GLiNERClient:
         flat_ner: bool = True,
         multi_label: bool = False,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        """Async prediction. Concurrent calls coalesce into one server-side batch."""
-        import asyncio
+        """Async version of predict."""
+        import asyncio  # noqa: PLC0415
 
         single = isinstance(text, str)
         items = [text] if single else list(text)
