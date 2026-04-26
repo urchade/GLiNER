@@ -706,12 +706,20 @@ class GLiNERFactory:
         return results[0] if single else results
 
     def shutdown(self) -> None:
-        """Tear down the Ray Serve deployment. Idempotent."""
+        """Tear down the Ray Serve deployment and the Ray runtime it booted.
+
+        Idempotent. Shutting down Ray after Serve avoids leaving the driver
+        attached to a detached Serve instance — the latter produces noisy
+        ``ServeController ... killed by ray.kill`` retry warnings in the
+        raylet log when the process exits.
+        """
         if self._closed:
             return
         from ray import serve as ray_serve  # noqa: PLC0415
 
         ray_serve.shutdown()
+        if ray.is_initialized():
+            ray.shutdown()
         self._closed = True
 
     def __enter__(self):

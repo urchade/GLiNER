@@ -2205,17 +2205,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 - target_mask: Packed mask of shape (B, M).
         """
         B, N, D = representations.shape
-
-        # ``lengths.max().item()`` would force a GPU→CPU sync to compress the output
-        # from ``N`` to ``max_len``. Under ``torch.compile`` with ``capture_scalar_outputs``
-        # the sync is traced symbolically and we keep the packing benefit; in eager
-        # execution we skip packing (use the full ``N``) to stay sync-free, at the cost
-        # of some downstream compute that masked positions would have saved.
-        if torch.compiler.is_compiling():
-            lengths = rep_mask.sum(dim=-1)
-            max_len = lengths.max().item()
-        else:
-            max_len = N
+        lengths = rep_mask.sum(dim=-1)
+        max_len = lengths.max().item()
 
         if max_len != N:
             target_rep = representations.new_zeros(B, max_len, D)
