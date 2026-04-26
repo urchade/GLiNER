@@ -172,13 +172,6 @@ data-aria-dark="Switch to auto color mode">
           <section id="module-gliner.serve.client">
 <span id="gliner-serve-client-module"></span><h1>gliner.serve.client module<a class="headerlink" href="#module-gliner.serve.client" title="Link to this heading">¶</a></h1>
 <p>HTTP client for the GLiNER Ray Serve deployment.</p>
-<p>This is a thin wrapper around the server’s HTTP endpoint — it does not import
-Ray and does not join the Ray cluster, so it works from any Python process
-with only the standard library available.</p>
-<p>To preserve server-side dynamic batching when multiple texts are submitted,
-the client dispatches each text as its own HTTP request concurrently so Ray
-Serve’s <code class="docutils literal notranslate"><span class="pre">&#64;serve.batch</span></code> can coalesce them into a single forward pass. A
-sequential loop of calls would serialize on the wire and defeat batching.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="gliner.serve.client.GLiNERClientError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.client.</span></span><span class="sig-name descname"><span class="pre">GLiNERClientError</span></span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClientError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.client.GLiNERClientError" title="Link to this definition">¶</a></dt>
@@ -194,11 +187,10 @@ sequential loop of calls would serialize on the wire and defeat batching.</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-</span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span>
-</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
-</span><span data-line="6"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="7"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="5"><span class="gp">... </span><span class="p">)</span>
+</span><span data-line="6"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
 </span></pre></div>
 </div>
 <p>Initialize the HTTP client.</p>
@@ -235,7 +227,7 @@ on a list of texts. Bounds the client-side thread pool.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.client.GLiNERClient.predict">
 <span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.client.GLiNERClient.predict" title="Link to this definition">¶</a></dt>
-<dd><p>Blocking prediction. <code class="docutils literal notranslate"><span class="pre">str</span></code> in → <code class="docutils literal notranslate"><span class="pre">dict</span></code> out; <code class="docutils literal notranslate"><span class="pre">list</span></code> in → <code class="docutils literal notranslate"><span class="pre">list</span></code> out.</p>
+<dd><p>Blocking prediction. <code class="docutils literal notranslate"><span class="pre">str</span></code> in -&gt; <code class="docutils literal notranslate"><span class="pre">dict</span></code> out; <code class="docutils literal notranslate"><span class="pre">list</span></code> in -&gt; <code class="docutils literal notranslate"><span class="pre">list</span></code> out.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
@@ -243,7 +235,7 @@ on a list of texts. Bounds the client-side thread pool.</p></li>
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.client.GLiNERClient.predict_async">
 <em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.client.GLiNERClient.predict_async" title="Link to this definition">¶</a></dt>
-<dd><p>Async prediction. Concurrent calls coalesce into one server-side batch.</p>
+<dd><p>Async version of predict.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>

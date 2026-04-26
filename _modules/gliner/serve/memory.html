@@ -178,9 +178,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="12"><span class="sd">``seq_len`` when invoking ``batch_size_fn``.</span>
 </span><span data-line="13"><span class="sd">&quot;&quot;&quot;</span>
 </span><span data-line="14">
-</span><span data-line="15"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span>
-</span><span data-line="16">
-</span><span data-line="17"><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span data-line="15"><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+</span><span data-line="16"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span>
+</span><span data-line="17">
 </span><span data-line="18"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span data-line="19">
 </span><span data-line="20"><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -231,145 +231,131 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="58">        <span class="n">free</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">mem_get_info</span><span class="p">()</span>
 </span><span data-line="59">        <span class="bp">self</span><span class="o">.</span><span class="n">total_gpu_memory</span> <span class="o">=</span> <span class="n">total</span>
 </span><span data-line="60">        <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span> <span class="o">=</span> <span class="n">total</span> <span class="o">-</span> <span class="n">free</span>
-</span><span data-line="61">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span data-line="62">            <span class="sa">f</span><span class="s2">&quot;CUDA context: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MiB&quot;</span>
-</span><span data-line="63">        <span class="p">)</span></div>
+</span><span data-line="61">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;CUDA context: </span><span class="si">%.1f</span><span class="s2"> MiB&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span></div>
 
-</span><span data-line="64">
+</span><span data-line="62">
 <div class="viewcode-block" id="GLiNERMemoryEstimator.measure_model_memory">
 <a class="viewcode-back" href="../../../api/gliner.serve.memory.html#gliner.serve.GLiNERMemoryEstimator.measure_model_memory">[docs]</a>
-</span><span data-line="65">    <span class="k">def</span><span class="w"> </span><span class="nf">measure_model_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="66"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Record model weight memory. Must be called after the model loads.&quot;&quot;&quot;</span>
-</span><span data-line="67">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-</span><span data-line="68">            <span class="k">return</span>
-</span><span data-line="69">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
-</span><span data-line="70">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
-</span><span data-line="71">        <span class="n">free</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">mem_get_info</span><span class="p">()</span>
-</span><span data-line="72">        <span class="bp">self</span><span class="o">.</span><span class="n">total_gpu_memory</span> <span class="o">=</span> <span class="n">total</span>
-</span><span data-line="73">        <span class="n">used</span> <span class="o">=</span> <span class="n">total</span> <span class="o">-</span> <span class="n">free</span>
-</span><span data-line="74">        <span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">used</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span><span class="p">)</span>
-</span><span data-line="75">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span data-line="76">            <span class="sa">f</span><span class="s2">&quot;Model weights: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MiB&quot;</span>
-</span><span data-line="77">        <span class="p">)</span></div>
+</span><span data-line="63">    <span class="k">def</span><span class="w"> </span><span class="nf">measure_model_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="64"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Record model weight memory. Must be called after the model loads.&quot;&quot;&quot;</span>
+</span><span data-line="65">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="66">            <span class="k">return</span>
+</span><span data-line="67">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+</span><span data-line="68">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</span><span data-line="69">        <span class="n">free</span><span class="p">,</span> <span class="n">total</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">mem_get_info</span><span class="p">()</span>
+</span><span data-line="70">        <span class="bp">self</span><span class="o">.</span><span class="n">total_gpu_memory</span> <span class="o">=</span> <span class="n">total</span>
+</span><span data-line="71">        <span class="n">used</span> <span class="o">=</span> <span class="n">total</span> <span class="o">-</span> <span class="n">free</span>
+</span><span data-line="72">        <span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">used</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span><span class="p">)</span>
+</span><span data-line="73">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Model weights: </span><span class="si">%.1f</span><span class="s2"> MiB&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span></div>
 
-</span><span data-line="78">
+</span><span data-line="74">
 <div class="viewcode-block" id="GLiNERMemoryEstimator.available_memory">
 <a class="viewcode-back" href="../../../api/gliner.serve.memory.html#gliner.serve.GLiNERMemoryEstimator.available_memory">[docs]</a>
-</span><span data-line="79">    <span class="k">def</span><span class="w"> </span><span class="nf">available_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="80"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Budget for a batch: ``total_gpu - cuda_context - model_weights``.&quot;&quot;&quot;</span>
-</span><span data-line="81">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-</span><span data-line="82">            <span class="k">return</span> <span class="mi">0</span>
-</span><span data-line="83">        <span class="n">budget</span> <span class="o">=</span> <span class="p">(</span>
-</span><span data-line="84">            <span class="bp">self</span><span class="o">.</span><span class="n">total_gpu_memory</span>
-</span><span data-line="85">            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span>
-</span><span data-line="86">            <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span>
-</span><span data-line="87">        <span class="p">)</span>
-</span><span data-line="88">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">budget</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_memory_fraction</span><span class="p">))</span></div>
+</span><span data-line="75">    <span class="k">def</span><span class="w"> </span><span class="nf">available_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="76"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Budget for a batch: ``total_gpu - cuda_context - model_weights``.&quot;&quot;&quot;</span>
+</span><span data-line="77">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="78">            <span class="k">return</span> <span class="mi">0</span>
+</span><span data-line="79">        <span class="n">budget</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">total_gpu_memory</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">cuda_context_bytes</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_memory_bytes</span>
+</span><span data-line="80">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">budget</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_memory_fraction</span><span class="p">))</span></div>
 
-</span><span data-line="89">
+</span><span data-line="81">
 <div class="viewcode-block" id="GLiNERMemoryEstimator.calibrate">
 <a class="viewcode-back" href="../../../api/gliner.serve.memory.html#gliner.serve.GLiNERMemoryEstimator.calibrate">[docs]</a>
-</span><span data-line="90">    <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span>
-</span><span data-line="91">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="92">        <span class="n">batch_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-</span><span data-line="93">        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-</span><span data-line="94">        <span class="n">min_seq_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
-</span><span data-line="95">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="96"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate ``per_sample_table`` across power-of-two seq lengths.</span>
-</span><span data-line="97">
-</span><span data-line="98"><span class="sd">        Uses a single dummy label so the probed sequence length is dominated</span>
-</span><span data-line="99"><span class="sd">        by text tokens; label/relation words are accounted for at lookup time</span>
-</span><span data-line="100"><span class="sd">        by the caller extending ``seq_len``.</span>
-</span><span data-line="101"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="102">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
-</span><span data-line="103">            <span class="k">return</span>
-</span><span data-line="104">
-</span><span data-line="105">        <span class="n">seq_lens</span> <span class="o">=</span> <span class="n">_power_of_two_seq_lens</span><span class="p">(</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">min_seq_len</span><span class="o">=</span><span class="n">min_seq_len</span><span class="p">)</span>
-</span><span data-line="106">        <span class="n">dummy_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
-</span><span data-line="107">        <span class="n">probe_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_probe_batch_size</span>
-</span><span data-line="108">
-</span><span data-line="109">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span data-line="110">            <span class="sa">f</span><span class="s2">&quot;Calibrating memory table: seq_lens=</span><span class="si">{</span><span class="n">seq_lens</span><span class="si">}</span><span class="s2">, probe_batch=</span><span class="si">{</span><span class="n">probe_b</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span data-line="111">        <span class="p">)</span>
-</span><span data-line="112">
-</span><span data-line="113">        <span class="k">for</span> <span class="n">seq_len</span> <span class="ow">in</span> <span class="n">seq_lens</span><span class="p">:</span>
-</span><span data-line="114">            <span class="n">dummy_text</span> <span class="o">=</span> <span class="s2">&quot;word &quot;</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_len</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
-</span><span data-line="115">            <span class="n">peak</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure_peak</span><span class="p">(</span>
-</span><span data-line="116">                <span class="n">batch_method</span><span class="p">,</span> <span class="p">[</span><span class="n">dummy_text</span><span class="p">]</span> <span class="o">*</span> <span class="n">probe_b</span><span class="p">,</span> <span class="n">dummy_labels</span>
-</span><span data-line="117">            <span class="p">)</span>
-</span><span data-line="118">            <span class="n">per_sample</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">peak</span> <span class="o">//</span> <span class="n">probe_b</span><span class="p">)</span>
-</span><span data-line="119">            <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">[</span><span class="n">seq_len</span><span class="p">]</span> <span class="o">=</span> <span class="n">per_sample</span>
-</span><span data-line="120">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-</span><span data-line="121">                <span class="sa">f</span><span class="s2">&quot;  seq_len=</span><span class="si">{</span><span class="n">seq_len</span><span class="si">:</span><span class="s2">&gt;5</span><span class="si">}</span><span class="s2">: per_sample=</span><span class="si">{</span><span class="n">per_sample</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="p">(</span><span class="mi">1024</span><span class="w"> </span><span class="o">**</span><span class="w"> </span><span class="mi">2</span><span class="p">)</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2"> MiB&quot;</span>
-</span><span data-line="122">            <span class="p">)</span></div>
+</span><span data-line="82">    <span class="k">def</span><span class="w"> </span><span class="nf">calibrate</span><span class="p">(</span>
+</span><span data-line="83">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="84">        <span class="n">batch_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+</span><span data-line="85">        <span class="n">max_seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="86">        <span class="n">min_seq_len</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+</span><span data-line="87">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+</span><span data-line="88"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Populate ``per_sample_table`` across power-of-two seq lengths.</span>
+</span><span data-line="89">
+</span><span data-line="90"><span class="sd">        Uses a single dummy label so the probed sequence length is dominated</span>
+</span><span data-line="91"><span class="sd">        by text tokens; label/relation words are accounted for at lookup time</span>
+</span><span data-line="92"><span class="sd">        by the caller extending ``seq_len``.</span>
+</span><span data-line="93"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="94">        <span class="k">if</span> <span class="ow">not</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">():</span>
+</span><span data-line="95">            <span class="k">return</span>
+</span><span data-line="96">
+</span><span data-line="97">        <span class="n">seq_lens</span> <span class="o">=</span> <span class="n">_power_of_two_seq_lens</span><span class="p">(</span><span class="n">max_seq_len</span><span class="p">,</span> <span class="n">min_seq_len</span><span class="o">=</span><span class="n">min_seq_len</span><span class="p">)</span>
+</span><span data-line="98">        <span class="n">dummy_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]</span>
+</span><span data-line="99">        <span class="n">probe_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">calibration_probe_batch_size</span>
+</span><span data-line="100">
+</span><span data-line="101">        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Calibrating memory table: seq_lens=</span><span class="si">%s</span><span class="s2">, probe_batch=</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">seq_lens</span><span class="p">,</span> <span class="n">probe_b</span><span class="p">)</span>
+</span><span data-line="102">
+</span><span data-line="103">        <span class="k">for</span> <span class="n">seq_len</span> <span class="ow">in</span> <span class="n">seq_lens</span><span class="p">:</span>
+</span><span data-line="104">            <span class="n">dummy_text</span> <span class="o">=</span> <span class="s2">&quot;word &quot;</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">seq_len</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+</span><span data-line="105">            <span class="n">peak</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_measure_peak</span><span class="p">(</span><span class="n">batch_method</span><span class="p">,</span> <span class="p">[</span><span class="n">dummy_text</span><span class="p">]</span> <span class="o">*</span> <span class="n">probe_b</span><span class="p">,</span> <span class="n">dummy_labels</span><span class="p">)</span>
+</span><span data-line="106">            <span class="n">per_sample</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">peak</span> <span class="o">//</span> <span class="n">probe_b</span><span class="p">)</span>
+</span><span data-line="107">            <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">[</span><span class="n">seq_len</span><span class="p">]</span> <span class="o">=</span> <span class="n">per_sample</span>
+</span><span data-line="108">            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;  seq_len=</span><span class="si">%5d</span><span class="s2">: per_sample=</span><span class="si">%.1f</span><span class="s2"> MiB&quot;</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">,</span> <span class="n">per_sample</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span></div>
 
-</span><span data-line="123">
-</span><span data-line="124">    <span class="k">def</span><span class="w"> </span><span class="nf">_measure_peak</span><span class="p">(</span>
-</span><span data-line="125">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="126">        <span class="n">batch_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
-</span><span data-line="127">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span data-line="128">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
-</span><span data-line="129">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="130"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a probe batch and return peak allocated bytes above baseline.&quot;&quot;&quot;</span>
-</span><span data-line="131">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
-</span><span data-line="132">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
-</span><span data-line="133">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">reset_peak_memory_stats</span><span class="p">()</span>
-</span><span data-line="134">        <span class="n">baseline</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory_allocated</span><span class="p">()</span>
-</span><span data-line="135">
-</span><span data-line="136">        <span class="n">batch_method</span><span class="p">(</span>
-</span><span data-line="137">            <span class="n">texts</span><span class="p">,</span>
-</span><span data-line="138">            <span class="n">labels</span><span class="p">,</span>
-</span><span data-line="139">            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="140">            <span class="n">flat_ner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="141">            <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-</span><span data-line="142">        <span class="p">)</span>
-</span><span data-line="143">
-</span><span data-line="144">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
-</span><span data-line="145">        <span class="n">peak</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">max_memory_allocated</span><span class="p">()</span>
-</span><span data-line="146">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">peak</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span>
-</span><span data-line="147">
-</span><span data-line="148">    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_seq_len</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="149"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Round ``seq_len`` up to the nearest calibrated entry (pessimistic).&quot;&quot;&quot;</span>
-</span><span data-line="150">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">:</span>
-</span><span data-line="151">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Memory estimator has not been calibrated&quot;</span><span class="p">)</span>
-</span><span data-line="152">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
-</span><span data-line="153">            <span class="k">if</span> <span class="n">key</span> <span class="o">&gt;=</span> <span class="n">seq_len</span><span class="p">:</span>
-</span><span data-line="154">                <span class="k">return</span> <span class="n">key</span>
-</span><span data-line="155">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-</span><span data-line="156">
+</span><span data-line="109">
+</span><span data-line="110">    <span class="k">def</span><span class="w"> </span><span class="nf">_measure_peak</span><span class="p">(</span>
+</span><span data-line="111">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="112">        <span class="n">batch_method</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+</span><span data-line="113">        <span class="n">texts</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="114">        <span class="n">labels</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
+</span><span data-line="115">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="116"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run a probe batch and return peak allocated bytes above baseline.&quot;&quot;&quot;</span>
+</span><span data-line="117">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+</span><span data-line="118">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">empty_cache</span><span class="p">()</span>
+</span><span data-line="119">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">reset_peak_memory_stats</span><span class="p">()</span>
+</span><span data-line="120">        <span class="n">baseline</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">memory_allocated</span><span class="p">()</span>
+</span><span data-line="121">
+</span><span data-line="122">        <span class="n">batch_method</span><span class="p">(</span>
+</span><span data-line="123">            <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="124">            <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="125">            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="126">            <span class="n">flat_ner</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="127">            <span class="n">multi_label</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span data-line="128">        <span class="p">)</span>
+</span><span data-line="129">
+</span><span data-line="130">        <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">synchronize</span><span class="p">()</span>
+</span><span data-line="131">        <span class="n">peak</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">max_memory_allocated</span><span class="p">()</span>
+</span><span data-line="132">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">peak</span> <span class="o">-</span> <span class="n">baseline</span><span class="p">)</span>
+</span><span data-line="133">
+</span><span data-line="134">    <span class="k">def</span><span class="w"> </span><span class="nf">_lookup_seq_len</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="135"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Round ``seq_len`` up to the nearest calibrated entry (pessimistic).&quot;&quot;&quot;</span>
+</span><span data-line="136">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">:</span>
+</span><span data-line="137">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Memory estimator has not been calibrated&quot;</span><span class="p">)</span>
+</span><span data-line="138">        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+</span><span data-line="139">            <span class="k">if</span> <span class="n">key</span> <span class="o">&gt;=</span> <span class="n">seq_len</span><span class="p">:</span>
+</span><span data-line="140">                <span class="k">return</span> <span class="n">key</span>
+</span><span data-line="141">        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+</span><span data-line="142">
 <div class="viewcode-block" id="GLiNERMemoryEstimator.per_sample_at">
 <a class="viewcode-back" href="../../../api/gliner.serve.memory.html#gliner.serve.GLiNERMemoryEstimator.per_sample_at">[docs]</a>
-</span><span data-line="157">    <span class="k">def</span><span class="w"> </span><span class="nf">per_sample_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="158"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Pessimistic per-sample memory at or above ``seq_len``.&quot;&quot;&quot;</span>
-</span><span data-line="159">        <span class="n">probe_seq_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_seq_len</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
-</span><span data-line="160">        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">[</span><span class="n">probe_seq_len</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">safety_factor</span><span class="p">)</span></div>
+</span><span data-line="143">    <span class="k">def</span><span class="w"> </span><span class="nf">per_sample_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="144"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Pessimistic per-sample memory at or above ``seq_len``.&quot;&quot;&quot;</span>
+</span><span data-line="145">        <span class="n">probe_seq_len</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lookup_seq_len</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
+</span><span data-line="146">        <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">per_sample_table</span><span class="p">[</span><span class="n">probe_seq_len</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">safety_factor</span><span class="p">)</span></div>
 
-</span><span data-line="161">
+</span><span data-line="147">
 <div class="viewcode-block" id="GLiNERMemoryEstimator.batch_size_fn">
 <a class="viewcode-back" href="../../../api/gliner.serve.memory.html#gliner.serve.GLiNERMemoryEstimator.batch_size_fn">[docs]</a>
-</span><span data-line="162">    <span class="k">def</span><span class="w"> </span><span class="nf">batch_size_fn</span><span class="p">(</span>
-</span><span data-line="163">        <span class="bp">self</span><span class="p">,</span>
-</span><span data-line="164">        <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-</span><span data-line="165">        <span class="n">precompiled_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
-</span><span data-line="166">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="167"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Largest precompiled batch size satisfying ``per_sample * N &lt;= budget``.</span>
-</span><span data-line="168">
-</span><span data-line="169"><span class="sd">        Budget = ``total_gpu - cuda_context - model_weights`` (times the</span>
-</span><span data-line="170"><span class="sd">        configured ``target_memory_fraction``). The caller is responsible for</span>
-</span><span data-line="171"><span class="sd">        folding label / relation word counts into ``seq_len``.</span>
-</span><span data-line="172"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="173">        <span class="k">if</span> <span class="ow">not</span> <span class="n">precompiled_sizes</span><span class="p">:</span>
-</span><span data-line="174">            <span class="k">return</span> <span class="mi">1</span>
-</span><span data-line="175">
-</span><span data-line="176">        <span class="n">available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_memory</span><span class="p">()</span>
-</span><span data-line="177">        <span class="k">if</span> <span class="n">available</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="178">            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">)</span>
-</span><span data-line="179">
-</span><span data-line="180">        <span class="n">per_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_at</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
-</span><span data-line="181">        <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-</span><span data-line="182">            <span class="k">if</span> <span class="n">per_sample</span> <span class="o">*</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="n">available</span><span class="p">:</span>
-</span><span data-line="183">                <span class="k">return</span> <span class="n">size</span>
-</span><span data-line="184">        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">)</span></div>
+</span><span data-line="148">    <span class="k">def</span><span class="w"> </span><span class="nf">batch_size_fn</span><span class="p">(</span>
+</span><span data-line="149">        <span class="bp">self</span><span class="p">,</span>
+</span><span data-line="150">        <span class="n">seq_len</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+</span><span data-line="151">        <span class="n">precompiled_sizes</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span>
+</span><span data-line="152">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+</span><span data-line="153"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Largest precompiled batch size satisfying ``per_sample * N &lt;= budget``.</span>
+</span><span data-line="154">
+</span><span data-line="155"><span class="sd">        Budget = ``total_gpu - cuda_context - model_weights`` (times the</span>
+</span><span data-line="156"><span class="sd">        configured ``target_memory_fraction``). The caller is responsible for</span>
+</span><span data-line="157"><span class="sd">        folding label / relation word counts into ``seq_len``.</span>
+</span><span data-line="158"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="159">        <span class="k">if</span> <span class="ow">not</span> <span class="n">precompiled_sizes</span><span class="p">:</span>
+</span><span data-line="160">            <span class="k">return</span> <span class="mi">1</span>
+</span><span data-line="161">
+</span><span data-line="162">        <span class="n">available</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_memory</span><span class="p">()</span>
+</span><span data-line="163">        <span class="k">if</span> <span class="n">available</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="164">            <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">)</span>
+</span><span data-line="165">
+</span><span data-line="166">        <span class="n">per_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">per_sample_at</span><span class="p">(</span><span class="n">seq_len</span><span class="p">)</span>
+</span><span data-line="167">        <span class="k">for</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">,</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="168">            <span class="k">if</span> <span class="n">per_sample</span> <span class="o">*</span> <span class="n">size</span> <span class="o">&lt;=</span> <span class="n">available</span><span class="p">:</span>
+</span><span data-line="169">                <span class="k">return</span> <span class="n">size</span>
+</span><span data-line="170">        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">precompiled_sizes</span><span class="p">)</span></div>
 </div>
 
 </span></pre></div>

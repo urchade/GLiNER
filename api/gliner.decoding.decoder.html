@@ -548,6 +548,7 @@ optionally relation predictions.</p></li>
 <li><p><strong>rel_idx</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, 2).</p></li>
 <li><p><strong>rel_logits</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of shape (batch_size, num_relations, num_relation_classes).</p></li>
 <li><p><strong>rel_mask</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional boolean tensor of shape (batch_size, num_relations).</p></li>
+<li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in the decoded spans.</p></li>
 <li><p><strong>flat_ner</strong> (<em>bool</em>) – If True, applies greedy filtering for non-overlapping entities.</p></li>
 <li><p><strong>threshold</strong> (<em>float</em>) – Minimum confidence score for entity predictions.</p></li>
 <li><p><strong>relation_threshold</strong> (<em>float</em>) – Minimum confidence score for relation predictions.</p></li>
@@ -673,7 +674,9 @@ predictions to be included in the output. Defaults to 0.5.</p></li>
 only the highest-scoring entity type per span is kept. Defaults to False.</p></li>
 <li><p><strong>rel_id_to_classes</strong> (<em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>Dict</em><em>[</em><em>int</em><em>, </em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional mapping from relation class IDs to relation names.
 If None, relation decoding is skipped and empty relation lists are returned.
-Can be either a single Dict or List[Dict] for per-sample mappings.
+Can be either a single Dict or List[Dict] for per-sample mappings.</p></li>
+<li><p><strong>entity_spans</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional tensor of pre-computed entity spans to use instead
+of decoding them from model_output.
 Class IDs are 1-indexed.</p></li>
 <li><p><strong>**kwargs</strong> – Additional keyword arguments passed to the parent class decode method.</p></li>
 </ul>

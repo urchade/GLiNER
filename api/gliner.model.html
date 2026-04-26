@@ -485,7 +485,7 @@ with models fine-tuned with quantization-aware training (QAT).</p>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>     <span class="c1"># int8 (torchao on GPU, FBGEMM on CPU)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>  <span class="c1"># int8 (torchao on GPU, FBGEMM on CPU)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For precision-only changes, prefer:</span>
 </span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
 </span></pre></div>
@@ -681,6 +681,8 @@ Prefer this over <code class="docutils literal notranslate"><span class="pre">qu
 <li><p><strong>others_weight_decay</strong> (<em>float</em><em> | </em><em>None</em>) – Weight decay for other parameters.</p></li>
 <li><p><strong>focal_loss_alpha</strong> (<em>float</em>) – Alpha for focal loss.</p></li>
 <li><p><strong>focal_loss_gamma</strong> (<em>float</em>) – Gamma for focal loss.</p></li>
+<li><p><strong>rel_focal_loss_alpha</strong> (<em>float</em><em> | </em><em>None</em>) – Alpha for relation focal loss. Defaults to entity alpha.</p></li>
+<li><p><strong>rel_focal_loss_gamma</strong> (<em>float</em><em> | </em><em>None</em>) – Gamma for relation focal loss. Defaults to entity gamma.</p></li>
 <li><p><strong>focal_loss_prob_margin</strong> (<em>float</em>) – Probability margin for focal loss.</p></li>
 <li><p><strong>loss_reduction</strong> (<em>str</em>) – Loss reduction method.</p></li>
 <li><p><strong>negatives</strong> (<em>float</em>) – Negative sampling ratio.</p></li>
@@ -823,6 +825,7 @@ Use this as the first step in the inference pipeline.</p>
 <li><p><strong>texts</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>]</em>) – Single text string or list of texts.</p></li>
 <li><p><strong>labels</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity labels - string, list of strings, or per-text label lists.</p></li>
 <li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional pre-defined spans to classify (character positions).</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to the data processor.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -968,7 +971,7 @@ Use this as the first step in the inference pipeline.</p>
 <li><p><strong>batch_size</strong> (<em>int</em>) – Batch size for processing. Defaults to 8.</p></li>
 <li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Configuration describing how to pack encoder inputs. When None
 the instance-level configuration set via configure_inference_packing is used.</p></li>
-<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>]</em>) – Input entity spans that should be classified by the model.</p></li>
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Input entity spans that should be classified by the model.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>
 <li><p><strong>**external_inputs</strong> – Additional inputs to pass to the model.</p></li>
 </ul>
@@ -1169,7 +1172,7 @@ so quality recovers end-to-end in a single call.</p>
 <li><p><strong>batch_size</strong> (<em>int</em>) – Batch size for processing. Defaults to 8.</p></li>
 <li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Configuration describing how to pack encoder inputs. When None
 the instance-level configuration set via configure_inference_packing is used.</p></li>
-<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>]</em>) – Input entity spans to limit predictions to. Each span is a dict
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Input entity spans to limit predictions to. Each span is a dict
 with ‘start’ and ‘end’ character positions.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>
 </ul>
@@ -1611,7 +1614,7 @@ with ‘start’ and ‘end’ character positions.</p></li>
 <li><p><strong>gen_constraints</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Labels to constrain generation.</p></li>
 <li><p><strong>num_gen_sequences</strong> (<em>int</em>) – Number of label sequences to generate per span.</p></li>
 <li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Inference packing configuration.</p></li>
-<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>]</em>) – Input entity spans to limit predictions to. Each span is a dict
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Input entity spans to limit predictions to. Each span is a dict
 with ‘start’ and ‘end’ character positions.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>
 <li><p><strong>**gen_kwargs</strong> – Additional generation parameters.</p></li>
@@ -1798,6 +1801,7 @@ detect entities and the relationships between them in a single forward pass.</p>
 <li><p><strong>labels</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>]</em>) – Entity labels - string, list of strings, or per-text label lists.</p></li>
 <li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional pre-defined spans to classify (character positions).</p></li>
 <li><p><strong>relations</strong> (<em>str</em><em> | </em><em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>List</em><em>[</em><em>List</em><em>[</em><em>str</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Relation type labels - string, list of strings, or per-text label lists.</p></li>
+<li><p><strong>**kwargs</strong> – Additional keyword arguments passed to the parent prepare_batch.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -1961,7 +1965,7 @@ detect entities and the relationships between them in a single forward pass.</p>
 <li><p><strong>multi_label</strong> (<em>bool</em>) – Allow multiple labels per span.</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em>) – Batch size for processing.</p></li>
 <li><p><strong>packing_config</strong> (<a class="reference internal" href="gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig" title="gliner.infer_packing.InferencePackingConfig"><em>InferencePackingConfig</em></a><em> | </em><em>None</em>) – Inference packing configuration.</p></li>
-<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>]</em>) – Input entity spans to limit predictions to. Each span is a dict
+<li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Dict</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Input entity spans to limit predictions to. Each span is a dict
 with ‘start’ and ‘end’ character positions.</p></li>
 <li><p><strong>return_relations</strong> (<em>bool</em>) – Whether to return relation predictions.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities in output. Defaults to False.</p></li>

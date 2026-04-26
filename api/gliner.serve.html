@@ -131,6 +131,30 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.serve.GLiNERClient"><code class="docutils literal notranslate"><span class="pre">GLiNERClient</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.serve.GLiNERClient.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERClient.predict"><code class="docutils literal notranslate">predict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERClient.predict_async"><code class="docutils literal notranslate">predict_async()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory"><code class="docutils literal notranslate"><span class="pre">GLiNERFactory</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.handle"><code class="docutils literal notranslate">handle</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.predict"><code class="docutils literal notranslate">predict()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.predict_async"><code class="docutils literal notranslate">predict_async()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.shutdown"><code class="docutils literal notranslate">shutdown()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator"><code class="docutils literal notranslate"><span class="pre">GLiNERMemoryEstimator</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.measure_cuda_context"><code class="docutils literal notranslate">measure_cuda_context()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.measure_model_memory"><code class="docutils literal notranslate">measure_model_memory()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.available_memory"><code class="docutils literal notranslate">available_memory()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.calibrate"><code class="docutils literal notranslate">calibrate()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.per_sample_at"><code class="docutils literal notranslate">per_sample_at()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.batch_size_fn"><code class="docutils literal notranslate">batch_size_fn()</span></code></a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig"><code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.model"><code class="docutils literal notranslate">model</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.device"><code class="docutils literal notranslate">device</span></code></a></li>
@@ -161,27 +185,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.calibration_min_seq_len"><code class="docutils literal notranslate">calibration_min_seq_len</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.calibration_probe_batch_size"><code class="docutils literal notranslate">calibration_probe_batch_size</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.warmup_iterations"><code class="docutils literal notranslate">warmup_iterations</span></code></a></li>
+<li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.http_port"><code class="docutils literal notranslate">http_port</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.ray_address"><code class="docutils literal notranslate">ray_address</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.to_env_vars"><code class="docutils literal notranslate">to_env_vars()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServeConfig.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator"><code class="docutils literal notranslate"><span class="pre">GLiNERMemoryEstimator</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.measure_cuda_context"><code class="docutils literal notranslate">measure_cuda_context()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.measure_model_memory"><code class="docutils literal notranslate">measure_model_memory()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.available_memory"><code class="docutils literal notranslate">available_memory()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.calibrate"><code class="docutils literal notranslate">calibrate()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.per_sample_at"><code class="docutils literal notranslate">per_sample_at()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERMemoryEstimator.batch_size_fn"><code class="docutils literal notranslate">batch_size_fn()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory"><code class="docutils literal notranslate"><span class="pre">GLiNERFactory</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.handle"><code class="docutils literal notranslate">handle</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.predict"><code class="docutils literal notranslate">predict()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.predict_async"><code class="docutils literal notranslate">predict_async()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERFactory.shutdown"><code class="docutils literal notranslate">shutdown()</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.serve.GLiNERServer"><code class="docutils literal notranslate"><span class="pre">GLiNERServer</span></code></a><ul>
@@ -191,15 +198,9 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.serve.GLiNERServer.predict"><code class="docutils literal notranslate">predict()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERClient"><code class="docutils literal notranslate"><span class="pre">GLiNERClient</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.serve.GLiNERClient.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERClient.predict"><code class="docutils literal notranslate">predict()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.GLiNERClient.predict_async"><code class="docutils literal notranslate">predict_async()</span></code></a></li>
-</ul>
-</li>
+<li><a class="reference internal" href="#gliner.serve.get_client"><code class="docutils literal notranslate"><span class="pre">get_client()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.serve"><code class="docutils literal notranslate"><span class="pre">serve()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.serve.shutdown"><code class="docutils literal notranslate"><span class="pre">shutdown()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.get_client"><code class="docutils literal notranslate"><span class="pre">get_client()</span></code></a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -259,8 +260,228 @@ handle = serve(config)</p>
 </dl>
 <p>See docs/serving.md for full documentation.</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERClient">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>HTTP client for a running GLiNER Ray Serve deployment.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="5"><span class="gp">... </span><span class="p">)</span>
+</span><span data-line="6"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
+</span></pre></div>
+</div>
+<p>Initialize the HTTP client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
+<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
+match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
+<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
+on a list of texts. Bounds the client-side thread pool.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Initialize the HTTP client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
+<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
+match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
+<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
+<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
+on a list of texts. Bounds the client-side thread pool.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict" title="Link to this definition">¶</a></dt>
+<dd><p>Blocking prediction. <code class="docutils literal notranslate"><span class="pre">str</span></code> in -&gt; <code class="docutils literal notranslate"><span class="pre">dict</span></code> out; <code class="docutils literal notranslate"><span class="pre">list</span></code> in -&gt; <code class="docutils literal notranslate"><span class="pre">list</span></code> out.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict_async">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict_async" title="Link to this definition">¶</a></dt>
+<dd><p>Async version of predict.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>vLLM-style synchronous facade over a GLiNER Ray Serve deployment.</p>
+<p>Bundles config → deploy → client into one lifecycle-managed object so
+callers never see Ray’s ObjectRefs.</p>
+<p>Pass a list of texts to <code class="docutils literal notranslate"><span class="pre">predict</span></code> to preserve dynamic batching: each
+text is dispatched as a separate request so Ray Serve’s <code class="docutils literal notranslate"><span class="pre">&#64;serve.batch</span></code>
+can accumulate them into a single forward pass. A Python loop of
+single-text calls would serialize and defeat batching.</p>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERFactory</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">llm</span> <span class="o">=</span> <span class="n">GLiNERFactory</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="p">[</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris is in France&quot;</span><span class="p">],</span>
+</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
+</span><span data-line="6"><span class="gp">... </span><span class="p">)</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">llm</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+</span></pre></div>
+</div>
+<p>Or as a context manager:
+&gt;&gt;&gt; with GLiNERFactory(model=”urchade/gliner_small-v2.1”) as llm:
+…     out = llm.predict(“John works at Google”, [“person”, “org”])</p>
+<p>Build a config (if not provided) and start the Ray Serve deployment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>str</em><em> | </em><em>None</em>) – Model name or path. Ignored if <code class="docutils literal notranslate"><span class="pre">config</span></code> is provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig" title="gliner.serve.config.GLiNERServeConfig"><em>GLiNERServeConfig</em></a><em> | </em><em>None</em>) – Prebuilt <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code>. Mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">model</span></code>/<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p></li>
+<li><p><strong>**kwargs</strong> – Forwarded to <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code> when building one.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.__init__" title="Link to this definition">¶</a></dt>
+<dd><p>Build a config (if not provided) and start the Ray Serve deployment.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>str</em><em> | </em><em>None</em>) – Model name or path. Ignored if <code class="docutils literal notranslate"><span class="pre">config</span></code> is provided.</p></li>
+<li><p><strong>config</strong> (<a class="reference internal" href="gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig" title="gliner.serve.config.GLiNERServeConfig"><em>GLiNERServeConfig</em></a><em> | </em><em>None</em>) – Prebuilt <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code>. Mutually exclusive with
+<code class="docutils literal notranslate"><span class="pre">model</span></code>/<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p></li>
+<li><p><strong>**kwargs</strong> – Forwarded to <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code> when building one.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.handle">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle</span></span><a class="headerlink" href="#gliner.serve.GLiNERFactory.handle" title="Link to this definition">¶</a></dt>
+<dd><p>Underlying Ray Serve deployment handle — for async/advanced use.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.predict" title="Link to this definition">¶</a></dt>
+<dd><p>Blocking prediction. Returns a dict for <code class="docutils literal notranslate"><span class="pre">str</span></code> input, list for list input.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.predict_async">
+<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.predict_async" title="Link to this definition">¶</a></dt>
+<dd><p>Async prediction. Concurrent calls accumulate into one batch.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.shutdown">
+<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.shutdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.shutdown" title="Link to this definition">¶</a></dt>
+<dd><p>Tear down the Ray Serve deployment and the Ray runtime it booted.</p>
+<p>Idempotent. Shutting down Ray after Serve avoids leaving the driver
+attached to a detached Serve instance — the latter produces noisy
+<code class="docutils literal notranslate"><span class="pre">ServeController</span> <span class="pre">...</span> <span class="pre">killed</span> <span class="pre">by</span> <span class="pre">ray.kill</span></code> retry warnings in the
+raylet log when the process exits.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERMemoryEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Precomputed memory table for GLiNER inference.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.measure_cuda_context">
+<span class="sig-name descname"><span class="pre">measure_cuda_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_cuda_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.measure_cuda_context" title="Link to this definition">¶</a></dt>
+<dd><p>Record CUDA context overhead. Must be called before the model loads.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.measure_model_memory">
+<span class="sig-name descname"><span class="pre">measure_model_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_model_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.measure_model_memory" title="Link to this definition">¶</a></dt>
+<dd><p>Record model weight memory. Must be called after the model loads.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.available_memory">
+<span class="sig-name descname"><span class="pre">available_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.available_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.available_memory" title="Link to this definition">¶</a></dt>
+<dd><p>Budget for a batch: <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.calibrate">
+<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.calibrate" title="Link to this definition">¶</a></dt>
+<dd><p>Populate <code class="docutils literal notranslate"><span class="pre">per_sample_table</span></code> across power-of-two seq lengths.</p>
+<p>Uses a single dummy label so the probed sequence length is dominated
+by text tokens; label/relation words are accounted for at lookup time
+by the caller extending <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.per_sample_at">
+<span class="sig-name descname"><span class="pre">per_sample_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.per_sample_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.per_sample_at" title="Link to this definition">¶</a></dt>
+<dd><p>Pessimistic per-sample memory at or above <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.batch_size_fn">
+<span class="sig-name descname"><span class="pre">batch_size_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.batch_size_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.batch_size_fn" title="Link to this definition">¶</a></dt>
+<dd><p>Largest precompiled batch size satisfying <code class="docutils literal notranslate"><span class="pre">per_sample</span> <span class="pre">*</span> <span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">budget</span></code>.</p>
+<p>Budget = <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code> (times the
+configured <code class="docutils literal notranslate"><span class="pre">target_memory_fraction</span></code>). The caller is responsible for
+folding label / relation word counts into <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERServeConfig">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERServeConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device='cuda'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='bfloat16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_model_len=2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span_width=12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_labels=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_relation_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_replicas=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms=5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ongoing_requests=256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity=4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix='/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoding_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_compilation=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_sequence_packing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_flashdeberta=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_batch_sizes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_overhead_factor=1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_min_seq_len=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_iterations=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/config.html#GLiNERServeConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERServeConfig" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERServeConfig</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device='cuda'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='bfloat16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_model_len=2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span_width=12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_labels=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_relation_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_replicas=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms=5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ongoing_requests=256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity=4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix='/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoding_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_compilation=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_sequence_packing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_flashdeberta=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_batch_sizes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_overhead_factor=1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_min_seq_len=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_iterations=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_port=8000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address=None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/config.html#GLiNERServeConfig"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERServeConfig" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Configuration for GLiNER Ray Serve deployment.</p>
 <p>This config controls model loading, serving parameters, and dynamic batching behavior.
@@ -413,6 +634,11 @@ Aligned with GLiNEREngineConfig from engine module.</p>
 <dd></dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.serve.GLiNERServeConfig.http_port">
+<span class="sig-name descname"><span class="pre">http_port</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">8000</span></em><a class="headerlink" href="#gliner.serve.GLiNERServeConfig.http_port" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERServeConfig.ray_address">
 <span class="sig-name descname"><span class="pre">ray_address</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.serve.GLiNERServeConfig.ray_address" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -427,165 +653,8 @@ Aligned with GLiNEREngineConfig from engine module.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.serve.GLiNERServeConfig.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device='cuda'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='bfloat16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_model_len=2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span_width=12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_labels=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_relation_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_replicas=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms=5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ongoing_requests=256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity=4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix='/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoding_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_compilation=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_sequence_packing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_flashdeberta=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_batch_sizes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_overhead_factor=1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_min_seq_len=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_iterations=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.serve.GLiNERServeConfig.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device='cuda'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype='bfloat16'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantization=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_model_len=2048</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_span_width=12</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_labels=-1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_relation_threshold=0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_replicas=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_gpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_cpus_per_replica=1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size=32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms=5.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">request_timeout_s=30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_ongoing_requests=256</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity=4096</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix='/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tokenizer_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">decoding_threads=4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_compilation=True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_sequence_packing=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">enable_flashdeberta=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_batch_sizes=&lt;factory&gt;</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction=0.8</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_overhead_factor=1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_min_seq_len=64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size=2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warmup_iterations=3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">http_port=8000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ray_address=None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.serve.GLiNERServeConfig.__init__" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERMemoryEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Precomputed memory table for GLiNER inference.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.measure_cuda_context">
-<span class="sig-name descname"><span class="pre">measure_cuda_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_cuda_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.measure_cuda_context" title="Link to this definition">¶</a></dt>
-<dd><p>Record CUDA context overhead. Must be called before the model loads.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.measure_model_memory">
-<span class="sig-name descname"><span class="pre">measure_model_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_model_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.measure_model_memory" title="Link to this definition">¶</a></dt>
-<dd><p>Record model weight memory. Must be called after the model loads.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.available_memory">
-<span class="sig-name descname"><span class="pre">available_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.available_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.available_memory" title="Link to this definition">¶</a></dt>
-<dd><p>Budget for a batch: <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.calibrate">
-<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.calibrate" title="Link to this definition">¶</a></dt>
-<dd><p>Populate <code class="docutils literal notranslate"><span class="pre">per_sample_table</span></code> across power-of-two seq lengths.</p>
-<p>Uses a single dummy label so the probed sequence length is dominated
-by text tokens; label/relation words are accounted for at lookup time
-by the caller extending <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.per_sample_at">
-<span class="sig-name descname"><span class="pre">per_sample_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.per_sample_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.per_sample_at" title="Link to this definition">¶</a></dt>
-<dd><p>Pessimistic per-sample memory at or above <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERMemoryEstimator.batch_size_fn">
-<span class="sig-name descname"><span class="pre">batch_size_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.batch_size_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERMemoryEstimator.batch_size_fn" title="Link to this definition">¶</a></dt>
-<dd><p>Largest precompiled batch size satisfying <code class="docutils literal notranslate"><span class="pre">per_sample</span> <span class="pre">*</span> <span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">budget</span></code>.</p>
-<p>Budget = <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code> (times the
-configured <code class="docutils literal notranslate"><span class="pre">target_memory_fraction</span></code>). The caller is responsible for
-folding label / relation word counts into <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>vLLM-style synchronous facade over a GLiNER Ray Serve deployment.</p>
-<p>Bundles config → deploy → client into one lifecycle-managed object so
-callers never see Ray’s ObjectRefs.</p>
-<p>Pass a list of texts to <code class="docutils literal notranslate"><span class="pre">predict</span></code> to preserve dynamic batching: each
-text is dispatched as a separate request so Ray Serve’s <code class="docutils literal notranslate"><span class="pre">&#64;serve.batch</span></code>
-can accumulate them into a single forward pass. A Python loop of
-single-text calls would serialize and defeat batching.</p>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERFactory</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">llm</span> <span class="o">=</span> <span class="n">GLiNERFactory</span><span class="p">(</span><span class="n">model</span><span class="o">=</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">outputs</span> <span class="o">=</span> <span class="n">llm</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-</span><span data-line="4"><span class="gp">... </span>    <span class="p">[</span><span class="s2">&quot;John works at Google&quot;</span><span class="p">,</span> <span class="s2">&quot;Paris is in France&quot;</span><span class="p">],</span>
-</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
-</span><span data-line="6"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="n">llm</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
-</span></pre></div>
-</div>
-<p>Or as a context manager:
-&gt;&gt;&gt; with GLiNERFactory(model=”urchade/gliner_small-v2.1”) as llm:
-…     out = llm.predict(“John works at Google”, [“person”, “org”])</p>
-<p>Build a config (if not provided) and start the Ray Serve deployment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em><em> | </em><em>None</em>) – Model name or path. Ignored if <code class="docutils literal notranslate"><span class="pre">config</span></code> is provided.</p></li>
-<li><p><strong>config</strong> (<a class="reference internal" href="gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig" title="gliner.serve.config.GLiNERServeConfig"><em>GLiNERServeConfig</em></a><em> | </em><em>None</em>) – Prebuilt <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code>. Mutually exclusive with
-<code class="docutils literal notranslate"><span class="pre">model</span></code>/<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p></li>
-<li><p><strong>**kwargs</strong> – Forwarded to <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code> when building one.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Build a config (if not provided) and start the Ray Serve deployment.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>str</em><em> | </em><em>None</em>) – Model name or path. Ignored if <code class="docutils literal notranslate"><span class="pre">config</span></code> is provided.</p></li>
-<li><p><strong>config</strong> (<a class="reference internal" href="gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig" title="gliner.serve.config.GLiNERServeConfig"><em>GLiNERServeConfig</em></a><em> | </em><em>None</em>) – Prebuilt <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code>. Mutually exclusive with
-<code class="docutils literal notranslate"><span class="pre">model</span></code>/<code class="docutils literal notranslate"><span class="pre">kwargs</span></code>.</p></li>
-<li><p><strong>**kwargs</strong> – Forwarded to <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig</span></code> when building one.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.handle">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle</span></span><a class="headerlink" href="#gliner.serve.GLiNERFactory.handle" title="Link to this definition">¶</a></dt>
-<dd><p>Underlying Ray Serve deployment handle — for async/advanced use.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.predict" title="Link to this definition">¶</a></dt>
-<dd><p>Blocking prediction. Returns a dict for <code class="docutils literal notranslate"><span class="pre">str</span></code> input, list for list input.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.predict_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.predict_async" title="Link to this definition">¶</a></dt>
-<dd><p>Async prediction. Concurrent calls accumulate into one batch.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERFactory.shutdown">
-<span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#GLiNERFactory.shutdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERFactory.shutdown" title="Link to this definition">¶</a></dt>
-<dd><p>Tear down the Ray Serve deployment and the Ray runtime it booted.</p>
-<p>Idempotent. Shutting down Ray after Serve avoids leaving the driver
-attached to a detached Serve instance — the latter produces noisy
-<code class="docutils literal notranslate"><span class="pre">ServeController</span> <span class="pre">...</span> <span class="pre">killed</span> <span class="pre">by</span> <span class="pre">ray.kill</span></code> retry warnings in the
-raylet log when the process exits.</p>
-<dl class="field-list simple">
 </dl>
 </dd></dl>
 
@@ -682,68 +751,12 @@ batch.</p>
 
 </dd></dl>
 
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERClient">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">GLiNERClient</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>HTTP client for a running GLiNER Ray Serve deployment.</p>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-</span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span>
-</span><span data-line="5"><span class="gp">... </span>    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>
-</span><span data-line="6"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="7"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
-</span></pre></div>
-</div>
-<p>Initialize the HTTP client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
-<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
-match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
-<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
-<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
-on a list of texts. Bounds the client-side thread pool.</p></li>
-</ul>
-</dd>
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.__init__" title="Link to this definition">¶</a></dt>
-<dd><p>Initialize the HTTP client.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>base_url</strong> (<em>str</em>) – Scheme + host + port of the Ray Serve HTTP proxy.</p></li>
-<li><p><strong>route_prefix</strong> (<em>str</em>) – Route prefix the deployment is mounted under (must
-match <code class="docutils literal notranslate"><span class="pre">GLiNERServeConfig.route_prefix</span></code>).</p></li>
-<li><p><strong>timeout</strong> (<em>float</em>) – Per-request timeout in seconds.</p></li>
-<li><p><strong>max_concurrency</strong> (<em>int</em>) – Maximum in-flight HTTP requests when predicting
-on a list of texts. Bounds the client-side thread pool.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict">
-<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict" title="Link to this definition">¶</a></dt>
-<dd><p>Blocking prediction. <code class="docutils literal notranslate"><span class="pre">str</span></code> in → <code class="docutils literal notranslate"><span class="pre">dict</span></code> out; <code class="docutils literal notranslate"><span class="pre">list</span></code> in → <code class="docutils literal notranslate"><span class="pre">list</span></code> out.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.serve.get_client">
+<span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#get_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.get_client" title="Link to this definition">¶</a></dt>
+<dd><p>Convenience constructor for <a class="reference internal" href="#gliner.serve.GLiNERClient" title="gliner.serve.GLiNERClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">GLiNERClient</span></code></a>.</p>
 <dl class="field-list simple">
 </dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.GLiNERClient.predict_async">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">predict_async</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">relation_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#GLiNERClient.predict_async"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.GLiNERClient.predict_async" title="Link to this definition">¶</a></dt>
-<dd><p>Async prediction. Concurrent calls coalesce into one server-side batch.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="py function">
@@ -779,14 +792,6 @@ on a list of texts. Bounds the client-side thread pool.</p></li>
 <dt class="sig sig-object py" id="gliner.serve.shutdown">
 <span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">shutdown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/server.html#shutdown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.shutdown" title="Link to this definition">¶</a></dt>
 <dd><p>Shutdown the GLiNER Ray Serve deployment.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gliner.serve.get_client">
-<span class="sig-prename descclassname"><span class="pre">gliner.serve.</span></span><span class="sig-name descname"><span class="pre">get_client</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'http://localhost:8000'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">route_prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/gliner'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timeout</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_concurrency</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/client.html#get_client"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.get_client" title="Link to this definition">¶</a></dt>
-<dd><p>Convenience constructor for <a class="reference internal" href="#gliner.serve.GLiNERClient" title="gliner.serve.GLiNERClient"><code class="xref py py-class docutils literal notranslate"><span class="pre">GLiNERClient</span></code></a>.</p>
 <dl class="field-list simple">
 </dl>
 </dd></dl>
