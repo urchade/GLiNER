@@ -1,9 +1,10 @@
-import pytest
 import torch
+import pytest
 from transformers import AutoTokenizer
+
 from gliner import GLiNERConfig
 from gliner.modeling.utils import extract_prompt_features_and_word_embeddings
-from gliner.data_processing import UniEncoderSpanProcessor, WordsSplitter
+from gliner.data_processing import WordsSplitter, UniEncoderSpanProcessor
 
 
 class TestFeaturesExtractor:
@@ -25,7 +26,7 @@ class TestFeaturesExtractor:
         model_input = self.processor.collate_fn(raw_batch, prepare_labels=False)
         model_input['text_lengths'] = raw_batch['seq_length']
         token_embeds = torch.rand(model_input['words_mask'].shape + (self.config.hidden_size,))
-        
+
         (prompts_embedding,
          prompts_embedding_mask,
          words_embedding,
@@ -37,7 +38,7 @@ class TestFeaturesExtractor:
             text_lengths=model_input['text_lengths'],
             words_mask=model_input['words_mask']
         )
-        
+
         assert prompts_embedding_mask.shape == (1, 1)
         assert prompts_embedding.shape == (1, 1, self.config.hidden_size)
         assert words_embedding.shape == (1, len(self.base_tokens[0]), self.config.hidden_size)
@@ -48,7 +49,7 @@ class TestFeaturesExtractor:
         model_input = self.processor.collate_fn(raw_batch, prepare_labels=False)
         model_input['text_lengths'] = raw_batch['seq_length']
         token_embeds = torch.rand(model_input['words_mask'].shape + (self.config.hidden_size,))
-        
+
         (prompts_embedding,
          prompts_embedding_mask,
          words_embedding,
@@ -60,7 +61,7 @@ class TestFeaturesExtractor:
             text_lengths=model_input['text_lengths'],
             words_mask=model_input['words_mask']
         )
-        
+
         assert prompts_embedding_mask.shape == (1, 1)
         assert prompts_embedding.shape == (1, 1, self.config.hidden_size)
         assert words_embedding.shape == (1, len(self.tokens_with_missed[0]), self.config.hidden_size)

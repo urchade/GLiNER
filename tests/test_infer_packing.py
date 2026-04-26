@@ -2,17 +2,17 @@ import random
 from typing import List
 
 import numpy as np
-import pytest
 import torch
+import pytest
 
-from gliner.infer_packing import InferencePackingConfig, pack_requests
 from tests.utils_infer import (
-    DummyTokenizer,
     MockEncoder,
-    make_requests,
-    run_baseline,
+    DummyTokenizer,
     run_packed,
+    run_baseline,
+    make_requests,
 )
+from gliner.infer_packing import InferencePackingConfig, pack_requests
 
 random.seed(1337)
 np.random.seed(1337)

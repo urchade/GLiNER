@@ -1,4 +1,6 @@
-import importlib.util, pytest
+import importlib.util
+
+import pytest
 
 if (
     importlib.util.find_spec("stanza") is None
