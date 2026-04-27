@@ -214,3 +214,72 @@ class TestFromPretrainedQuantizeTrueRejection:
         # ``_FakeModel("cpu").quantize(True)`` which also raises.
         with pytest.raises(TypeError, match="expects a string"):
             _FakeModel("cpu").quantize(True)
+
+
+class TestMaterializeMetaBuffers:
+    """``_materialize_meta_buffers`` post-fixes non-persistent buffers that
+    survive a meta-init + ``load_state_dict(assign=True)`` cycle."""
+
+    def _module_with_meta_position_ids(self, length: int = 16) -> nn.Module:
+        """Build a small module mirroring DeBERTa's ``position_ids`` buffer
+        registration, then move it to meta to simulate post-load state."""
+        module = nn.Module()
+        module.register_buffer(
+            "position_ids",
+            torch.arange(0, length, dtype=torch.int64).unsqueeze(0),
+            persistent=False,
+        )
+        module.position_ids = module.position_ids.to("meta")
+        return module
+
+    def test_position_ids_restored_to_canonical_value(self):
+        m = self._module_with_meta_position_ids(length=8)
+        assert m.position_ids.is_meta  # precondition
+
+        materialized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == ["position_ids"]
+        assert not m.position_ids.is_meta
+        assert torch.equal(
+            m.position_ids,
+            torch.arange(0, 8, dtype=torch.int64).unsqueeze(0),
+        )
+
+    def test_no_op_when_no_meta_buffers(self):
+        m = nn.Module()
+        m.register_buffer("position_ids", torch.arange(0, 4).unsqueeze(0), persistent=False)
+        out = BaseGLiNER._materialize_meta_buffers(m)
+        assert out == []
+
+    def test_nested_module_meta_buffer_restored(self):
+        """Buffers nested inside child modules are walked and fixed too."""
+        outer = nn.Module()
+        inner = nn.Module()
+        inner.register_buffer(
+            "position_ids",
+            torch.arange(0, 4, dtype=torch.int64).unsqueeze(0),
+            persistent=False,
+        )
+        inner.position_ids = inner.position_ids.to("meta")
+        outer.add_module("embeddings", inner)
+
+        materialized = BaseGLiNER._materialize_meta_buffers(outer)
+
+        assert materialized == ["embeddings.position_ids"]
+        assert not outer.embeddings.position_ids.is_meta
+
+    def test_unknown_meta_buffer_warns_and_zero_fills(self):
+        """Buffers we don't know how to materialize fall back to zeros + warn."""
+        m = nn.Module()
+        m.register_buffer(
+            "mystery_constant",
+            torch.tensor([1.0, 2.0, 3.0]),
+            persistent=False,
+        )
+        m.mystery_constant = m.mystery_constant.to("meta")
+
+        with pytest.warns(UserWarning, match="unknown non-persistent buffer"):
+            materialized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == ["mystery_constant"]
+        assert torch.equal(m.mystery_constant, torch.zeros(3))

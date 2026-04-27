@@ -510,6 +510,50 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
+    @staticmethod
+    def _materialize_meta_buffers(module: nn.Module) -> list:
+        """Re-materialize non-persistent buffers left on meta after assign-load.
+
+        Walks the module tree and replaces any buffer still on the meta device
+        after a meta-init + ``load_state_dict(assign=True)`` sequence.
+
+        Non-persistent buffers (registered with ``persistent=False``, e.g.
+        DeBERTa's ``position_ids``) are not in the saved state dict, so they
+        survive as meta tensors after the load. This helper restores them to
+        their canonical computed values.
+
+        Returns a list of buffer names that were materialized — useful for
+        tests and for warning on unknown patterns.
+        """
+        materialized = []
+        for name, buf in list(module.named_buffers()):
+            if not buf.is_meta:
+                continue
+            *parents, leaf = name.split(".")
+            parent_mod = module
+            for p in parents:
+                parent_mod = getattr(parent_mod, p)
+            if leaf == "position_ids":
+                # Standard transformers convention: arange(0, max_pos).expand(1, -1)
+                value = torch.arange(0, buf.shape[-1], dtype=buf.dtype).unsqueeze(0).contiguous()
+                parent_mod.register_buffer(leaf, value, persistent=False)
+                materialized.append(name)
+            else:
+                # Unknown non-persistent buffer — fall back to zeros and warn.
+                # If a caller hits this, the architecture has a buffer pattern
+                # we don't recognize; the user should either disable
+                # ``low_cpu_mem_usage`` or extend this method.
+                warnings.warn(
+                    f"low_cpu_mem_usage materialized unknown non-persistent buffer "
+                    f"{name!r} as zeros. Inference may be incorrect for this module. "
+                    f"Pass low_cpu_mem_usage=False to disable the meta-init path.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+                parent_mod.register_buffer(leaf, torch.zeros(buf.shape, dtype=buf.dtype), persistent=False)
+                materialized.append(name)
+        return materialized
+
     @classmethod
     def _load_state_dict(
         cls,
@@ -738,6 +782,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         compile_torch_model: Optional[bool] = False,
         quantize: Optional[str] = None,
         dtype: Optional[Union[str, torch.dtype]] = None,
+        low_cpu_mem_usage: bool = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         session_options=None,
@@ -774,6 +819,15 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 reading, so the full fp32 copy is never materialized — peak
                 host memory is roughly half of the default path for bf16/fp16.
                 Prefer this over ``quantize`` for plain precision changes.
+            low_cpu_mem_usage: If True, build the model under
+                ``torch.device("meta")`` and use ``load_state_dict(assign=True)``
+                to swap loaded tensors into place. Skips the random-init
+                compute, the fp32 random-init shell, and the post-init cast
+                pass — the model goes from "shape descriptor" to "loaded
+                weights" in one shot. Non-persistent buffers (e.g. DeBERTa's
+                ``position_ids``) are re-materialized after the load.
+                Default ``False`` for now (opt-in); enable for cold-start /
+                serverless deployments where every 100ms matters.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -822,25 +876,54 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             if not model_file.exists():
                 raise FileNotFoundError(f"No model file found in {model_dir}")
 
-            # Create model instance
-            instance = cls(
-                config, tokenizer=tokenizer, backbone_from_pretrained=False, cache_dir=cache_dir, **model_kwargs
-            )
-
-            cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
-
             torch_dtype = cls._parse_dtype(dtype)
-            if torch_dtype is not None:
-                # Pre-cast the random-init shell so the model never exists at
-                # fp32 alongside the loaded state dict. ``.to(floating_dtype)``
-                # only touches floating-point params/buffers.
-                instance.model.to(torch_dtype)
 
-            # Load state dict (tensors cast to ``torch_dtype`` during read when set)
-            state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
-            instance.model.load_state_dict(state_dict, strict=strict)
-            del state_dict
-            instance.model.to(map_location)
+            if low_cpu_mem_usage:
+                # Build the model graph on meta device — no real allocation,
+                # no random-init compute. Shape descriptors only.
+                with torch.device("meta"):
+                    instance = cls(
+                        config,
+                        tokenizer=tokenizer,
+                        backbone_from_pretrained=False,
+                        cache_dir=cache_dir,
+                        **model_kwargs,
+                    )
+                cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
+
+                # Read state dict (cast on read if dtype was set), then swap
+                # tensors directly into the meta-shell parameter slots.
+                state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
+                instance.model.load_state_dict(state_dict, assign=True, strict=strict)
+                del state_dict
+
+                # Materialize non-persistent buffers (position_ids etc.) that
+                # the state dict didn't carry.
+                cls._materialize_meta_buffers(instance.model)
+
+                # If the state dict's map_location was "cpu" but the caller
+                # asked for cuda (or vice versa), move now. assign=True keeps
+                # tensors on whatever device they were loaded to.
+                instance.model.to(map_location)
+            else:
+                # Standard path: random-init shell at fp32, optional cast, load.
+                instance = cls(
+                    config,
+                    tokenizer=tokenizer,
+                    backbone_from_pretrained=False,
+                    cache_dir=cache_dir,
+                    **model_kwargs,
+                )
+                cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
+                if torch_dtype is not None:
+                    # Pre-cast the random-init shell so the model never exists at
+                    # fp32 alongside the loaded state dict. ``.to(floating_dtype)``
+                    # only touches floating-point params/buffers.
+                    instance.model.to(torch_dtype)
+                state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
+                instance.model.load_state_dict(state_dict, strict=strict)
+                del state_dict
+                instance.model.to(map_location)
 
             if compile_torch_model:
                 if "cuda" in map_location:
@@ -4192,6 +4275,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         compile_torch_model: Optional[bool] = False,
         quantize: Optional[str] = None,
         dtype: Optional[Union[str, torch.dtype]] = None,
+        low_cpu_mem_usage: bool = False,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
@@ -4228,6 +4312,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 are cast during the state-dict read so the fp32 copy is never
                 fully materialized; prefer this over ``quantize`` for plain
                 precision changes.
+            low_cpu_mem_usage: If True, build the model under
+                ``torch.device("meta")`` and use ``load_state_dict(assign=True)``,
+                skipping the random-init compute and the fp32 shell allocation.
+                See the base-class docstring for the full contract.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -4294,6 +4382,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             compile_torch_model=compile_torch_model,
             quantize=quantize,
             dtype=dtype,
+            low_cpu_mem_usage=low_cpu_mem_usage,
             max_length=max_length,
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
