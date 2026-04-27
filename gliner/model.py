@@ -511,21 +511,29 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
     @staticmethod
-    def _materialize_meta_buffers(module: nn.Module) -> list:
+    def _materialize_meta_buffers(module: nn.Module) -> tuple:
         """Re-materialize non-persistent buffers left on meta after assign-load.
 
         Walks the module tree and replaces any buffer still on the meta device
         after a meta-init + ``load_state_dict(assign=True)`` sequence.
 
-        Non-persistent buffers (registered with ``persistent=False``, e.g.
-        DeBERTa's ``position_ids``) are not in the saved state dict, so they
-        survive as meta tensors after the load. This helper restores them to
-        their canonical computed values.
+        Non-persistent buffers (registered with ``persistent=False``) are not
+        in the saved state dict, so they survive as meta tensors after the
+        load. This helper restores the ones we recognize:
 
-        Returns a list of buffer names that were materialized — useful for
-        tests and for warning on unknown patterns.
+        - ``position_ids`` — ``arange(0, max_pos).unsqueeze(0)`` (BERT/DeBERTa).
+        - ``token_type_ids`` — ``zeros((1, max_pos))`` (BERT-family default).
+
+        For *unrecognized* buffers (e.g. RoPE's ``inv_freq``, where the
+        canonical value depends on a per-architecture ``base`` we can't
+        recover from the buffer alone), this returns them in
+        ``unrecognized`` so the caller can fall back to the standard load
+        path rather than ship a model with broken inference.
+
+        Returns ``(materialized: list[str], unrecognized: list[str])``.
         """
-        materialized = []
+        materialized: list = []
+        unrecognized: list = []
         for name, buf in list(module.named_buffers()):
             if not buf.is_meta:
                 continue
@@ -538,21 +546,18 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 value = torch.arange(0, buf.shape[-1], dtype=buf.dtype).unsqueeze(0).contiguous()
                 parent_mod.register_buffer(leaf, value, persistent=False)
                 materialized.append(name)
-            else:
-                # Unknown non-persistent buffer — fall back to zeros and warn.
-                # If a caller hits this, the architecture has a buffer pattern
-                # we don't recognize; the user should either disable
-                # ``low_cpu_mem_usage`` or extend this method.
-                warnings.warn(
-                    f"low_cpu_mem_usage materialized unknown non-persistent buffer "
-                    f"{name!r} as zeros. Inference may be incorrect for this module. "
-                    f"Pass low_cpu_mem_usage=False to disable the meta-init path.",
-                    UserWarning,
-                    stacklevel=3,
-                )
-                parent_mod.register_buffer(leaf, torch.zeros(buf.shape, dtype=buf.dtype), persistent=False)
+            elif leaf == "token_type_ids":
+                # BERT-family default: zeros, broadcast to (1, max_pos).
+                value = torch.zeros(buf.shape, dtype=buf.dtype)
+                parent_mod.register_buffer(leaf, value, persistent=False)
                 materialized.append(name)
-        return materialized
+            else:
+                # Unrecognized non-persistent buffer. We can't safely zero-fill
+                # because the canonical value may be load-bearing (e.g. RoPE
+                # ``inv_freq`` is computed from ``base ** (arange(0, dim, 2) / dim)``
+                # and zeros would break attention). Surface to caller for fallback.
+                unrecognized.append(name)
+        return materialized, unrecognized
 
     @classmethod
     def _load_state_dict(
@@ -878,35 +883,58 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             torch_dtype = cls._parse_dtype(dtype)
 
+            instance = None
             if low_cpu_mem_usage:
                 # Build the model graph on meta device — no real allocation,
                 # no random-init compute. Shape descriptors only.
                 with torch.device("meta"):
-                    instance = cls(
+                    meta_instance = cls(
                         config,
                         tokenizer=tokenizer,
                         backbone_from_pretrained=False,
                         cache_dir=cache_dir,
                         **model_kwargs,
                     )
-                cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
+                cls._resize_token_embeddings(meta_instance, config, tokenizer, resize_token_embeddings)
 
                 # Read state dict (cast on read if dtype was set), then swap
                 # tensors directly into the meta-shell parameter slots.
                 state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
-                instance.model.load_state_dict(state_dict, assign=True, strict=strict)
+                meta_instance.model.load_state_dict(state_dict, assign=True, strict=strict)
                 del state_dict
 
                 # Materialize non-persistent buffers (position_ids etc.) that
                 # the state dict didn't carry.
-                cls._materialize_meta_buffers(instance.model)
+                _materialized, unrecognized = cls._materialize_meta_buffers(meta_instance.model)
 
-                # If the state dict's map_location was "cpu" but the caller
-                # asked for cuda (or vice versa), move now. assign=True keeps
-                # tensors on whatever device they were loaded to.
-                instance.model.to(map_location)
-            else:
+                if unrecognized:
+                    # Buffers we don't know how to recompute (e.g. RoPE inv_freq
+                    # whose base varies per-architecture). The meta-init load
+                    # would produce wrong inference; fall back to the standard
+                    # path so the user gets a correct model. Cost is one full
+                    # standard load; benefit is no silent correctness bug.
+                    short_names = sorted({n.rsplit(".", 1)[-1] for n in unrecognized})
+                    warnings.warn(
+                        f"low_cpu_mem_usage=True is not supported for this architecture: "
+                        f"the model has non-persistent buffer(s) {short_names} that "
+                        f"_materialize_meta_buffers does not recognize "
+                        f"(e.g. RoPE inv_freq for ModernBERT). Falling back to the "
+                        f"standard load path so inference is correct. Pass "
+                        f"low_cpu_mem_usage=False to silence this warning.",
+                        UserWarning,
+                        stacklevel=2,
+                    )
+                    del meta_instance
+                else:
+                    # All buffers recognized — meta path succeeded.
+                    meta_instance.model.to(map_location)
+                    instance = meta_instance
+
+            if instance is None:
                 # Standard path: random-init shell at fp32, optional cast, load.
+                # Reached when low_cpu_mem_usage=False, OR when the meta-init
+                # path detected unrecognized non-persistent buffers and fell
+                # back automatically.
                 instance = cls(
                     config,
                     tokenizer=tokenizer,

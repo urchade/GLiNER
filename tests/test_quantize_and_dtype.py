@@ -236,9 +236,10 @@ class TestMaterializeMetaBuffers:
         m = self._module_with_meta_position_ids(length=8)
         assert m.position_ids.is_meta  # precondition
 
-        materialized = BaseGLiNER._materialize_meta_buffers(m)
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
 
         assert materialized == ["position_ids"]
+        assert unrecognized == []
         assert not m.position_ids.is_meta
         assert torch.equal(
             m.position_ids,
@@ -248,8 +249,9 @@ class TestMaterializeMetaBuffers:
     def test_no_op_when_no_meta_buffers(self):
         m = nn.Module()
         m.register_buffer("position_ids", torch.arange(0, 4).unsqueeze(0), persistent=False)
-        out = BaseGLiNER._materialize_meta_buffers(m)
-        assert out == []
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+        assert materialized == []
+        assert unrecognized == []
 
     def test_nested_module_meta_buffer_restored(self):
         """Buffers nested inside child modules are walked and fixed too."""
@@ -263,23 +265,41 @@ class TestMaterializeMetaBuffers:
         inner.position_ids = inner.position_ids.to("meta")
         outer.add_module("embeddings", inner)
 
-        materialized = BaseGLiNER._materialize_meta_buffers(outer)
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(outer)
 
         assert materialized == ["embeddings.position_ids"]
+        assert unrecognized == []
         assert not outer.embeddings.position_ids.is_meta
 
-    def test_unknown_meta_buffer_warns_and_zero_fills(self):
-        """Buffers we don't know how to materialize fall back to zeros + warn."""
+    def test_token_type_ids_restored_to_zeros(self):
+        """BERT-family ``token_type_ids`` is a non-persistent buffer of zeros."""
         m = nn.Module()
         m.register_buffer(
-            "mystery_constant",
-            torch.tensor([1.0, 2.0, 3.0]),
+            "token_type_ids",
+            torch.zeros((1, 6), dtype=torch.int64),
             persistent=False,
         )
-        m.mystery_constant = m.mystery_constant.to("meta")
+        m.token_type_ids = m.token_type_ids.to("meta")
 
-        with pytest.warns(UserWarning, match="unknown non-persistent buffer"):
-            materialized = BaseGLiNER._materialize_meta_buffers(m)
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
 
-        assert materialized == ["mystery_constant"]
-        assert torch.equal(m.mystery_constant, torch.zeros(3))
+        assert materialized == ["token_type_ids"]
+        assert unrecognized == []
+        assert torch.equal(m.token_type_ids, torch.zeros((1, 6), dtype=torch.int64))
+
+    def test_unknown_buffer_returned_as_unrecognized(self):
+        """Unrecognized buffers are surfaced for caller-side fallback (not zero-filled)."""
+        m = nn.Module()
+        m.register_buffer(
+            "inv_freq",
+            torch.tensor([1.0, 0.5, 0.25]),
+            persistent=False,
+        )
+        m.inv_freq = m.inv_freq.to("meta")
+
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == []
+        assert unrecognized == ["inv_freq"]
+        # The buffer is still meta — caller must fall back to the standard load path.
+        assert m.inv_freq.is_meta
