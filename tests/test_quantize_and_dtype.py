@@ -5,6 +5,7 @@ public contracts on BaseGLiNER (``_parse_dtype``, ``_load_state_dict``) and
 ``model.quantize(...)`` via a lightweight fake subclass.
 """
 
+import warnings
 from pathlib import Path
 
 import torch
@@ -337,3 +338,102 @@ class TestVariantDtypeConsistency:
                 variant="bf16",
                 dtype=torch.int8,
             )
+
+
+class TestVariantAvailable:
+    """``_variant_available`` probe for variant file presence."""
+
+    def _safetensors_at(self, path: Path) -> None:
+        save_file({"weight": torch.randn(2, 2)}, str(path))
+
+    def test_local_dir_with_variant_returns_true(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.bf16.safetensors")
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is True
+
+    def test_local_dir_without_variant_returns_false(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.safetensors")
+        # default fp32 is there, but no bf16 file
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is False
+
+    def test_local_dir_with_only_fp16_does_not_match_bf16(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.fp16.safetensors")
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is False
+        assert BaseGLiNER._variant_available(str(tmp_path), "fp16") is True
+
+    def test_nonexistent_path_with_local_files_only_returns_none(self, tmp_path: Path):
+        """No local dir + local_files_only=True should not hit the network."""
+        nonexistent = tmp_path / "does_not_exist"
+        assert BaseGLiNER._variant_available(str(nonexistent), "bf16", local_files_only=True) is None
+
+
+class TestResolveVariantFallback:
+    """``_resolve_variant`` warns and downgrades to None when variant is missing."""
+
+    def test_passthrough_when_none(self):
+        # No probe needed for variant=None; returns None silently.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            assert BaseGLiNER._resolve_variant("any/repo", None) is None
+            assert [w for w in caught if "variant" in str(w.message).lower()] == []
+
+    def test_passthrough_when_available(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.bf16.safetensors"))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            out = BaseGLiNER._resolve_variant(str(tmp_path), "bf16")
+            assert out == "bf16"
+            assert [w for w in caught if "variant" in str(w.message).lower()] == []
+
+    def test_warns_and_returns_none_when_unavailable(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        # Variant file isn't there; expect warn + None.
+        with pytest.warns(UserWarning, match="not published"):
+            out = BaseGLiNER._resolve_variant(str(tmp_path), "bf16")
+        assert out is None
+
+
+class TestResolveModelFile:
+    """``_resolve_model_file`` picks the right file with graceful fallback."""
+
+    def test_default_path_picks_safetensors(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+        assert path == tmp_path / "model.safetensors"
+        assert eff is None
+
+    def test_default_path_falls_back_to_pytorch_bin(self, tmp_path: Path):
+        torch.save({}, str(tmp_path / "pytorch_model.bin"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+        assert path == tmp_path / "pytorch_model.bin"
+        assert eff is None
+
+    def test_default_path_no_file_raises(self, tmp_path: Path):
+        with pytest.raises(FileNotFoundError, match="No model file"):
+            BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+
+    def test_variant_present_returns_variant(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.bf16.safetensors"))
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "model.bf16.safetensors"
+        assert eff == "bf16"
+
+    def test_variant_missing_warns_and_falls_back_to_safetensors(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        with pytest.warns(UserWarning, match="not found"):
+            path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "model.safetensors"
+        # effective_variant must be None so caller knows we fell back
+        # (torch_dtype is already set from the variant earlier in from_pretrained)
+        assert eff is None
+
+    def test_variant_missing_falls_back_to_pytorch_bin(self, tmp_path: Path):
+        torch.save({}, str(tmp_path / "pytorch_model.bin"))
+        with pytest.warns(UserWarning, match="not found"):
+            path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "pytorch_model.bin"
+        assert eff is None
+
+    def test_variant_missing_with_no_fallback_raises(self, tmp_path: Path):
+        with pytest.raises(FileNotFoundError, match="Neither"):
+            BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")

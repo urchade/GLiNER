@@ -402,12 +402,13 @@ model = GLiNER.from_pretrained("org/gliner_bf16-v1", variant="bf16")
 # for gliner_medium-v2.1) when a bf16 file is published.
 ```
 
-Behavior:
-- `variant=None` (default): unchanged — pulls the whole repo and loads `model.safetensors`.
-- `variant="fp16"` / `"bf16"`: `snapshot_download` is filtered with `allow_patterns` so only `model.{variant}.safetensors` (plus configs and tokenizer assets) is fetched. `dtype=` is inferred from `variant` if not set; passing both with mismatched precisions raises.
-- If the variant file isn't published in the repo, you get a `FileNotFoundError` pointing you at `dtype=` for the in-memory cast path. There's no silent fallback — falling back to fp32 would defeat the download savings.
+Behavior — `variant=` is a *best-effort hint*, not a hard requirement:
 
-This is the lever to pull for cold-start cost when bytes-on-the-wire dominate; combine with `dtype=` (which is now redundant when `variant=` is set, but harmless if it matches) for the lowest peak memory after download.
+- `variant=None` (default): unchanged — pulls the whole repo and loads `model.safetensors`.
+- `variant="fp16"` / `"bf16"` and the variant **is** published: `snapshot_download` is filtered with `allow_patterns` so only `model.{variant}.safetensors` (plus configs and tokenizer assets) is fetched. `dtype=` is inferred from `variant`; passing both with mismatched precisions raises.
+- `variant="fp16"` / `"bf16"` and the variant **is not** published: a `UserWarning` is emitted and the loader falls back to the default fp32 file plus an in-memory cast — same outcome as passing `dtype=` alone, no error, no I/O win. The warning text tells the user the publisher hasn't uploaded the file so the bandwidth savings didn't apply.
+
+This is the lever to pull for cold-start cost when bytes-on-the-wire dominate. Set `variant="bf16"` and forget about it — if the publisher has the variant file you get the I/O savings, and if they don't you get the in-memory `dtype=` behavior with a one-line warning. The probe uses `huggingface_hub.HfApi().list_repo_files` (one cheap API call) before downloading.
 
 ### Quantization, Compilation & FlashDeBERTa
 
