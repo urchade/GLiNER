@@ -303,3 +303,58 @@ class TestMaterializeMetaBuffers:
         assert unrecognized == ["inv_freq"]
         # The buffer is still meta — caller must fall back to the standard load path.
         assert m.inv_freq.is_meta
+
+
+class TestMetaParamFallbackContract:
+    """Codex review finding: with ``low_cpu_mem_usage=True`` and the default
+    ``strict=False``, ``load_state_dict(assign=True)`` may leave a parameter
+    on the meta device when the checkpoint is missing a key. The subsequent
+    ``.to(map_location)`` then raises ``NotImplementedError: Cannot copy out
+    of meta tensor``, whereas the standard path would have kept the
+    random-init value and loaded successfully.
+
+    These tests assert the *contract* underlying the fix without spinning up
+    a real GLiNER model: ``load_state_dict(assign=True, strict=False)`` does
+    leave parameters on meta when keys are missing, and the
+    "scan for meta parameters after assign" check in ``from_pretrained``
+    correctly identifies them.
+    """
+
+    def test_assign_load_with_missing_key_leaves_param_on_meta(self):
+        """The premise — without our scan, ``.to()`` would crash."""
+        with torch.device("meta"):
+            module = nn.Linear(4, 4)
+        # State dict is missing the bias.
+        partial_sd = {"weight": torch.randn(4, 4)}
+        result = module.load_state_dict(partial_sd, assign=True, strict=False)
+        assert "bias" in result.missing_keys
+        # The bug: bias is still on meta.
+        assert module.bias.is_meta
+        # And .to() on a meta param raises.
+        with pytest.raises(NotImplementedError, match="meta"):
+            module.to("cpu")
+
+    def test_meta_param_scan_finds_missing_assign_targets(self):
+        """The fix's scan: walk named_parameters looking for ``is_meta``,
+        report names so the fallback warning can surface them."""
+        with torch.device("meta"):
+            module = nn.Sequential(nn.Linear(4, 4), nn.Linear(4, 2))
+        # Provide weights but not biases.
+        partial_sd = {
+            "0.weight": torch.randn(4, 4),
+            "1.weight": torch.randn(2, 4),
+        }
+        module.load_state_dict(partial_sd, assign=True, strict=False)
+        meta_params = [n for n, p in module.named_parameters() if p.is_meta]
+        assert sorted(meta_params) == ["0.bias", "1.bias"]
+
+    def test_full_assign_load_leaves_no_meta_params(self):
+        """Sanity: when the state dict is complete, no meta params remain."""
+        with torch.device("meta"):
+            module = nn.Linear(4, 4)
+        full_sd = {"weight": torch.randn(4, 4), "bias": torch.randn(4)}
+        module.load_state_dict(full_sd, assign=True, strict=False)
+        meta_params = [n for n, p in module.named_parameters() if p.is_meta]
+        assert meta_params == []
+        # And .to() succeeds on the materialized module.
+        module.to("cpu")

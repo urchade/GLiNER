@@ -900,33 +900,61 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 # Read state dict (cast on read if dtype was set), then swap
                 # tensors directly into the meta-shell parameter slots.
                 state_dict = cls._load_state_dict(model_file, map_location, dtype=torch_dtype)
-                meta_instance.model.load_state_dict(state_dict, assign=True, strict=strict)
+                incompat = meta_instance.model.load_state_dict(state_dict, assign=True, strict=strict)
                 del state_dict
 
                 # Materialize non-persistent buffers (position_ids etc.) that
                 # the state dict didn't carry.
                 _materialized, unrecognized = cls._materialize_meta_buffers(meta_instance.model)
 
-                if unrecognized:
-                    # Buffers we don't know how to recompute (e.g. RoPE inv_freq
-                    # whose base varies per-architecture). The meta-init load
-                    # would produce wrong inference; fall back to the standard
-                    # path so the user gets a correct model. Cost is one full
-                    # standard load; benefit is no silent correctness bug.
-                    short_names = sorted({n.rsplit(".", 1)[-1] for n in unrecognized})
+                # Detect parameters left on meta. With strict=True, missing
+                # keys would have raised at load_state_dict; with strict=False
+                # (the default) they don't, leaving the parameter on the meta
+                # device. The standard path keeps random-init values for these
+                # params, which is what the caller would have seen without
+                # low_cpu_mem_usage=True. The subsequent .to(map_location)
+                # would otherwise raise ``NotImplementedError: Cannot copy out
+                # of meta tensor`` and fail the load entirely.
+                meta_param_names = [n for n, p in meta_instance.model.named_parameters() if p.is_meta]
+
+                if unrecognized or meta_param_names:
+                    # Cases that meta-init can't safely handle: unrecognized
+                    # non-persistent buffers (e.g. RoPE inv_freq whose base
+                    # varies per-architecture), or parameters that the state
+                    # dict didn't supply (strict=False + missing keys). Fall
+                    # back to the standard load path — cost is one full
+                    # standard load; benefit is no silent correctness bug
+                    # and no spurious crash on .to(map_location).
+                    if unrecognized:
+                        short_names = sorted({n.rsplit(".", 1)[-1] for n in unrecognized})
+                        reason = (
+                            f"the model has non-persistent buffer(s) {short_names} that "
+                            f"_materialize_meta_buffers does not recognize "
+                            f"(e.g. RoPE inv_freq for ModernBERT)"
+                        )
+                    else:
+                        # Truncate to keep the warning readable; the missing-key
+                        # set can be large for genuinely incomplete checkpoints.
+                        sample = sorted(meta_param_names)[:5]
+                        more = f" (and {len(meta_param_names) - 5} more)" if len(meta_param_names) > 5 else ""
+                        reason = (
+                            f"the checkpoint is missing parameter(s) {sample}{more}; "
+                            f"the standard load path would have kept the random-init "
+                            f"values for these"
+                        )
                     warnings.warn(
-                        f"low_cpu_mem_usage=True is not supported for this architecture: "
-                        f"the model has non-persistent buffer(s) {short_names} that "
-                        f"_materialize_meta_buffers does not recognize "
-                        f"(e.g. RoPE inv_freq for ModernBERT). Falling back to the "
-                        f"standard load path so inference is correct. Pass "
-                        f"low_cpu_mem_usage=False to silence this warning.",
+                        f"low_cpu_mem_usage=True is not supported for this load: "
+                        f"{reason}. Falling back to the standard load path so "
+                        f"inference is correct. Pass low_cpu_mem_usage=False to "
+                        f"silence this warning.",
                         UserWarning,
                         stacklevel=2,
                     )
                     del meta_instance
                 else:
-                    # All buffers recognized — meta path succeeded.
+                    # All buffers recognized and all params materialized —
+                    # meta path succeeded.
+                    del incompat
                     meta_instance.model.to(map_location)
                     instance = meta_instance
 
