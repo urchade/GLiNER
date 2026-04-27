@@ -15,9 +15,15 @@ from torch import nn
 from packaging import version
 from safetensors import safe_open
 from transformers import AutoTokenizer
-from huggingface_hub import HfApi, PyTorchModelHubMixin, snapshot_download
+from huggingface_hub import (
+    PyTorchModelHubMixin,
+    hf_hub_download,
+    snapshot_download,
+    try_to_load_from_cache,
+)
 from torch.utils.data import DataLoader
 from safetensors.torch import save_file
+from huggingface_hub.errors import EntryNotFoundError
 
 try:
     from onnxruntime.quantization import QuantType, quantize_dynamic
@@ -339,33 +345,58 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     ) -> Optional[bool]:
         """Probe whether ``model.{variant}.safetensors`` is published.
 
-        For local paths the probe is a disk check. For Hub repos it calls
-        ``HfApi().list_repo_files``.
+        Resolution order (matches the ``transformers`` / ``huggingface_hub``
+        idiom — cheapest checks first, no list-files round-trip):
+
+        1. ``model_id`` is a local directory → ``Path.exists()``.
+        2. The file is in the local HF cache for this repo+revision →
+           ``try_to_load_from_cache``. Pure local lookup, no network.
+        3. ``local_files_only=True`` → return ``None`` (uncertain) without
+           hitting the network.
+        4. ``hf_hub_download`` for the variant filename: success means the
+           file exists (and is now cached, so the subsequent
+           ``snapshot_download`` reuses it); ``EntryNotFoundError`` means
+           the publisher hasn't uploaded a variant.
 
         Returns:
             ``True`` / ``False`` when known, or ``None`` when availability
-            cannot be determined (offline, transient API failure, gated
-            repo without auth). Callers should treat ``None`` as
-            "uncertain — try the narrow download and let it fail loudly".
+            cannot be determined (offline + uncached, transient API failure,
+            gated repo without auth). ``None`` is treated as "try the narrow
+            download and let it fail loudly".
         """
         target = f"model.{variant}.safetensors"
 
+        # 1. Local directory.
         model_dir = Path(model_id)
         if model_dir.exists() and model_dir.is_dir():
             return (model_dir / target).exists()
 
+        # 2. Already cached for this repo+revision? Pure local — no network.
+        # try_to_load_from_cache validates the repo_id format; an
+        # HFValidationError here means the input isn't a valid repo_id at
+        # all (e.g. a non-existent local path), so treat as uncertain.
+        try:
+            cached = try_to_load_from_cache(repo_id=model_id, filename=target, revision=revision)
+        except Exception:
+            return None
+        if isinstance(cached, str):
+            return True
+
+        # 3. Offline mode: can't probe further.
         if local_files_only:
             return None
 
+        # 4. Try-and-recover via hf_hub_download. Success caches the file so
+        # the subsequent snapshot_download reuses it (no double download).
         try:
-            files = HfApi().list_repo_files(repo_id=model_id, revision=revision, token=token)
+            hf_hub_download(repo_id=model_id, filename=target, revision=revision, token=token)
+            return True
+        except EntryNotFoundError:
+            return False
         except Exception:
-            # The list of possible huggingface_hub errors here is wide
-            # (network, auth, repo not found, gated). Treat any failure as
-            # "availability unknown" and let the subsequent download path
-            # produce the canonical error if there really is a problem.
+            # Auth / network / repo-not-found / gated — surface as uncertain
+            # and let the subsequent download path produce the canonical error.
             return None
-        return target in files
 
     @classmethod
     def _resolve_variant(
@@ -392,6 +423,15 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             model_id, variant, revision=revision, token=token, local_files_only=local_files_only
         )
         if available is False:
+            # TODO(strict-variant): once half-precision variant files have been
+            # published for the flagship GLiNER models on the Hub, flip this
+            # branch to raise ``EntryNotFoundError`` (or a wrapped equivalent)
+            # instead of warning + falling back. That matches
+            # ``transformers.PreTrainedModel.from_pretrained(variant=...)``,
+            # which is strict — explicit > implicit. The soft-fallback was a
+            # transitional choice taken because, at PR-merge time, no GLiNER
+            # repo on the Hub shipped a variant file, so a strict surface
+            # would have been broken-on-arrival for every caller.
             warnings.warn(
                 f"variant={variant!r} requested but 'model.{variant}.safetensors' is not "
                 f"published in {model_id!r}. Falling back to the default fp32 file with "
