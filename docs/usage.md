@@ -392,6 +392,23 @@ Accepted values: `"fp16"` / `"float16"` / `"half"`, `"bf16"` / `"bfloat16"`, `"f
 
 `dtype` covers plain precision changes (bf16/fp16/fp32). For int8 / torchao / CPU dynamic quantization, keep using `quantize` (see below). The two can be combined if desired.
 
+#### Selective download (`variant`)
+
+`dtype=` casts in memory but the on-disk file is still fp32, so the bytes pulled from the Hub don't shrink. If a publisher uploads a half-precision variant of the file (`model.fp16.safetensors` or `model.bf16.safetensors`, following the transformers naming convention), pass `variant=` to download *only* that file:
+
+```python
+model = GLiNER.from_pretrained("org/gliner_bf16-v1", variant="bf16")
+# Halves bytes-on-the-wire vs. the default fp32 download (~745 MB -> ~370 MB
+# for gliner_medium-v2.1) when a bf16 file is published.
+```
+
+Behavior:
+- `variant=None` (default): unchanged — pulls the whole repo and loads `model.safetensors`.
+- `variant="fp16"` / `"bf16"`: `snapshot_download` is filtered with `allow_patterns` so only `model.{variant}.safetensors` (plus configs and tokenizer assets) is fetched. `dtype=` is inferred from `variant` if not set; passing both with mismatched precisions raises.
+- If the variant file isn't published in the repo, you get a `FileNotFoundError` pointing you at `dtype=` for the in-memory cast path. There's no silent fallback — falling back to fp32 would defeat the download savings.
+
+This is the lever to pull for cold-start cost when bytes-on-the-wire dominate; combine with `dtype=` (which is now redundant when `variant=` is set, but harmless if it matches) for the lowest peak memory after download.
+
 ### Quantization, Compilation & FlashDeBERTa
 
 Combine `dtype="fp16"` (or `"bf16"`) with `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:

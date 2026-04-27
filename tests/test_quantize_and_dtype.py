@@ -214,3 +214,126 @@ class TestFromPretrainedQuantizeTrueRejection:
         # ``_FakeModel("cpu").quantize(True)`` which also raises.
         with pytest.raises(TypeError, match="expects a string"):
             _FakeModel("cpu").quantize(True)
+
+
+class TestNormalizeVariant:
+    """``variant=`` canonicalization for selective downloads."""
+
+    def test_none_is_default(self):
+        assert BaseGLiNER._normalize_variant(None) is None
+
+    @pytest.mark.parametrize(
+        "alias,canonical",
+        [
+            ("fp16", "fp16"),
+            ("float16", "fp16"),
+            ("half", "fp16"),
+            ("FP16", "fp16"),  # case-insensitive
+            ("bf16", "bf16"),
+            ("bfloat16", "bf16"),
+            ("BFloat16", "bf16"),
+        ],
+    )
+    def test_aliases_canonicalize(self, alias, canonical):
+        assert BaseGLiNER._normalize_variant(alias) == canonical
+
+    @pytest.mark.parametrize("v", ["fp32", "float32", "float"])
+    def test_fp32_explicitly_rejected(self, v):
+        """fp32 is the default download — there's no separate variant file."""
+        with pytest.raises(ValueError, match="not a separate download"):
+            BaseGLiNER._normalize_variant(v)
+
+    def test_int8_rejected_with_pointer(self):
+        """int8 isn't a precision variant; the error should redirect to quantize=."""
+        with pytest.raises(ValueError, match=r"quantize='int8'"):
+            BaseGLiNER._normalize_variant("int8")
+
+    def test_unknown_string_lists_supported(self):
+        with pytest.raises(ValueError, match="Supported"):
+            BaseGLiNER._normalize_variant("qint4")
+
+    @pytest.mark.parametrize("bad", [123, 3.14, [], object()])
+    def test_bad_type_raises_typeerror(self, bad):
+        with pytest.raises(TypeError, match=r"str or None"):
+            BaseGLiNER._normalize_variant(bad)
+
+
+class TestVariantAllowPatterns:
+    """The ``allow_patterns`` we hand to ``snapshot_download``."""
+
+    def test_includes_only_requested_variant_safetensors(self):
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        assert "model.bf16.safetensors" in patterns
+        # Default and other variants must NOT be in the allow list, otherwise
+        # snapshot_download would still pull them.
+        assert "model.safetensors" not in patterns
+        assert "model.fp16.safetensors" not in patterns
+        assert "pytorch_model.bin" not in patterns
+
+    def test_includes_sharded_index(self):
+        patterns = BaseGLiNER._variant_allow_patterns("fp16")
+        assert "model.fp16.safetensors.index.json" in patterns
+
+    def test_includes_configs_and_tokenizer(self):
+        """Tokenizer / config files must always come down."""
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        # ``*.json`` covers gliner_config.json, tokenizer_config.json,
+        # special_tokens_map.json, added_tokens.json.
+        assert "*.json" in patterns
+        # SentencePiece-style tokenizers ship .model / .txt files.
+        assert "spiece.model" in patterns
+        assert "sentencepiece.bpe.model" in patterns
+        assert "*.txt" in patterns
+
+    def test_fp16_and_bf16_differ_only_in_variant_filename(self):
+        a = set(BaseGLiNER._variant_allow_patterns("fp16"))
+        b = set(BaseGLiNER._variant_allow_patterns("bf16"))
+        diff = a.symmetric_difference(b)
+        assert diff == {
+            "model.fp16.safetensors",
+            "model.bf16.safetensors",
+            "model.fp16.safetensors.index.json",
+            "model.bf16.safetensors.index.json",
+        }
+
+
+class TestVariantDtypeConsistency:
+    """``variant=`` and ``dtype=`` must agree (or only one set).
+
+    The mismatch check fires before any download/config/model construction,
+    so we can test it on the abstract ``BaseGLiNER`` without a real checkpoint.
+    """
+
+    def test_mismatch_raises_value_error(self, tmp_path: Path):
+        """variant='bf16' with dtype='fp16' is contradictory."""
+        with pytest.raises(ValueError, match="variant='bf16' requires"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bf16",
+                dtype="fp16",
+            )
+
+    def test_aliases_normalize_before_compare(self, tmp_path: Path):
+        """variant='bfloat16' + dtype='bf16' must NOT raise on dtype mismatch.
+
+        Both canonicalize to bf16. The call still fails (no config in tmp_path)
+        but with a different error — proving the consistency check passed.
+        """
+        with pytest.raises(FileNotFoundError, match="config"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bfloat16",
+                dtype="bf16",
+            )
+
+    def test_int_dtype_against_variant_rejected_by_dtype_parser(self, tmp_path: Path):
+        """variant='bf16' with dtype=torch.int8 should fail at dtype parsing."""
+        with pytest.raises(ValueError, match="floating-point"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bf16",
+                dtype=torch.int8,
+            )
