@@ -319,19 +319,26 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def _variant_allow_patterns(variant: str) -> list:
         """Return ``snapshot_download(allow_patterns=...)`` for a variant.
 
-        The patterns include the variant safetensors file (and its sharded
-        index, if present) plus the configs and tokenizer assets every load
-        needs. The default ``model.safetensors`` and ``pytorch_model.bin`` are
-        deliberately excluded so the caller pays I/O only for the requested
-        variant.
+        Includes the single-file variant safetensors, the sharded variant
+        index, the actual sharded variant safetensors files, and the configs
+        and tokenizer assets every load needs. The default
+        ``model.safetensors`` and ``pytorch_model.bin`` are deliberately
+        excluded so the caller pays I/O only for the requested variant.
+
+        Sharded checkpoint convention (transformers-style):
+            ``model-00001-of-NNNNN.{variant}.safetensors``
+            ``model.{variant}.safetensors.index.json``
         """
         return [
             "*.json",
             "*.txt",
             "spiece.model",
             "sentencepiece.bpe.model",
+            # Single-file variant.
             f"model.{variant}.safetensors",
+            # Sharded variant: index file + per-shard files.
             f"model.{variant}.safetensors.index.json",
+            f"model-*-of-*.{variant}.safetensors",
         ]
 
     @classmethod
@@ -340,6 +347,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         model_id: str,
         variant: str,
         revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
         token: Union[str, bool, None] = None,
         local_files_only: bool = False,
     ) -> Optional[bool]:
@@ -375,8 +383,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         # try_to_load_from_cache validates the repo_id format; an
         # HFValidationError here means the input isn't a valid repo_id at
         # all (e.g. a non-existent local path), so treat as uncertain.
+        # ``cache_dir`` must match what ``snapshot_download`` will use, or the
+        # probe and the actual download diverge (and we'd download the variant
+        # twice).
         try:
-            cached = try_to_load_from_cache(repo_id=model_id, filename=target, revision=revision)
+            cached = try_to_load_from_cache(repo_id=model_id, filename=target, revision=revision, cache_dir=cache_dir)
         except Exception:
             return None
         if isinstance(cached, str):
@@ -388,8 +399,16 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         # 4. Try-and-recover via hf_hub_download. Success caches the file so
         # the subsequent snapshot_download reuses it (no double download).
+        # cache_dir must propagate so the probe and snapshot_download share
+        # the same store.
         try:
-            hf_hub_download(repo_id=model_id, filename=target, revision=revision, token=token)
+            hf_hub_download(
+                repo_id=model_id,
+                filename=target,
+                revision=revision,
+                cache_dir=cache_dir,
+                token=token,
+            )
             return True
         except EntryNotFoundError:
             return False
@@ -404,6 +423,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         model_id: str,
         variant: Optional[str],
         revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
         token: Union[str, bool, None] = None,
         local_files_only: bool = False,
     ) -> Optional[str]:
@@ -420,7 +440,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if variant is None:
             return None
         available = cls._variant_available(
-            model_id, variant, revision=revision, token=token, local_files_only=local_files_only
+            model_id,
+            variant,
+            revision=revision,
+            cache_dir=cache_dir,
+            token=token,
+            local_files_only=local_files_only,
         )
         if available is False:
             # TODO(strict-variant): once half-precision variant files have been
@@ -1046,6 +1071,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     model_id,
                     variant,
                     revision=revision,
+                    cache_dir=cache_dir,
                     token=token,
                     local_files_only=local_files_only,
                 )
@@ -4530,6 +4556,28 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         # outer ``GLiNER`` class doesn't inherit from ``BaseGLiNER``; reuse
         # the helpers directly so behavior stays in lockstep.
         normalized_variant = BaseGLiNER._normalize_variant(variant)
+
+        # dtype-vs-variant consistency check MUST run before the probe.
+        # Otherwise, when the variant file is missing on the Hub,
+        # ``_resolve_variant`` downgrades to ``None`` and the inner
+        # ``from_pretrained``'s consistency check is skipped — silently
+        # accepting a ``variant="bf16", dtype="fp16"`` mismatch instead of
+        # raising as documented.
+        torch_dtype = BaseGLiNER._parse_dtype(dtype)
+        if normalized_variant is not None:
+            variant_dtype = BaseGLiNER._VARIANT_TO_DTYPE[normalized_variant]
+            if torch_dtype is None:
+                torch_dtype = variant_dtype
+                # Propagate the variant's dtype so the inner cast-on-read still
+                # produces the requested precision after a fallback.
+                dtype = variant_dtype
+            elif torch_dtype != variant_dtype:
+                raise ValueError(
+                    f"variant={normalized_variant!r} requires dtype={variant_dtype}; "
+                    f"got dtype={torch_dtype}. Drop dtype= to inherit from variant, "
+                    f"or unset variant= to load the default file."
+                )
+
         # Probe for availability and warn-and-fall-back to None if the variant
         # file isn't published. The inner from_pretrained will see model_dir
         # is already populated and skip its own probe — no double round-trip.
@@ -4537,15 +4585,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             model_id,
             normalized_variant,
             revision=revision,
+            cache_dir=cache_dir,
             token=token,
             local_files_only=local_files_only,
         )
-        # If the probe downgraded variant -> None but the user asked for a
-        # specific variant, propagate the variant's dtype so the inner cast-on-
-        # read still produces the requested precision.
-        if variant is not None and normalized_variant is None and dtype is None:
-            original = BaseGLiNER._normalize_variant(variant)
-            dtype = BaseGLiNER._VARIANT_TO_DTYPE[original]
 
         model_dir = BaseGLiNER._download_model(
             model_id,

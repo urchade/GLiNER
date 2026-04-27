@@ -13,6 +13,7 @@ import pytest
 from torch import nn
 from safetensors.torch import save_file
 
+from gliner import GLiNER
 from gliner.model import BaseGLiNER
 
 
@@ -295,7 +296,25 @@ class TestVariantAllowPatterns:
             "model.bf16.safetensors",
             "model.fp16.safetensors.index.json",
             "model.bf16.safetensors.index.json",
+            # Sharded variant patterns must also differ between fp16 and bf16,
+            # otherwise large multi-file checkpoints can't pull only the
+            # requested precision's shards.
+            "model-*-of-*.fp16.safetensors",
+            "model-*-of-*.bf16.safetensors",
         }
+
+    def test_includes_sharded_safetensors_pattern(self):
+        """Sharded variant checkpoints place tensor data in
+        ``model-XXXXX-of-YYYYY.{variant}.safetensors`` files; without the
+        wildcard pattern the index would download but the actual shards
+        would be filtered out.
+        """
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        assert "model-*-of-*.bf16.safetensors" in patterns
+        # Wrong variant must not slip through the sharded match.
+        assert "model-*-of-*.fp16.safetensors" not in patterns
+        # Default-variant shards must still be excluded.
+        assert "model-*-of-*.safetensors" not in patterns
 
 
 class TestVariantDtypeConsistency:
@@ -337,6 +356,25 @@ class TestVariantDtypeConsistency:
                 model_dir=tmp_path,
                 variant="bf16",
                 dtype=torch.int8,
+            )
+
+    def test_outer_dispatcher_mismatch_raises_before_probe(self, tmp_path: Path):
+        """Codex review finding: the outer ``GLiNER.from_pretrained`` used to
+        run the variant probe before checking dtype/variant consistency, so
+        when the variant file was missing on the Hub the consistency check
+        was skipped and a ``variant='bf16', dtype='fp16'`` mismatch would
+        load fp16 silently. This test guards the regression by checking
+        the mismatch raises even when the model_id is a non-existent path
+        (which would otherwise be caught later by the download step).
+        """
+        # tmp_path has no gliner_config.json; if the consistency check runs
+        # first, we get a ValueError. If it runs after the probe (the bug),
+        # we'd get a FileNotFoundError or warning instead.
+        with pytest.raises(ValueError, match="variant='bf16' requires"):
+            GLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                variant="bf16",
+                dtype="fp16",
             )
 
 
