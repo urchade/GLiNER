@@ -151,7 +151,10 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#local-models-and-caching">Local Models and Caching</a><ul>
 <li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
 <li><a class="reference internal" href="#device-selection">Device Selection</a></li>
-<li><a class="reference internal" href="#reduced-precision-loading-dtype">Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)</a></li>
+<li><a class="reference internal" href="#reduced-precision-loading-dtype">Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)</a><ul>
+<li><a class="reference internal" href="#selective-download-variant">Selective download (<code class="docutils literal notranslate"><span class="pre">variant</span></code>)</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#quantization-compilation-flashdeberta">Quantization, Compilation &amp; FlashDeBERTa</a></li>
 <li><a class="reference internal" href="#accelerating-inference-with-sequence-packing">&#9889; Accelerating Inference with Sequence Packing</a></li>
 <li><a class="reference internal" href="#usage-with-spacy">&#128268; Usage with spaCy</a><ul>
@@ -609,6 +612,22 @@ data-aria-dark="Switch to auto color mode">
 <li><p>Faster first-inference latency after a scale-from-zero event.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> covers plain precision changes (bf16/fp16/fp32). For int8 / torchao / CPU dynamic quantization, keep using <code class="docutils literal notranslate"><span class="pre">quantize</span></code> (see below). The two can be combined if desired.</p>
+<section id="selective-download-variant">
+<h4>Selective download (<code class="docutils literal notranslate"><span class="pre">variant</span></code>)<a class="headerlink" href="#selective-download-variant" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dtype=</span></code> casts in memory but the on-disk file is still fp32, so the bytes pulled from the Hub don’t shrink. If a publisher uploads a half-precision variant of the file (<code class="docutils literal notranslate"><span class="pre">model.fp16.safetensors</span></code> or <code class="docutils literal notranslate"><span class="pre">model.bf16.safetensors</span></code>, following the transformers naming convention), pass <code class="docutils literal notranslate"><span class="pre">variant=</span></code> to download <em>only</em> that file:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;org/gliner_bf16-v1&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
+</span><span data-line="2"><span class="c1"># Halves bytes-on-the-wire vs. the default fp32 download (~745 MB -&gt; ~370 MB</span>
+</span><span data-line="3"><span class="c1"># for gliner_medium-v2.1) when a bf16 file is published.</span>
+</span></pre></div>
+</div>
+<p>Behavior — <code class="docutils literal notranslate"><span class="pre">variant=</span></code> is a <em>best-effort hint</em>, not a hard requirement:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">variant=None</span></code> (default): unchanged — pulls the whole repo and loads <code class="docutils literal notranslate"><span class="pre">model.safetensors</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variant=&quot;fp16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code> and the variant <strong>is</strong> published: <code class="docutils literal notranslate"><span class="pre">snapshot_download</span></code> is filtered with <code class="docutils literal notranslate"><span class="pre">allow_patterns</span></code> so only <code class="docutils literal notranslate"><span class="pre">model.{variant}.safetensors</span></code> (plus configs and tokenizer assets) is fetched. <code class="docutils literal notranslate"><span class="pre">dtype=</span></code> is inferred from <code class="docutils literal notranslate"><span class="pre">variant</span></code>; passing both with mismatched precisions raises.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">variant=&quot;fp16&quot;</span></code> / <code class="docutils literal notranslate"><span class="pre">&quot;bf16&quot;</span></code> and the variant <strong>is not</strong> published: a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> is emitted and the loader falls back to the default fp32 file plus an in-memory cast — same outcome as passing <code class="docutils literal notranslate"><span class="pre">dtype=</span></code> alone, no error, no I/O win. The warning text tells the user the publisher hasn’t uploaded the file so the bandwidth savings didn’t apply.</p></li>
+</ul>
+<p>This is the lever to pull for cold-start cost when bytes-on-the-wire dominate. Set <code class="docutils literal notranslate"><span class="pre">variant=&quot;bf16&quot;</span></code> and forget about it — if the publisher has the variant file you get the I/O savings, and if they don’t you get the in-memory <code class="docutils literal notranslate"><span class="pre">dtype=</span></code> behavior with a one-line warning. The probe uses <code class="docutils literal notranslate"><span class="pre">huggingface_hub.HfApi().list_repo_files</span></code> (one cheap API call) before downloading.</p>
+</section>
 </section>
 <section id="quantization-compilation-flashdeberta">
 <h3>Quantization, Compilation &amp; FlashDeBERTa<a class="headerlink" href="#quantization-compilation-flashdeberta" title="Link to this heading">¶</a></h3>
