@@ -15,9 +15,15 @@ from torch import nn
 from packaging import version
 from safetensors import safe_open
 from transformers import AutoTokenizer
-from huggingface_hub import PyTorchModelHubMixin, snapshot_download
+from huggingface_hub import (
+    PyTorchModelHubMixin,
+    hf_hub_download,
+    snapshot_download,
+    try_to_load_from_cache,
+)
 from torch.utils.data import DataLoader
 from safetensors.torch import save_file
+from huggingface_hub.errors import EntryNotFoundError
 
 try:
     from onnxruntime.quantization import QuantType, quantize_dynamic
@@ -267,6 +273,240 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         "float32": torch.float32,
         "float": torch.float32,
     }
+
+    # Variants the loader knows how to *download* selectively. The default
+    # (fp32) is represented as `variant=None` and matches the canonical
+    # ``model.safetensors`` filename. fp16/bf16 map to the transformers
+    # convention ``model.{variant}.safetensors``.
+    _VARIANT_TO_DTYPE = {
+        "fp16": torch.float16,
+        "bf16": torch.bfloat16,
+    }
+    _VARIANT_ALIASES = {
+        "fp16": "fp16",
+        "float16": "fp16",
+        "half": "fp16",
+        "bf16": "bf16",
+        "bfloat16": "bf16",
+    }
+
+    @classmethod
+    def _normalize_variant(cls, variant) -> Optional[str]:
+        """Canonicalize a variant string to ``"fp16"``, ``"bf16"``, or ``None``.
+
+        ``None`` selects the default (fp32) ``model.safetensors``. Anything
+        else is canonicalized via :attr:`_VARIANT_ALIASES`. Unknown values —
+        including ``"fp32"`` and integer dtypes — raise ``ValueError`` with a
+        message pointing the caller at ``dtype=`` for in-memory casts.
+        """
+        if variant is None:
+            return None
+        if not isinstance(variant, str):
+            raise TypeError(f"variant must be str or None, got {type(variant).__name__}")
+        key = variant.lower()
+        if key in {"fp32", "float32", "float"}:
+            raise ValueError(
+                "variant='fp32' is not a separate download — drop variant= to load the default `model.safetensors`."
+            )
+        if key not in cls._VARIANT_ALIASES:
+            raise ValueError(
+                f"Unknown variant {variant!r}. Supported: {sorted(set(cls._VARIANT_ALIASES))}. "
+                f"For int8, use `quantize='int8'` (no separate download)."
+            )
+        return cls._VARIANT_ALIASES[key]
+
+    @staticmethod
+    def _variant_allow_patterns(variant: str) -> list:
+        """Return ``snapshot_download(allow_patterns=...)`` for a variant.
+
+        Includes the single-file variant safetensors, the sharded variant
+        index, the actual sharded variant safetensors files, and the configs
+        and tokenizer assets every load needs. The default
+        ``model.safetensors`` and ``pytorch_model.bin`` are deliberately
+        excluded so the caller pays I/O only for the requested variant.
+
+        Sharded checkpoint convention (transformers-style):
+            ``model-00001-of-NNNNN.{variant}.safetensors``
+            ``model.{variant}.safetensors.index.json``
+        """
+        return [
+            "*.json",
+            "*.txt",
+            "spiece.model",
+            "sentencepiece.bpe.model",
+            # Single-file variant.
+            f"model.{variant}.safetensors",
+            # Sharded variant: index file + per-shard files.
+            f"model.{variant}.safetensors.index.json",
+            f"model-*-of-*.{variant}.safetensors",
+        ]
+
+    @classmethod
+    def _variant_available(
+        cls,
+        model_id: str,
+        variant: str,
+        revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        token: Union[str, bool, None] = None,
+        local_files_only: bool = False,
+    ) -> Optional[bool]:
+        """Probe whether ``model.{variant}.safetensors`` is published.
+
+        Resolution order (matches the ``transformers`` / ``huggingface_hub``
+        idiom — cheapest checks first, no list-files round-trip):
+
+        1. ``model_id`` is a local directory → ``Path.exists()``.
+        2. The file is in the local HF cache for this repo+revision →
+           ``try_to_load_from_cache``. Pure local lookup, no network.
+        3. ``local_files_only=True`` → return ``None`` (uncertain) without
+           hitting the network.
+        4. ``hf_hub_download`` for the variant filename: success means the
+           file exists (and is now cached, so the subsequent
+           ``snapshot_download`` reuses it); ``EntryNotFoundError`` means
+           the publisher hasn't uploaded a variant.
+
+        Returns:
+            ``True`` / ``False`` when known, or ``None`` when availability
+            cannot be determined (offline + uncached, transient API failure,
+            gated repo without auth). ``None`` is treated as "try the narrow
+            download and let it fail loudly".
+        """
+        target = f"model.{variant}.safetensors"
+
+        # 1. Local directory.
+        model_dir = Path(model_id)
+        if model_dir.exists() and model_dir.is_dir():
+            return (model_dir / target).exists()
+
+        # 2. Already cached for this repo+revision? Pure local — no network.
+        # try_to_load_from_cache validates the repo_id format; an
+        # HFValidationError here means the input isn't a valid repo_id at
+        # all (e.g. a non-existent local path), so treat as uncertain.
+        # ``cache_dir`` must match what ``snapshot_download`` will use, or the
+        # probe and the actual download diverge (and we'd download the variant
+        # twice).
+        try:
+            cached = try_to_load_from_cache(repo_id=model_id, filename=target, revision=revision, cache_dir=cache_dir)
+        except Exception:
+            return None
+        if isinstance(cached, str):
+            return True
+
+        # 3. Offline mode: can't probe further.
+        if local_files_only:
+            return None
+
+        # 4. Try-and-recover via hf_hub_download. Success caches the file so
+        # the subsequent snapshot_download reuses it (no double download).
+        # cache_dir must propagate so the probe and snapshot_download share
+        # the same store.
+        try:
+            hf_hub_download(
+                repo_id=model_id,
+                filename=target,
+                revision=revision,
+                cache_dir=cache_dir,
+                token=token,
+            )
+            return True
+        except EntryNotFoundError:
+            return False
+        except Exception:
+            # Auth / network / repo-not-found / gated — surface as uncertain
+            # and let the subsequent download path produce the canonical error.
+            return None
+
+    @classmethod
+    def _resolve_variant(
+        cls,
+        model_id: str,
+        variant: Optional[str],
+        revision: Optional[str] = None,
+        cache_dir: Optional[Union[str, Path]] = None,
+        token: Union[str, bool, None] = None,
+        local_files_only: bool = False,
+    ) -> Optional[str]:
+        """Probe for variant availability; warn and fall back to ``None`` if missing.
+
+        When the publisher has uploaded ``model.{variant}.safetensors`` this
+        returns ``variant`` unchanged so the caller proceeds with the narrow
+        download (the I/O win). When the file is definitively absent, this
+        returns ``None`` and emits a ``UserWarning`` — the caller should fall
+        back to the default fp32 file plus an in-memory cast (via ``dtype=``).
+        Uncertain probes (``available is None``) pass through unchanged so
+        the narrow download is attempted.
+        """
+        if variant is None:
+            return None
+        available = cls._variant_available(
+            model_id,
+            variant,
+            revision=revision,
+            cache_dir=cache_dir,
+            token=token,
+            local_files_only=local_files_only,
+        )
+        if available is False:
+            # TODO(strict-variant): once half-precision variant files have been
+            # published for the flagship GLiNER models on the Hub, flip this
+            # branch to raise ``EntryNotFoundError`` (or a wrapped equivalent)
+            # instead of warning + falling back. That matches
+            # ``transformers.PreTrainedModel.from_pretrained(variant=...)``,
+            # which is strict — explicit > implicit. The soft-fallback was a
+            # transitional choice taken because, at PR-merge time, no GLiNER
+            # repo on the Hub shipped a variant file, so a strict surface
+            # would have been broken-on-arrival for every caller.
+            warnings.warn(
+                f"variant={variant!r} requested but 'model.{variant}.safetensors' is not "
+                f"published in {model_id!r}. Falling back to the default fp32 file with "
+                f"dtype={variant!r} cast on read — bytes-on-the-wire are not reduced. To "
+                f"silence this, ask the publisher to upload the variant or pass variant=None.",
+                UserWarning,
+                stacklevel=3,
+            )
+            return None
+        return variant
+
+    @classmethod
+    def _resolve_model_file(cls, model_dir: Path, variant: Optional[str]) -> tuple:
+        """Pick the model file on disk, with graceful fallback if variant is missing.
+
+        Returns ``(model_file: Path, effective_variant: Optional[str])``.
+        ``effective_variant`` is ``None`` when we fell back from a requested
+        variant to the fp32 file — the caller already has ``torch_dtype`` set
+        from the variant, so cast-on-read still produces the right precision.
+
+        Raises:
+            FileNotFoundError: if no usable model file exists.
+        """
+        if variant is not None:
+            variant_file = model_dir / f"model.{variant}.safetensors"
+            if variant_file.exists():
+                return variant_file, variant
+            # Variant requested but missing — try fp32 fallback alongside.
+            fallback = model_dir / "model.safetensors"
+            if not fallback.exists():
+                fallback = model_dir / "pytorch_model.bin"
+            if fallback.exists():
+                warnings.warn(
+                    f"Variant file 'model.{variant}.safetensors' not found in {model_dir}; "
+                    f"loading '{fallback.name}' and casting to {variant} on read.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+                return fallback, None
+            raise FileNotFoundError(
+                f"Neither 'model.{variant}.safetensors' nor 'model.safetensors' "
+                f"nor 'pytorch_model.bin' found in {model_dir}."
+            )
+        # No variant requested — original behavior.
+        model_file = model_dir / "model.safetensors"
+        if not model_file.exists():
+            model_file = model_dir / "pytorch_model.bin"
+        if not model_file.exists():
+            raise FileNotFoundError(f"No model file found in {model_dir}")
+        return model_file, None
 
     @classmethod
     def _parse_dtype(cls, dtype) -> Optional[torch.dtype]:
@@ -557,6 +797,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         resume_download: bool = False,
         token: Union[str, bool, None] = None,
         local_files_only: bool = False,
+        variant: Optional[str] = None,
     ) -> Path:
         """
         Download model from HuggingFace Hub or use local directory.
@@ -570,6 +811,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             resume_download: Resume interrupted downloads
             token: HF token
             local_files_only: Only use local files
+            variant: If set, restrict the download to ``model.{variant}.safetensors``
+                (plus configs/tokenizer assets) via ``snapshot_download``'s
+                ``allow_patterns``. Must be canonicalized via
+                :meth:`_normalize_variant` by the caller.
 
         Returns:
             Path to model directory
@@ -577,6 +822,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         model_dir = Path(model_id)
 
         if not model_dir.exists():
+            allow_patterns = cls._variant_allow_patterns(variant) if variant else None
             model_dir = Path(
                 snapshot_download(
                     repo_id=model_id,
@@ -587,6 +833,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     resume_download=resume_download,
                     token=token,
                     local_files_only=local_files_only,
+                    allow_patterns=allow_patterns,
                 )
             )
 
@@ -738,6 +985,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         compile_torch_model: Optional[bool] = False,
         quantize: Optional[str] = None,
         dtype: Optional[Union[str, torch.dtype]] = None,
+        variant: Optional[str] = None,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         session_options=None,
@@ -774,6 +1022,17 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 reading, so the full fp32 copy is never materialized — peak
                 host memory is roughly half of the default path for bf16/fp16.
                 Prefer this over ``quantize`` for plain precision changes.
+            variant: If set (``"fp16"`` or ``"bf16"``), prefer
+                ``model.{variant}.safetensors`` over the default fp32 file.
+                Best-effort: the loader probes the Hub (or local path) for the
+                variant file before downloading. If it is published, only the
+                variant file is fetched (~half the bytes vs fp32) and loaded
+                directly. If it is not published, a ``UserWarning`` is emitted
+                and the loader falls back to the default fp32 file plus an
+                in-memory cast — same outcome as ``dtype={variant!r}`` alone,
+                no I/O win, no error. ``dtype`` is inferred from ``variant``
+                when not set; passing both with mismatched precisions raises.
+                ``None`` (default) preserves the prior behavior verbatim.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             session_options: ONNX runtime session options.
@@ -786,10 +1045,49 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         Returns:
             Loaded model instance.
         """
+        # Resolve variant + dtype up front so the download path can be
+        # narrowed *before* hitting the network. Must happen before any
+        # snapshot_download call so allow_patterns can apply.
+        variant = cls._normalize_variant(variant)
+        torch_dtype = cls._parse_dtype(dtype)
+        if variant is not None:
+            variant_dtype = cls._VARIANT_TO_DTYPE[variant]
+            if torch_dtype is None:
+                torch_dtype = variant_dtype
+            elif torch_dtype != variant_dtype:
+                raise ValueError(
+                    f"variant={variant!r} requires dtype={variant_dtype}; got dtype={torch_dtype}. "
+                    f"Drop dtype= to inherit from variant, or unset variant= to load the default file."
+                )
+            # Probe Hub/disk for variant availability. If the file isn't
+            # published, this warns and returns None — we then fall back to
+            # the default fp32 download path with `torch_dtype` already set,
+            # so cast-on-read produces the requested precision (no I/O win,
+            # but the model still loads). Skip if a model_dir was provided
+            # by the caller (they've already resolved the location); the
+            # file-resolution step below handles missing files there.
+            if model_dir is None:
+                variant = cls._resolve_variant(
+                    model_id,
+                    variant,
+                    revision=revision,
+                    cache_dir=cache_dir,
+                    token=token,
+                    local_files_only=local_files_only,
+                )
+
         # Download or locate model
         if model_dir is None:
             model_dir = cls._download_model(
-                model_id, revision, cache_dir, force_download, proxies, resume_download, token, local_files_only
+                model_id,
+                revision,
+                cache_dir,
+                force_download,
+                proxies,
+                resume_download,
+                token,
+                local_files_only,
+                variant=variant,
             )
 
         # Load config
@@ -814,13 +1112,13 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             tokenizer = cls._load_tokenizer(config, model_dir, cache_dir)
 
         if not load_onnx_model:
-            # Find model file
-            model_file = model_dir / "model.safetensors"
-            if not model_file.exists():
-                model_file = model_dir / "pytorch_model.bin"
-
-            if not model_file.exists():
-                raise FileNotFoundError(f"No model file found in {model_dir}")
+            # Find the model file. _resolve_model_file picks the variant file
+            # if present, falls back to the default fp32 file with a warning if
+            # the variant is missing (e.g. caller passed model_dir directly to
+            # a local path without a variant file). torch_dtype is already set
+            # from the variant earlier, so the cast-on-read in _load_state_dict
+            # still produces the requested precision after a fallback.
+            model_file, _ = cls._resolve_model_file(model_dir, variant)
 
             # Create model instance
             instance = cls(
@@ -829,7 +1127,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             cls._resize_token_embeddings(instance, config, tokenizer, resize_token_embeddings)
 
-            torch_dtype = cls._parse_dtype(dtype)
             if torch_dtype is not None:
                 # Pre-cast the random-init shell so the model never exists at
                 # fp32 alongside the loaded state dict. ``.to(floating_dtype)``
@@ -4192,6 +4489,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         compile_torch_model: Optional[bool] = False,
         quantize: Optional[str] = None,
         dtype: Optional[Union[str, torch.dtype]] = None,
+        variant: Optional[str] = None,
         load_onnx_model: Optional[bool] = False,
         onnx_model_file: Optional[str] = "model.onnx",
         # Config overrides
@@ -4228,6 +4526,13 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
                 are cast during the state-dict read so the fp32 copy is never
                 fully materialized; prefer this over ``quantize`` for plain
                 precision changes.
+            variant: ``"fp16"`` / ``"bf16"`` to prefer
+                ``model.{variant}.safetensors`` over the default fp32 file.
+                Best-effort with graceful fallback: if the publisher uploaded
+                the variant, only that file is fetched; if not, warns and
+                falls back to fp32 + cast on read. See the base-class
+                ``from_pretrained`` docstring for the full contract.
+                ``None`` (default) preserves prior behavior.
             load_onnx_model: Whether to load ONNX model instead of PyTorch.
             onnx_model_file: Path to ONNX model file.
             max_length: Override max_length in config.
@@ -4244,21 +4549,58 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             >>> model = GLiNER.from_pretrained("knowledgator/gliner-bi-small-v1.0")
             >>> model = GLiNER.from_pretrained("path/to/local/model", quantize="int8")
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", dtype="bf16")
+            >>> # If the repo publishes model.bf16.safetensors, download only that:
+            >>> model = GLiNER.from_pretrained("org/gliner_bf16-v1", variant="bf16")
         """
-        model_dir = Path(model_id)
-        if not model_dir.exists():
-            model_dir = Path(
-                snapshot_download(
-                    repo_id=model_id,
-                    revision=revision,
-                    cache_dir=cache_dir,
-                    force_download=force_download,
-                    proxies=proxies,
-                    resume_download=resume_download,
-                    token=token,
-                    local_files_only=local_files_only,
+        # Canonicalize variant up front so it can narrow the download. The
+        # outer ``GLiNER`` class doesn't inherit from ``BaseGLiNER``; reuse
+        # the helpers directly so behavior stays in lockstep.
+        normalized_variant = BaseGLiNER._normalize_variant(variant)
+
+        # dtype-vs-variant consistency check MUST run before the probe.
+        # Otherwise, when the variant file is missing on the Hub,
+        # ``_resolve_variant`` downgrades to ``None`` and the inner
+        # ``from_pretrained``'s consistency check is skipped — silently
+        # accepting a ``variant="bf16", dtype="fp16"`` mismatch instead of
+        # raising as documented.
+        torch_dtype = BaseGLiNER._parse_dtype(dtype)
+        if normalized_variant is not None:
+            variant_dtype = BaseGLiNER._VARIANT_TO_DTYPE[normalized_variant]
+            if torch_dtype is None:
+                torch_dtype = variant_dtype
+                # Propagate the variant's dtype so the inner cast-on-read still
+                # produces the requested precision after a fallback.
+                dtype = variant_dtype
+            elif torch_dtype != variant_dtype:
+                raise ValueError(
+                    f"variant={normalized_variant!r} requires dtype={variant_dtype}; "
+                    f"got dtype={torch_dtype}. Drop dtype= to inherit from variant, "
+                    f"or unset variant= to load the default file."
                 )
-            )
+
+        # Probe for availability and warn-and-fall-back to None if the variant
+        # file isn't published. The inner from_pretrained will see model_dir
+        # is already populated and skip its own probe — no double round-trip.
+        normalized_variant = BaseGLiNER._resolve_variant(
+            model_id,
+            normalized_variant,
+            revision=revision,
+            cache_dir=cache_dir,
+            token=token,
+            local_files_only=local_files_only,
+        )
+
+        model_dir = BaseGLiNER._download_model(
+            model_id,
+            revision=revision,
+            cache_dir=cache_dir,
+            force_download=force_download,
+            proxies=proxies,
+            resume_download=resume_download,
+            token=token,
+            local_files_only=local_files_only,
+            variant=normalized_variant,
+        )
 
         # Load config to determine model type
         config_file = model_dir / "gliner_config.json"
@@ -4294,6 +4636,7 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             compile_torch_model=compile_torch_model,
             quantize=quantize,
             dtype=dtype,
+            variant=normalized_variant,
             max_length=max_length,
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
