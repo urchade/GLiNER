@@ -5,6 +5,7 @@ public contracts on BaseGLiNER (``_parse_dtype``, ``_load_state_dict``) and
 ``model.quantize(...)`` via a lightweight fake subclass.
 """
 
+import warnings
 from pathlib import Path
 
 import torch
@@ -12,6 +13,7 @@ import pytest
 from torch import nn
 from safetensors.torch import save_file
 
+from gliner import GLiNER
 from gliner.model import BaseGLiNER
 
 
@@ -358,3 +360,262 @@ class TestMetaParamFallbackContract:
         assert meta_params == []
         # And .to() succeeds on the materialized module.
         module.to("cpu")
+
+
+class TestNormalizeVariant:
+    """``variant=`` canonicalization for selective downloads."""
+
+    def test_none_is_default(self):
+        assert BaseGLiNER._normalize_variant(None) is None
+
+    @pytest.mark.parametrize(
+        "alias,canonical",
+        [
+            ("fp16", "fp16"),
+            ("float16", "fp16"),
+            ("half", "fp16"),
+            ("FP16", "fp16"),  # case-insensitive
+            ("bf16", "bf16"),
+            ("bfloat16", "bf16"),
+            ("BFloat16", "bf16"),
+        ],
+    )
+    def test_aliases_canonicalize(self, alias, canonical):
+        assert BaseGLiNER._normalize_variant(alias) == canonical
+
+    @pytest.mark.parametrize("v", ["fp32", "float32", "float"])
+    def test_fp32_explicitly_rejected(self, v):
+        """fp32 is the default download — there's no separate variant file."""
+        with pytest.raises(ValueError, match="not a separate download"):
+            BaseGLiNER._normalize_variant(v)
+
+    def test_int8_rejected_with_pointer(self):
+        """int8 isn't a precision variant; the error should redirect to quantize=."""
+        with pytest.raises(ValueError, match=r"quantize='int8'"):
+            BaseGLiNER._normalize_variant("int8")
+
+    def test_unknown_string_lists_supported(self):
+        with pytest.raises(ValueError, match="Supported"):
+            BaseGLiNER._normalize_variant("qint4")
+
+    @pytest.mark.parametrize("bad", [123, 3.14, [], object()])
+    def test_bad_type_raises_typeerror(self, bad):
+        with pytest.raises(TypeError, match=r"str or None"):
+            BaseGLiNER._normalize_variant(bad)
+
+
+class TestVariantAllowPatterns:
+    """The ``allow_patterns`` we hand to ``snapshot_download``."""
+
+    def test_includes_only_requested_variant_safetensors(self):
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        assert "model.bf16.safetensors" in patterns
+        # Default and other variants must NOT be in the allow list, otherwise
+        # snapshot_download would still pull them.
+        assert "model.safetensors" not in patterns
+        assert "model.fp16.safetensors" not in patterns
+        assert "pytorch_model.bin" not in patterns
+
+    def test_includes_sharded_index(self):
+        patterns = BaseGLiNER._variant_allow_patterns("fp16")
+        assert "model.fp16.safetensors.index.json" in patterns
+
+    def test_includes_configs_and_tokenizer(self):
+        """Tokenizer / config files must always come down."""
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        # ``*.json`` covers gliner_config.json, tokenizer_config.json,
+        # special_tokens_map.json, added_tokens.json.
+        assert "*.json" in patterns
+        # SentencePiece-style tokenizers ship .model / .txt files.
+        assert "spiece.model" in patterns
+        assert "sentencepiece.bpe.model" in patterns
+        assert "*.txt" in patterns
+
+    def test_fp16_and_bf16_differ_only_in_variant_filename(self):
+        a = set(BaseGLiNER._variant_allow_patterns("fp16"))
+        b = set(BaseGLiNER._variant_allow_patterns("bf16"))
+        diff = a.symmetric_difference(b)
+        assert diff == {
+            "model.fp16.safetensors",
+            "model.bf16.safetensors",
+            "model.fp16.safetensors.index.json",
+            "model.bf16.safetensors.index.json",
+            # Sharded variant patterns must also differ between fp16 and bf16,
+            # otherwise large multi-file checkpoints can't pull only the
+            # requested precision's shards.
+            "model-*-of-*.fp16.safetensors",
+            "model-*-of-*.bf16.safetensors",
+        }
+
+    def test_includes_sharded_safetensors_pattern(self):
+        """Sharded variant checkpoints place tensor data in
+        ``model-XXXXX-of-YYYYY.{variant}.safetensors`` files; without the
+        wildcard pattern the index would download but the actual shards
+        would be filtered out.
+        """
+        patterns = BaseGLiNER._variant_allow_patterns("bf16")
+        assert "model-*-of-*.bf16.safetensors" in patterns
+        # Wrong variant must not slip through the sharded match.
+        assert "model-*-of-*.fp16.safetensors" not in patterns
+        # Default-variant shards must still be excluded.
+        assert "model-*-of-*.safetensors" not in patterns
+
+
+class TestVariantDtypeConsistency:
+    """``variant=`` and ``dtype=`` must agree (or only one set).
+
+    The mismatch check fires before any download/config/model construction,
+    so we can test it on the abstract ``BaseGLiNER`` without a real checkpoint.
+    """
+
+    def test_mismatch_raises_value_error(self, tmp_path: Path):
+        """variant='bf16' with dtype='fp16' is contradictory."""
+        with pytest.raises(ValueError, match="variant='bf16' requires"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bf16",
+                dtype="fp16",
+            )
+
+    def test_aliases_normalize_before_compare(self, tmp_path: Path):
+        """variant='bfloat16' + dtype='bf16' must NOT raise on dtype mismatch.
+
+        Both canonicalize to bf16. The call still fails (no config in tmp_path)
+        but with a different error — proving the consistency check passed.
+        """
+        with pytest.raises(FileNotFoundError, match="config"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bfloat16",
+                dtype="bf16",
+            )
+
+    def test_int_dtype_against_variant_rejected_by_dtype_parser(self, tmp_path: Path):
+        """variant='bf16' with dtype=torch.int8 should fail at dtype parsing."""
+        with pytest.raises(ValueError, match="floating-point"):
+            BaseGLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                model_dir=tmp_path,
+                variant="bf16",
+                dtype=torch.int8,
+            )
+
+    def test_outer_dispatcher_mismatch_raises_before_probe(self, tmp_path: Path):
+        """Codex review finding: the outer ``GLiNER.from_pretrained`` used to
+        run the variant probe before checking dtype/variant consistency, so
+        when the variant file was missing on the Hub the consistency check
+        was skipped and a ``variant='bf16', dtype='fp16'`` mismatch would
+        load fp16 silently. This test guards the regression by checking
+        the mismatch raises even when the model_id is a non-existent path
+        (which would otherwise be caught later by the download step).
+        """
+        # tmp_path has no gliner_config.json; if the consistency check runs
+        # first, we get a ValueError. If it runs after the probe (the bug),
+        # we'd get a FileNotFoundError or warning instead.
+        with pytest.raises(ValueError, match="variant='bf16' requires"):
+            GLiNER.from_pretrained(
+                model_id=str(tmp_path),
+                variant="bf16",
+                dtype="fp16",
+            )
+
+
+class TestVariantAvailable:
+    """``_variant_available`` probe for variant file presence."""
+
+    def _safetensors_at(self, path: Path) -> None:
+        save_file({"weight": torch.randn(2, 2)}, str(path))
+
+    def test_local_dir_with_variant_returns_true(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.bf16.safetensors")
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is True
+
+    def test_local_dir_without_variant_returns_false(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.safetensors")
+        # default fp32 is there, but no bf16 file
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is False
+
+    def test_local_dir_with_only_fp16_does_not_match_bf16(self, tmp_path: Path):
+        self._safetensors_at(tmp_path / "model.fp16.safetensors")
+        assert BaseGLiNER._variant_available(str(tmp_path), "bf16") is False
+        assert BaseGLiNER._variant_available(str(tmp_path), "fp16") is True
+
+    def test_nonexistent_path_with_local_files_only_returns_none(self, tmp_path: Path):
+        """No local dir + local_files_only=True should not hit the network."""
+        nonexistent = tmp_path / "does_not_exist"
+        assert BaseGLiNER._variant_available(str(nonexistent), "bf16", local_files_only=True) is None
+
+
+class TestResolveVariantFallback:
+    """``_resolve_variant`` warns and downgrades to None when variant is missing."""
+
+    def test_passthrough_when_none(self):
+        # No probe needed for variant=None; returns None silently.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            assert BaseGLiNER._resolve_variant("any/repo", None) is None
+            assert [w for w in caught if "variant" in str(w.message).lower()] == []
+
+    def test_passthrough_when_available(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.bf16.safetensors"))
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            out = BaseGLiNER._resolve_variant(str(tmp_path), "bf16")
+            assert out == "bf16"
+            assert [w for w in caught if "variant" in str(w.message).lower()] == []
+
+    def test_warns_and_returns_none_when_unavailable(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        # Variant file isn't there; expect warn + None.
+        with pytest.warns(UserWarning, match="not published"):
+            out = BaseGLiNER._resolve_variant(str(tmp_path), "bf16")
+        assert out is None
+
+
+class TestResolveModelFile:
+    """``_resolve_model_file`` picks the right file with graceful fallback."""
+
+    def test_default_path_picks_safetensors(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+        assert path == tmp_path / "model.safetensors"
+        assert eff is None
+
+    def test_default_path_falls_back_to_pytorch_bin(self, tmp_path: Path):
+        torch.save({}, str(tmp_path / "pytorch_model.bin"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+        assert path == tmp_path / "pytorch_model.bin"
+        assert eff is None
+
+    def test_default_path_no_file_raises(self, tmp_path: Path):
+        with pytest.raises(FileNotFoundError, match="No model file"):
+            BaseGLiNER._resolve_model_file(tmp_path, variant=None)
+
+    def test_variant_present_returns_variant(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.bf16.safetensors"))
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "model.bf16.safetensors"
+        assert eff == "bf16"
+
+    def test_variant_missing_warns_and_falls_back_to_safetensors(self, tmp_path: Path):
+        save_file({"weight": torch.randn(2, 2)}, str(tmp_path / "model.safetensors"))
+        with pytest.warns(UserWarning, match="not found"):
+            path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "model.safetensors"
+        # effective_variant must be None so caller knows we fell back
+        # (torch_dtype is already set from the variant earlier in from_pretrained)
+        assert eff is None
+
+    def test_variant_missing_falls_back_to_pytorch_bin(self, tmp_path: Path):
+        torch.save({}, str(tmp_path / "pytorch_model.bin"))
+        with pytest.warns(UserWarning, match="not found"):
+            path, eff = BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")
+        assert path == tmp_path / "pytorch_model.bin"
+        assert eff is None
+
+    def test_variant_missing_with_no_fallback_raises(self, tmp_path: Path):
+        with pytest.raises(FileNotFoundError, match="Neither"):
+            BaseGLiNER._resolve_model_file(tmp_path, variant="bf16")

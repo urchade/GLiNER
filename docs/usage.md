@@ -422,6 +422,24 @@ About **1.5 seconds saved on every cold start**, plus 23–89% lower peak host R
 
 Default is `False` while the path matures — enable it explicitly when cold-start latency or peak host memory matters. `low_cpu_mem_usage` stacks with `dtype=` (use them together) and is independent of `quantize=` and `compile_torch_model=`.
 
+#### Selective download (`variant`)
+
+`dtype=` casts in memory but the on-disk file is still fp32, so the bytes pulled from the Hub don't shrink. If a publisher uploads a half-precision variant of the file (`model.fp16.safetensors` or `model.bf16.safetensors`, following the transformers naming convention), pass `variant=` to download *only* that file:
+
+```python
+model = GLiNER.from_pretrained("org/gliner_bf16-v1", variant="bf16")
+# Halves bytes-on-the-wire vs. the default fp32 download (~745 MB -> ~370 MB
+# for gliner_medium-v2.1) when a bf16 file is published.
+```
+
+Behavior — `variant=` is a *best-effort hint*, not a hard requirement:
+
+- `variant=None` (default): unchanged — pulls the whole repo and loads `model.safetensors`.
+- `variant="fp16"` / `"bf16"` and the variant **is** published: `snapshot_download` is filtered with `allow_patterns` so only `model.{variant}.safetensors` (plus configs and tokenizer assets) is fetched. `dtype=` is inferred from `variant`; passing both with mismatched precisions raises.
+- `variant="fp16"` / `"bf16"` and the variant **is not** published: a `UserWarning` is emitted and the loader falls back to the default fp32 file plus an in-memory cast — same outcome as passing `dtype=` alone, no error, no I/O win. The warning text tells the user the publisher hasn't uploaded the file so the bandwidth savings didn't apply.
+
+This is the lever to pull for cold-start cost when bytes-on-the-wire dominate. Set `variant="bf16"` and forget about it — if the publisher has the variant file you get the I/O savings, and if they don't you get the in-memory `dtype=` behavior with a one-line warning. The probe uses `huggingface_hub.HfApi().list_repo_files` (one cheap API call) before downloading.
+
 ### Quantization, Compilation & FlashDeBERTa
 
 Combine `dtype="fp16"` (or `"bf16"`) with `compile_torch_model=True` for up to ~1.9x faster GPU inference with zero quality loss:
