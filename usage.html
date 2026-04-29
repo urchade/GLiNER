@@ -152,6 +152,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
 <li><a class="reference internal" href="#device-selection">Device Selection</a></li>
 <li><a class="reference internal" href="#reduced-precision-loading-dtype">Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)</a><ul>
+<li><a class="reference internal" href="#skipping-the-random-init-shell-low-cpu-mem-usage">Skipping the random-init shell (<code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage</span></code>)</a></li>
 <li><a class="reference internal" href="#selective-download-variant">Selective download (<code class="docutils literal notranslate"><span class="pre">variant</span></code>)</a></li>
 </ul>
 </li>
@@ -612,6 +613,65 @@ data-aria-dark="Switch to auto color mode">
 <li><p>Faster first-inference latency after a scale-from-zero event.</p></li>
 </ul>
 <p><code class="docutils literal notranslate"><span class="pre">dtype</span></code> covers plain precision changes (bf16/fp16/fp32). For int8 / torchao / CPU dynamic quantization, keep using <code class="docutils literal notranslate"><span class="pre">quantize</span></code> (see below). The two can be combined if desired.</p>
+<section id="skipping-the-random-init-shell-low-cpu-mem-usage">
+<h4>Skipping the random-init shell (<code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage</span></code>)<a class="headerlink" href="#skipping-the-random-init-shell-low-cpu-mem-usage" title="Link to this heading">¶</a></h4>
+<p><code class="docutils literal notranslate"><span class="pre">dtype=</span></code> lowers peak memory but doesn’t speed up the <em>load itself</em> — even with <code class="docutils literal notranslate"><span class="pre">dtype=&quot;bf16&quot;</span></code>, GLiNER still allocates a fp32 random-initialized model shell, runs Kaiming/Xavier init over every parameter, casts the whole thing to bf16, then overwrites every value with the loaded weights. All of that init work is thrown away.</p>
+<p>Pass <code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage=True</span></code> to skip it: the model graph is built under <code class="docutils literal notranslate"><span class="pre">torch.device(&quot;meta&quot;)</span></code> (shape descriptors only, no allocation, no random init), the state dict is read at the target precision, and <code class="docutils literal notranslate"><span class="pre">load_state_dict(assign=True)</span></code> swaps the loaded tensors directly into the meta-shell parameter slots in one pass.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="2">    <span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">low_cpu_mem_usage</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">,</span>
+</span><span data-line="6"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Measured on <code class="docutils literal notranslate"><span class="pre">gliner_medium-v2.1</span></code> on an RTX 5090 (n=12 reps, Welch t-tested, OS page cache warmed):</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>path</p></th>
+<th class="head"><p>mean load time</p></th>
+<th class="head"><p>speedup</p></th>
+<th class="head"><p>peak host RSS delta</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>baseline (cuda, bf16)</p></td>
+<td><p>3.16 s</p></td>
+<td><p>1.0×</p></td>
+<td><p>1361 MB</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage=True</span></code> (cuda, bf16)</p></td>
+<td><p><strong>1.61 s</strong></p></td>
+<td><p><strong>1.96×</strong></p></td>
+<td><p>1004 MB</p></td>
+</tr>
+<tr class="row-even"><td><p>baseline (cpu, bf16)</p></td>
+<td><p>3.30 s</p></td>
+<td><p>1.0×</p></td>
+<td><p>1597 MB</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage=True</span></code> (cpu, bf16)</p></td>
+<td><p><strong>1.60 s</strong></p></td>
+<td><p><strong>2.06×</strong></p></td>
+<td><p>1225 MB</p></td>
+</tr>
+<tr class="row-even"><td><p>baseline (cpu, fp32)</p></td>
+<td><p>3.04 s</p></td>
+<td><p>1.0×</p></td>
+<td><p>1598 MB</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage=True</span></code> (cpu, fp32)</p></td>
+<td><p><strong>1.45 s</strong></p></td>
+<td><p><strong>2.10×</strong></p></td>
+<td><p>170 MB</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>About <strong>1.5 seconds saved on every cold start</strong>, plus 23–89% lower peak host RSS depending on dtype (the fp32 case is dramatic because safetensors mmaps the on-disk file and we never copy it into anonymous memory). Loaded parameters are bit-identical to the standard path — verified across 224 parameters and 1 buffer (<code class="docutils literal notranslate"><span class="pre">position_ids</span></code>, re-materialized after assign).</p>
+<p>Default is <code class="docutils literal notranslate"><span class="pre">False</span></code> while the path matures — enable it explicitly when cold-start latency or peak host memory matters. <code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage</span></code> stacks with <code class="docutils literal notranslate"><span class="pre">dtype=</span></code> (use them together) and is independent of <code class="docutils literal notranslate"><span class="pre">quantize=</span></code> and <code class="docutils literal notranslate"><span class="pre">compile_torch_model=</span></code>.</p>
+</section>
 <section id="selective-download-variant">
 <h4>Selective download (<code class="docutils literal notranslate"><span class="pre">variant</span></code>)<a class="headerlink" href="#selective-download-variant" title="Link to this heading">¶</a></h4>
 <p><code class="docutils literal notranslate"><span class="pre">dtype=</span></code> casts in memory but the on-disk file is still fp32, so the bytes pulled from the Hub don’t shrink. If a publisher uploads a half-precision variant of the file (<code class="docutils literal notranslate"><span class="pre">model.fp16.safetensors</span></code> or <code class="docutils literal notranslate"><span class="pre">model.bf16.safetensors</span></code>, following the transformers naming convention), pass <code class="docutils literal notranslate"><span class="pre">variant=</span></code> to download <em>only</em> that file:</p>
