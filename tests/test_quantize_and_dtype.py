@@ -218,6 +218,150 @@ class TestFromPretrainedQuantizeTrueRejection:
             _FakeModel("cpu").quantize(True)
 
 
+class TestMaterializeMetaBuffers:
+    """``_materialize_meta_buffers`` post-fixes non-persistent buffers that
+    survive a meta-init + ``load_state_dict(assign=True)`` cycle."""
+
+    def _module_with_meta_position_ids(self, length: int = 16) -> nn.Module:
+        """Build a small module mirroring DeBERTa's ``position_ids`` buffer
+        registration, then move it to meta to simulate post-load state."""
+        module = nn.Module()
+        module.register_buffer(
+            "position_ids",
+            torch.arange(0, length, dtype=torch.int64).unsqueeze(0),
+            persistent=False,
+        )
+        module.position_ids = module.position_ids.to("meta")
+        return module
+
+    def test_position_ids_restored_to_canonical_value(self):
+        m = self._module_with_meta_position_ids(length=8)
+        assert m.position_ids.is_meta  # precondition
+
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == ["position_ids"]
+        assert unrecognized == []
+        assert not m.position_ids.is_meta
+        assert torch.equal(
+            m.position_ids,
+            torch.arange(0, 8, dtype=torch.int64).unsqueeze(0),
+        )
+
+    def test_no_op_when_no_meta_buffers(self):
+        m = nn.Module()
+        m.register_buffer("position_ids", torch.arange(0, 4).unsqueeze(0), persistent=False)
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+        assert materialized == []
+        assert unrecognized == []
+
+    def test_nested_module_meta_buffer_restored(self):
+        """Buffers nested inside child modules are walked and fixed too."""
+        outer = nn.Module()
+        inner = nn.Module()
+        inner.register_buffer(
+            "position_ids",
+            torch.arange(0, 4, dtype=torch.int64).unsqueeze(0),
+            persistent=False,
+        )
+        inner.position_ids = inner.position_ids.to("meta")
+        outer.add_module("embeddings", inner)
+
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(outer)
+
+        assert materialized == ["embeddings.position_ids"]
+        assert unrecognized == []
+        assert not outer.embeddings.position_ids.is_meta
+
+    def test_token_type_ids_restored_to_zeros(self):
+        """BERT-family ``token_type_ids`` is a non-persistent buffer of zeros."""
+        m = nn.Module()
+        m.register_buffer(
+            "token_type_ids",
+            torch.zeros((1, 6), dtype=torch.int64),
+            persistent=False,
+        )
+        m.token_type_ids = m.token_type_ids.to("meta")
+
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == ["token_type_ids"]
+        assert unrecognized == []
+        assert torch.equal(m.token_type_ids, torch.zeros((1, 6), dtype=torch.int64))
+
+    def test_unknown_buffer_returned_as_unrecognized(self):
+        """Unrecognized buffers are surfaced for caller-side fallback (not zero-filled)."""
+        m = nn.Module()
+        m.register_buffer(
+            "inv_freq",
+            torch.tensor([1.0, 0.5, 0.25]),
+            persistent=False,
+        )
+        m.inv_freq = m.inv_freq.to("meta")
+
+        materialized, unrecognized = BaseGLiNER._materialize_meta_buffers(m)
+
+        assert materialized == []
+        assert unrecognized == ["inv_freq"]
+        # The buffer is still meta — caller must fall back to the standard load path.
+        assert m.inv_freq.is_meta
+
+
+class TestMetaParamFallbackContract:
+    """Codex review finding: with ``low_cpu_mem_usage=True`` and the default
+    ``strict=False``, ``load_state_dict(assign=True)`` may leave a parameter
+    on the meta device when the checkpoint is missing a key. The subsequent
+    ``.to(map_location)`` then raises ``NotImplementedError: Cannot copy out
+    of meta tensor``, whereas the standard path would have kept the
+    random-init value and loaded successfully.
+
+    These tests assert the *contract* underlying the fix without spinning up
+    a real GLiNER model: ``load_state_dict(assign=True, strict=False)`` does
+    leave parameters on meta when keys are missing, and the
+    "scan for meta parameters after assign" check in ``from_pretrained``
+    correctly identifies them.
+    """
+
+    def test_assign_load_with_missing_key_leaves_param_on_meta(self):
+        """The premise — without our scan, ``.to()`` would crash."""
+        with torch.device("meta"):
+            module = nn.Linear(4, 4)
+        # State dict is missing the bias.
+        partial_sd = {"weight": torch.randn(4, 4)}
+        result = module.load_state_dict(partial_sd, assign=True, strict=False)
+        assert "bias" in result.missing_keys
+        # The bug: bias is still on meta.
+        assert module.bias.is_meta
+        # And .to() on a meta param raises.
+        with pytest.raises(NotImplementedError, match="meta"):
+            module.to("cpu")
+
+    def test_meta_param_scan_finds_missing_assign_targets(self):
+        """The fix's scan: walk named_parameters looking for ``is_meta``,
+        report names so the fallback warning can surface them."""
+        with torch.device("meta"):
+            module = nn.Sequential(nn.Linear(4, 4), nn.Linear(4, 2))
+        # Provide weights but not biases.
+        partial_sd = {
+            "0.weight": torch.randn(4, 4),
+            "1.weight": torch.randn(2, 4),
+        }
+        module.load_state_dict(partial_sd, assign=True, strict=False)
+        meta_params = [n for n, p in module.named_parameters() if p.is_meta]
+        assert sorted(meta_params) == ["0.bias", "1.bias"]
+
+    def test_full_assign_load_leaves_no_meta_params(self):
+        """Sanity: when the state dict is complete, no meta params remain."""
+        with torch.device("meta"):
+            module = nn.Linear(4, 4)
+        full_sd = {"weight": torch.randn(4, 4), "bias": torch.randn(4)}
+        module.load_state_dict(full_sd, assign=True, strict=False)
+        meta_params = [n for n, p in module.named_parameters() if p.is_meta]
+        assert meta_params == []
+        # And .to() succeeds on the materialized module.
+        module.to("cpu")
+
+
 class TestNormalizeVariant:
     """``variant=`` canonicalization for selective downloads."""
 
