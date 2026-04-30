@@ -22,6 +22,81 @@ The very first release should be "0.1.0".
 
 ## Releases
 
+GLiNER supports two release methods: **automated releases via GitHub Actions** (recommended) and manual releases via `twine`. The automated method is preferred as it ensures consistency and uses PyPI's trusted publishing.
+
+### Automated Release via GitHub Actions (Recommended)
+
+The repository includes a GitHub Actions workflow (`.github/workflows/release.yaml`) that automatically builds and publishes releases to PyPI when you push a version tag to the main branch.
+
+#### Prerequisites
+
+1. Ensure PyPI trusted publishing is configured for the GLiNER project in your PyPI account settings
+2. The GitHub Actions workflow must have the proper PyPI environment configured
+
+#### Steps for Automated Release
+
+**Step 1: Adjust the version of your package**
+
+Update the version in [`gliner/__init__.py`](gliner/__init__.py) from dev to release version:
+
+```diff
+- __version__ = "0.4.0.dev"
++ __version__ = "0.4.0"
+```
+
+Commit and push to main:
+
+```bash
+git add gliner
+git commit -m "Release: v{VERSION}"
+git push origin main
+```
+
+**Step 2: Create and push a version tag**
+
+Create a tag matching the pattern `v*` (e.g., `v0.4.0`) and push it to trigger the release:
+
+```bash
+git tag v<VERSION>
+git push origin v<VERSION>
+```
+
+**Important:** The tag MUST be pushed to the main branch. The workflow will automatically verify this and fail if the tag is from any other branch.
+
+**Step 3: Monitor the GitHub Actions workflow**
+
+1. Go to [https://github.com/urchade/GLiNER/actions](https://github.com/urchade/GLiNER/actions)
+2. Watch the "Release GLiNER to PyPI" workflow execution
+3. The workflow will:
+   - Build the distribution packages (wheel and source tarball)
+   - Verify the tag is on the main branch
+   - Publish to PyPI using trusted publishing
+
+**Step 4: (Optional) Prepare release notes**
+
+Create release notes on GitHub at [https://github.com/urchade/GLiNER/releases](https://github.com/urchade/GLiNER/releases) using the tag you just created.
+
+**Step 5: Bump the dev version**
+
+After a successful release, update [`gliner/__init__.py`](gliner/__init__.py) to the next dev version:
+
+```diff
+- __version__ = "0.4.0"
++ __version__ = "0.4.1.dev"
+```
+
+Commit and push:
+
+```bash
+git add gliner
+git commit -m "Bump version to {NEXT_VERSION}.dev"
+git push origin main
+```
+
+### Manual Release via twine
+
+If you need to release manually or the automated workflow is unavailable, follow these steps:
+
 ### Step 1: Adjust the version of your package
 
 You should have the current version specified in [`gliner/__init__.py`](gliner/__init__.py). This version should be a dev version (e.g. `0.1.0.dev`) before you release, change it to the name of the version you are releasing:
@@ -154,3 +229,5 @@ Go back to the draft you did at step 4 ([https://github.com/urchade/GLiNER/relea
 ### Step 9: Bump the dev version on the main branch
 
 You’re almost done! Just go back to the `main` branch and change the dev version in [`gliner/__init__.py`](gliner/__init__.py) to the new version you’re developing, for instance `4.13.0.dev` if just released `4.12.0`.
+
+**Note:** This step applies to both the automated and manual release processes.
