@@ -29,7 +29,7 @@ training:
   num_steps: 15000
   train_batch_size: 8
   eval_every: 10
-  warmup_ratio: 0.05
+  warmup_steps: 0.05
   scheduler_type: "cosine"  # Options: linear, cosine, constant
   
   # Loss Function Configuration
