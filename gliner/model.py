@@ -2400,6 +2400,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label: bool = False,
         threshold: float = 0.5,
         batch_size: int = 12,
+        entity_types: Optional[List[str]] = None,
     ) -> Tuple[Any, float]:
         """Evaluate the model on a given test dataset.
 
@@ -2409,6 +2410,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             multi_label: Whether to use multi-label classification. Defaults to False.
             threshold: The threshold for predictions. Defaults to 0.5.
             batch_size: The batch size for evaluation. Defaults to 12.
+            entity_types: Optional list of entity types to evaluate. If None, extracts from test data. Defaults to None.
 
         Returns:
             Tuple containing the evaluation output and the F1 score.
@@ -2416,15 +2418,12 @@ class BaseEncoderGLiNER(BaseGLiNER):
         self.eval()
         # Create the dataset and data loader
         dataset = test_data
-        collator = self.data_collator_class(
-            self.config,
-            data_processor=self.data_processor,
-            return_tokens=True,
-            return_entities=True,
-            return_id_to_classes=True,
-            prepare_labels=False,
-        )
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
+        collator = self.create_collator()
+
+        def collate_fn(batch):
+            return self.collate_batch(batch, entity_types, collator)
+
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         all_preds = self._process_batches(data_loader, threshold, flat_ner, multi_label)
         all_trues = []
@@ -4219,6 +4218,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         adjacency_threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
         batch_size: int = 12,
+        entity_types: Optional[List[str]] = None,
     ) -> Tuple[Tuple[Any, float], Tuple[Any, float]]:
         """Evaluate the model on both NER and relation extraction tasks.
 
@@ -4230,6 +4230,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
             relation_threshold: The threshold for relation predictions. Defaults to threshold.
             batch_size: The batch size for evaluation. Defaults to 12.
+            entity_types: Optional list of entity types to evaluate. If None, extracts from test data. Defaults to None.
 
         Returns:
             Tuple of ((ner_output, ner_f1), (rel_output, rel_f1)) containing:
@@ -4258,7 +4259,11 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             return_rel_id_to_classes=True,
             prepare_labels=False,
         )
-        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collator)
+
+        def collate_fn(batch):
+            return collator(batch, entity_types=entity_types)
+
+        data_loader = torch.utils.data.DataLoader(dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn)
 
         all_entity_preds = []
         all_relation_preds = []
