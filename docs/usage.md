@@ -983,84 +983,233 @@ relations = [
 
 ## Practical Examples
 
-### Example 1: Extract Company Information
+### Compliance & PII Redaction
+
+Detect and mask personal data across documents using GLiNER's multilingual PII model, which covers 40+ entity types (SSN, credit cards, passports, emails, IBANs, etc.) in 100+ languages.
 
 ```python
 from gliner import GLiNER
 
-model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+model = GLiNER.from_pretrained("urchade/gliner_multi_pii-v1")
 
 text = """
-Apple Inc. is headquartered in Cupertino, California. The company was founded 
-by Steve Jobs, Steve Wozniak, and Ronald Wayne in April 1976. Tim Cook is the 
-current CEO. Apple's main products include iPhone, iPad, and Mac computers.
+Patient John Smith (DOB: 03/15/1982, SSN: 123-45-6789) was seen at
+Mayo Clinic on January 10, 2024. Contact: john.smith@email.com,
++1-555-867-5309. Insurance ID: BC-9876543. His home address is
+742 Evergreen Terrace, Springfield, IL 62704.
 """
 
-labels = ["company", "location", "person", "position", "product", "date"]
-entities = model.predict_entities(text, labels, threshold=0.5)
+pii_labels = [
+    "person", "date of birth", "social security number", "email",
+    "phone number", "medical facility", "insurance id", "address",
+]
 
-# Organize by type
-from collections import defaultdict
-by_type = defaultdict(list)
-for entity in entities:
-    by_type[entity['label']].append(entity['text'])
+entities = model.predict_entities(text, pii_labels, threshold=0.5)
 
-for label, items in by_type.items():
-    print(f"{label}: {', '.join(set(items))}")
+# Redact PII from text
+redacted = text
+for entity in sorted(entities, key=lambda e: e["start"], reverse=True):
+    redacted = redacted[: entity["start"]] + f"[{entity['label'].upper()}]" + redacted[entity["end"] :]
+
+print(redacted)
 ```
 
-### Example 2: Process Scientific Papers
+<details>
+<summary>Expected Output</summary>
+
+```
+Patient [PERSON] (DOB: [DATE OF BIRTH], SSN: [SOCIAL SECURITY NUMBER]) was seen at
+[MEDICAL FACILITY] on January 10, 2024. Contact: [EMAIL],
+[PHONE NUMBER]. Insurance ID: [INSURANCE ID]. His home address is
+[ADDRESS].
+```
+</details>
+
+### Knowledge Graph Construction
+
+Jointly extract entities and relations in a single pass to build knowledge graphs for Graph RAG, semantic search, and analytics.
 
 ```python
 from gliner import GLiNER
 
-model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+model = GLiNER.from_pretrained("knowledgator/gliner-relex-large-v1.0")
 
-abstract = """
-We introduce GPT-4, a large-scale multimodal model developed by OpenAI. 
-The model was trained on a diverse dataset and exhibits strong performance 
-on various benchmarks including MMLU, HumanEval, and GSM-8K.
+text = """
+Elon Musk founded SpaceX in 2002 in Hawthorne, California. The company
+developed the Falcon 9 rocket and the Dragon spacecraft. SpaceX was awarded
+a $1.6 billion NASA contract for cargo resupply missions to the International
+Space Station.
 """
 
-labels = [
-    "model_name", "organization", "dataset", "benchmark", 
-    "metric", "task", "method"
-]
+entity_labels = ["person", "organization", "date", "location", "product", "monetary value"]
+relation_labels = ["founded", "founded_in", "headquartered_in", "developed", "awarded_by"]
 
-entities = model.predict_entities(abstract, labels, threshold=0.4)
+entities, relations = model.inference(
+    [text],
+    labels=entity_labels,
+    relations=relation_labels,
+    threshold=0.5,
+    relation_threshold=0.5,
+)
 
-print("Extracted Information:")
-for entity in entities:
-    print(f"  {entity['label']}: {entity['text']}")
+print("Entities:")
+for entity in entities[0]:
+    print(f"  {entity['text']} ({entity['label']})")
+
+print("\nRelations (knowledge graph edges):")
+for relation in relations[0]:
+    head = entities[0][relation["head"]["entity_idx"]]
+    tail = entities[0][relation["tail"]["entity_idx"]]
+    print(f"  {head['text']} --[{relation['relation']}]--> {tail['text']}")
 ```
 
-### Example 3: Analyze News Articles
+### Large-Scale Entity Extraction
+
+Use the bi-encoder to tag millions of documents against hundreds of entity types. Pre-compute label embeddings once and reuse them across all documents for maximum throughput.
 
 ```python
 from gliner import GLiNER
 
-model = GLiNER.from_pretrained("knowledgator/gliner-bi-small-v1.0")
-
-article = """
-Tesla CEO Elon Musk announced on Twitter that the company will open a new 
-Gigafactory in Austin, Texas. The facility will produce the Cybertruck and 
-Model Y vehicles. Construction began in July 2020 and operations started in 2021.
-"""
+model = GLiNER.from_pretrained("knowledgator/gliner-bi-base-v2.0", map_location="cuda")
 
 labels = [
-    "person", "position", "company", "location", "facility", 
-    "product", "date", "event"
+    "person", "organization", "location", "date", "product", "event",
+    "technology", "software", "programming_language", "framework",
+    "database", "protocol", "standard", "regulation", "currency",
+    "measurement", "chemical_compound", "disease", "medication",
+    # ... scale to hundreds of types
 ]
 
-# Process with BiEncoder for efficiency
-entities = model.predict_entities(article, labels, threshold=0.5)
+# Pre-compute label embeddings once
+label_embeddings = model.encode_labels(labels, batch_size=32)
 
-# Group related entities
-print("Key Information:")
-print(f"- Company: {[e['text'] for e in entities if e['label'] == 'company']}")
-print(f"- Location: {[e['text'] for e in entities if e['label'] == 'location']}")
-print(f"- Products: {[e['text'] for e in entities if e['label'] == 'product']}")
-print(f"- Timeline: {[e['text'] for e in entities if e['label'] == 'date']}")
+# Process a large document collection efficiently
+documents = [
+    "Python 3.12 was released by the PSF in October 2023.",
+    "The FDA approved a new treatment for Type 2 diabetes.",
+    "Tesla announced record Q4 revenue of $25.2 billion.",
+    # ... millions of documents
+]
+
+all_entities = model.batch_predict_with_embeds(
+    documents,
+    label_embeddings,
+    labels,
+    threshold=0.5,
+    batch_size=64,
+)
+
+for doc, entities in zip(documents, all_entities):
+    print(f"\n{doc[:60]}...")
+    for entity in entities:
+        print(f"  {entity['text']} => {entity['label']} ({entity['score']:.2f})")
+```
+
+### Domain-Specific NER
+
+Fine-tune GLiNER on your specialized corpus (biomedical, legal, financial, etc.) with minimal labeled data to get high-quality extraction for domain terms.
+
+```python
+from gliner import GLiNER
+
+# Start from a pre-trained model
+model = GLiNER.from_pretrained("gliner-community/gliner_small-v2.5")
+
+# Prepare domain-specific training data (NER format)
+train_data = [
+    {
+        "tokenized_text": ["Aspirin", "reduces", "inflammation", "in", "rheumatoid", "arthritis", "patients", "."],
+        "ner": [
+            [0, 0, "medication"],
+            [2, 2, "condition"],
+            [4, 5, "disease"],
+        ],
+    },
+    {
+        "tokenized_text": ["Metformin", "is", "prescribed", "for", "Type", "2", "diabetes", "."],
+        "ner": [
+            [0, 0, "medication"],
+            [4, 6, "disease"],
+        ],
+    },
+    # ... add more examples from your domain
+]
+
+# Fine-tune — even 50–200 examples can yield strong results
+model.train_model(
+    train_dataset=train_data,
+    output_dir="models/bio-gliner",
+    max_steps=500,
+    per_device_train_batch_size=8,
+    learning_rate=1e-5,
+    bf16=True,
+)
+
+# Use the fine-tuned model
+text = "The patient was started on Lisinopril 10mg for hypertension."
+entities = model.predict_entities(text, ["medication", "dosage", "disease"], threshold=0.5)
+for entity in entities:
+    print(f"  {entity['text']} => {entity['label']}")
+```
+
+For detailed training guides, see the [training documentation](https://urchade.github.io/GLiNER/training.html).
+
+### Multi-lingual Information Extraction
+
+Extract structured data from 100+ languages with a single model — no per-language setup required.
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("urchade/gliner_multi-v2.1")
+
+texts = {
+    "English": "Barack Obama was born in Honolulu, Hawaii on August 4, 1961.",
+    "French": "Emmanuel Macron est le président de la République française depuis 2017.",
+    "Japanese": "東京都は日本の首都であり、2021年にオリンピックが開催されました。",
+    "Arabic": "تأسست شركة أرامكو السعودية في عام 1933 في المملكة العربية السعودية.",
+}
+
+labels = ["person", "location", "organization", "date"]
+
+for lang, text in texts.items():
+    entities = model.predict_entities(text, labels, threshold=0.5)
+    print(f"\n{lang}: {text[:60]}...")
+    for entity in entities:
+        print(f"  {entity['text']} => {entity['label']}")
+```
+
+### Search & Retrieval Augmentation
+
+Parse user queries into structured entities to improve search relevance and RAG pipelines — route queries, filter results, or enrich retrieval context.
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("gliner-community/gliner_small-v2.5")
+
+queries = [
+    "What were Apple's revenue numbers in Q3 2023?",
+    "Find clinical trials for Alzheimer's treatment in Europe",
+    "Show me Python machine learning libraries released after 2022",
+]
+
+query_labels = [
+    "company", "metric", "time_period", "disease", "treatment",
+    "location", "programming_language", "topic", "product_type",
+]
+
+for query in queries:
+    entities = model.predict_entities(query, query_labels, threshold=0.4)
+    print(f"\nQuery: {query}")
+
+    # Build structured filters from extracted entities
+    filters = {entity["label"]: entity["text"] for entity in entities}
+    print(f"  Extracted filters: {filters}")
+
+    # Use filters to enhance retrieval
+    # e.g., add metadata filters to your vector DB query,
+    # or expand the search with entity synonyms
 ```
 
 ## ⚡ Prompt Compression (Precomputed Prompt Embeddings)
