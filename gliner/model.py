@@ -729,7 +729,13 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         return tokenizer
 
     @classmethod
-    def _load_tokenizer(cls, config: GLiNERConfig, model_dir: Path, cache_dir: Optional[Path] = None):
+    def _load_tokenizer(
+        cls,
+        config: GLiNERConfig,
+        model_dir: Path,
+        cache_dir: Optional[Path] = None,
+        local_files_only: bool = False,
+    ):
         """
         Load tokenizer from directory.
 
@@ -737,6 +743,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             config: GLiNER config instance
             model_dir: Directory containing tokenizer files
             cache_dir: Cache directory for downloads
+            local_files_only: Only use local files
 
         Returns:
             Tokenizer instance or None
@@ -744,9 +751,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         tokenizer_config_path = model_dir / "tokenizer_config.json"
 
         if tokenizer_config_path.is_file():
-            tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir, local_files_only=local_files_only)
         else:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir, local_files_only=local_files_only)
 
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
@@ -1168,7 +1175,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         tokenizer = None
         if load_tokenizer:
-            tokenizer = cls._load_tokenizer(config, model_dir, cache_dir)
+            tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
 
         if not load_onnx_model:
             # Find the model file. _resolve_model_file picks the variant file
