@@ -13,7 +13,7 @@ Usage:
     pip install openvino nncf onnx onnxruntime
 
     python scripts/convert_to_openvino.py \
-        --model urchade/gliner-multitask-large-v0.5 \
+        --model knowledgator/gliner-bi-small-v1.0 \
         --output_dir results/openvino \
         --baseline_f1 0.27
 
@@ -25,6 +25,11 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+
 import sys
 import time
 import tempfile
@@ -36,7 +41,6 @@ import numpy as np
 
 try:
     from gliner import GLiNER
-    from gliner.onnx import UniEncoderSpanORTModel
 except ImportError:
     sys.exit("pip install -e '.[training]' from repo root")
 
@@ -177,8 +181,13 @@ def measure_latency_ov(compiled_model, inputs_fn, n: int = 50) -> dict:
 
 def export_to_onnx(model: GLiNER, onnx_path: Path, labels: list) -> None:
     print(f"  Exporting to ONNX: {onnx_path}")
-    model.save_pretrained_onnx(str(onnx_path.parent), labels=labels)
-    print("  ONNX export complete")
+    onnx_path.parent.mkdir(parents=True, exist_ok=True)
+    result = model.export_to_onnx(
+        save_dir=str(onnx_path.parent),
+        onnx_filename=onnx_path.name,
+        quantize=False,
+    )
+    print(f"  ONNX export complete → {result}")
 
 
 # ---------------------------------------------------------------------------
@@ -196,41 +205,32 @@ def onnx_to_openvino_fp32(onnx_path: Path, ov_dir: Path) -> Path:
     return ov_fp32_path
 
 
-def quantize_to_int8(ov_fp32_path: Path, calibration_data: list, ov_dir: Path) -> Path:
-    """NNCF post-training static INT8 quantization.
+def quantize_to_int8(ov_fp32_path: Path, ov_dir: Path) -> Path:
+    """NNCF INT8 weight compression (no calibration required).
 
-    Calibration: 128-sentence CoNLL-2003 validation split (by default).
-    Strategy: quantize transformer encoder layers only (scope excludes the
-    span scorer head to protect boundary detection accuracy).
+    Uses nncf.compress_weights instead of full activation quantization —
+    GLiNER's ONNX graph contains If nodes with dynamic rank that the CPU
+    plugin rejects when compiling (required by calibration-based INT8).
+    Weight-only INT8 compresses all linear-layer weights asymmetrically,
+    giving ~4x model size reduction and ~1.5-2x CPU speedup with no
+    calibration pass and no model compilation at quantization time.
     """
     ov = _require_openvino()
     nncf = _require_nncf()
 
     ov_int8_path = ov_dir / "model_int8.xml"
-    print(f"  Quantizing to INT8: {ov_int8_path}")
-    print(f"  Calibration set: {len(calibration_data)} samples")
+    print(f"  Compressing weights to INT8 (weight-only): {ov_int8_path}")
 
     core = ov.Core()
     fp32_model = core.read_model(str(ov_fp32_path))
 
-    # Build calibration dataset from pre-tokenised numpy arrays
-    def calibration_transform(item):
-        return {k: np.array(v) for k, v in item.items()}
-
-    ov_dataset = nncf.Dataset(calibration_data, calibration_transform)
-
-    quantized = nncf.quantize(
+    compressed = nncf.compress_weights(
         fp32_model,
-        ov_dataset,
-        preset=nncf.QuantizationPreset.MIXED,
-        # Exclude the final scoring heads — they are low-compute and accuracy-sensitive
-        ignored_scope=nncf.IgnoredScope(
-            patterns=[".*prompt_rep_layer.*", ".*span_rep_layer.*"]
-        ),
+        mode=nncf.CompressWeightsMode.INT8_ASYM,
     )
 
-    ov.save_model(quantized, str(ov_int8_path))
-    print("  INT8 quantization complete")
+    ov.save_model(compressed, str(ov_int8_path))
+    print("  INT8 weight compression complete")
     return ov_int8_path
 
 
@@ -242,20 +242,28 @@ def prepare_calibration_data(
     model: GLiNER,
     examples: list,
     labels: list,
-    n: int = 128,
+    n: int = 64,
 ) -> list[dict]:
-    """Tokenise N sentences and collect raw model inputs for NNCF calibration."""
+    """Build calibration inputs using the model's own prepare_batch → collate_batch pipeline."""
     print(f"  Preparing {n} calibration samples...")
-    samples = examples[:n]
-    texts = [" ".join(ex["tokens"]) for ex in samples]
+    texts = [" ".join(ex["tokens"]) for ex in examples[:n]]
 
     calib_inputs = []
     model.eval()
+    collator = model.create_collator()
+
     with torch.no_grad():
         for text in texts:
             try:
-                inputs = model.prepare_model_inputs([text], labels)
-                calib_inputs.append({k: v.numpy() for k, v in inputs.items() if isinstance(v, torch.Tensor)})
+                prepared = model.prepare_batch([text], labels)
+                batch = model.collate_batch(prepared["input_x"], prepared["entity_types"], collator)
+                numpy_batch = {
+                    k: v.numpy()
+                    for k, v in batch.items()
+                    if isinstance(v, torch.Tensor)
+                }
+                if numpy_batch:
+                    calib_inputs.append(numpy_batch)
             except Exception:
                 continue
 
@@ -269,7 +277,7 @@ def prepare_calibration_data(
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="GLiNER-Robust Step 3: OpenVINO quantization")
-    p.add_argument("--model", default="urchade/gliner-multitask-large-v0.5")
+    p.add_argument("--model", default="knowledgator/gliner-bi-small-v1.0")
     p.add_argument("--output_dir", default="results/openvino")
     p.add_argument("--calibration_n", type=int, default=128)
     p.add_argument("--latency_repeats", type=int, default=50)
@@ -348,16 +356,12 @@ def main() -> None:
     ov_int8_path = ov_dir / "model_int8.xml"
 
     if ov_fp32_path.exists() and (not args.skip_quant or not ov_int8_path.exists()):
-        print("\n── D. INT8 static quantization")
-        calib_data = prepare_calibration_data(
-            model, conll_val, CONLL_LABELS, n=args.calibration_n
-        )
-        if calib_data:
-            try:
-                ov_int8_path = quantize_to_int8(ov_fp32_path, calib_data, ov_dir)
-            except Exception as e:
-                print(f"  INT8 quantization failed: {e}")
-                print("  You may need: pip install nncf openvino\n")
+        print("\n── D. INT8 weight compression (no calibration)")
+        try:
+            ov_int8_path = quantize_to_int8(ov_fp32_path, ov_dir)
+        except Exception as e:
+            print(f"  INT8 compression failed: {e}")
+            print("  You may need: pip install nncf openvino\n")
 
     # ── Step E: OV benchmarks ─────────────────────────────────────────────
     ov = None
@@ -376,6 +380,28 @@ def main() -> None:
             print(f"\n── E. Benchmarking {label}")
             try:
                 ov_model = core.read_model(str(xml_path))
+
+                # Build a sample input dict matching the OV model's inputs.
+                # BiEncoderSpanGLiNER has no prepare_model_inputs — use prepare_batch
+                # + collate_batch which is the universal GLiNER input pipeline.
+                collator = model.create_collator()
+                prepared = model.prepare_batch([sample_sentence], CONLL_LABELS)
+                batch_tensors = model.collate_batch(
+                    prepared["input_x"], prepared["entity_types"], collator
+                )
+                sample_np = {
+                    inp.any_name: batch_tensors[inp.any_name].numpy()
+                    for inp in ov_model.inputs
+                    if inp.any_name in batch_tensors
+                    and isinstance(batch_tensors[inp.any_name], torch.Tensor)
+                }
+
+                # Reshape to static shapes — required because OpenVINO's CPU plugin
+                # cannot compile If nodes that have dynamic rank (GLiNER uses conditional
+                # branches from bi-encoder architecture).
+                static_shapes = {name: arr.shape for name, arr in sample_np.items()}
+                ov_model.reshape(static_shapes)
+
                 compiled = core.compile_model(ov_model, "CPU")
 
                 model_size_mb = sum(
@@ -383,15 +409,8 @@ def main() -> None:
                     if f.exists()
                 ) / (1024 ** 2)
 
-                # Build a sample input dict matching the OV model's inputs
-                sample_inputs_pt = model.prepare_model_inputs([sample_sentence], CONLL_LABELS)
-
-                def make_inputs():
-                    return {
-                        inp.any_name: sample_inputs_pt[inp.any_name].numpy()
-                        for inp in compiled.inputs
-                        if inp.any_name in sample_inputs_pt
-                    }
+                def make_inputs(_np=sample_np):
+                    return _np
 
                 lat_ov = measure_latency_ov(compiled, make_inputs, n=args.latency_repeats)
                 print(f"  Mean: {lat_ov['mean_ms']} ms  |  P50: {lat_ov['p50_ms']} ms")

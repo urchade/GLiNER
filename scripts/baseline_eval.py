@@ -6,11 +6,17 @@ that mathematically motivates the Focal / Dice loss work in Step 2.
 
 Usage:
     python scripts/baseline_eval.py \
-        --model urchade/gliner-multitask-large-v0.5 \
+        --model knowledgator/gliner-bi-small-v1.0 \
         --output results/baseline_table.csv
 """
-
 from __future__ import annotations
+
+# KMP_DUPLICATE_LIB_OK suppresses the macOS ARM OpenMP abort that occurs when
+# PyTorch (libiomp5) and accelerate/transformers (libomp) are both in-process.
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
 
 import argparse
 import csv
@@ -147,7 +153,7 @@ def measure_latency(model: GLiNER, sentence: str, labels: list,
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--model",    default="urchade/gliner-multitask-large-v0.5")
+    p.add_argument("--model",    default="knowledgator/gliner-bi-small-v1.0")
     p.add_argument("--datasets", nargs="+", default=["wnut17", "conll2003"])
     p.add_argument("--output",   default="results/baseline_table.csv")
     p.add_argument("--threshold", type=float, default=0.5)

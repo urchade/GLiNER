@@ -5,6 +5,7 @@ architectures, including uni-encoder and bi-encoder variants for both
 span-level and token-level named entity recognition, as well as relation
 extraction models.
 """
+from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
@@ -12,7 +13,10 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import torch
-import onnxruntime as ort
+try:
+    import onnxruntime as ort
+except (ImportError, Exception):
+    ort = None
 
 from ..modeling.outputs import GLiNERBaseOutput, GLiNERRelexOutput
 

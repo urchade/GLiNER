@@ -12,12 +12,19 @@ Configs (in order):
 
 Usage:
     python scripts/train_ablation.py \
-        --base_model urchade/gliner-multitask-large-v0.5 \
+        --base_model knowledgator/gliner-bi-small-v1.0 \
         --max_steps 200 \
         --output_dir results/ablation
 """
 
 from __future__ import annotations
+
+import os
+os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
+os.environ.setdefault("OMP_NUM_THREADS", "1")
+os.environ.setdefault("TOKENIZERS_PARALLELISM", "false")
+# Force CPU training — MPS (Apple GPU) causes assertion failures with GLiNER's span tensors
+os.environ["PYTORCH_ENABLE_MPS_FALLBACK"] = "1"
 
 import argparse
 import csv
@@ -150,6 +157,7 @@ def run_one(cfg: AblationCfg, base_model: str, train_data: list, eval_data: list
         save_total_limit=1,
         report_to="none",
         dataloader_num_workers=0,
+        use_cpu=True,  # MPS (Apple GPU) causes buffer assertion failures with GLiNER span tensors
     )
 
     t0 = time.perf_counter()
@@ -194,7 +202,7 @@ def run_one(cfg: AblationCfg, base_model: str, train_data: list, eval_data: list
 
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
-    p.add_argument("--base_model", default="urchade/gliner-multitask-large-v0.5")
+    p.add_argument("--base_model", default="knowledgator/gliner-bi-small-v1.0")
     p.add_argument("--output_dir", default="results/ablation")
     p.add_argument("--max_steps",  type=int, default=200,
                    help="Steps per config. 200 is enough to see loss function differences.")
