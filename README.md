@@ -99,17 +99,6 @@ python scripts/baseline_eval.py \
 
 ---
 
-## Roadmap
-
-- [x] Codebase audit & architecture analysis
-- [x] **Step 1** — Baseline evaluation (WNUT-17: 44.12%, CoNLL-2003: 53.22%, 187× span imbalance)
-- [x] **Step 2** — Focal Loss + Dice Loss + span-width weighting ablations (best: Focal α=0.25 → +0.99 pp)
-- [x] **Step 3** — OpenVINO INT8 pipeline (2.35× faster, 181 MB, same accuracy)
-- [x] **Step 4** — Evaluation visuals (Pareto frontier, F1 heatmap, ablation bars, loss curves)
-- [ ] **Step 5** — HuggingFace Hub release + upstream PR
-
----
-
 ## Repository Structure
 
 ```
