@@ -753,7 +753,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if tokenizer_config_path.is_file():
             tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir, local_files_only=local_files_only)
         else:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir, local_files_only=local_files_only)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name,
+                cache_dir=cache_dir,
+                local_files_only=local_files_only,
+            )
 
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
