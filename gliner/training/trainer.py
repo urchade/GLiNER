@@ -14,15 +14,13 @@ from dataclasses import field, dataclass
 import torch
 import transformers
 from torch import nn
-from transformers.trainer import (
-    get_parameter_names,
-    is_sagemaker_mp_enabled,
-)
 from transformers.trainer_utils import set_seed
-
-if is_sagemaker_mp_enabled():
-    from transformers.trainer_pt_utils import smp_forward_backward
 from torch.utils.data import Dataset, DataLoader
+
+
+def _get_trainer_imports():
+    from transformers.trainer import get_parameter_names, is_sagemaker_mp_enabled
+    return get_parameter_names, is_sagemaker_mp_enabled
 
 ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
@@ -85,6 +83,9 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_reduction: Optional[str] = "sum"
     negatives: Optional[float] = 1.0
     masking: Optional[str] = "global"
+    loss_type: Optional[str] = "focal"
+    use_span_width_weight: Optional[bool] = False
+    dice_gamma: Optional[float] = 1.0
 
 
 class Trainer(transformers.Trainer):
@@ -164,6 +165,9 @@ class Trainer(transformers.Trainer):
             reduction=self.args.loss_reduction,
             negatives=self.args.negatives,
             masking=self.args.masking,
+            loss_type=self.args.loss_type,
+            use_span_width_weight=self.args.use_span_width_weight,
+            dice_gamma=self.args.dice_gamma,
             **inputs,
         )
 
@@ -184,7 +188,9 @@ class Trainer(transformers.Trainer):
             raise KeyError(f"Batch has no 'labels'. Keys: {list(inputs.keys())}")
 
         try:
+            _, is_sagemaker_mp_enabled = _get_trainer_imports()
             if is_sagemaker_mp_enabled():
+                from transformers.trainer_pt_utils import smp_forward_backward
                 loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
                 return loss_mb.reduce_mean().detach().to(self.args.device)
 
@@ -225,6 +231,7 @@ class Trainer(transformers.Trainer):
             raise
 
     def create_optimizer(self):
+        get_parameter_names, is_sagemaker_mp_enabled = _get_trainer_imports()
         if is_sagemaker_mp_enabled():
             return super().create_optimizer()
 

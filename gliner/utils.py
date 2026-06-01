@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import argparse
 from typing import Any, Dict, Union
@@ -68,11 +69,9 @@ def is_module_available(module_name):
     Returns:
         bool: True if the module is available, False otherwise.
     """
-    try:
-        __import__(module_name)
-        return True
-    except ImportError:
-        return False
+    # Use find_spec to avoid actually importing the module — some packages (peft, onnxruntime)
+    # trigger OpenMP initialization that deadlocks on macOS ARM when imported via __import__.
+    return importlib.util.find_spec(module_name) is not None
 
 
 class MissedPackageException(Exception):
