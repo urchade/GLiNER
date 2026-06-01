@@ -11,13 +11,15 @@ class _FakeModel:
 
     def prepare_batch(self, texts, labels):
         self.prepared_labels = labels
+        valid_texts = [text for text in texts if text.strip()]
+        valid_to_orig_idx = [idx for idx, text in enumerate(texts) if text.strip()]
         return {
-            "input_x": [{"tokenized_text": text.split(), "ner": None} for text in texts],
+            "input_x": [{"tokenized_text": text.split(), "ner": None} for text in valid_texts],
             "entity_types": labels,
-            "valid_texts": texts,
-            "valid_to_orig_idx": list(range(len(texts))),
-            "start_token_map": [[0] for _ in texts],
-            "end_token_map": [[1] for _ in texts],
+            "valid_texts": valid_texts,
+            "valid_to_orig_idx": valid_to_orig_idx,
+            "start_token_map": [[0] for _ in valid_texts],
+            "end_token_map": [[1] for _ in valid_texts],
             "num_original": len(texts),
         }
 
@@ -33,7 +35,10 @@ class _FakeModel:
         return [[object()] for _ in batch["input_x"]]
 
     def map_entities_to_text(self, decoded, valid_texts, valid_to_orig_idx, start_token_map, end_token_map, num_original):
-        return decoded
+        results = [[] for _ in range(num_original)]
+        for decoded_idx, original_idx in enumerate(valid_to_orig_idx):
+            results[original_idx] = decoded[decoded_idx]
+        return results
 
 
 def test_min_batch_value_uses_lowest_threshold_for_model_pruning():
@@ -81,6 +86,7 @@ def test_run_batch_ner_passes_heterogeneous_decode_controls():
     server.model = _FakeModel()
     server.collator = object()
     server.packing_config = None
+    server.config = Mock(enable_polylora=False, polylora_base_adapter_id="__base__")
 
     result = server._run_batch_ner(
         ["John works at Acme", "Paris is sunny"],
@@ -96,3 +102,30 @@ def test_run_batch_ner_passes_heterogeneous_decode_controls():
     assert server.model.decode_batch_kwargs["threshold"] == [0.2, 0.8]
     assert server.model.decode_batch_kwargs["flat_ner"] == [True, False]
     assert server.model.decode_batch_kwargs["multi_label"] == [False, True]
+
+
+def test_resolve_adapter_ids_uses_base_adapter_for_empty_request_ids():
+    server = GLiNERServer.__new__(GLiNERServer)
+    server.config = Mock(enable_polylora=True, polylora_base_adapter_id="__base__")
+
+    assert server._resolve_adapter_ids([None, "task-a", None], [0, 2]) == ["__base__", "__base__"]
+
+
+def test_run_batch_ner_passes_valid_text_adapter_ids():
+    server = GLiNERServer.__new__(GLiNERServer)
+    server.model = _FakeModel()
+    server.collator = object()
+    server.packing_config = None
+    server.config = Mock(enable_polylora=True, polylora_base_adapter_id="__base__")
+
+    result = server._run_batch_ner(
+        ["John works at Acme", ""],
+        ["person", "organization"],
+        threshold=0.5,
+        flat_ner=True,
+        multi_label=False,
+        adapter_ids=[None, "task-b"],
+    )
+
+    assert len(result) == 2
+    assert server.model.run_batch_kwargs["adapter_ids"] == ["__base__"]
