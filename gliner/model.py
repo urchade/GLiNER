@@ -2067,7 +2067,10 @@ class BaseEncoderGLiNER(BaseGLiNER):
         if isinstance(labels, str):
             entity_types = list(dict.fromkeys([labels]))
         elif labels and isinstance(labels[0], list):
-            entity_types = [list(dict.fromkeys(lbls)) for lbls in labels]
+            if len(labels) != num_original:
+                raise ValueError(f"Per-text labels must have length {num_original}, got {len(labels)}")
+            all_entity_types = [list(dict.fromkeys(lbls)) for lbls in labels]
+            entity_types = [all_entity_types[i] for i in valid_to_orig_idx]
         else:
             entity_types = list(dict.fromkeys(labels))
 
@@ -2159,9 +2162,9 @@ class BaseEncoderGLiNER(BaseGLiNER):
         self,
         model_output: Any,
         batch: Dict[str, Any],
-        threshold: float = 0.5,
-        flat_ner: bool = True,
-        multi_label: bool = False,
+        threshold: Union[float, List[float]] = 0.5,
+        flat_ner: Union[bool, List[bool]] = True,
+        multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> List[List[Any]]:
@@ -3274,9 +3277,9 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         self,
         model_output: Any,
         batch: Dict[str, Any],
-        threshold: float = 0.5,
-        flat_ner: bool = True,
-        multi_label: bool = False,
+        threshold: Union[float, List[float]] = 0.5,
+        flat_ner: Union[bool, List[bool]] = True,
+        multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> List[List[Any]]:
@@ -3645,7 +3648,12 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         elif isinstance(relations, str):
             relation_types = list(dict.fromkeys([relations]))
         elif relations and isinstance(relations[0], list):
-            relation_types = [list(dict.fromkeys(rels)) for rels in relations]
+            num_original = len(texts) if not isinstance(texts, str) else 1
+            valid_to_orig_idx = prepared["valid_to_orig_idx"]
+            if len(relations) != num_original:
+                raise ValueError(f"Per-text relations must have length {num_original}, got {len(relations)}")
+            all_relation_types = [list(dict.fromkeys(rels)) for rels in relations]
+            relation_types = [all_relation_types[i] for i in valid_to_orig_idx]
         else:
             relation_types = list(dict.fromkeys(relations))
 
@@ -3739,10 +3747,10 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         self,
         model_output: Any,
         batch: Dict[str, Any],
-        threshold: float = 0.5,
-        relation_threshold: Optional[float] = None,
-        flat_ner: bool = True,
-        multi_label: bool = False,
+        threshold: Union[float, List[float]] = 0.5,
+        relation_threshold: Optional[Union[float, List[float]]] = None,
+        flat_ner: Union[bool, List[bool]] = True,
+        multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
     ) -> Tuple[List[List[Any]], List[List[Any]]]:

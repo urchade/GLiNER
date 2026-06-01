@@ -12,6 +12,21 @@ from .memory import GLiNERMemoryEstimator
 logger = logging.getLogger(__name__)
 
 
+def _min_batch_value(value):
+    if isinstance(value, list):
+        return min(value) if value else 0.5
+    return value
+
+
+def _normalize_relation_lists(relations):
+    if relations is None:
+        return None
+    if isinstance(relations, list) and (not relations or isinstance(relations[0], (list, type(None)))):
+        normalized = [item or [] for item in relations]
+        return None if all(not item for item in normalized) else normalized
+    return relations
+
+
 class GLiNERServer:
     """GLiNER Ray Serve deployment with dynamic batching.
 
@@ -185,8 +200,8 @@ class GLiNERServer:
     def observed_seq_len(
         self,
         texts: List[str],
-        labels: Optional[List[str]] = None,
-        relations: Optional[List[str]] = None,
+        labels: Optional[List[str] | List[List[str]]] = None,
+        relations: Optional[List[str] | List[List[str] | None]] = None,
     ) -> int:
         """Total input word count: longest text + all label/relation words.
 
@@ -197,14 +212,27 @@ class GLiNERServer:
         max_text_words = max((len(t.split()) for t in texts if t.strip()), default=0)
         prompt_words = 0
         if labels:
-            prompt_words += sum(len(label.split()) for label in labels)
+            if isinstance(labels[0], list):
+                prompt_words += max(sum(len(label.split()) for label in label_set) for label_set in labels)
+            else:
+                prompt_words += sum(len(label.split()) for label in labels)
         if relations:
-            prompt_words += sum(len(r.split()) for r in relations)
+            normalized_relations = _normalize_relation_lists(relations)
+            if normalized_relations:
+                if isinstance(normalized_relations[0], list):
+                    prompt_words += max(
+                        sum(len(relation.split()) for relation in relation_set)
+                        for relation_set in normalized_relations
+                    )
+                else:
+                    prompt_words += sum(len(r.split()) for r in normalized_relations)
         total = max_text_words + prompt_words
         return min(max(total, self.config.calibration_min_seq_len), self.config.max_model_len)
 
-    def _filter_labels(self, labels: List[str]) -> List[str]:
+    def _filter_labels(self, labels: List[str] | List[List[str]]) -> List[str] | List[List[str]]:
         """Filter labels based on max_labels config."""
+        if labels and isinstance(labels[0], list):
+            return [self._filter_labels(label_set) for label_set in labels]
         if self.config.max_labels > 0 and len(labels) > self.config.max_labels:
             logger.warning("Truncating labels from %d to %d", len(labels), self.config.max_labels)
             return labels[: self.config.max_labels]
@@ -214,12 +242,12 @@ class GLiNERServer:
     def _run_batch_internal(
         self,
         texts: List[str],
-        labels: List[str],
-        relations: Optional[List[str]] = None,
-        threshold: float = 0.5,
-        relation_threshold: float = 0.5,
-        flat_ner: bool = True,
-        multi_label: bool = False,
+        labels: List[str] | List[List[str]],
+        relations: Optional[List[str] | List[List[str] | None]] = None,
+        threshold: float | List[float] = 0.5,
+        relation_threshold: float | List[float] = 0.5,
+        flat_ner: bool | List[bool] = True,
+        multi_label: bool | List[bool] = False,
     ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
         """Run batch inference using low-level methods (no DataLoader).
 
@@ -248,10 +276,10 @@ class GLiNERServer:
     def _run_batch_ner(
         self,
         texts: List[str],
-        labels: List[str],
-        threshold: float,
-        flat_ner: bool,
-        multi_label: bool,
+        labels: List[str] | List[List[str]],
+        threshold: float | List[float],
+        flat_ner: bool | List[bool],
+        multi_label: bool | List[bool],
     ) -> List[List[Dict[str, Any]]]:
         """Run NER batch inference using low-level methods."""
         prepared = self.model.prepare_batch(texts, labels)
@@ -267,7 +295,7 @@ class GLiNERServer:
 
         model_output = self.model.run_batch(
             batch,
-            threshold=threshold,
+            threshold=_min_batch_value(threshold),
             packing_config=self.packing_config,
             move_to_device=True,
         )
@@ -294,14 +322,15 @@ class GLiNERServer:
     def _run_batch_relex(
         self,
         texts: List[str],
-        labels: List[str],
-        relations: Optional[List[str]],
-        threshold: float,
-        relation_threshold: float,
-        flat_ner: bool,
-        multi_label: bool,
+        labels: List[str] | List[List[str]],
+        relations: Optional[List[str] | List[List[str] | None]],
+        threshold: float | List[float],
+        relation_threshold: float | List[float],
+        flat_ner: bool | List[bool],
+        multi_label: bool | List[bool],
     ) -> Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]:
         """Run relation extraction batch inference using low-level methods."""
+        relations = _normalize_relation_lists(relations)
         prepared = self.model.prepare_batch(texts, labels, relations=relations)
 
         if not prepared["valid_texts"]:
@@ -317,7 +346,8 @@ class GLiNERServer:
 
         model_output = self.model.run_batch(
             batch,
-            threshold=threshold,
+            threshold=_min_batch_value(threshold),
+            adjacency_threshold=_min_batch_value(relation_threshold),
             packing_config=self.packing_config,
             move_to_device=True,
         )
@@ -426,6 +456,7 @@ def _build_deployment(config: GLiNERServeConfig):
             "num_cpus": config.num_cpus_per_replica,
         },
         max_ongoing_requests=config.max_ongoing_requests,
+        max_queued_requests=config.queue_capacity,
     )
     class GLiNERDeployment:
         def __init__(self, serve_config: GLiNERServeConfig):
@@ -461,27 +492,42 @@ def _build_deployment(config: GLiNERServeConfig):
             using ``batch_size_fn`` on the observed seq length — so the next
             accumulation picks the largest precompiled size that fits.
 
-            Assumes batch requests are homogeneous — labels/thresholds/flags
-            are taken from the first request.
+            Supports heterogeneous request parameters by passing per-text
+            labels, relations, thresholds, and decode flags through to the
+            model decode path.
             """
             next_max_batch = self.server.batch_size_fn(
                 seq_len=self.server.observed_seq_len(
                     texts,
-                    labels=labels_list[0] if labels_list else None,
-                    relations=relations_list[0] if relations_list else None,
+                    labels=labels_list,
+                    relations=relations_list,
                 )
             )
             self._infer_batch.set_max_batch_size(next_max_batch)
 
-            return self.server.predict(
+            labels_list = self.server._filter_labels(labels_list)
+            relations = _normalize_relation_lists(relations_list)
+
+            if self.server._supports_relations and relations:
+                entities, rels = self.server._run_batch_internal(
+                    texts,
+                    labels_list,
+                    relations=relations,
+                    threshold=thresholds,
+                    relation_threshold=relation_thresholds,
+                    flat_ner=flat_ner_list,
+                    multi_label=multi_label_list,
+                )
+                return [{"entities": ents, "relations": r} for ents, r in zip(entities, rels)]
+
+            entities = self.server._run_batch_internal(
                 texts,
-                labels_list[0],
-                relations=relations_list[0],
-                threshold=thresholds[0],
-                relation_threshold=relation_thresholds[0],
-                flat_ner=flat_ner_list[0],
-                multi_label=multi_label_list[0],
+                labels_list,
+                threshold=thresholds,
+                flat_ner=flat_ner_list,
+                multi_label=multi_label_list,
             )
+            return [{"entities": ents} for ents in entities]
 
         async def predict(
             self,
