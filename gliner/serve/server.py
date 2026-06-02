@@ -1,4 +1,5 @@
 """Ray Serve deployment for GLiNER with dynamic batching and memory-aware batch sizing."""
+from __future__ import annotations
 
 import os
 import re
@@ -6,7 +7,8 @@ import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
 
 import torch
-from starlette.responses import JSONResponse
+
+from gliner import GLiNER, InferencePackingConfig
 
 from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
@@ -53,8 +55,6 @@ class GLiNERServer:
         Args:
             config: Server configuration with model and serving parameters.
         """
-        from gliner import GLiNER, InferencePackingConfig  # noqa: PLC0415
-
         self.config = config
         self._polylora_model = None
         self._adapter_id_re = re.compile(config.polylora_adapter_id_pattern)
@@ -130,7 +130,7 @@ class GLiNERServer:
 
     def _initialize_polylora(self) -> None:
         try:
-            from polylora import PolyLoraConfig, PolyLoraModel
+            from polylora import PolyLoraModel, PolyLoraConfig  # noqa: PLC0415
         except ImportError as exc:
             raise ImportError("enable_polylora=True requires the polylora package to be importable") from exc
 
@@ -377,6 +377,7 @@ class GLiNERServer:
             relation_threshold: Relation confidence threshold.
             flat_ner: Whether to use flat NER.
             multi_label: Whether to allow multiple labels per span.
+            adapter_ids: Optional PolyLoRA adapter id or per-text adapter ids.
 
         Returns:
             For NER models: List of entity lists.
@@ -542,6 +543,7 @@ class GLiNERServer:
             relation_threshold: Confidence threshold for relations.
             flat_ner: Whether to use flat NER (no overlapping entities).
             multi_label: Whether to allow multiple labels per span.
+            adapter_id: Optional PolyLoRA adapter id to use for inference.
 
         Returns:
             List of result dicts, one per input text. Each dict contains:
@@ -705,6 +707,8 @@ def _build_deployment(config: GLiNERServeConfig):
 
         async def __call__(self, request) -> Dict[str, Any]:
             """Handle HTTP requests."""
+            from starlette.responses import JSONResponse  # noqa: PLC0415
+
             path = request.url.path.rstrip("/")
             if path.endswith("/adapter-cache"):
                 adapter_id = request.query_params.get("adapter_id")
