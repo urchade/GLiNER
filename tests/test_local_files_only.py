@@ -1,9 +1,10 @@
 """Tests that local_files_only is correctly forwarded through the loading path."""
 from unittest.mock import MagicMock, patch
+
 import pytest
 
-from gliner.config import GLiNERConfig
 from gliner.model import BaseGLiNER
+from gliner.config import GLiNERConfig
 
 
 @pytest.fixture
