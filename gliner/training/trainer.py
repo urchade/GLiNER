@@ -85,6 +85,32 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_reduction: Optional[str] = "sum"
     negatives: Optional[float] = 1.0
     masking: Optional[str] = "global"
+    hard_negative_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": (
+                "Fraction of batch negatives drawn from semantically similar (hard) types. "
+                "0.0 = pure random sampling (default, no change). "
+                "0.5 = recommended: half hard, half random. "
+                "Requires sentence-transformers for best quality; falls back to "
+                "character n-gram similarity when not installed."
+            )
+        },
+    )
+    hard_negative_encoder: Optional[str] = field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        metadata={
+            "help": (
+                "sentence-transformers model name used to embed entity type strings "
+                "for hard-negative retrieval. Set to None to use the lightweight "
+                "character n-gram fallback (no extra dependencies)."
+            )
+        },
+    )
+    hard_negative_cache_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Cache directory for the hard-negative encoder weights."},
+    )
 
 
 class Trainer(transformers.Trainer):
@@ -94,6 +120,45 @@ class Trainer(transformers.Trainer):
     - no hard dependency on self.use_apex
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hard_neg_index = None
+        if getattr(self.args, "hard_negative_ratio", 0.0) > 0:
+            self._build_hard_neg_index()
+
+    def _build_hard_neg_index(self):
+        """Build TypeSimilarityIndex from the training dataset entity types."""
+        from .hard_negatives import TypeSimilarityIndex  # noqa: PLC0415
+
+        all_types: set = set()
+        dataset = getattr(self, "train_dataset", None)
+        if dataset is not None:
+            for item in dataset:
+                for ann in item.get("ner", []):
+                    all_types.add(ann[-1])
+                for ann in item.get("relations", []):
+                    if len(ann) >= 7:
+                        all_types.add(ann[2])
+                        all_types.add(ann[5])
+
+        if not all_types:
+            return
+
+        idx = TypeSimilarityIndex(
+            encoder_name=getattr(self.args, "hard_negative_encoder", None),
+            cache_dir=getattr(self.args, "hard_negative_cache_dir", None),
+        )
+        idx.build(list(all_types))
+        self._hard_neg_index = idx
+        logger.info("TypeSimilarityIndex built: %d entity types", len(all_types))
+
+        # Inject into the model's data processor so the collator picks it up
+        model = self.accelerator.unwrap_model(self.model) if hasattr(self, "accelerator") else self.model
+        proc = getattr(model, "data_processor", None)
+        if proc is not None:
+            proc._hard_neg_index = idx
+            proc._hard_negative_ratio = getattr(self.args, "hard_negative_ratio", 0.0)
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         # called by HF during checkpoint saves
