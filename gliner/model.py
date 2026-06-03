@@ -2418,6 +2418,62 @@ class BaseEncoderGLiNER(BaseGLiNER):
             **kwargs,
         )
 
+    def predict_entities_long(
+        self,
+        text: str,
+        labels,
+        threshold: float = 0.5,
+        max_tokens: int = 384,
+        stride: Optional[int] = None,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+        dedup_strategy: str = "max_score",
+        batch_size: int = 8,
+    ) -> List[Dict[str, Any]]:
+        """Run entity extraction on a text of arbitrary length using a sliding window.
+
+        Addresses the 384-token hard limit for long documents (GitHub #95, #113).
+        Splits the document into overlapping windows, runs inference on each, then
+        deduplicates entities that appear in multiple windows.
+
+        Args:
+            text:            Input text of arbitrary length.
+            labels:          Entity type labels — any format accepted by predict_entities()
+                             (plain strings, description dicts, or dict mapping).
+            threshold:       Confidence threshold. Default: 0.5.
+            max_tokens:      Maximum word-tokens per window. Default: 384 (model max_len).
+            stride:          Step between window starts. Default: max_tokens // 3 (33% overlap).
+                             Set equal to max_tokens for non-overlapping windows.
+            flat_ner:        Resolve overlapping spans by score. Default: True.
+            multi_label:     Allow multiple labels per span. Default: False.
+            dedup_strategy:  How to handle duplicate predictions from overlapping windows:
+                             "max_score" (default), "first", or "last".
+            batch_size:      Inference batch size per window. Default: 8.
+
+        Returns:
+            List of entity dicts (start, end, text, label, score) sorted by start.
+
+        Example:
+            entities = model.predict_entities_long(
+                long_document,
+                ["person", "organization", "location"],
+                max_tokens=512,
+                stride=128,
+            )
+        """
+        from .long_doc import predict_entities_long as _predict_long  # noqa: PLC0415
+
+        return _predict_long(
+            self, text, labels,
+            threshold=threshold,
+            max_tokens=max_tokens,
+            stride=stride,
+            flat_ner=flat_ner,
+            multi_label=multi_label,
+            dedup_strategy=dedup_strategy,
+            batch_size=batch_size,
+        )
+
     @torch.no_grad()
     def evaluate(
         self,
