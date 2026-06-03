@@ -35,6 +35,7 @@ class BaseGLiNERConfig(PretrainedConfig):
         ent_token: str = "<<ENT>>",
         sep_token: str = "<<SEP>>",
         _attn_implementation: Optional[str] = None,
+        use_flash_attention: bool = False,
         token_loss_coef: float = 1.0,
         span_loss_coef: float = 1.0,
         represent_spans: bool = False,
@@ -108,6 +109,7 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.ent_token = ent_token
         self.sep_token = sep_token
         self._attn_implementation = _attn_implementation
+        self.use_flash_attention = use_flash_attention
         self.token_loss_coef = token_loss_coef
         self.span_loss_coef = span_loss_coef
         self.represent_spans = represent_spans

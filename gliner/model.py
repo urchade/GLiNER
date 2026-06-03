@@ -923,6 +923,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        flash_attention: bool = False,
         **model_kwargs,
     ):
         """Initialize a model from configuration without loading pretrained weights.
@@ -981,6 +982,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             config_dict["post_fusion_schema"] = post_fusion_schema
         if _attn_implementation is not None:
             config_dict["_attn_implementation"] = _attn_implementation
+        if flash_attention:
+            config_dict["use_flash_attention"] = True
 
         # Create config instance using the class's config_class
         if cls.config_class is not None:
@@ -1054,6 +1057,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        flash_attention: bool = False,
         **model_kwargs,
     ):
         """Load pretrained model from HuggingFace Hub or local directory.
@@ -1170,6 +1174,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
             _attn_implementation=_attn_implementation,
+            use_flash_attention=flash_attention if flash_attention else None,
         )
 
         # Load tokenizer
