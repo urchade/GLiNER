@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
-import onnxruntime as ort
+try:
+    import onnxruntime as ort
+except ImportError:
+    ort = None
 import transformers
 from tqdm import tqdm
 from torch import nn

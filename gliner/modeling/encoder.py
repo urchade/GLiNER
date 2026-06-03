@@ -952,6 +952,7 @@ class BiEncoder(Encoder):
         label_kwargs = dict(kwargs)
         label_kwargs.pop("packing_config", None)
         label_kwargs.pop("pair_attention_mask", None)
+        label_kwargs.pop("token_lengths", None)
         label_kwargs["attention_mask"] = attention_mask
         labels_embeddings = self.labels_encoder(input_ids, *args, **label_kwargs)
         if hasattr(self, "labels_projection"):
