@@ -120,6 +120,78 @@ def focal_loss_with_logits(
         )
 
 
+def span_contrastive_loss(
+    span_embeddings: torch.Tensor,
+    span_labels: torch.Tensor,
+    temperature: float = 0.07,
+    reduction: str = "mean",
+) -> torch.Tensor:
+    """Supervised contrastive loss over span representations.
+
+    Pulls embeddings of same-type spans together and pushes different-type spans apart.
+    Applied as an auxiliary loss on top of the primary NER loss. Reference: arXiv:2404.17178.
+
+    Only spans with exactly one positive class participate (unambiguous positive spans).
+    This avoids noise from multi-label boundary cases.
+
+    Args:
+        span_embeddings: L2-normalised span vectors of shape (N, D).
+                         N = number of positive-span candidates (pre-filtered).
+        span_labels:     Integer class IDs of shape (N,). -1 = excluded.
+        temperature:     Logit scale factor. Lower = sharper. Default: 0.07.
+        reduction:       "mean" or "sum". Default: "mean".
+
+    Returns:
+        Scalar contrastive loss, or 0.0 if fewer than 2 positive spans exist.
+
+    Example:
+        >>> embeds = F.normalize(torch.randn(32, 512), dim=-1)
+        >>> labels = torch.randint(0, 5, (32,))
+        >>> loss = span_contrastive_loss(embeds, labels, temperature=0.07)
+    """
+    valid = span_labels >= 0
+    if valid.sum() < 2:
+        return torch.tensor(0.0, device=span_embeddings.device, dtype=span_embeddings.dtype)
+
+    embeds = span_embeddings[valid]
+    labels = span_labels[valid]
+
+    # L2-normalise for cosine similarity
+    embeds = F.normalize(embeds, dim=-1)
+
+    # Similarity matrix: (N, N) scaled by temperature
+    sim = torch.matmul(embeds, embeds.T) / temperature  # (N, N)
+
+    # Build positive/negative masks
+    labels_col = labels.unsqueeze(1)
+    labels_row = labels.unsqueeze(0)
+    pos_mask = labels_col == labels_row                     # same class
+    neg_mask = ~pos_mask
+
+    # Exclude self-similarity from positives
+    eye = torch.eye(embeds.size(0), device=embeds.device, dtype=torch.bool)
+    pos_mask = pos_mask & ~eye
+
+    # Skip if no valid positive pairs exist
+    if pos_mask.sum() == 0:
+        return torch.tensor(0.0, device=span_embeddings.device, dtype=span_embeddings.dtype)
+
+    # Numerically stable log-softmax over negatives for each anchor
+    sim_max = sim.detach().max(dim=1, keepdim=True).values
+    exp_sim = torch.exp(sim - sim_max)
+
+    # For each anchor i: log(sum_j exp(sim[i,j])) over all j != i
+    denom = (exp_sim * (~eye).float()).sum(dim=1, keepdim=True).clamp(min=1e-9)
+    log_prob = sim - sim_max - torch.log(denom)
+
+    # Mean log-probability over all positive pairs
+    loss_per_anchor = -(log_prob * pos_mask.float()).sum(dim=1) / pos_mask.float().sum(dim=1).clamp(min=1)
+
+    if reduction == "mean":
+        return loss_per_anchor.mean()
+    return loss_per_anchor.sum()
+
+
 def cross_entropy_loss(
     inputs: torch.Tensor,
     targets: torch.Tensor,

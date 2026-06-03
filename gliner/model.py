@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
-import onnxruntime as ort
+try:
+    import onnxruntime as ort
+except ImportError:
+    ort = None
 import transformers
 from tqdm import tqdm
 from torch import nn
@@ -924,6 +927,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        flash_attention: bool = False,
         **model_kwargs,
     ):
         """Initialize a model from configuration without loading pretrained weights.
@@ -982,6 +986,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             config_dict["post_fusion_schema"] = post_fusion_schema
         if _attn_implementation is not None:
             config_dict["_attn_implementation"] = _attn_implementation
+        if flash_attention:
+            config_dict["use_flash_attention"] = True
 
         # Create config instance using the class's config_class
         if cls.config_class is not None:
@@ -1055,6 +1061,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        flash_attention: bool = False,
         **model_kwargs,
     ):
         """Load pretrained model from HuggingFace Hub or local directory.
@@ -1171,6 +1178,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             max_width=max_width,
             post_fusion_schema=post_fusion_schema,
             _attn_implementation=_attn_implementation,
+            use_flash_attention=flash_attention if flash_attention else None,
         )
 
         # Load tokenizer
@@ -1378,6 +1386,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         return batch
 
+    def _is_modernbert_backbone(self) -> bool:
+        """Detect if the primary encoder uses a ModernBERT backbone."""
+        try:
+            model_cls = self.model.token_rep_layer.bert_layer.model.__class__.__name__
+            return "ModernBert" in model_cls or "ModernBERT" in model_cls
+        except AttributeError:
+            return False
+
     def _run_torch_onnx_export(
         self,
         wrapper: nn.Module,
@@ -1389,16 +1405,38 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         opset: int,
     ):
         wrapper.eval()
-        torch.onnx.export(
-            wrapper,
-            all_inputs,
-            f=str(onnx_path),
-            input_names=input_names,
-            output_names=output_names,
-            dynamic_axes=dynamic_axes,
-            opset_version=opset,
-            dynamo=False,
-        )
+
+        # ModernBERT uses flex_attn which is not supported by ONNX opset ≤ 19.
+        # Force eager attention during export so trace succeeds; the saved model
+        # still uses flex_attn at inference time when loaded in PyTorch.
+        _modernbert_restore: dict = {}
+        if self._is_modernbert_backbone():
+            try:
+                enc_cfg = self.model.token_rep_layer.bert_layer.model.config
+                _modernbert_restore["_attn_implementation"] = enc_cfg._attn_implementation
+                enc_cfg._attn_implementation = "eager"
+            except AttributeError:
+                pass
+
+        try:
+            torch.onnx.export(
+                wrapper,
+                all_inputs,
+                f=str(onnx_path),
+                input_names=input_names,
+                output_names=output_names,
+                dynamic_axes=dynamic_axes,
+                opset_version=opset,
+                dynamo=False,
+            )
+        finally:
+            # Restore original attention implementation regardless of success/failure
+            if _modernbert_restore:
+                try:
+                    enc_cfg = self.model.token_rep_layer.bert_layer.model.config
+                    enc_cfg._attn_implementation = _modernbert_restore["_attn_implementation"]
+                except AttributeError:
+                    pass
 
     def _maybe_quantize_onnx(
         self,
@@ -2284,9 +2322,16 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 - score: Confidence score
                 - class_probs: (optional) Dictionary mapping class names to probabilities (top 5)
         """
+        from .descriptions import normalise_labels, remap_entity_labels  # noqa: PLC0415
+
         self.eval()
 
-        prepared = self.prepare_batch(texts, labels, input_spans)
+        # Support description dicts and plain strings transparently
+        display_names, prompt_strings = normalise_labels(labels)
+        using_descriptions = prompt_strings != display_names
+        prompt_to_display = dict(zip(prompt_strings, display_names)) if using_descriptions else {}
+
+        prepared = self.prepare_batch(texts, prompt_strings, input_spans)
 
         if not prepared["valid_texts"]:
             return [[] for _ in range(prepared["num_original"])]
@@ -2324,6 +2369,10 @@ class BaseEncoderGLiNER(BaseGLiNER):
             prepared["end_token_map"],
             prepared["num_original"],
         )
+
+        if using_descriptions:
+            for entities in all_entities:
+                remap_entity_labels(entities, prompt_to_display)
 
         return all_entities
 
@@ -2401,6 +2450,62 @@ class BaseEncoderGLiNER(BaseGLiNER):
             threshold=threshold,
             multi_label=multi_label,
             **kwargs,
+        )
+
+    def predict_entities_long(
+        self,
+        text: str,
+        labels,
+        threshold: float = 0.5,
+        max_tokens: int = 384,
+        stride: Optional[int] = None,
+        flat_ner: bool = True,
+        multi_label: bool = False,
+        dedup_strategy: str = "max_score",
+        batch_size: int = 8,
+    ) -> List[Dict[str, Any]]:
+        """Run entity extraction on a text of arbitrary length using a sliding window.
+
+        Addresses the 384-token hard limit for long documents (GitHub #95, #113).
+        Splits the document into overlapping windows, runs inference on each, then
+        deduplicates entities that appear in multiple windows.
+
+        Args:
+            text:            Input text of arbitrary length.
+            labels:          Entity type labels — any format accepted by predict_entities()
+                             (plain strings, description dicts, or dict mapping).
+            threshold:       Confidence threshold. Default: 0.5.
+            max_tokens:      Maximum word-tokens per window. Default: 384 (model max_len).
+            stride:          Step between window starts. Default: max_tokens // 3 (33% overlap).
+                             Set equal to max_tokens for non-overlapping windows.
+            flat_ner:        Resolve overlapping spans by score. Default: True.
+            multi_label:     Allow multiple labels per span. Default: False.
+            dedup_strategy:  How to handle duplicate predictions from overlapping windows:
+                             "max_score" (default), "first", or "last".
+            batch_size:      Inference batch size per window. Default: 8.
+
+        Returns:
+            List of entity dicts (start, end, text, label, score) sorted by start.
+
+        Example:
+            entities = model.predict_entities_long(
+                long_document,
+                ["person", "organization", "location"],
+                max_tokens=512,
+                stride=128,
+            )
+        """
+        from .long_doc import predict_entities_long as _predict_long  # noqa: PLC0415
+
+        return _predict_long(
+            self, text, labels,
+            threshold=threshold,
+            max_tokens=max_tokens,
+            stride=stride,
+            flat_ner=flat_ner,
+            multi_label=multi_label,
+            dedup_strategy=dedup_strategy,
+            batch_size=batch_size,
         )
 
     @torch.no_grad()

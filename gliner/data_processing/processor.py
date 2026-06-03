@@ -332,7 +332,13 @@ class BaseProcessor(ABC):
                 - List of ID-to-class mappings (one per example)
         """
         if negatives is None:
-            negatives = get_negatives(batch_list, sampled_neg=sampled_neg, key=key)
+            negatives = get_negatives(
+                batch_list,
+                sampled_neg=sampled_neg,
+                key=key,
+                similarity_index=getattr(self, "_hard_neg_index", None),
+                hard_negative_ratio=getattr(self, "_hard_negative_ratio", 0.0),
+            )
         class_to_ids = []
         id_to_classes = []
         for b in batch_list:

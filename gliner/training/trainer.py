@@ -85,6 +85,67 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_reduction: Optional[str] = "sum"
     negatives: Optional[float] = 1.0
     masking: Optional[str] = "global"
+    hard_negative_ratio: float = field(
+        default=0.0,
+        metadata={
+            "help": (
+                "Fraction of batch negatives drawn from semantically similar (hard) types. "
+                "0.0 = pure random sampling (default, no change). "
+                "0.5 = recommended: half hard, half random. "
+                "Requires sentence-transformers for best quality; falls back to "
+                "character n-gram similarity when not installed."
+            )
+        },
+    )
+    hard_negative_encoder: Optional[str] = field(
+        default="sentence-transformers/all-MiniLM-L6-v2",
+        metadata={
+            "help": (
+                "sentence-transformers model name used to embed entity type strings "
+                "for hard-negative retrieval. Set to None to use the lightweight "
+                "character n-gram fallback (no extra dependencies)."
+            )
+        },
+    )
+    hard_negative_cache_dir: Optional[str] = field(
+        default=None,
+        metadata={"help": "Cache directory for the hard-negative encoder weights."},
+    )
+    contrastive_loss_coef: float = field(
+        default=0.0,
+        metadata={
+            "help": (
+                "Weight λ for the auxiliary supervised contrastive loss on span representations. "
+                "0.0 = disabled (default). Recommended range: 0.05–0.2. "
+                "Ref: arXiv:2404.17178 — +7%% avg F1 in few-shot NER."
+            )
+        },
+    )
+    contrastive_temperature: float = field(
+        default=0.07,
+        metadata={"help": "Temperature τ for contrastive loss logit scaling. Default: 0.07."},
+    )
+    use_curriculum: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Enable curriculum learning: train on easiest examples first, "
+                "gradually adding harder ones. Improves convergence speed and final F1."
+            )
+        },
+    )
+    curriculum_start_pct: float = field(
+        default=0.30,
+        metadata={"help": "Fraction of easiest examples to use at epoch 0. Default: 0.30."},
+    )
+    curriculum_ramp_epochs: int = field(
+        default=5,
+        metadata={"help": "Number of epochs to linearly ramp to the full dataset. Default: 5."},
+    )
+    curriculum_seed: int = field(
+        default=42,
+        metadata={"help": "Random seed for CurriculumSampler shuffling. Default: 42."},
+    )
 
 
 class Trainer(transformers.Trainer):
@@ -94,6 +155,75 @@ class Trainer(transformers.Trainer):
     - no hard dependency on self.use_apex
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._hard_neg_index = None
+        if getattr(self.args, "hard_negative_ratio", 0.0) > 0:
+            self._build_hard_neg_index()
+
+    def _build_hard_neg_index(self):
+        """Build TypeSimilarityIndex from the training dataset entity types."""
+        from .hard_negatives import TypeSimilarityIndex  # noqa: PLC0415
+
+        all_types: set = set()
+        dataset = getattr(self, "train_dataset", None)
+        if dataset is not None:
+            for item in dataset:
+                for ann in item.get("ner", []):
+                    all_types.add(ann[-1])
+                for ann in item.get("relations", []):
+                    if len(ann) >= 7:
+                        all_types.add(ann[2])
+                        all_types.add(ann[5])
+
+        if not all_types:
+            return
+
+        idx = TypeSimilarityIndex(
+            encoder_name=getattr(self.args, "hard_negative_encoder", None),
+            cache_dir=getattr(self.args, "hard_negative_cache_dir", None),
+        )
+        idx.build(list(all_types))
+        self._hard_neg_index = idx
+        logger.info("TypeSimilarityIndex built: %d entity types", len(all_types))
+
+        # Inject into the model's data processor so the collator picks it up
+        model = self.accelerator.unwrap_model(self.model) if hasattr(self, "accelerator") else self.model
+        proc = getattr(model, "data_processor", None)
+        if proc is not None:
+            proc._hard_neg_index = idx
+            proc._hard_negative_ratio = getattr(self.args, "hard_negative_ratio", 0.0)
+
+    def get_train_dataloader(self) -> DataLoader:
+        """Override to inject CurriculumSampler when use_curriculum=True."""
+        if not getattr(self.args, "use_curriculum", False):
+            return super().get_train_dataloader()
+
+        from .curriculum import SpanDifficultyScorer, CurriculumSampler  # noqa: PLC0415
+
+        dataset = self.train_dataset
+        scorer = SpanDifficultyScorer()
+        scorer.fit(list(dataset))
+
+        sampler = CurriculumSampler(
+            dataset,
+            scorer,
+            start_pct=getattr(self.args, "curriculum_start_pct", 0.30),
+            ramp_epochs=getattr(self.args, "curriculum_ramp_epochs", 5),
+            seed=getattr(self.args, "curriculum_seed", 42),
+        )
+        # Expose sampler so set_epoch() can be called each epoch
+        self._curriculum_sampler = sampler
+
+        return DataLoader(
+            dataset,
+            sampler=sampler,
+            batch_size=self.args.per_device_train_batch_size,
+            collate_fn=self.data_collator,
+            num_workers=self.args.dataloader_num_workers,
+            pin_memory=self.args.dataloader_pin_memory,
+        )
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         # called by HF during checkpoint saves
@@ -164,6 +294,8 @@ class Trainer(transformers.Trainer):
             reduction=self.args.loss_reduction,
             negatives=self.args.negatives,
             masking=self.args.masking,
+            contrastive_loss_coef=self.args.contrastive_loss_coef,
+            contrastive_temperature=self.args.contrastive_temperature,
             **inputs,
         )
 

@@ -39,7 +39,7 @@ from .encoder import Encoder, BiEncoder
 from .outputs import GLiNERBaseOutput, GLiNERRelexOutput, GLiNERDecoderOutput
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
-from .loss_functions import cross_entropy_loss, focal_loss_with_logits
+from .loss_functions import cross_entropy_loss, focal_loss_with_logits, span_contrastive_loss
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 
@@ -476,6 +476,23 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         loss = None
         if labels is not None:
             loss = self.loss(scores, labels, prompts_embedding_mask, span_mask, **kwargs)
+
+            # Optional supervised contrastive loss on span representations (arXiv:2404.17178)
+            contrastive_coef = kwargs.get("contrastive_loss_coef", 0.0)
+            if contrastive_coef > 0.0:
+                import torch.nn.functional as _F  # noqa: PLC0415
+                temperature = kwargs.get("contrastive_temperature", 0.07)
+                lbl_flat = labels.view(-1, labels.size(-1))
+                pos_count = lbl_flat.sum(dim=-1)
+                single_pos = pos_count == 1
+                class_ids = torch.where(
+                    single_pos,
+                    lbl_flat.long().argmax(dim=-1),
+                    torch.full_like(lbl_flat.sum(-1).long(), -1),
+                )
+                emb_flat = _F.normalize(span_rep.view(-1, span_rep.size(-1)), dim=-1)
+                c_loss = span_contrastive_loss(emb_flat, class_ids, temperature=temperature)
+                loss = loss + contrastive_coef * c_loss
 
         output = GLiNERBaseOutput(
             logits=scores,
