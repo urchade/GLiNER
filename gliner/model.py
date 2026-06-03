@@ -2288,9 +2288,16 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 - score: Confidence score
                 - class_probs: (optional) Dictionary mapping class names to probabilities (top 5)
         """
+        from .descriptions import normalise_labels, remap_entity_labels  # noqa: PLC0415
+
         self.eval()
 
-        prepared = self.prepare_batch(texts, labels, input_spans)
+        # Support description dicts and plain strings transparently
+        display_names, prompt_strings = normalise_labels(labels)
+        using_descriptions = prompt_strings != display_names
+        prompt_to_display = dict(zip(prompt_strings, display_names)) if using_descriptions else {}
+
+        prepared = self.prepare_batch(texts, prompt_strings, input_spans)
 
         if not prepared["valid_texts"]:
             return [[] for _ in range(prepared["num_original"])]
@@ -2328,6 +2335,10 @@ class BaseEncoderGLiNER(BaseGLiNER):
             prepared["end_token_map"],
             prepared["num_original"],
         )
+
+        if using_descriptions:
+            for entities in all_entities:
+                remap_entity_labels(entities, prompt_to_display)
 
         return all_entities
 
