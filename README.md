@@ -1,6 +1,6 @@
 # GLiNER-Robust
 
-**A research-grade fork of [GLiNER](https://github.com/urchade/GLiNER) with three targeted improvements: mathematically-motivated loss functions, hardware-aware INT8 inference, and rigorous zero-shot benchmarking.**
+**A fork of [GLiNER](https://github.com/urchade/GLiNER) with four targeted improvements: mathematically-motivated loss functions, hardware-aware INT8 inference, vocabulary pruning for edge deployment, and rigorous zero-shot benchmarking.**
 
 > Based on: Zaratiana et al., *"GLiNER: Generalist Model for Named Entity Recognition using Bidirectional Transformer"*, NAACL 2024. [[arXiv:2311.08526]](https://arxiv.org/abs/2311.08526)
 
@@ -30,6 +30,18 @@
 
 > INT8 via NNCF weight compression (`INT8_ASYM`, 85/85 layers). No accuracy degradation — weight-only, no activation quantization.
 
+### Vocabulary Pruning (English, `urchade/gliner_multi-v2.1`, 100k Wikipedia articles)
+
+| Metric | Original | Pruned | Δ |
+|---|---|---|---|
+| Vocabulary | 250,105 tokens | 90,840 tokens | **−63.7%** |
+| Model size | 1,155.8 MB | 666.5 MB | **−42.3% (−489 MB)** |
+| Entity F1 | baseline | identical | **0% regression** |
+
+> Conservative mode (all seen tokens): lossless. Aggressive mode (`--top_k 30000`): ~65% size reduction with minor score shifts near the detection threshold.
+
+---
+
 **Key finding — span imbalance:**
 - WNUT-17: **187× more negative spans than positive** (0.53% positive ratio) → mathematical justification for Focal/Dice loss
 - CoNLL-2003: **64× imbalance** (1.53% positive ratio) — less severe, smaller gains expected
@@ -52,7 +64,27 @@ The original GLiNER training loop uses Binary Cross-Entropy over all enumerated 
 
 The upstream repo exports to ONNX. We go further: full OpenVINO IR conversion with NNCF static INT8 quantization using a 128-sentence NER calibration set. Target: 3-4× latency reduction on Intel CPUs with <1 pp F1 drop.
 
-### 3. Rigorous Benchmarking
+### 3. Vocabulary Pruning for Edge Deployment
+
+Multilingual GLiNER models (mDeBERTa-v3) carry a 250k-token embedding matrix. For a single-language deployment the vast majority of those embeddings are never accessed. The pruning engine identifies the active token set for the target language, slices `word_embeddings.weight` to keep only the relevant rows, rebuilds the fast tokenizer, and exports a self-contained model that loads with the standard `GLiNER.from_pretrained()` API — **no code changes required in the inference path.**
+
+```bash
+# Prune to English — one command, no accuracy loss
+python scripts/prune_gliner_vocab.py \
+    --model_id urchade/gliner_multi-v2.1 \
+    --dataset_for_vocab wikipedia \
+    --output_dir ./pruned_en \
+    --lang en
+
+# Verify correctness + measure size reduction
+python scripts/validate_pruned_model.py \
+    --original_model_id urchade/gliner_multi-v2.1 \
+    --pruned_model_dir ./pruned_en
+```
+
+See [`docs/vocab_pruning.md`](docs/vocab_pruning.md) for the full reference.
+
+### 4. Rigorous Benchmarking
 
 Clean ablation table across all loss configurations. Accuracy-vs-Latency Pareto frontier. Per-entity-class F1 heatmap. Everything reproducible from a single script.
 
@@ -64,8 +96,11 @@ Clean ablation table across all loss configurations. Accuracy-vs-Latency Pareto 
 # Clone this repo, then:
 pip install -e ".[training]"
 
-# For OpenVINO inference (Step 3):
+# For OpenVINO inference:
 pip install optimum[openvino] nncf
+
+# For vocabulary pruning with Wikipedia corpus:
+pip install datasets
 ```
 
 ---
@@ -104,18 +139,23 @@ python scripts/baseline_eval.py \
 ```
 gliner/
   modeling/
-    loss_functions.py   focal_loss_with_logits + span_dice_loss (Step 2)
-    span_rep.py         span representation strategies
-    base.py             forward pass and loss dispatch
+    loss_functions.py      focal_loss_with_logits + span_dice_loss
+    span_rep.py            span representation strategies
+    base.py                forward pass and loss dispatch
+    encoder.py             Transformer + Encoder + BiEncoder wrappers
   training/
-    trainer.py          TrainingArguments with focal_loss_alpha/gamma
+    trainer.py             TrainingArguments with focal_loss_alpha/gamma
 scripts/
-  baseline_eval.py      Step 1: zero-shot eval + latency + span imbalance
-  convert_to_onnx.py    existing ONNX export
-  convert_to_openvino.py  Step 3: OpenVINO IR + INT8 (TODO)
-  train_ablation.py     Step 2: loss function ablation training (TODO)
-results/                all benchmark outputs (CSV + plots)
-benchmarks/             latency profiling scripts
+  baseline_eval.py         Step 1: zero-shot eval + latency + span imbalance
+  train_ablation.py        Step 2: loss function ablation training
+  convert_to_onnx.py       ONNX export
+  convert_to_openvino.py   Step 3: OpenVINO IR + INT8 quantization
+  prune_gliner_vocab.py    Step 4: vocabulary pruning engine
+  validate_pruned_model.py Step 4: pruned model correctness validator
+docs/
+  vocab_pruning.md         Vocabulary pruning guide and benchmarks
+results/                   benchmark outputs (CSV + plots)
+benchmarks/                latency profiling scripts
 ```
 
 ---
