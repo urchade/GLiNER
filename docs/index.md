@@ -18,6 +18,7 @@ add_custom_architectures
 convert_to_onnx
 vocab_pruning
 flash_attention
+relation_extraction
 serving
 ```
 

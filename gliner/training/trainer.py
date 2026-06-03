@@ -111,6 +111,41 @@ class TrainingArguments(transformers.TrainingArguments):
         default=None,
         metadata={"help": "Cache directory for the hard-negative encoder weights."},
     )
+    contrastive_loss_coef: float = field(
+        default=0.0,
+        metadata={
+            "help": (
+                "Weight λ for the auxiliary supervised contrastive loss on span representations. "
+                "0.0 = disabled (default). Recommended range: 0.05–0.2. "
+                "Ref: arXiv:2404.17178 — +7%% avg F1 in few-shot NER."
+            )
+        },
+    )
+    contrastive_temperature: float = field(
+        default=0.07,
+        metadata={"help": "Temperature τ for contrastive loss logit scaling. Default: 0.07."},
+    )
+    use_curriculum: bool = field(
+        default=False,
+        metadata={
+            "help": (
+                "Enable curriculum learning: train on easiest examples first, "
+                "gradually adding harder ones. Improves convergence speed and final F1."
+            )
+        },
+    )
+    curriculum_start_pct: float = field(
+        default=0.30,
+        metadata={"help": "Fraction of easiest examples to use at epoch 0. Default: 0.30."},
+    )
+    curriculum_ramp_epochs: int = field(
+        default=5,
+        metadata={"help": "Number of epochs to linearly ramp to the full dataset. Default: 5."},
+    )
+    curriculum_seed: int = field(
+        default=42,
+        metadata={"help": "Random seed for CurriculumSampler shuffling. Default: 42."},
+    )
 
 
 class Trainer(transformers.Trainer):
@@ -159,6 +194,36 @@ class Trainer(transformers.Trainer):
         if proc is not None:
             proc._hard_neg_index = idx
             proc._hard_negative_ratio = getattr(self.args, "hard_negative_ratio", 0.0)
+
+    def get_train_dataloader(self) -> DataLoader:
+        """Override to inject CurriculumSampler when use_curriculum=True."""
+        if not getattr(self.args, "use_curriculum", False):
+            return super().get_train_dataloader()
+
+        from .curriculum import SpanDifficultyScorer, CurriculumSampler  # noqa: PLC0415
+
+        dataset = self.train_dataset
+        scorer = SpanDifficultyScorer()
+        scorer.fit(list(dataset))
+
+        sampler = CurriculumSampler(
+            dataset,
+            scorer,
+            start_pct=getattr(self.args, "curriculum_start_pct", 0.30),
+            ramp_epochs=getattr(self.args, "curriculum_ramp_epochs", 5),
+            seed=getattr(self.args, "curriculum_seed", 42),
+        )
+        # Expose sampler so set_epoch() can be called each epoch
+        self._curriculum_sampler = sampler
+
+        return DataLoader(
+            dataset,
+            sampler=sampler,
+            batch_size=self.args.per_device_train_batch_size,
+            collate_fn=self.data_collator,
+            num_workers=self.args.dataloader_num_workers,
+            pin_memory=self.args.dataloader_pin_memory,
+        )
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         # called by HF during checkpoint saves
@@ -229,6 +294,8 @@ class Trainer(transformers.Trainer):
             reduction=self.args.loss_reduction,
             negatives=self.args.negatives,
             masking=self.args.masking,
+            contrastive_loss_coef=self.args.contrastive_loss_coef,
+            contrastive_temperature=self.args.contrastive_temperature,
             **inputs,
         )
 

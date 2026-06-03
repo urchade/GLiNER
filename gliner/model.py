@@ -1382,6 +1382,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         return batch
 
+    def _is_modernbert_backbone(self) -> bool:
+        """Detect if the primary encoder uses a ModernBERT backbone."""
+        try:
+            model_cls = self.model.token_rep_layer.bert_layer.model.__class__.__name__
+            return "ModernBert" in model_cls or "ModernBERT" in model_cls
+        except AttributeError:
+            return False
+
     def _run_torch_onnx_export(
         self,
         wrapper: nn.Module,
@@ -1393,16 +1401,38 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         opset: int,
     ):
         wrapper.eval()
-        torch.onnx.export(
-            wrapper,
-            all_inputs,
-            f=str(onnx_path),
-            input_names=input_names,
-            output_names=output_names,
-            dynamic_axes=dynamic_axes,
-            opset_version=opset,
-            dynamo=False,
-        )
+
+        # ModernBERT uses flex_attn which is not supported by ONNX opset ≤ 19.
+        # Force eager attention during export so trace succeeds; the saved model
+        # still uses flex_attn at inference time when loaded in PyTorch.
+        _modernbert_restore: dict = {}
+        if self._is_modernbert_backbone():
+            try:
+                enc_cfg = self.model.token_rep_layer.bert_layer.model.config
+                _modernbert_restore["_attn_implementation"] = enc_cfg._attn_implementation
+                enc_cfg._attn_implementation = "eager"
+            except AttributeError:
+                pass
+
+        try:
+            torch.onnx.export(
+                wrapper,
+                all_inputs,
+                f=str(onnx_path),
+                input_names=input_names,
+                output_names=output_names,
+                dynamic_axes=dynamic_axes,
+                opset_version=opset,
+                dynamo=False,
+            )
+        finally:
+            # Restore original attention implementation regardless of success/failure
+            if _modernbert_restore:
+                try:
+                    enc_cfg = self.model.token_rep_layer.bert_layer.model.config
+                    enc_cfg._attn_implementation = _modernbert_restore["_attn_implementation"]
+                except AttributeError:
+                    pass
 
     def _maybe_quantize_onnx(
         self,
