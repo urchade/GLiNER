@@ -77,17 +77,11 @@ def _param_mb(model) -> float:
 
 
 def _normalize(entities: list[dict]) -> list[dict]:
-    """Sort entities for stable comparison."""
+    """Sort entities by (text, label) for stable comparison."""
     return sorted(
         [{"text": e["text"], "label": e["label"], "score": float(e["score"])} for e in entities],
         key=lambda x: (x["text"], x["label"]),
     )
-
-
-def _entity_sets_match(a: list[dict], b: list[dict]) -> bool:
-    """True if both lists contain the same (text, label) pairs regardless of score."""
-    key = lambda e: (e["text"], e["label"])  # noqa: E731
-    return sorted(a, key=key) == sorted([{"text": e["text"], "label": e["label"]} for e in b], key=key)
 
 
 def _compare(orig: list[dict], pruned: list[dict], score_tol: float = 0.02) -> tuple[str, str]:
@@ -153,6 +147,10 @@ def main() -> None:
         help="Entity prediction confidence threshold",
     )
     parser.add_argument(
+        "--score_tol", type=float, default=0.02,
+        help="Max allowed score drift (absolute) before a test is marked SCORE_DRIFT instead of PASS",
+    )
+    parser.add_argument(
         "--skip_latency", action="store_true",
         help="Skip latency benchmarking (faster correctness-only check)",
     )
@@ -192,7 +190,7 @@ def main() -> None:
         orig_out   = orig.predict_entities(tc["text"],   tc["labels"], threshold=args.threshold)
         pruned_out = pruned.predict_entities(tc["text"], tc["labels"], threshold=args.threshold)
 
-        status, detail = _compare(orig_out, pruned_out)
+        status, detail = _compare(orig_out, pruned_out, score_tol=args.score_tol)
         snippet = tc["text"][:55] + ("…" if len(tc["text"]) > 55 else "")
 
         if status == "PASS":
