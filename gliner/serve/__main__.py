@@ -18,6 +18,10 @@ logging.basicConfig(
 )
 
 
+def _parse_str_list(value: str) -> list[str]:
+    return [item.strip() for item in value.split(",") if item.strip()]
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Start GLiNER Ray Serve deployment",
@@ -214,6 +218,62 @@ def main():
         help="Memory overhead factor for safety margin",
     )
 
+    polylora_group = parser.add_argument_group("PolyLoRA Configuration")
+    polylora_group.add_argument(
+        "--enable-polylora",
+        action="store_true",
+        help="Enable PolyLoRA adapter serving",
+    )
+    polylora_group.add_argument(
+        "--polylora-adapter-weight-modules",
+        type=_parse_str_list,
+        default=None,
+        help="Comma-separated target module names for adapter weights",
+    )
+    polylora_group.add_argument("--polylora-max-rank", type=int, default=16, help="Maximum LoRA rank")
+    polylora_group.add_argument(
+        "--polylora-max-gpu-adapters",
+        type=int,
+        default=8,
+        help="Maximum PolyLoRA GPU adapter slots",
+    )
+    polylora_group.add_argument(
+        "--polylora-max-cpu-adapters",
+        type=int,
+        default=128,
+        help="Maximum PolyLoRA CPU adapters",
+    )
+    polylora_group.add_argument(
+        "--polylora-disk-cache-dir",
+        type=str,
+        default=None,
+        help="PolyLoRA disk cache directory",
+    )
+    polylora_group.add_argument(
+        "--polylora-max-disk-adapters",
+        type=int,
+        default=None,
+        help="Maximum PolyLoRA disk-cached adapters",
+    )
+    polylora_group.add_argument(
+        "--polylora-base-adapter-id",
+        type=str,
+        default="__base__",
+        help="Adapter id reserved for base-only inference",
+    )
+    polylora_group.add_argument(
+        "--polylora-use-triton-kernels",
+        action=argparse.BooleanOptionalAction,
+        default=True,
+        help="Use Triton kernels for PolyLoRA",
+    )
+    polylora_group.add_argument(
+        "--polylora-adapter-id-pattern",
+        type=str,
+        default=r"^[A-Za-z0-9_.-]{1,128}$",
+        help="Regular expression for valid adapter ids",
+    )
+
     args = parser.parse_args()
 
     precompiled_sizes = [int(x.strip()) for x in args.precompiled_batch_sizes.split(",")]
@@ -251,6 +311,16 @@ def main():
         warmup_iterations=args.warmup_iterations,
         http_port=args.port,
         ray_address=args.ray_address,
+        enable_polylora=args.enable_polylora,
+        polylora_adapter_weight_modules=args.polylora_adapter_weight_modules,
+        polylora_max_rank=args.polylora_max_rank,
+        polylora_max_gpu_adapters=args.polylora_max_gpu_adapters,
+        polylora_max_cpu_adapters=args.polylora_max_cpu_adapters,
+        polylora_disk_cache_dir=args.polylora_disk_cache_dir,
+        polylora_max_disk_adapters=args.polylora_max_disk_adapters,
+        polylora_base_adapter_id=args.polylora_base_adapter_id,
+        polylora_use_triton_kernels=args.polylora_use_triton_kernels,
+        polylora_adapter_id_pattern=args.polylora_adapter_id_pattern,
     )
 
     print("=" * 60)  # noqa: T201
@@ -268,6 +338,7 @@ def main():
     print(f"Compilation: {'enabled' if not args.no_compile else 'disabled'}")  # noqa: T201
     print(f"FlashDeBERTa: {'enabled' if args.enable_flashdeberta else 'disabled'}")  # noqa: T201
     print(f"Sequence packing: {'enabled' if args.enable_sequence_packing else 'disabled'}")  # noqa: T201
+    print(f"PolyLoRA: {'enabled' if args.enable_polylora else 'disabled'}")  # noqa: T201
     print(f"Target memory fraction: {args.target_memory_fraction}")  # noqa: T201
     print("=" * 60)  # noqa: T201
 
