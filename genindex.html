@@ -348,6 +348,16 @@ data-aria-dark="Switch to auto color mode">
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="api/gliner.serve.client.html#gliner.serve.client.GLiNERClient.adapter_cache_status">adapter_cache_status() (gliner.serve.client.GLiNERClient method)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERClient.adapter_cache_status">(gliner.serve.GLiNERClient method)</a>
+</li>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServer.adapter_cache_status">(gliner.serve.GLiNERServer method)</a>
+</li>
+        <li><a href="api/gliner.serve.server.html#gliner.serve.server.GLiNERServer.adapter_cache_status">(gliner.serve.server.GLiNERServer method)</a>
+</li>
+      </ul></li>
       <li><a href="api/gliner.decoding.trie.python_labels_trie.html#gliner.decoding.trie.python_labels_trie.LabelsTrie.add">add() (gliner.decoding.trie.python_labels_trie.LabelsTrie method)</a>
 
       <ul>
@@ -364,12 +374,12 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="api/gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel.adj_loss">adj_loss() (gliner.modeling.base.UniEncoderSpanRelexModel method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.all_outs">all_outs (gliner.evaluation.evaluator.BaseEvaluator attribute)</a>
 </li>
       <li><a href="api/gliner.evaluation.evaluator.html#gliner.evaluation.evaluator.BaseEvaluator.all_true">all_true (gliner.evaluation.evaluator.BaseEvaluator attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.modeling.layers.html#gliner.modeling.layers.MultiheadAttention.attention_head_size">attention_head_size (gliner.modeling.layers.MultiheadAttention attribute)</a>
 </li>
       <li><a href="api/gliner.infer_packing.html#gliner.infer_packing.PackedBatch.attention_mask">attention_mask (gliner.infer_packing.PackedBatch attribute)</a>, <a href="api/gliner.infer_packing.html#id4">[1]</a>
@@ -888,6 +898,12 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.enable_flashdeberta">(gliner.serve.GLiNERServeConfig attribute)</a>
 </li>
       </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.enable_polylora">enable_polylora (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.enable_polylora">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.enable_sequence_packing">enable_sequence_packing (gliner.serve.config.GLiNERServeConfig attribute)</a>
 
       <ul>
@@ -906,12 +922,18 @@ data-aria-dark="Switch to auto color mode">
 </li>
       <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.end">end (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id1">[1]</a>
 </li>
+      <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServer.ensure_adapter_loaded">ensure_adapter_loaded() (gliner.serve.GLiNERServer method)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.server.html#gliner.serve.server.GLiNERServer.ensure_adapter_loaded">(gliner.serve.server.GLiNERServer method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERRelexOutput.entity_spans">entity_spans (gliner.modeling.outputs.GLiNERRelexOutput attribute)</a>
 </li>
       <li><a href="api/gliner.decoding.decoder.html#gliner.decoding.decoder.Span.entity_type">entity_type (gliner.decoding.decoder.Span attribute)</a>, <a href="api/gliner.decoding.decoder.html#id2">[1]</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.modeling.decoder.html#gliner.modeling.decoder.NumericalStabilityProcessor.epsilon">epsilon (gliner.modeling.decoder.NumericalStabilityProcessor attribute)</a>
 </li>
       <li><a href="api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ERMLPInteraction">ERMLPInteraction (class in gliner.modeling.multitask.triples_layers)</a>
@@ -1609,16 +1631,22 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig">(class in gliner.infer_packing)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.infer_packing.html#gliner.infer_packing.PackedBatch.input_ids">input_ids (gliner.infer_packing.PackedBatch attribute)</a>, <a href="api/gliner.infer_packing.html#id3">[1]</a>
 
       <ul>
         <li><a href="api/gliner.html#gliner.PackedBatch.input_ids">(gliner.PackedBatch attribute)</a>, <a href="api/gliner.html#id3">[1]</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.onnx.model.html#gliner.onnx.model.BaseORTModel.input_names">input_names (gliner.onnx.model.BaseORTModel attribute)</a>
 </li>
+      <li><a href="api/gliner.serve.client.html#gliner.serve.client.GLiNERClient.is_adapter_cached">is_adapter_cached() (gliner.serve.client.GLiNERClient method)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERClient.is_adapter_cached">(gliner.serve.GLiNERClient method)</a>
+</li>
+      </ul></li>
       <li><a href="api/gliner.config.html#gliner.config.BaseGLiNERConfig.is_composition">is_composition (gliner.config.BaseGLiNERConfig attribute)</a>
 </li>
       <li><a href="api/gliner.utils.html#gliner.utils.is_module_available">is_module_available() (in module gliner.utils)</a>
@@ -2134,6 +2162,60 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.serve.memory.html#gliner.serve.memory.GLiNERMemoryEstimator.per_sample_at">(gliner.serve.memory.GLiNERMemoryEstimator method)</a>
 </li>
       </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_adapter_id_pattern">polylora_adapter_id_pattern (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_adapter_id_pattern">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_adapter_weight_modules">polylora_adapter_weight_modules (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_adapter_weight_modules">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_base_adapter_id">polylora_base_adapter_id (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_base_adapter_id">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_disk_cache_dir">polylora_disk_cache_dir (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_disk_cache_dir">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_max_cpu_adapters">polylora_max_cpu_adapters (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_max_cpu_adapters">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_max_disk_adapters">polylora_max_disk_adapters (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_max_disk_adapters">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_max_gpu_adapters">polylora_max_gpu_adapters (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_max_gpu_adapters">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_max_rank">polylora_max_rank (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_max_rank">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
+      <li><a href="api/gliner.serve.config.html#gliner.serve.config.GLiNERServeConfig.polylora_use_triton_kernels">polylora_use_triton_kernels (gliner.serve.config.GLiNERServeConfig attribute)</a>
+
+      <ul>
+        <li><a href="api/gliner.serve.html#gliner.serve.GLiNERServeConfig.polylora_use_triton_kernels">(gliner.serve.GLiNERServeConfig attribute)</a>
+</li>
+      </ul></li>
       <li><a href="api/gliner.modeling.layers.html#gliner.modeling.layers.CrossAttentionBlock.post_norm">post_norm (gliner.modeling.layers.CrossAttentionBlock attribute)</a>
 
       <ul>
@@ -2184,6 +2266,8 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.model.html#gliner.model.UniEncoderSpanRelexGLiNER.predict_entities">(gliner.model.UniEncoderSpanRelexGLiNER method)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.model.html#gliner.model.UniEncoderSpanRelexGLiNER.predict_relations">predict_relations() (gliner.model.UniEncoderSpanRelexGLiNER method)</a>
 </li>
       <li><a href="api/gliner.model.html#gliner.model.BaseBiEncoderGLiNER.predict_with_embeds">predict_with_embeds() (gliner.model.BaseBiEncoderGLiNER method)</a>
@@ -2210,8 +2294,6 @@ data-aria-dark="Switch to auto color mode">
         <li><a href="api/gliner.onnx.model.html#gliner.onnx.model.BaseORTModel.prepare_inputs">(gliner.onnx.model.BaseORTModel method)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="api/gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderTokenProcessor.prepare_span_idx">prepare_span_idx() (gliner.data_processing.processor.UniEncoderTokenProcessor method)</a>
 
       <ul>

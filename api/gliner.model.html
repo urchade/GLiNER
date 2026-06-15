@@ -921,9 +921,9 @@ Use this as the first step in the inference pipeline.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch.</p></li>
 <li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch (needs ‘tokens’ and ‘id_to_classes’).</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
-<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER (no overlapping entities).</p></li>
-<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>List</em><em>[</em><em>float</em><em>]</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to use flat NER (no overlapping entities).</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to allow multiple labels per span.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
 <li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
 </ul>
@@ -1579,9 +1579,9 @@ with ‘start’ and ‘end’ character positions.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch (includes gen_labels).</p></li>
 <li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch (needs ‘tokens’ and ‘id_to_classes’).</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for predictions.</p></li>
-<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER (no overlapping entities).</p></li>
-<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>List</em><em>[</em><em>float</em><em>]</em>) – Confidence threshold for predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to use flat NER (no overlapping entities).</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to allow multiple labels per span.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
 <li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
 </ul>
@@ -1903,10 +1903,10 @@ detect entities and the relationships between them in a single forward pass.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model_output</strong> (<em>Any</em>) – Output from run_batch.</p></li>
 <li><p><strong>batch</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Any</em><em>]</em>) – The collated batch.</p></li>
-<li><p><strong>threshold</strong> (<em>float</em>) – Confidence threshold for entity predictions.</p></li>
-<li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – Confidence threshold for relation predictions.</p></li>
-<li><p><strong>flat_ner</strong> (<em>bool</em>) – Whether to use flat NER.</p></li>
-<li><p><strong>multi_label</strong> (<em>bool</em>) – Whether to allow multiple labels per span.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em><em> | </em><em>List</em><em>[</em><em>float</em><em>]</em>) – Confidence threshold for entity predictions.</p></li>
+<li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>List</em><em>[</em><em>float</em><em>] </em><em>| </em><em>None</em>) – Confidence threshold for relation predictions.</p></li>
+<li><p><strong>flat_ner</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to use flat NER.</p></li>
+<li><p><strong>multi_label</strong> (<em>bool</em><em> | </em><em>List</em><em>[</em><em>bool</em><em>]</em>) – Whether to allow multiple labels per span.</p></li>
 <li><p><strong>return_class_probs</strong> (<em>bool</em>) – Whether to include class probabilities.</p></li>
 <li><p><strong>input_spans</strong> (<em>List</em><em>[</em><em>List</em><em>[</em><em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em><em>]</em><em>] </em><em>| </em><em>None</em>) – Optional word-level input spans to classify.</p></li>
 </ul>

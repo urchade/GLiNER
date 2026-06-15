@@ -226,21 +226,32 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="58">
 </span><span data-line="59">    <span class="n">ray_address</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="60">
-</span><span data-line="61">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="62">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">:</span>
-</span><span data-line="63">            <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span><span class="p">})</span>
-</span><span data-line="64">        <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">)</span>
-</span><span data-line="65">
+</span><span data-line="61">    <span class="n">enable_polylora</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+</span><span data-line="62">    <span class="n">polylora_adapter_weight_modules</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="63">    <span class="n">polylora_max_rank</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">16</span>
+</span><span data-line="64">    <span class="n">polylora_max_gpu_adapters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">8</span>
+</span><span data-line="65">    <span class="n">polylora_max_cpu_adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">128</span>
+</span><span data-line="66">    <span class="n">polylora_disk_cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="67">    <span class="n">polylora_max_disk_adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+</span><span data-line="68">    <span class="n">polylora_base_adapter_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;__base__&quot;</span>
+</span><span data-line="69">    <span class="n">polylora_use_triton_kernels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="70">    <span class="n">polylora_adapter_id_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^[A-Za-z0-9_.-]{1,128}$&quot;</span>
+</span><span data-line="71">
+</span><span data-line="72">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+</span><span data-line="73">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">:</span>
+</span><span data-line="74">            <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">)</span> <span class="o">|</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span><span class="p">})</span>
+</span><span data-line="75">        <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">)</span>
+</span><span data-line="76">
 <div class="viewcode-block" id="GLiNERServeConfig.to_env_vars">
 <a class="viewcode-back" href="../../../api/gliner.serve.config.html#gliner.serve.GLiNERServeConfig.to_env_vars">[docs]</a>
-</span><span data-line="66">    <span class="k">def</span><span class="w"> </span><span class="nf">to_env_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="67"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert config to environment variables for model loading.&quot;&quot;&quot;</span>
-</span><span data-line="68">        <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
-</span><span data-line="69">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enable_flashdeberta</span><span class="p">:</span>
-</span><span data-line="70">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
-</span><span data-line="71">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer_threads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="72">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;TOKENIZERS_PARALLELISM&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
-</span><span data-line="73">        <span class="k">return</span> <span class="n">env</span></div>
+</span><span data-line="77">    <span class="k">def</span><span class="w"> </span><span class="nf">to_env_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+</span><span data-line="78"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert config to environment variables for model loading.&quot;&quot;&quot;</span>
+</span><span data-line="79">        <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
+</span><span data-line="80">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enable_flashdeberta</span><span class="p">:</span>
+</span><span data-line="81">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</span><span data-line="82">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer_threads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+</span><span data-line="83">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;TOKENIZERS_PARALLELISM&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+</span><span data-line="84">        <span class="k">return</span> <span class="n">env</span></div>
 </div>
 
 </span></pre></div>
