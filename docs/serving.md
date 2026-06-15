@@ -289,7 +289,7 @@ Server:
 
 **Build:**
 ```bash
-docker build -t gliner-serve -f gliner/serve/Dockerfile .
+docker build -t gliner-serve -f gliner/serve/Containerfile .
 ```
 
 **Run:**
