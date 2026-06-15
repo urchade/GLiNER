@@ -116,7 +116,7 @@ class TrainingArguments(transformers.TrainingArguments):
         metadata={
             "help": (
                 "Weight λ for the auxiliary supervised contrastive loss on span representations. "
-                "0.0 = disabled (default). Recommended range: 0.05–0.2. "
+                "0.0 = disabled (default). Recommended range: 0.05-0.2. "
                 "Ref: arXiv:2404.17178 — +7%% avg F1 in few-shot NER."
             )
         },
@@ -196,34 +196,43 @@ class Trainer(transformers.Trainer):
             proc._hard_negative_ratio = getattr(self.args, "hard_negative_ratio", 0.0)
 
     def get_train_dataloader(self) -> DataLoader:
-        """Override to inject CurriculumSampler when use_curriculum=True."""
-        if not getattr(self.args, "use_curriculum", False):
-            return super().get_train_dataloader()
+        """Return the training DataLoader, injecting CurriculumSampler when use_curriculum=True."""
+        if self.train_dataset is None:
+            raise ValueError("Trainer: training requires a train_dataset.")
 
-        from .curriculum import SpanDifficultyScorer, CurriculumSampler  # noqa: PLC0415
+        train_dataset = self.train_dataset
+        data_collator = self.data_collator
 
-        dataset = self.train_dataset
-        scorer = SpanDifficultyScorer()
-        scorer.fit(list(dataset))
+        dataloader_params = {
+            "batch_size": self._train_batch_size,
+            "collate_fn": data_collator,
+            "num_workers": self.args.dataloader_num_workers,
+            "pin_memory": self.args.dataloader_pin_memory,
+            "persistent_workers": self.args.dataloader_persistent_workers,
+        }
 
-        sampler = CurriculumSampler(
-            dataset,
-            scorer,
-            start_pct=getattr(self.args, "curriculum_start_pct", 0.30),
-            ramp_epochs=getattr(self.args, "curriculum_ramp_epochs", 5),
-            seed=getattr(self.args, "curriculum_seed", 42),
-        )
-        # Expose sampler so set_epoch() can be called each epoch
-        self._curriculum_sampler = sampler
+        if not isinstance(train_dataset, torch.utils.data.IterableDataset):
+            if getattr(self.args, "use_curriculum", False):
+                from .curriculum import CurriculumSampler, SpanDifficultyScorer  # noqa: PLC0415
 
-        return DataLoader(
-            dataset,
-            sampler=sampler,
-            batch_size=self.args.per_device_train_batch_size,
-            collate_fn=self.data_collator,
-            num_workers=self.args.dataloader_num_workers,
-            pin_memory=self.args.dataloader_pin_memory,
-        )
+                scorer = SpanDifficultyScorer()
+                scorer.fit(list(train_dataset))
+                sampler = CurriculumSampler(
+                    train_dataset,
+                    scorer,
+                    start_pct=getattr(self.args, "curriculum_start_pct", 0.30),
+                    ramp_epochs=getattr(self.args, "curriculum_ramp_epochs", 5),
+                    seed=getattr(self.args, "curriculum_seed", 42),
+                )
+                self._curriculum_sampler = sampler
+                dataloader_params["sampler"] = sampler
+            else:
+                dataloader_params["sampler"] = self._get_train_sampler()
+            dataloader_params["drop_last"] = self.args.dataloader_drop_last
+            dataloader_params["worker_init_fn"] = seed_worker
+            dataloader_params["prefetch_factor"] = self.args.dataloader_prefetch_factor
+
+        return self.accelerator.prepare(DataLoader(train_dataset, **dataloader_params))
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         # called by HF during checkpoint saves
@@ -449,29 +458,6 @@ class Trainer(transformers.Trainer):
         if prediction_loss_only:
             return (loss, None, None)
         return (loss, logits, labels)
-
-    def get_train_dataloader(self) -> DataLoader:
-        if self.train_dataset is None:
-            raise ValueError("Trainer: training requires a train_dataset.")
-
-        train_dataset = self.train_dataset
-        data_collator = self.data_collator
-
-        dataloader_params = {
-            "batch_size": self._train_batch_size,
-            "collate_fn": data_collator,
-            "num_workers": self.args.dataloader_num_workers,
-            "pin_memory": self.args.dataloader_pin_memory,
-            "persistent_workers": self.args.dataloader_persistent_workers,
-        }
-
-        if not isinstance(train_dataset, torch.utils.data.IterableDataset):
-            dataloader_params["sampler"] = self._get_train_sampler()
-            dataloader_params["drop_last"] = self.args.dataloader_drop_last
-            dataloader_params["worker_init_fn"] = seed_worker
-            dataloader_params["prefetch_factor"] = self.args.dataloader_prefetch_factor
-
-        return self.accelerator.prepare(DataLoader(train_dataset, **dataloader_params))
 
     def get_eval_dataloader(self, eval_dataset: Optional[Union[str, Dataset]] = None) -> DataLoader:
         if eval_dataset is None and self.eval_dataset is None:

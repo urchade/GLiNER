@@ -25,7 +25,7 @@ Usage in training (via TrainingArguments):
 from __future__ import annotations
 
 import random
-from typing import Dict, List, Optional, Set
+from typing import Set, List, Optional
 
 from ..utils import is_module_available
 
@@ -112,7 +112,6 @@ class TypeSimilarityIndex:
 
     def _build_sbert(self, types: List[str]) -> None:
         from sentence_transformers import SentenceTransformer  # noqa: PLC0415
-        import numpy as np  # noqa: PLC0415
 
         model = SentenceTransformer(self.encoder_name, cache_folder=self.cache_dir)
         embeddings = model.encode(types, normalize_embeddings=True, show_progress_bar=False)
@@ -133,9 +132,7 @@ class TypeSimilarityIndex:
         n: int,
         exclude: Optional[Set[str]] = None,
     ) -> List[str]:
-        """
-        Return up to n entity types that are semantically closest to positive_types
-        but not in them (i.e., confusable but incorrect types).
+        """Return up to n entity types semantically closest to positive_types but not in them.
 
         Args:
             positive_types: The entity types that are actually present in this example.

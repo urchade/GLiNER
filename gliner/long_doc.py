@@ -15,7 +15,7 @@ Algorithm:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple, Optional
 
 
 def _compute_windows(
@@ -76,17 +76,16 @@ def _merge_entities(
     """
     seen: Dict[Tuple, Dict] = {}   # key: (start, end, label) → entity dict
 
-    for window_idx, entities in enumerate(all_entities):
+    for _window_idx, entities in enumerate(all_entities):
         for entity in entities:
             key = (entity["start"], entity["end"], entity["label"])
             if key not in seen:
                 seen[key] = entity
-            else:
-                if dedup_strategy == "max_score":
-                    if entity.get("score", 0.0) > seen[key].get("score", 0.0):
-                        seen[key] = entity
-                elif dedup_strategy == "last":
+            elif dedup_strategy == "max_score":
+                if entity.get("score", 0.0) > seen[key].get("score", 0.0):
                     seen[key] = entity
+            elif dedup_strategy == "last":
+                seen[key] = entity
                 # "first" → keep existing, do nothing
 
     return sorted(seen.values(), key=lambda e: e["start"])
@@ -219,18 +218,23 @@ def batch_predict_entities_long(
     dedup_strategy: str = "max_score",
     batch_size: int = 8,
 ) -> List[List[Dict]]:
-    """
-    Run sliding-window inference on multiple texts.
+    """Run sliding-window inference on multiple texts.
 
     Processes each text independently. For throughput-critical workloads, consider
     using the single-document version with a higher batch_size so window batches
     from one document fill the GPU/CPU efficiently.
 
     Args:
-        model:   A GLiNER model instance.
-        texts:   List of input texts of arbitrary length.
-        labels:  Entity type labels (any format accepted by predict_entities).
-        (other args same as predict_entities_long)
+        model: A GLiNER model instance.
+        texts: List of input texts of arbitrary length.
+        labels: Entity type labels (any format accepted by predict_entities).
+        threshold: Confidence threshold for entity predictions. Default: 0.5.
+        max_tokens: Maximum word-tokens per window. Default: 384.
+        stride: Step size between window starts in tokens. Default: max_tokens // 3.
+        flat_ner: Resolve overlapping spans by keeping the highest-scoring one.
+        multi_label: Allow the same span to have multiple entity labels.
+        dedup_strategy: How to resolve entities seen in multiple windows.
+        batch_size: Batch size passed to the per-window inference call.
 
     Returns:
         List of entity-list, one per input text.

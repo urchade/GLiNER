@@ -37,14 +37,11 @@ Or via TrainingArguments (integrates automatically when use_curriculum=True):
 
 from __future__ import annotations
 
-import math
 import random
+from typing import Dict, List, Iterator, Optional
 from collections import Counter
-from typing import Dict, Iterator, List, Optional
 
-import torch
 from torch.utils.data import Sampler
-
 
 # ---------------------------------------------------------------------------
 # Difficulty scoring

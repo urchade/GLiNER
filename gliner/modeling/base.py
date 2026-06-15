@@ -39,7 +39,7 @@ from .encoder import Encoder, BiEncoder
 from .outputs import GLiNERBaseOutput, GLiNERRelexOutput, GLiNERDecoderOutput
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
-from .loss_functions import cross_entropy_loss, focal_loss_with_logits, span_contrastive_loss
+from .loss_functions import cross_entropy_loss, span_contrastive_loss, focal_loss_with_logits
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 

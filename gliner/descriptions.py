@@ -30,7 +30,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Tuple, Union, Optional
 
 # ---------------------------------------------------------------------------
 # Core normalisation utility
@@ -103,9 +103,8 @@ def normalise_labels(
     prompt_strings = []
     for name, desc in zip(display_names, descriptions):
         if desc:
-            if max_description_length is not None:
-                desc = desc[:max_description_length]
-            prompt_strings.append(f"{name}{description_sep}{desc}")
+            effective = desc[:max_description_length] if max_description_length is not None else desc
+            prompt_strings.append(f"{name}{description_sep}{effective}")
         else:
             prompt_strings.append(name)
 

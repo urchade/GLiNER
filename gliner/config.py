@@ -73,6 +73,9 @@ class BaseGLiNERConfig(PretrainedConfig):
             ent_token (str, optional): Entity marker token. Defaults to "<<ENT>>".
             sep_token (str, optional): Separator token. Defaults to "<<SEP>>".
             _attn_implementation (str, optional): Attention implementation. Defaults to None.
+            use_flash_attention (bool, optional): Whether to enable flash attention. Defaults to False.
+            contrastive_loss_coef (float, optional): Weight for auxiliary contrastive loss. Defaults to 0.0.
+            contrastive_temperature (float, optional): Temperature for contrastive loss scaling. Defaults to 0.07.
             token_loss_coef (float, optional): Token loss coefficient. Defaults to 1.0.
             span_loss_coef (float, optional): Span loss coefficient. Defaults to 1.0.
             represent_spans (bool, optional): Whether to represent spans. Defaults to False.

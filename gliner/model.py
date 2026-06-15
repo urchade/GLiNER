@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
+
 try:
     import onnxruntime as ort
 except ImportError:
@@ -756,7 +757,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if tokenizer_config_path.is_file():
             tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir, local_files_only=local_files_only)
         else:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir, local_files_only=local_files_only)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
 
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
@@ -947,6 +950,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             max_width: Override max_width in config.
             post_fusion_schema: Override post_fusion_schema in config.
             _attn_implementation: Override attention implementation.
+            flash_attention: Whether to enable flash attention. Defaults to False.
             **model_kwargs: Additional model initialization arguments.
 
         Returns:
@@ -1113,6 +1117,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             max_width: Override max_width in config.
             post_fusion_schema: Override post_fusion_schema in config.
             _attn_implementation: Override attention implementation.
+            flash_attention: Whether to enable flash attention. Defaults to False.
             **model_kwargs: Additional model initialization arguments.
 
         Returns:

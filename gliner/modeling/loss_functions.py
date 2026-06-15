@@ -166,7 +166,6 @@ def span_contrastive_loss(
     labels_col = labels.unsqueeze(1)
     labels_row = labels.unsqueeze(0)
     pos_mask = labels_col == labels_row                     # same class
-    neg_mask = ~pos_mask
 
     # Exclude self-similarity from positives
     eye = torch.eye(embeds.size(0), device=embeds.device, dtype=torch.bool)
