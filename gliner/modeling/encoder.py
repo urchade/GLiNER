@@ -114,9 +114,18 @@ class Transformer(nn.Module):
                 ModelClass = T5EncoderModel
         elif config_name in {"DebertaV2Config"}:
             custom = True
-            if os.environ.get("USE_FLASHDEBERTA", "") and IS_FLASHDEBERTA:
+            want_flash = getattr(config, "use_flash_attention", False) or os.environ.get("USE_FLASHDEBERTA", "")
+            if want_flash and IS_FLASHDEBERTA:
                 ModelClass = FlashDebertaV2Model
             else:
+                if want_flash and not IS_FLASHDEBERTA:
+                    warnings.warn(
+                        "use_flash_attention=True requested but 'flashdeberta' is not installed. "
+                        "Falling back to standard DeBERTa attention. "
+                        "Install with: pip install flashdeberta",
+                        UserWarning,
+                        stacklevel=3,
+                    )
                 ModelClass = DebertaV2Model
 
         else:
@@ -952,6 +961,7 @@ class BiEncoder(Encoder):
         label_kwargs = dict(kwargs)
         label_kwargs.pop("packing_config", None)
         label_kwargs.pop("pair_attention_mask", None)
+        label_kwargs.pop("token_lengths", None)
         label_kwargs["attention_mask"] = attention_mask
         labels_embeddings = self.labels_encoder(input_ids, *args, **label_kwargs)
         if hasattr(self, "labels_projection"):
