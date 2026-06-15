@@ -3,7 +3,7 @@ version: "3.8"
 services:
     gliner-serve:
         build:
-            context: ../..
+            context: .
             dockerfile: gliner/serve/Containerfile
         ports:
             - "8000:8000"
