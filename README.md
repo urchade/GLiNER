@@ -1,4 +1,14 @@
 <div align="center">
+  <a href="https://pioneer.ai/gliner" target="_blank" rel="noopener noreferrer">
+    <img src="image/GitHub.png" alt="Pioneer AI - Fine-tune GLiNER with a single prompt" width="100%"/>
+  </a>
+</div>
+
+> [!IMPORTANT]
+> **🚀 GLiNER2 is Now Available from [Fastino Labs](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
+
+
+<div align="center">
 
 # GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
@@ -234,8 +244,7 @@ GLiNER was originally developed by:
 * Pierre Holat
 * Thierry Charnois
 
-Alternative architectures, such as bi-encoder and GLiNER-relex, were developed by [Ihor Stepanov](https://www.linkedin.com/in/ihor-knowledgator/).
-
+We gratefully acknowledge the contributions of the open-source community, whose efforts have helped shape and improve this project.
 
 ## Maintainers
 
@@ -281,50 +290,65 @@ For bug reports and feature requests, please [open an issue](https://github.com/
 
 ## Citations
 
-If you find GLiNER useful in your research, please consider citing our papers:
+If you find **GLiNER** useful in your research, please consider citing the original paper:
 
 ```bibtex
 @inproceedings{zaratiana-etal-2024-gliner,
     title = "{GL}i{NER}: Generalist Model for Named Entity Recognition using Bidirectional Transformer",
-    author = "Zaratiana, Urchade  and
-      Tomeh, Nadi  and
-      Holat, Pierre  and
+    author = "Zaratiana, Urchade and
+      Tomeh, Nadi and
+      Holat, Pierre and
       Charnois, Thierry",
-    editor = "Duh, Kevin  and
-      Gomez, Helena  and
-      Bethard, Steven",
     booktitle = "Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers)",
-    month = jun,
     year = "2024",
-    address = "Mexico City, Mexico",
-    publisher = "Association for Computational Linguistics",
     url = "https://aclanthology.org/2024.naacl-long.300",
-    doi = "10.18653/v1/2024.naacl-long.300",
     pages = "5364--5376",
 }
 ```
 
+## Related and Follow-up Work
+
+The GLiNER family has since been extended to additional information extraction and classification tasks:
+
+### GLiNER2
+
 ```bibtex
-@misc{stepanov2024glinermultitaskgeneralistlightweight,
-      title={GLiNER multi-task: Generalist Lightweight Model for Various Information Extraction Tasks}, 
-      author={Ihor Stepanov and Mykhailo Shtopko},
-      year={2024},
-      eprint={2406.12925},
+@misc{zaratiana2025gliner2efficientmultitaskinformation,
+      title={GLiNER2: An Efficient Multi-Task Information Extraction System with Schema-Driven Interface},
+      author={Urchade Zaratiana and Gil Pasternak and Oliver Boyd and George Hurn-Maloney and Ash Lewis},
+      year={2025},
+      eprint={2507.18546},
       archivePrefix={arXiv},
-      primaryClass={cs.LG},
-      url={https://arxiv.org/abs/2406.12925}, 
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2507.18546},
 }
 ```
 
+### GLiGuard
+
 ```bibtex
-@misc{stepanov2026millionlabelnerbreakingscale,
-      title={The Million-Label NER: Breaking Scale Barriers with GLiNER bi-encoder}, 
-      author={Ihor Stepanov and Mykhailo Shtopko and Dmytro Vodianytskyi and Oleksandr Lukashov},
+@misc{zaratiana2026gliguardschemaconditionedclassificationllm,
+      title={GLiGuard: Schema-Conditioned Classification for LLM Safeguard},
+      author={Urchade Zaratiana and Mary Newhauser and George Hurn-Maloney and Ash Lewis},
       year={2026},
-      eprint={2602.18487},
+      eprint={2605.07982},
       archivePrefix={arXiv},
       primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2602.18487}, 
+      url={https://arxiv.org/abs/2605.07982},
+}
+```
+
+### GLiNER2-PII
+
+```bibtex
+@misc{zaratiana2026gliner2piimultilingualmodelpersonally,
+      title={GLiNER2-PII: A Multilingual Model for Personally Identifiable Information Extraction},
+      author={Urchade Zaratiana and Ash Lewis and George Hurn-Maloney},
+      year={2026},
+      eprint={2605.09973},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2605.09973},
 }
 ```
 
