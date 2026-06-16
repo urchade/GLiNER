@@ -229,6 +229,11 @@ result = ref.result()
 
 ## PolyLoRA
 
+Install polylora first:
+```bash
+pip install polylora
+```
+
 PolyLoRA support lets one deployment route requests through different LoRA
 adapters without starting one replica per adapter. Enable it with
 `--enable-polylora` or `GLiNERServeConfig(enable_polylora=True)`. The
