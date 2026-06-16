@@ -185,9 +185,12 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#practical-examples">Practical Examples</a><ul>
-<li><a class="reference internal" href="#example-1-extract-company-information">Example 1: Extract Company Information</a></li>
-<li><a class="reference internal" href="#example-2-process-scientific-papers">Example 2: Process Scientific Papers</a></li>
-<li><a class="reference internal" href="#example-3-analyze-news-articles">Example 3: Analyze News Articles</a></li>
+<li><a class="reference internal" href="#compliance-pii-redaction">Compliance &amp; PII Redaction</a></li>
+<li><a class="reference internal" href="#knowledge-graph-construction">Knowledge Graph Construction</a></li>
+<li><a class="reference internal" href="#large-scale-entity-extraction">Large-Scale Entity Extraction</a></li>
+<li><a class="reference internal" href="#domain-specific-ner">Domain-Specific NER</a></li>
+<li><a class="reference internal" href="#multi-lingual-information-extraction">Multi-lingual Information Extraction</a></li>
+<li><a class="reference internal" href="#search-retrieval-augmentation">Search &amp; Retrieval Augmentation</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#prompt-compression-precomputed-prompt-embeddings">&#9889; Prompt Compression (Precomputed Prompt Embeddings)</a><ul>
@@ -1215,83 +1218,223 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="practical-examples">
 <h2>Practical Examples<a class="headerlink" href="#practical-examples" title="Link to this heading">¶</a></h2>
-<section id="example-1-extract-company-information">
-<h3>Example 1: Extract Company Information<a class="headerlink" href="#example-1-extract-company-information" title="Link to this heading">¶</a></h3>
+<section id="compliance-pii-redaction">
+<h3>Compliance &amp; PII Redaction<a class="headerlink" href="#compliance-pii-redaction" title="Link to this heading">¶</a></h3>
+<p>Detect and mask personal data across documents using GLiNER’s multilingual PII model, which covers 40+ entity types (SSN, credit cards, passports, emails, IBANs, etc.) in 100+ languages.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_multi_pii-v1&quot;</span><span class="p">)</span>
 </span><span data-line="4">
 </span><span data-line="5"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="6"><span class="s2">Apple Inc. is headquartered in Cupertino, California. The company was founded </span>
-</span><span data-line="7"><span class="s2">by Steve Jobs, Steve Wozniak, and Ronald Wayne in April 1976. Tim Cook is the </span>
-</span><span data-line="8"><span class="s2">current CEO. Apple&#39;s main products include iPhone, iPad, and Mac computers.</span>
-</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="10">
-</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
-</span><span data-line="12"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
-</span><span data-line="13">
-</span><span data-line="14"><span class="c1"># Organize by type</span>
-</span><span data-line="15"><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">defaultdict</span>
-</span><span data-line="16"><span class="n">by_type</span> <span class="o">=</span> <span class="n">defaultdict</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
-</span><span data-line="17"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
-</span><span data-line="18">    <span class="n">by_type</span><span class="p">[</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">])</span>
-</span><span data-line="19">
-</span><span data-line="20"><span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">items</span> <span class="ow">in</span> <span class="n">by_type</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-</span><span data-line="21">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">items</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="example-2-process-scientific-papers">
-<h3>Example 2: Process Scientific Papers<a class="headerlink" href="#example-2-process-scientific-papers" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_medium-v2.1&quot;</span><span class="p">)</span>
-</span><span data-line="4">
-</span><span data-line="5"><span class="n">abstract</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="6"><span class="s2">We introduce GPT-4, a large-scale multimodal model developed by OpenAI. </span>
-</span><span data-line="7"><span class="s2">The model was trained on a diverse dataset and exhibits strong performance </span>
-</span><span data-line="8"><span class="s2">on various benchmarks including MMLU, HumanEval, and GSM-8K.</span>
-</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="10">
-</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="12">    <span class="s2">&quot;model_name&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;dataset&quot;</span><span class="p">,</span> <span class="s2">&quot;benchmark&quot;</span><span class="p">,</span> 
-</span><span data-line="13">    <span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="s2">&quot;task&quot;</span><span class="p">,</span> <span class="s2">&quot;method&quot;</span>
-</span><span data-line="14"><span class="p">]</span>
-</span><span data-line="15">
-</span><span data-line="16"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">abstract</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
-</span><span data-line="17">
-</span><span data-line="18"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Extracted Information:&quot;</span><span class="p">)</span>
-</span><span data-line="19"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
-</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</section>
-<section id="example-3-analyze-news-articles">
-<h3>Example 3: Analyze News Articles<a class="headerlink" href="#example-3-analyze-news-articles" title="Link to this heading">¶</a></h3>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
-</span><span data-line="2">
-</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-bi-small-v1.0&quot;</span><span class="p">)</span>
-</span><span data-line="4">
-</span><span data-line="5"><span class="n">article</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="6"><span class="s2">Tesla CEO Elon Musk announced on Twitter that the company will open a new </span>
-</span><span data-line="7"><span class="s2">Gigafactory in Austin, Texas. The facility will produce the Cybertruck and </span>
-</span><span data-line="8"><span class="s2">Model Y vehicles. Construction began in July 2020 and operations started in 2021.</span>
-</span><span data-line="9"><span class="s2">&quot;&quot;&quot;</span>
-</span><span data-line="10">
-</span><span data-line="11"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="12">    <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;position&quot;</span><span class="p">,</span> <span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;facility&quot;</span><span class="p">,</span> 
-</span><span data-line="13">    <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span>
-</span><span data-line="14"><span class="p">]</span>
-</span><span data-line="15">
-</span><span data-line="16"><span class="c1"># Process with BiEncoder for efficiency</span>
-</span><span data-line="17"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">article</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="6"><span class="s2">Patient John Smith (DOB: 03/15/1982, SSN: 123-45-6789) was seen at</span>
+</span><span data-line="7"><span class="s2">Mayo Clinic on January 10, 2024. Contact: john.smith@email.com,</span>
+</span><span data-line="8"><span class="s2">+1-555-867-5309. Insurance ID: BC-9876543. His home address is</span>
+</span><span data-line="9"><span class="s2">742 Evergreen Terrace, Springfield, IL 62704.</span>
+</span><span data-line="10"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">pii_labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="13">    <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;date of birth&quot;</span><span class="p">,</span> <span class="s2">&quot;social security number&quot;</span><span class="p">,</span> <span class="s2">&quot;email&quot;</span><span class="p">,</span>
+</span><span data-line="14">    <span class="s2">&quot;phone number&quot;</span><span class="p">,</span> <span class="s2">&quot;medical facility&quot;</span><span class="p">,</span> <span class="s2">&quot;insurance id&quot;</span><span class="p">,</span> <span class="s2">&quot;address&quot;</span><span class="p">,</span>
+</span><span data-line="15"><span class="p">]</span>
+</span><span data-line="16">
+</span><span data-line="17"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">pii_labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
 </span><span data-line="18">
-</span><span data-line="19"><span class="c1"># Group related entities</span>
-</span><span data-line="20"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Key Information:&quot;</span><span class="p">)</span>
-</span><span data-line="21"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Company: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;company&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Location: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;location&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="23"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Products: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;product&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- Timeline: </span><span class="si">{</span><span class="p">[</span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">e</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">e</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;date&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="19"><span class="c1"># Redact PII from text</span>
+</span><span data-line="20"><span class="n">redacted</span> <span class="o">=</span> <span class="n">text</span>
+</span><span data-line="21"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">entities</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">e</span><span class="p">:</span> <span class="n">e</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">],</span> <span class="n">reverse</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+</span><span data-line="22">    <span class="n">redacted</span> <span class="o">=</span> <span class="n">redacted</span><span class="p">[:</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;start&quot;</span><span class="p">]]</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span><span class="si">}</span><span class="s2">]&quot;</span> <span class="o">+</span> <span class="n">redacted</span><span class="p">[</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;end&quot;</span><span class="p">]</span> <span class="p">:]</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="n">redacted</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<details>
+<summary>Expected Output</summary>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">Patient</span> <span class="p">[</span><span class="n">PERSON</span><span class="p">]</span> <span class="p">(</span><span class="n">DOB</span><span class="p">:</span> <span class="p">[</span><span class="n">DATE</span> <span class="n">OF</span> <span class="n">BIRTH</span><span class="p">],</span> <span class="n">SSN</span><span class="p">:</span> <span class="p">[</span><span class="n">SOCIAL</span> <span class="n">SECURITY</span> <span class="n">NUMBER</span><span class="p">])</span> <span class="n">was</span> <span class="n">seen</span> <span class="n">at</span>
+</span><span data-line="2"><span class="p">[</span><span class="n">MEDICAL</span> <span class="n">FACILITY</span><span class="p">]</span> <span class="n">on</span> <span class="n">January</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">2024.</span> <span class="n">Contact</span><span class="p">:</span> <span class="p">[</span><span class="n">EMAIL</span><span class="p">],</span>
+</span><span data-line="3"><span class="p">[</span><span class="n">PHONE</span> <span class="n">NUMBER</span><span class="p">]</span><span class="o">.</span> <span class="n">Insurance</span> <span class="n">ID</span><span class="p">:</span> <span class="p">[</span><span class="n">INSURANCE</span> <span class="n">ID</span><span class="p">]</span><span class="o">.</span> <span class="n">His</span> <span class="n">home</span> <span class="n">address</span> <span class="ow">is</span>
+</span><span data-line="4"><span class="p">[</span><span class="n">ADDRESS</span><span class="p">]</span><span class="o">.</span>
+</span></pre></div>
+</div>
+</details>
+</section>
+<section id="knowledge-graph-construction">
+<h3>Knowledge Graph Construction<a class="headerlink" href="#knowledge-graph-construction" title="Link to this heading">¶</a></h3>
+<p>Jointly extract entities and relations in a single pass to build knowledge graphs for Graph RAG, semantic search, and analytics.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-relex-large-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="6"><span class="s2">Elon Musk founded SpaceX in 2002 in Hawthorne, California. The company</span>
+</span><span data-line="7"><span class="s2">developed the Falcon 9 rocket and the Dragon spacecraft. SpaceX was awarded</span>
+</span><span data-line="8"><span class="s2">a $1.6 billion NASA contract for cargo resupply missions to the International</span>
+</span><span data-line="9"><span class="s2">Space Station.</span>
+</span><span data-line="10"><span class="s2">&quot;&quot;&quot;</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;monetary value&quot;</span><span class="p">]</span>
+</span><span data-line="13"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;founded&quot;</span><span class="p">,</span> <span class="s2">&quot;founded_in&quot;</span><span class="p">,</span> <span class="s2">&quot;headquartered_in&quot;</span><span class="p">,</span> <span class="s2">&quot;developed&quot;</span><span class="p">,</span> <span class="s2">&quot;awarded_by&quot;</span><span class="p">]</span>
+</span><span data-line="14">
+</span><span data-line="15"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="16">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
+</span><span data-line="17">    <span class="n">labels</span><span class="o">=</span><span class="n">entity_labels</span><span class="p">,</span>
+</span><span data-line="18">    <span class="n">relations</span><span class="o">=</span><span class="n">relation_labels</span><span class="p">,</span>
+</span><span data-line="19">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="20">    <span class="n">relation_threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="21"><span class="p">)</span>
+</span><span data-line="22">
+</span><span data-line="23"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="24"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="25">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="26">
+</span><span data-line="27"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations (knowledge graph edges):&quot;</span><span class="p">)</span>
+</span><span data-line="28"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+</span><span data-line="29">    <span class="n">head</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s2">&quot;head&quot;</span><span class="p">][</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">]]</span>
+</span><span data-line="30">    <span class="n">tail</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s2">&quot;tail&quot;</span><span class="p">][</span><span class="s2">&quot;entity_idx&quot;</span><span class="p">]]</span>
+</span><span data-line="31">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="large-scale-entity-extraction">
+<h3>Large-Scale Entity Extraction<a class="headerlink" href="#large-scale-entity-extraction" title="Link to this heading">¶</a></h3>
+<p>Use the bi-encoder to tag millions of documents against hundreds of entity types. Pre-compute label embeddings once and reuse them across all documents for maximum throughput.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-bi-base-v2.0&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="6">    <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">,</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="s2">&quot;technology&quot;</span><span class="p">,</span> <span class="s2">&quot;software&quot;</span><span class="p">,</span> <span class="s2">&quot;programming_language&quot;</span><span class="p">,</span> <span class="s2">&quot;framework&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">&quot;database&quot;</span><span class="p">,</span> <span class="s2">&quot;protocol&quot;</span><span class="p">,</span> <span class="s2">&quot;standard&quot;</span><span class="p">,</span> <span class="s2">&quot;regulation&quot;</span><span class="p">,</span> <span class="s2">&quot;currency&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">&quot;measurement&quot;</span><span class="p">,</span> <span class="s2">&quot;chemical_compound&quot;</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">,</span> <span class="s2">&quot;medication&quot;</span><span class="p">,</span>
+</span><span data-line="10">    <span class="c1"># ... scale to hundreds of types</span>
+</span><span data-line="11"><span class="p">]</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="c1"># Pre-compute label embeddings once</span>
+</span><span data-line="14"><span class="n">label_embeddings</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="c1"># Process a large document collection efficiently</span>
+</span><span data-line="17"><span class="n">documents</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="18">    <span class="s2">&quot;Python 3.12 was released by the PSF in October 2023.&quot;</span><span class="p">,</span>
+</span><span data-line="19">    <span class="s2">&quot;The FDA approved a new treatment for Type 2 diabetes.&quot;</span><span class="p">,</span>
+</span><span data-line="20">    <span class="s2">&quot;Tesla announced record Q4 revenue of $25.2 billion.&quot;</span><span class="p">,</span>
+</span><span data-line="21">    <span class="c1"># ... millions of documents</span>
+</span><span data-line="22"><span class="p">]</span>
+</span><span data-line="23">
+</span><span data-line="24"><span class="n">all_entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">batch_predict_with_embeds</span><span class="p">(</span>
+</span><span data-line="25">    <span class="n">documents</span><span class="p">,</span>
+</span><span data-line="26">    <span class="n">label_embeddings</span><span class="p">,</span>
+</span><span data-line="27">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="28">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="29">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
+</span><span data-line="30"><span class="p">)</span>
+</span><span data-line="31">
+</span><span data-line="32"><span class="k">for</span> <span class="n">doc</span><span class="p">,</span> <span class="n">entities</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">documents</span><span class="p">,</span> <span class="n">all_entities</span><span class="p">):</span>
+</span><span data-line="33">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">doc</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+</span><span data-line="34">    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="35">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;score&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="domain-specific-ner">
+<h3>Domain-Specific NER<a class="headerlink" href="#domain-specific-ner" title="Link to this heading">¶</a></h3>
+<p>Fine-tune GLiNER on your specialized corpus (biomedical, legal, financial, etc.) with minimal labeled data to get high-quality extraction for domain terms.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="c1"># Start from a pre-trained model</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gliner-community/gliner_small-v2.5&quot;</span><span class="p">)</span>
+</span><span data-line="5">
+</span><span data-line="6"><span class="c1"># Prepare domain-specific training data (NER format)</span>
+</span><span data-line="7"><span class="n">train_data</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="8">    <span class="p">{</span>
+</span><span data-line="9">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Aspirin&quot;</span><span class="p">,</span> <span class="s2">&quot;reduces&quot;</span><span class="p">,</span> <span class="s2">&quot;inflammation&quot;</span><span class="p">,</span> <span class="s2">&quot;in&quot;</span><span class="p">,</span> <span class="s2">&quot;rheumatoid&quot;</span><span class="p">,</span> <span class="s2">&quot;arthritis&quot;</span><span class="p">,</span> <span class="s2">&quot;patients&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+</span><span data-line="10">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="11">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;medication&quot;</span><span class="p">],</span>
+</span><span data-line="12">            <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;condition&quot;</span><span class="p">],</span>
+</span><span data-line="13">            <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">],</span>
+</span><span data-line="14">        <span class="p">],</span>
+</span><span data-line="15">    <span class="p">},</span>
+</span><span data-line="16">    <span class="p">{</span>
+</span><span data-line="17">        <span class="s2">&quot;tokenized_text&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Metformin&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;prescribed&quot;</span><span class="p">,</span> <span class="s2">&quot;for&quot;</span><span class="p">,</span> <span class="s2">&quot;Type&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;diabetes&quot;</span><span class="p">,</span> <span class="s2">&quot;.&quot;</span><span class="p">],</span>
+</span><span data-line="18">        <span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[</span>
+</span><span data-line="19">            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;medication&quot;</span><span class="p">],</span>
+</span><span data-line="20">            <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">],</span>
+</span><span data-line="21">        <span class="p">],</span>
+</span><span data-line="22">    <span class="p">},</span>
+</span><span data-line="23">    <span class="c1"># ... add more examples from your domain</span>
+</span><span data-line="24"><span class="p">]</span>
+</span><span data-line="25">
+</span><span data-line="26"><span class="c1"># Fine-tune — even 50–200 examples can yield strong results</span>
+</span><span data-line="27"><span class="n">model</span><span class="o">.</span><span class="n">train_model</span><span class="p">(</span>
+</span><span data-line="28">    <span class="n">train_dataset</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>
+</span><span data-line="29">    <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;models/bio-gliner&quot;</span><span class="p">,</span>
+</span><span data-line="30">    <span class="n">max_steps</span><span class="o">=</span><span class="mi">500</span><span class="p">,</span>
+</span><span data-line="31">    <span class="n">per_device_train_batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="32">    <span class="n">learning_rate</span><span class="o">=</span><span class="mf">1e-5</span><span class="p">,</span>
+</span><span data-line="33">    <span class="n">bf16</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="34"><span class="p">)</span>
+</span><span data-line="35">
+</span><span data-line="36"><span class="c1"># Use the fine-tuned model</span>
+</span><span data-line="37"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;The patient was started on Lisinopril 10mg for hypertension.&quot;</span>
+</span><span data-line="38"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;medication&quot;</span><span class="p">,</span> <span class="s2">&quot;dosage&quot;</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">],</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="39"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="40">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For detailed training guides, see the <a class="reference external" href="https://urchade.github.io/GLiNER/training.html">training documentation</a>.</p>
+</section>
+<section id="multi-lingual-information-extraction">
+<h3>Multi-lingual Information Extraction<a class="headerlink" href="#multi-lingual-information-extraction" title="Link to this heading">¶</a></h3>
+<p>Extract structured data from 100+ languages with a single model — no per-language setup required.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_multi-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">texts</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="6">    <span class="s2">&quot;English&quot;</span><span class="p">:</span> <span class="s2">&quot;Barack Obama was born in Honolulu, Hawaii on August 4, 1961.&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="s2">&quot;French&quot;</span><span class="p">:</span> <span class="s2">&quot;Emmanuel Macron est le président de la République française depuis 2017.&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">&quot;Japanese&quot;</span><span class="p">:</span> <span class="s2">&quot;東京都は日本の首都であり、2021年にオリンピックが開催されました。&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">&quot;Arabic&quot;</span><span class="p">:</span> <span class="s2">&quot;تأسست شركة أرامكو السعودية في عام 1933 في المملكة العربية السعودية.&quot;</span><span class="p">,</span>
+</span><span data-line="10"><span class="p">}</span>
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;date&quot;</span><span class="p">]</span>
+</span><span data-line="13">
+</span><span data-line="14"><span class="k">for</span> <span class="n">lang</span><span class="p">,</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">texts</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+</span><span data-line="15">    <span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+</span><span data-line="16">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">lang</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">text</span><span class="p">[:</span><span class="mi">60</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
+</span><span data-line="17">    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="18">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span></pre></div>
+</div>
+</section>
+<section id="search-retrieval-augmentation">
+<h3>Search &amp; Retrieval Augmentation<a class="headerlink" href="#search-retrieval-augmentation" title="Link to this heading">¶</a></h3>
+<p>Parse user queries into structured entities to improve search relevance and RAG pipelines — route queries, filter results, or enrich retrieval context.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;gliner-community/gliner_small-v2.5&quot;</span><span class="p">)</span>
+</span><span data-line="4">
+</span><span data-line="5"><span class="n">queries</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="6">    <span class="s2">&quot;What were Apple&#39;s revenue numbers in Q3 2023?&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="s2">&quot;Find clinical trials for Alzheimer&#39;s treatment in Europe&quot;</span><span class="p">,</span>
+</span><span data-line="8">    <span class="s2">&quot;Show me Python machine learning libraries released after 2022&quot;</span><span class="p">,</span>
+</span><span data-line="9"><span class="p">]</span>
+</span><span data-line="10">
+</span><span data-line="11"><span class="n">query_labels</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="12">    <span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;metric&quot;</span><span class="p">,</span> <span class="s2">&quot;time_period&quot;</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">,</span> <span class="s2">&quot;treatment&quot;</span><span class="p">,</span>
+</span><span data-line="13">    <span class="s2">&quot;location&quot;</span><span class="p">,</span> <span class="s2">&quot;programming_language&quot;</span><span class="p">,</span> <span class="s2">&quot;topic&quot;</span><span class="p">,</span> <span class="s2">&quot;product_type&quot;</span><span class="p">,</span>
+</span><span data-line="14"><span class="p">]</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="k">for</span> <span class="n">query</span> <span class="ow">in</span> <span class="n">queries</span><span class="p">:</span>
+</span><span data-line="17">    <span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">query_labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.4</span><span class="p">)</span>
+</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Query: </span><span class="si">{</span><span class="n">query</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="19">
+</span><span data-line="20">    <span class="c1"># Build structured filters from extracted entities</span>
+</span><span data-line="21">    <span class="n">filters</span> <span class="o">=</span> <span class="p">{</span><span class="n">entity</span><span class="p">[</span><span class="s2">&quot;label&quot;</span><span class="p">]:</span> <span class="n">entity</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">}</span>
+</span><span data-line="22">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Extracted filters: </span><span class="si">{</span><span class="n">filters</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="23">
+</span><span data-line="24">    <span class="c1"># Use filters to enhance retrieval</span>
+</span><span data-line="25">    <span class="c1"># e.g., add metadata filters to your vector DB query,</span>
+</span><span data-line="26">    <span class="c1"># or expand the search with entity synonyms</span>
 </span></pre></div>
 </div>
 </section>
