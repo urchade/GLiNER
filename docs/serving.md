@@ -24,24 +24,6 @@ python -m gliner.serve --model urchade/gliner_small-v2.1
 
 ### Make Predictions
 
-**In-process (vLLM-style, recommended):**
-```python
-from gliner.serve import GLiNERFactory
-
-with GLiNERFactory(model="urchade/gliner_small-v2.1") as llm:
-    outputs = llm.predict(
-        ["John works at Google", "Paris is in France"],
-        labels=["person", "organization", "location"],
-    )
-    print(outputs)
-```
-
-`GLiNERFactory` bundles config → deploy → client into one lifecycle-managed
-object. Passing a list of texts preserves dynamic batching — each text is
-dispatched as a separate request so Ray Serve's ``@serve.batch`` accumulates
-them into a single forward pass. Use `predict_async` for concurrent calls
-from `asyncio`.
-
 **Remote Python client** (attach to a running deployment):
 ```python
 from gliner.serve import GLiNERClient
@@ -94,9 +76,18 @@ curl -X POST http://localhost:8000/gliner \
   -d '{"text": "John works at Google", "labels": ["person", "organization"]}'
 ```
 
-## Configuration Options
+## CLI Options
 
-### Basic
+The CLI entry point is the quickest way to start a standalone HTTP
+deployment:
+
+```bash
+python -m gliner.serve --model urchade/gliner_small-v2.1
+```
+
+### Common examples
+
+**Basic model settings:**
 ```bash
 python -m gliner.serve \
     --model urchade/gliner_small-v2.1 \
@@ -104,7 +95,7 @@ python -m gliner.serve \
     --dtype bfloat16
 ```
 
-### Performance
+**Performance settings:**
 ```bash
 python -m gliner.serve \
     --model urchade/gliner_small-v2.1 \
@@ -113,12 +104,95 @@ python -m gliner.serve \
     --max-batch-size 64
 ```
 
-### Multi-replica
+**Multi-replica serving:**
 ```bash
 python -m gliner.serve \
     --model urchade/gliner_small-v2.1 \
     --num-replicas 4 \
     --num-gpus-per-replica 1
+```
+
+**PolyLoRA serving:**
+```bash
+python -m gliner.serve \
+    --model urchade/gliner_small-v2.1 \
+    --enable-polylora \
+    --polylora-max-gpu-adapters 8 \
+    --polylora-disk-cache-dir /models/polylora-cache
+```
+
+### Full option reference
+
+```
+Model Configuration:
+  --model                         Model name or path (required)
+  --device                        cuda or cpu (default: cuda)
+  --dtype                         float32, float16/fp16, bfloat16/bf16
+                                  (default: bfloat16)
+  --quantization                  int8 (default: None). For precision changes,
+                                  use --dtype.
+
+Model Limits:
+  --max-model-len                 Maximum sequence length (default: 2048)
+  --max-span-width                Maximum entity span width (default: 12)
+  --max-labels                    Maximum labels per request; -1 is unlimited
+                                  (default: -1)
+
+Thresholds:
+  --default-threshold             Default entity threshold (default: 0.5)
+  --default-relation-threshold    Default relation threshold (default: 0.5)
+
+Replica Configuration:
+  --num-replicas                  Number of replicas (default: 1)
+  --num-gpus-per-replica          GPUs per replica (default: 1.0)
+  --num-cpus-per-replica          CPUs per replica (default: 1.0)
+
+Batching Configuration:
+  --max-batch-size                Maximum Ray Serve batch size (default: 32)
+  --batch-wait-timeout-ms         Batch wait timeout in milliseconds
+                                  (default: 10.0)
+  --request-timeout-s             Request timeout in seconds (default: 30.0)
+  --max-ongoing-requests          Maximum in-flight requests per replica
+                                  (default: 256)
+  --queue-capacity                Maximum queued requests (default: 4096)
+  --precompiled-batch-sizes       Comma-separated batch sizes to precompile
+                                  (default: 1,2,4,8,16,32)
+
+Server Configuration:
+  --route-prefix                  HTTP route prefix (default: /gliner)
+  --port                          HTTP port (default: 8000)
+  --ray-address                   Ray cluster address (default: local)
+
+Performance Options:
+  --tokenizer-threads             Tokenizer thread count (default: 4)
+  --decoding-threads              Decoding thread count (default: 4)
+  --no-compile                    Disable torch.compile precompilation
+  --enable-sequence-packing       Enable inference sequence packing
+  --enable-flashdeberta           Enable FlashDeBERTa
+  --warmup-iterations             Warmup iterations per compiled batch size
+                                  (default: 3)
+
+Memory Configuration:
+  --target-memory-fraction        Target GPU memory fraction (default: 0.9)
+  --memory-overhead-factor        Safety margin on memory estimates
+                                  (default: 1.3)
+
+PolyLoRA Configuration:
+  --enable-polylora               Enable PolyLoRA adapter serving
+  --polylora-adapter-weight-modules
+                                  Comma-separated target module names
+  --polylora-max-rank             Maximum LoRA rank (default: 16)
+  --polylora-max-gpu-adapters     Maximum GPU adapter slots (default: 8)
+  --polylora-max-cpu-adapters     Maximum CPU adapters (default: 128)
+  --polylora-disk-cache-dir       Disk cache directory for adapters
+  --polylora-max-disk-adapters    Maximum disk-cached adapters
+  --polylora-base-adapter-id      Reserved base adapter id
+                                  (default: __base__)
+  --polylora-use-triton-kernels / --no-polylora-use-triton-kernels
+                                  Enable or disable PolyLoRA Triton kernels
+                                  (default: enabled)
+  --polylora-adapter-id-pattern   Regular expression for valid adapter ids
+                                  (default: ^[A-Za-z0-9_.-]{1,128}$)
 ```
 
 ## Programmatic Usage
@@ -133,8 +207,7 @@ config = GLiNERServeConfig(
     device="cuda",
     dtype="bfloat16",
     max_batch_size=32,
-    enable_compilation=True,
-    enable_flashdeberta=True,
+    enable_compilation=False,
 )
 
 llm = GLiNERFactory(config=config)
@@ -153,6 +226,95 @@ handle = serve(GLiNERServeConfig(model="urchade/gliner_small-v2.1"))
 ref = handle.predict.remote("John works at Google", ["person", "organization"])
 result = ref.result()
 ```
+
+## PolyLoRA
+
+Install polylora first:
+```bash
+pip install polylora
+```
+
+PolyLoRA support lets one deployment route requests through different LoRA
+adapters without starting one replica per adapter. Enable it with
+`--enable-polylora` or `GLiNERServeConfig(enable_polylora=True)`. The
+`polylora` package must be importable in the serving environment.
+
+PolyLoRA is currently implemented for GLiNER text encoder models. During
+startup, the server wraps `model.model.token_rep_layer.bert_layer.model` with
+`PolyLoraModel`; architectures without that path raise `NotImplementedError`.
+
+### Start with PolyLoRA
+
+```bash
+python -m gliner.serve \
+    --model urchade/gliner_small-v2.1 \
+    --enable-polylora \
+    --polylora-max-rank 16 \
+    --polylora-max-gpu-adapters 8 \
+    --polylora-max-cpu-adapters 128 \
+    --polylora-disk-cache-dir /models/polylora-cache
+```
+
+Use `--polylora-adapter-weight-modules` when your adapter weights target a
+specific set of module names:
+
+```bash
+python -m gliner.serve \
+    --model urchade/gliner_small-v2.1 \
+    --enable-polylora \
+    --polylora-adapter-weight-modules query,value
+```
+
+### Select an adapter per request
+
+Pass `adapter_id` in Python or HTTP requests. If `adapter_id` is omitted while
+PolyLoRA is enabled, the request uses `polylora_base_adapter_id` (default:
+`"__base__"`), which means base-model inference.
+
+```python
+from gliner.serve import GLiNERClient
+
+client = GLiNERClient()
+result = client.predict(
+    "John works at Google",
+    labels=["person", "organization"],
+    adapter_id="customer-a",
+)
+```
+
+```bash
+curl -X POST http://localhost:8000/gliner \
+  -H "Content-Type: application/json" \
+  -d '{
+        "text": "John works at Google",
+        "labels": ["person", "organization"],
+        "adapter_id": "customer-a"
+      }'
+```
+
+Adapter ids must match `polylora_adapter_id_pattern` and cannot equal the
+reserved base adapter id. Unknown adapter ids return a 404 response.
+
+### Adapter cache status
+
+The client exposes the `/adapter-cache` endpoint:
+
+```python
+client.adapter_cache_status()
+client.adapter_cache_status("customer-a")
+client.is_adapter_cached("customer-a")
+```
+
+The raw HTTP endpoint is also available:
+
+```bash
+curl http://localhost:8000/gliner/adapter-cache
+curl "http://localhost:8000/gliner/adapter-cache?adapter_id=customer-a"
+```
+
+The response includes whether PolyLoRA is enabled, the base adapter id, loaded
+adapter ids, disk-cached adapter ids when disk cache is configured, and current
+GPU adapter slots.
 
 ## Relation Extraction
 
@@ -250,40 +412,6 @@ curl -X POST http://localhost:8000/gliner \
 ```
 For NER-only models the `"relations"` key is omitted; passing `relations=`
 to such a model is a no-op.
-
-## All CLI Options
-
-```
-Model Configuration:
-  --model               Model name or path (required)
-  --device              cuda or cpu (default: cuda)
-  --dtype               float32, float16/fp16, bfloat16/bf16 (default: bfloat16)
-                        Weights are loaded directly at this precision; the fp32
-                        intermediate is never materialized.
-  --quantization        int8 (default: None). For precision changes use --dtype.
-
-Batching:
-  --max-batch-size      Max batch size (default: 32)
-  --batch-wait-timeout-ms  Batch wait timeout (default: 10)
-  --precompiled-batch-sizes  Comma-separated sizes (default: 1,2,4,8,16,32)
-
-Replicas:
-  --num-replicas        Number of replicas (default: 1)
-  --num-gpus-per-replica  GPUs per replica (default: 1.0)
-
-Performance:
-  --enable-flashdeberta    Use FlashDeBERTa backend
-  --enable-sequence-packing  Enable sequence packing
-  --no-compile             Disable torch.compile
-
-Memory:
-  --target-memory-fraction  GPU memory fraction (default: 0.9)
-  --memory-overhead-factor  Safety margin on memory estimates (default: 1.3)
-
-Server:
-  --route-prefix        HTTP route (default: /gliner)
-  --ray-address         Ray cluster address
-```
 
 ## Docker
 
