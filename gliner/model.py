@@ -8,7 +8,10 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
-import onnxruntime as ort
+try:
+    import onnxruntime as ort
+except (ImportError, Exception):
+    ort = None
 import transformers
 from tqdm import tqdm
 from torch import nn
@@ -51,7 +54,12 @@ from .decoding import (
     SpanGenerativeDecoder,
     TokenGenerativeDecoder,
 )
-from .training import Trainer, TrainingArguments
+# Lazy import — transformers.Trainer triggers torch.distributed import which
+# deadlocks on macOS ARM when multiple OpenMP runtimes are present.
+# Only load when train_model() is actually called.
+def _get_trainer_classes():
+    from .training import Trainer, TrainingArguments
+    return Trainer, TrainingArguments
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
     BaseORTModel,
@@ -101,10 +109,12 @@ from .data_processing.tokenizer import WordsSplitter
 
 if is_module_available("onnxruntime"):
     import onnxruntime as ort
-
     ONNX_AVAILABLE = True
 else:
-    ONNX_AVAILABLE = False
+    ort = None
+    # export_to_onnx only needs torch.onnx.export (always available).
+    # onnxruntime is only required for ORT inference, not for the export itself.
+    ONNX_AVAILABLE = True
 
 logger = logging.getLogger(__name__)
 
@@ -1660,41 +1670,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         dataloader_num_workers: int = 1,
         report_to: str = "none",
         **kwargs,
-    ) -> TrainingArguments:
-        """Create training arguments with sensible defaults.
-
-        Args:
-            output_dir: Directory to save model checkpoints.
-            learning_rate: Learning rate for main parameters.
-            weight_decay: Weight decay for main parameters.
-            others_lr: Learning rate for other parameters.
-            others_weight_decay: Weight decay for other parameters.
-            focal_loss_alpha: Alpha for focal loss.
-            focal_loss_gamma: Gamma for focal loss.
-            rel_focal_loss_alpha: Alpha for relation focal loss. Defaults to entity alpha.
-            rel_focal_loss_gamma: Gamma for relation focal loss. Defaults to entity gamma.
-            focal_loss_prob_margin: Probability margin for focal loss.
-            loss_reduction: Loss reduction method.
-            negatives: Negative sampling ratio.
-            masking: Masking strategy.
-            lr_scheduler_type: Learning rate scheduler type.
-            warmup_ratio: Warmup ratio.
-            per_device_train_batch_size: Training batch size.
-            per_device_eval_batch_size: Evaluation batch size.
-            max_grad_norm: Maximum gradient norm.
-            max_steps: Maximum training steps.
-            save_steps: Save checkpoint every N steps.
-            save_total_limit: Maximum number of checkpoints to keep.
-            logging_steps: Log every N steps.
-            use_cpu: Whether to use CPU.
-            bf16: Whether to use bfloat16.
-            dataloader_num_workers: Number of dataloader workers.
-            report_to: Where to report metrics.
-            **kwargs: Additional training arguments.
-
-        Returns:
-            TrainingArguments instance.
-        """
+    ):
+        """Create training arguments with sensible defaults."""
+        _, TrainingArguments = _get_trainer_classes()
         return TrainingArguments(
             output_dir=output_dir,
             learning_rate=learning_rate,
@@ -1729,12 +1707,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         self,
         train_dataset,
         eval_dataset,
-        training_args: Optional[TrainingArguments] = None,
+        training_args=None,
         freeze_components: Optional[list[str]] = None,
         compile_model: bool = False,
         output_dir: Optional[Union[str, Path]] = None,
         **training_kwargs,
-    ) -> Trainer:
+    ):
         """Train the model.
 
         Args:
@@ -1782,6 +1760,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         else:
             trainer_kwargs["processing_class"] = self.data_processor.transformer_tokenizer
 
+        Trainer, _ = _get_trainer_classes()
         trainer = Trainer(**trainer_kwargs)
 
         # Train

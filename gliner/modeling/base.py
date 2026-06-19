@@ -39,7 +39,7 @@ from .encoder import Encoder, BiEncoder
 from .outputs import GLiNERBaseOutput, GLiNERRelexOutput, GLiNERDecoderOutput
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
-from .loss_functions import cross_entropy_loss, focal_loss_with_logits
+from .loss_functions import cross_entropy_loss, focal_loss_with_logits, span_dice_loss
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 
@@ -183,6 +183,8 @@ class BaseModel(ABC, nn.Module):
         negatives: float = 1.0,
         masking: str = "none",
         normalize_prob: bool = True,
+        loss_type: str = "focal",
+        dice_gamma: float = 1.0,
     ) -> torch.Tensor:
         """Compute loss with optional negative sampling and masking.
 
@@ -203,16 +205,19 @@ class BaseModel(ABC, nn.Module):
         Returns:
             Loss tensor of same shape as labels.
         """
-        # Compute the loss per element using the focal loss function
-        all_losses = focal_loss_with_logits(
-            logits,
-            labels,
-            alpha=alpha,
-            gamma=gamma,
-            prob_margin=prob_margin,
-            label_smoothing=label_smoothing,
-            normalize_prob=normalize_prob,
-        )
+        if loss_type == "dice":
+            all_losses = span_dice_loss(logits, targets=labels, gamma=dice_gamma, reduction="none")
+        else:
+            # "focal" (default) and "bce" (alpha=-1, gamma=0) both go through focal_loss_with_logits
+            all_losses = focal_loss_with_logits(
+                logits,
+                labels,
+                alpha=alpha,
+                gamma=gamma,
+                prob_margin=prob_margin,
+                label_smoothing=label_smoothing,
+                normalize_prob=normalize_prob,
+            )
 
         # Create a mask of the same shape as labels:
         # For elements where labels==0, sample a Bernoulli random variable that is 1 with probability `negatives`
@@ -500,6 +505,9 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         reduction: str = "sum",
         negatives: float = 1.0,
         masking: str = "none",
+        loss_type: str = "focal",
+        use_span_width_weight: bool = False,
+        dice_gamma: float = 1.0,
         **kwargs: Any,
     ) -> torch.Tensor:
         """Compute span classification loss.
@@ -516,6 +524,11 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             reduction: Loss reduction method ('sum' or 'mean').
             negatives: Negative sampling probability.
             masking: Masking strategy for negative sampling.
+            loss_type: Loss function — 'focal' (default), 'bce', or 'dice'.
+            use_span_width_weight: If True, scale positive-span losses by
+                w(k) = 1 + log(k+1) where k is the 1-indexed span width.
+                Zero inference overhead; applied before final reduction.
+            dice_gamma: Self-adjustment exponent for Dice loss. Ignored for focal/bce.
             **kwargs: Additional arguments.
 
         Returns:
@@ -524,15 +537,39 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
 
-        # Reshape scores and labels to match the expected shape
-        BS, _, _, CL = scores.shape
+        BS, L, K, CL = scores.shape
+
+        # Span-width-aware positive weighting: w(k) = 1 + log(k+1), k in [1..K].
+        # Applied before flattening so the K axis is still accessible.
+        if use_span_width_weight:
+            k_idx = torch.arange(1, K + 1, dtype=scores.dtype, device=scores.device)
+            width_weight = 1.0 + torch.log(k_idx)           # (K,)
+            # Broadcast to (B, L, K, C); boost positives only, leave negatives at 1.0
+            w = width_weight.view(1, 1, K, 1)
+            label_clamped = labels.clamp(min=0.0)
+            # weight tensor: 1 everywhere, boosted by w where label=1
+            pos_boost = 1.0 + (w - 1.0) * label_clamped    # (B, L, K, C)
+        else:
+            pos_boost = None
 
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
         all_losses = self._loss(
-            scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives=negatives, masking=masking
+            scores,
+            labels,
+            alpha,
+            gamma,
+            prob_margin,
+            label_smoothing,
+            negatives=negatives,
+            masking=masking,
+            loss_type=loss_type,
+            dice_gamma=dice_gamma,
         )
+
+        if pos_boost is not None:
+            all_losses = all_losses * pos_boost.view(BS, -1, CL)
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
