@@ -952,8 +952,8 @@ class BiEncoder(Encoder):
             input_ids: Label token IDs of shape (batch_size, seq_len).
             attention_mask: Attention mask of shape (batch_size, seq_len).
             *args: Additional positional arguments.
-            **kwargs: Additional keyword arguments (packing_config and pair_attention_mask
-                are removed as they're not supported for labels).
+            **kwargs: Additional keyword arguments (packing_config, pair_attention_mask
+                and token_lengths are removed as they're not supported for labels).
 
         Returns:
             Pooled label embeddings of shape (batch_size, hidden_size).
@@ -961,6 +961,10 @@ class BiEncoder(Encoder):
         label_kwargs = dict(kwargs)
         label_kwargs.pop("packing_config", None)
         label_kwargs.pop("pair_attention_mask", None)
+        # token_lengths carries precomputed lengths for the *text* inputs (see
+        # collator); forwarding it to the labels encoder crashes plain HF
+        # backbones ("BertModel.forward() got an unexpected keyword argument
+        # 'token_lengths'", #370).
         label_kwargs.pop("token_lengths", None)
         label_kwargs["attention_mask"] = attention_mask
         labels_embeddings = self.labels_encoder(input_ids, *args, **label_kwargs)

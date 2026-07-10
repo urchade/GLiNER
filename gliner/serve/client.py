@@ -52,6 +52,7 @@ class GLiNERClient:
         relation_threshold: Optional[float],
         flat_ner: bool,
         multi_label: bool,
+        adapter_id: Optional[str],
     ) -> Dict[str, Any]:
         """Build the JSON payload for a single prediction request."""
         payload: Dict[str, Any] = {
@@ -66,6 +67,8 @@ class GLiNERClient:
             payload["threshold"] = threshold
         if relation_threshold is not None:
             payload["relation_threshold"] = relation_threshold
+        if adapter_id is not None:
+            payload["adapter_id"] = adapter_id
         return payload
 
     def _post(self, payload: Dict[str, Any]) -> Dict[str, Any]:
@@ -95,6 +98,7 @@ class GLiNERClient:
         relation_threshold: Optional[float] = None,
         flat_ner: bool = True,
         multi_label: bool = False,
+        adapter_id: Optional[str] = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Blocking prediction. ``str`` in -> ``dict`` out; ``list`` in -> ``list`` out."""
         single = isinstance(text, str)
@@ -103,7 +107,7 @@ class GLiNERClient:
         payloads = [
             self._build_payload(
                 t, labels, relations, threshold, relation_threshold,
-                flat_ner, multi_label,
+                flat_ner, multi_label, adapter_id,
             )
             for t in items
         ]
@@ -128,6 +132,7 @@ class GLiNERClient:
         relation_threshold: Optional[float] = None,
         flat_ner: bool = True,
         multi_label: bool = False,
+        adapter_id: Optional[str] = None,
     ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """Async version of predict."""
         import asyncio  # noqa: PLC0415
@@ -138,7 +143,7 @@ class GLiNERClient:
         payloads = [
             self._build_payload(
                 t, labels, relations, threshold, relation_threshold,
-                flat_ner, multi_label,
+                flat_ner, multi_label, adapter_id,
             )
             for t in items
         ]
@@ -148,6 +153,24 @@ class GLiNERClient:
         )
 
         return results[0] if single else list(results)
+
+    def adapter_cache_status(self, adapter_id: Optional[str] = None) -> Dict[str, Any]:
+        """Return PolyLoRA adapter cache status from the server."""
+        import json  # noqa: PLC0415
+        import urllib.parse  # noqa: PLC0415
+        import urllib.request  # noqa: PLC0415
+
+        url = f"{self.url}/adapter-cache"
+        if adapter_id is not None:
+            url += "?" + urllib.parse.urlencode({"adapter_id": adapter_id})
+        try:
+            with urllib.request.urlopen(url, timeout=self.timeout) as resp:
+                return json.loads(resp.read())
+        except Exception as exc:
+            raise GLiNERClientError(f"Request to {url} failed: {exc}") from exc
+
+    def is_adapter_cached(self, adapter_id: str) -> bool:
+        return bool(self.adapter_cache_status(adapter_id).get("cached"))
 
 
 def get_client(

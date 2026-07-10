@@ -58,6 +58,17 @@ class GLiNERServeConfig:
 
     ray_address: Optional[str] = None
 
+    enable_polylora: bool = False
+    polylora_adapter_weight_modules: Optional[List[str]] = None
+    polylora_max_rank: int = 16
+    polylora_max_gpu_adapters: int = 8
+    polylora_max_cpu_adapters: Optional[int] = 128
+    polylora_disk_cache_dir: Optional[str] = None
+    polylora_max_disk_adapters: Optional[int] = None
+    polylora_base_adapter_id: str = "__base__"
+    polylora_use_triton_kernels: bool = True
+    polylora_adapter_id_pattern: str = r"^[A-Za-z0-9_.-]{1,128}$"
+
     def __post_init__(self):
         if self.max_batch_size not in self.precompiled_batch_sizes:
             self.precompiled_batch_sizes = sorted(set(self.precompiled_batch_sizes) | {self.max_batch_size})
