@@ -181,3 +181,9 @@ poetry.toml
 pyrightconfig.json
 
 .vscode
+
+# Claude Code persistent-memory scratch file (per-branch, not part of the PR)
+/CLAUDE.md
+
+# Archived reference material (mission brief, cross-branch notes) — not part of the PR
+/docs/archive/
