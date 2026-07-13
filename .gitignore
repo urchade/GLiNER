@@ -192,3 +192,8 @@ pyrightconfig.json
 
 # Output from scripts/conformal_validation.py
 /results/
+
+# Leftover scratch files from unrelated branches in this fork
+# (feature/vocab-pruning-engine), physically present but irrelevant here
+/ROADMAP.md
+/pruning_adr.md
