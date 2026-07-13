@@ -148,6 +148,7 @@ def trial_metrics(
     n_trials: int,
     mode: str,
     seed: int,
+    pool_and_resplit: bool = False,
 ) -> Dict:
     """Mirror ConformalGLiNER's own calibrated/uncalibrated split (design.md §5).
 
@@ -158,10 +159,32 @@ def trial_metrics(
     blended into the guaranteed-looking headline number. This is exactly the
     scenario the zero-shot descope (design.md §0) predicts and this eval is meant
     to demonstrate, not accidentally paper over.
+
+    pool_and_resplit=True implements eval_plan.md §2.2's actual in-domain protocol:
+    pool calib_pool+test_pool together and draw a *fresh* random calib/test
+    partition every trial, rather than using calib_pool and test_pool as static,
+    separately-sourced sets. This matters empirically, not just by-the-book: an
+    earlier run of this script found CoNLL-2003's *official* validation and test
+    splits are themselves not fully exchangeable for this model (mean
+    nonconformity 0.22 on validation vs 0.27 on test -- a real, documented
+    property of that benchmark's val/test construction, not a code bug), which
+    silently violated split conformal's exchangeability precondition and produced
+    a measured ~4-5pp coverage undershoot. Pooling and re-splitting per trial is
+    the correct way to test "does split-conformal coverage hold when
+    exchangeability genuinely is satisfied" without that confound. Pair A
+    (zero-shot) deliberately keeps calib_pool/test_pool separate -- that
+    non-exchangeability *is* the experiment there.
     """
     rng = random.Random(seed)
-    calib_n_total = len(calib_pool.examples)
-    test_indices_all = list(range(len(test_pool.examples)))
+
+    if pool_and_resplit:
+        combined_probs = calib_pool.probs + test_pool.probs
+        combined_id_to_class = calib_pool.id_to_class + test_pool.id_to_class
+        combined_gold = calib_gold + test_gold
+        combined_n = len(combined_probs)
+    else:
+        calib_n_total = len(calib_pool.examples)
+        test_indices_all = list(range(len(test_pool.examples)))
 
     coverages, effs, raw_counts = [], [], []
     uncal_coverages = []
@@ -171,15 +194,24 @@ def trial_metrics(
     floor = calibration_floor(alpha)
 
     for _trial in range(n_trials):
-        calib_idx = rng.sample(range(calib_n_total), min(n_calib, calib_n_total))
+        if pool_and_resplit:
+            shuffled = list(range(combined_n))
+            rng.shuffle(shuffled)
+            calib_idx = shuffled[: min(n_calib, combined_n)]
+            test_idx = shuffled[min(n_calib, combined_n) :]
+        else:
+            calib_idx = rng.sample(range(calib_n_total), min(n_calib, calib_n_total))
+            test_idx = test_indices_all
+
         calib_types_n: Dict[str, int] = {}
         for i in calib_idx:
-            for t, _ in calib_gold[i]:
+            for t, _ in (combined_gold if pool_and_resplit else calib_gold)[i]:
                 calib_types_n[t] = calib_types_n.get(t, 0) + 1
         calibrated_types = {t for t, n in calib_types_n.items() if n >= floor}
         if not calibrated_types:
             continue
-        pooled_scores = [s for i in calib_idx for (t, s) in calib_gold[i] if t in calibrated_types]
+        calib_gold_source = combined_gold if pool_and_resplit else calib_gold
+        pooled_scores = [s for i in calib_idx for (t, s) in calib_gold_source[i] if t in calibrated_types]
         if len(pooled_scores) < floor:
             continue
 
@@ -192,7 +224,7 @@ def trial_metrics(
             def admit(s, tau=tau):
                 return s <= tau
         else:  # risk_control
-            gold_lists = [[s for (t, s) in calib_gold[i] if t in calibrated_types] for i in calib_idx]
+            gold_lists = [[s for (t, s) in calib_gold_source[i] if t in calibrated_types] for i in calib_idx]
             try:
                 lam = crc_lambda_search(gold_lists, alpha, verify_monotone=False)
             except ValueError:
@@ -205,16 +237,23 @@ def trial_metrics(
         hits, ngold = 0, 0
         uncal_hits, uncal_ngold = 0, 0
         eff_sum, raw_sum = 0.0, 0.0
-        for i in test_indices_all:
-            probs = test_pool.probs[i]
-            cls_map = test_pool.id_to_class[i]
+        sentence_losses: List[float] = []  # CRC's own per-sentence loss (theory.md Eq. 4)
+        test_gold_source = combined_gold if pool_and_resplit else test_gold
+        test_probs_source = combined_probs if pool_and_resplit else test_pool.probs
+        test_cls_source = combined_id_to_class if pool_and_resplit else test_pool.id_to_class
+        for i in test_idx:
+            probs = test_probs_source[i]
+            cls_map = test_cls_source[i]
             L, K, C = probs.shape
-            for etype, s in test_gold[i]:
+            sentence_gold = [(t, s) for t, s in test_gold_source[i] if t in calibrated_types]
+            sentence_hits = 0
+            for etype, s in test_gold_source[i]:
                 if etype in calibrated_types:
                     ngold += 1
                     per_type_n[etype] = per_type_n.get(etype, 0) + 1
                     if admit(s):
                         hits += 1
+                        sentence_hits += 1
                         per_type_hits[etype] = per_type_hits.get(etype, 0) + 1
                 else:
                     # descriptive only, no guarantee -- raw p>0.5 rule, matching
@@ -222,6 +261,9 @@ def trial_metrics(
                     uncal_ngold += 1
                     if s <= 0.5:
                         uncal_hits += 1
+            # CRC's own loss convention (theory.md Eq. 4): 0 for entity-free sentences,
+            # avoids a 0/0 and matches exactly what crc_lambda_search calibrated against.
+            sentence_losses.append(1.0 - sentence_hits / len(sentence_gold) if sentence_gold else 0.0)
             for col in range(C):
                 etype = cls_map.get(col + 1)
                 if etype is None or etype not in calibrated_types:
@@ -230,11 +272,21 @@ def trial_metrics(
                 thresh = tau if mode == "span_filter" else lam
                 eff_sum += (nc <= thresh).sum().item()
                 raw_sum += L * K
-        coverages.append(hits / ngold if ngold else float("nan"))
+
+        if mode == "risk_control":
+            # Report the quantity CRC actually calibrates and guarantees: the mean
+            # PER-SENTENCE miss rate, not entities pooled flat across sentences.
+            # These differ whenever gold-entity count per sentence is uneven (theory.md
+            # part ii's "informative m" point) -- pooling flat would silently measure a
+            # different, uncalibrated quantity and can show spurious "undercoverage"
+            # that has nothing to do with the (valid) CRC guarantee actually being tested.
+            coverages.append(1.0 - sum(sentence_losses) / len(sentence_losses) if sentence_losses else float("nan"))
+        else:
+            coverages.append(hits / ngold if ngold else float("nan"))
         if uncal_ngold:
             uncal_coverages.append(uncal_hits / uncal_ngold)
-        effs.append(eff_sum / len(test_indices_all))
-        raw_counts.append(raw_sum / len(test_indices_all))
+        effs.append(eff_sum / len(test_idx))
+        raw_counts.append(raw_sum / len(test_idx))
 
     per_type_coverage = {t: per_type_hits.get(t, 0) / n for t, n in per_type_n.items() if n > 0}
     return {
@@ -254,14 +306,27 @@ def trial_metrics(
     }
 
 
-def run_suite(name: str, calib_pool: Pool, test_pool: Pool, n_trials: int, n_calib: int) -> List[Dict]:
+def run_suite(
+    name: str, calib_pool: Pool, test_pool: Pool, n_trials: int, n_calib: int, pool_and_resplit: bool = False
+) -> List[Dict]:
     calib_gold = gold_nc_by_example(calib_pool)
     test_gold = gold_nc_by_example(test_pool)
     rows = []
     for mode in ("span_filter", "risk_control"):
         for alpha in ALPHAS:
             t0 = time.time()
-            m = trial_metrics(calib_pool, test_pool, calib_gold, test_gold, alpha, n_calib, n_trials, mode, seed=1234)
+            m = trial_metrics(
+                calib_pool,
+                test_pool,
+                calib_gold,
+                test_gold,
+                alpha,
+                n_calib,
+                n_trials,
+                mode,
+                seed=1234,
+                pool_and_resplit=pool_and_resplit,
+            )
             m.update({"pair": name, "mode": mode, "seconds": round(time.time() - t0, 1)})
             rows.append(m)
             uncal = m["uncalibrated_coverage_mean"]
@@ -281,7 +346,18 @@ def calib_size_sensitivity(calib_pool: Pool, test_pool: Pool, alpha: float, n_tr
     for n_calib in [50, 100, 200, 500, 1000]:
         if n_calib > len(calib_pool.examples):
             continue
-        m = trial_metrics(calib_pool, test_pool, calib_gold, test_gold, alpha, n_calib, n_trials, "span_filter", 99)
+        m = trial_metrics(
+            calib_pool,
+            test_pool,
+            calib_gold,
+            test_gold,
+            alpha,
+            n_calib,
+            n_trials,
+            "span_filter",
+            99,
+            pool_and_resplit=True,
+        )
         m["n_calib"] = n_calib
         rows.append(m)
         print(f"[calib_size n={n_calib}] coverage={m['coverage_mean']:.4f}+-{m['coverage_std']:.4f}")
@@ -462,8 +538,17 @@ def main():
     print(f"Pools built in {time.time() - t0:.1f}s")
 
     rows = []
-    rows += run_suite("in-domain CoNLL-2003", conll_calib_pool, conll_test_pool, args.n_trials, args.n_calib)
-    rows += run_suite("in-domain WNUT-17", wnut_calib_pool, wnut_test_pool, args.n_trials, args.n_calib)
+    rows += run_suite(
+        "in-domain CoNLL-2003",
+        conll_calib_pool,
+        conll_test_pool,
+        args.n_trials,
+        args.n_calib,
+        pool_and_resplit=True,
+    )
+    rows += run_suite(
+        "in-domain WNUT-17", wnut_calib_pool, wnut_test_pool, args.n_trials, args.n_calib, pool_and_resplit=True
+    )
     rows += run_suite(
         "zero-shot CoNLL-2003->WNUT-17 (Pair A)", conll_calib_pool, wnut_test_pool, args.n_trials, args.n_calib
     )
