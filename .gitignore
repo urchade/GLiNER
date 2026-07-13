@@ -187,3 +187,9 @@ pyrightconfig.json
 
 # Archived reference material (mission brief, cross-branch notes) — not part of the PR
 /docs/archive/
+
+# Leftover scratch files from unrelated branches (feature/vocab-pruning-engine,
+# feat/focal-dice-loss-openvino), physically present but irrelevant here
+/ROADMAP.md
+/pruning_adr.md
+/results/
