@@ -199,13 +199,17 @@ command, ~3 min on one CPU core) and can be attached directly to the GitHub PR.
 - No new required dependencies for the shipped package — `gliner/conformal/` uses only
   NumPy/PyTorch (already required). `scripts/conformal_validation.py` (not part of the
   package; dev/validation tooling only, not imported by anything in `gliner/`) additionally
-  uses `datasets` and `matplotlib` to fetch benchmark data and produce plots. **Neither is
-  currently a declared dependency of this repo** (checked `pyproject.toml`/`requirements.txt`)
-  — flagging this explicitly rather than asserting otherwise, since the mission's engineering
-  standard is to ask before adding anything beyond NumPy/PyTorch. They're standard,
-  widely-installed tooling and only touch a validation script, never the library surface, but
-  maintainers may want them added as a `[dev]`/`[eval]` extra, or the script left
-  as "install these yourself to reproduce."
+  uses `datasets` and `matplotlib` to fetch benchmark data and produce plots. **Deliberately
+  left undeclared in `pyproject.toml`/`requirements.txt`**, matching this repo's own established
+  convention: none of the existing benchmark/eval scripts under `scripts/` (e.g.
+  `convert_to_onnx.py`, or the vocab-pruning branch's `baseline_eval.py`/`visualize_results.py`,
+  which need the same `datasets`/`matplotlib` tooling) declare their dependencies either — users
+  install them ad hoc to run a specific script. Confirmed this isn't a CI risk either:
+  `.github/workflows/tests.yml` runs `pytest -q --tb=short` against only `requirements.txt` +
+  `pytest`/`sentencepiece`/`onnxruntime`, and `scripts/` isn't collected by pytest
+  (`testpaths = ["tests"]`), so `tests/test_conformal_*.py` (which need neither package) run
+  clean either way. `ruff check gliner` (CI's exact lint invocation, which only covers
+  `gliner/`, not `tests/`/`scripts/`) passes clean on this branch.
 - `gliner/conformal` is not imported by `gliner/__init__.py` by default — it's an opt-in
   `from gliner.conformal import ConformalGLiNER`, so there's no import-time cost for users
   who don't use it.
