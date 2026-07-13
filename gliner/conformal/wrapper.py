@@ -1,12 +1,11 @@
 """ConformalGLiNER -- conformal-prediction wrapper around a span-mode GLiNER model.
 
-See docs/research/design.md for the full design rationale. Summary of the one
-behavior every method below enforces (design.md §0/§5): the ``>= 1-alpha``
-guarantee applies only to entity types adequately represented in the
-calibration set (``>= calibration_floor(alpha)`` gold occurrences). Any other
-type is served from GLiNER's original uncalibrated ``p > 0.5`` rule, flagged
-``"calibrated": False``, with a loud warning -- never silently blended into a
-guaranteed-looking number.
+See docs/conformal.md for the design rationale. Summary of the one behavior
+every method below enforces: the ``>= 1-alpha`` guarantee applies only to
+entity types adequately represented in the calibration set (``>=
+calibration_floor(alpha)`` gold occurrences). Any other type is served from
+GLiNER's original uncalibrated ``p > 0.5`` rule, flagged ``"calibrated": False``,
+with a loud warning -- never silently blended into a guaranteed-looking number.
 """
 
 from __future__ import annotations
@@ -62,8 +61,8 @@ class _CalibrationState:
 class ConformalGLiNER:
     """Wraps a span-mode GLiNER model with a calibrated conformal filter.
 
-    Never mutates the wrapped model. See docs/research/design.md §3 for the API
-    rationale and §0 for exactly what the guarantee does and does not cover.
+    Never mutates the wrapped model. See docs/conformal.md for the API rationale
+    and exactly what the guarantee does and does not cover.
     """
 
     def __init__(self, model: Any):
@@ -100,14 +99,14 @@ class ConformalGLiNER:
             calib_data: ``[{"tokenized_text": [...], "ner": [[start,end,type],...]}, ...]``
                 -- the same schema GLiNER's own training/eval pipeline uses
                 (gliner/data_processing/processor.py). Must be disjoint from any
-                data later passed to :meth:`coverage_report` (design.md §"Split
-                strategy" / eval_plan.md §2.2) -- reusing calibration examples to
-                also measure coverage produces a biased, inflated estimate.
+                data later passed to :meth:`coverage_report` -- reusing
+                calibration examples to also measure coverage produces a
+                biased, inflated estimate.
             alpha: target miscoverage/risk level in (0, 1).
-            mode: one of ``"span_filter"``, ``"risk_control"``, ``"mondrian"``
-                (design.md §1). No default is silently assumed by the public
-                API surface beyond this parameter's own default; callers relying
-                on the default should be aware it is ``"risk_control"``.
+            mode: one of ``"span_filter"``, ``"risk_control"``, ``"mondrian"``.
+                No default is silently assumed by the public API surface beyond
+                this parameter's own default; callers relying on the default
+                should be aware it is ``"risk_control"``.
             labels: the fixed target label set 𝒯_cal. Defaults to every type
                 appearing at least once in ``calib_data``.
 
@@ -116,8 +115,8 @@ class ConformalGLiNER:
 
         Raises:
             ValueError: invalid ``mode``/``alpha``, or too few calibration
-                examples for the requested ``alpha`` (design.md §6 -- raises
-                rather than silently degrading).
+                examples for the requested ``alpha`` -- raises rather than
+                silently degrading.
         """
         if mode not in _VALID_MODES:
             raise ValueError(f"mode must be one of {sorted(_VALID_MODES)}, got {mode!r}")
@@ -164,12 +163,12 @@ class ConformalGLiNER:
         )
 
         if mode in ("span_filter", "mondrian"):
-            # Pooled threshold: theory.md part (iii-a), the marginal-over-calibrated-types
-            # guarantee, and (for mondrian) the fallback for any calibrated-but-not-enough-
-            # for-its-own-Mondrian-cell type -- though by construction every type in
+            # Pooled threshold: the marginal-over-calibrated-types guarantee, and (for
+            # mondrian) the fallback for any calibrated-but-not-enough-for-its-own-
+            # Mondrian-cell type -- though by construction every type in
             # `calibrated_types` already met the same floor, so mondrian_calibrate below
             # should not skip any of them; the pooled value is kept regardless as the
-            # documented, deterministic fallback path (design.md §1.3).
+            # documented, deterministic fallback path.
             pooled_scores = [s for s, t in zip(scores, types) if t in calibrated_types]
             state.pooled_nc_threshold = split_conformal_quantile(pooled_scores, alpha)
 
@@ -219,8 +218,7 @@ class ConformalGLiNER:
         calibration time. Every returned entity carries a
         ``"conformal": {"mode", "alpha", "calibrated"}`` field;
         ``"calibrated": False`` means that entity's type had no valid
-        guarantee and was produced by the original uncalibrated rule instead
-        (design.md §5).
+        guarantee and was produced by the original uncalibrated rule instead.
         """
         state = self._require_calibrated()
         single = isinstance(text, str)
@@ -307,27 +305,25 @@ class ConformalGLiNER:
 
         ``test_data`` must be disjoint from whatever was passed to
         :meth:`calibrate` -- reusing calibration data here trivially inflates
-        the coverage estimate (design.md §"Split strategy"; eval_plan.md §2.2).
-        This method does not enforce disjointness itself (it has no way to know
-        the calibration set's identity at this layer); callers/tests are
-        responsible, per eval_plan.md's recommended "canary" regression test.
+        the coverage estimate, since the threshold was tuned to fit exactly
+        that data. This method does not enforce disjointness itself (it has no
+        way to know the calibration set's identity at this layer); callers/
+        tests are responsible.
 
-        Returns a dict with overall + per-type coverage (design.md/eval_plan.md
-        §3.1/§3.3, restricted to calibrated types -- never blended with
-        uncalibrated ones, design.md §5 point 3) and efficiency (§3.2).
+        Returns a dict with overall + per-type coverage, restricted to
+        calibrated types -- never blended with uncalibrated ones -- and
+        efficiency (mean admitted candidates per example).
 
         ``overall_coverage`` reports the quantity actually calibrated for
         ``state.mode``, not a one-size-fits-all pooled statistic: for
         ``"span_filter"``/``"mondrian"`` that's the marginal per-entity coverage
-        (pooled over every gold entity, theory.md iii-a/iii-c); for
-        ``"risk_control"`` it's ``1 - mean_per_sentence_miss_rate``, matching
-        CRC's own loss definition (theory.md Eq. 4) exactly. These are genuinely
-        different quantities whenever gold-entity count varies across sentences
-        (theory.md part ii's "informative m" point) -- pooling entities flat for
-        risk_control would silently report an uncalibrated number and can show
-        spurious undercoverage unrelated to whether the actual CRC guarantee
-        holds. (Caught empirically while validating this module -- see
-        docs/research/validation_results.md.)
+        (pooled over every gold entity); for ``"risk_control"`` it's
+        ``1 - mean_per_sentence_miss_rate``, matching Conformal Risk Control's
+        own loss definition exactly. These are genuinely different quantities
+        whenever gold-entity count varies across sentences -- pooling entities
+        flat for risk_control would silently report an uncalibrated number and
+        can show spurious undercoverage unrelated to whether the actual CRC
+        guarantee holds. (Caught empirically while validating this module.)
         """
         state = self._require_calibrated()
         labels = list(labels) if labels else list(state.labels)

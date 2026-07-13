@@ -1,18 +1,15 @@
 """Empirical validation of ConformalGLiNER's coverage/risk guarantees.
 
-Implements docs/research/eval_plan.md's protocol against real data (not
-synthetic): CoNLL-2003 and WNUT-17 via DFKI-SLT/cross_ner (sidesteps
-`datasets`'s script-loading rejection, per eval_plan.md §1), using
-gliner-community/gliner_small-v2.5.
+Validates against real data (not synthetic): CoNLL-2003 and WNUT-17 via
+DFKI-SLT/cross_ner (sidesteps `datasets`'s script-loading rejection for these
+two datasets), using gliner-community/gliner_small-v2.5.
 
-Scope disclosed up front (docs/research/design.md's "descope, don't fake
-rigor" standard applies here too): this run covers in-domain CoNLL-2003,
-in-domain WNUT-17, and zero-shot Pair A (CoNLL-2003 -> WNUT-17, the
-eval_plan.md-designated headline pair) -- not the full CrossNER 5-domain
-sweep or Pairs B/C. Pool sizes are capped (see POOL_CAP below) for CPU
-runtime; T defaults to 50 trials (eval_plan.md's own "fast dev" figure,
-not the 200-trial final-numbers figure) so this is runnable in one sitting
-on a laptop. Both are disclosed in the output results markdown, not hidden.
+Scope disclosed up front, not hidden: this run covers in-domain CoNLL-2003,
+in-domain WNUT-17, and a zero-shot pair (calibrate on CoNLL-2003, measure
+coverage on WNUT-17) -- not a full CrossNER multi-domain sweep. Pool sizes
+are capped (see POOL_CAP below) for CPU runtime; T defaults to 50 trials so
+this is runnable in one sitting on a laptop (bump for final/published
+numbers). Both are disclosed in the output results markdown too.
 
 One forward pass per pooled sentence set; all T-trial resampling happens
 on cached scores/tensors afterward (no repeated model calls per trial).
@@ -150,18 +147,18 @@ def trial_metrics(
     seed: int,
     pool_and_resplit: bool = False,
 ) -> Dict:
-    """Mirror ConformalGLiNER's own calibrated/uncalibrated split (design.md §5).
+    """Mirror ConformalGLiNER's own calibrated/uncalibrated split.
 
     A type only contributes to the headline coverage/efficiency numbers if it met
     the calibration floor in *that trial's* calibration subsample. Types requested
     at test time that never met the floor (e.g. WNUT-only types under Pair A's
     CoNLL-derived calibration) are tracked separately as `uncalibrated_*` -- never
     blended into the guaranteed-looking headline number. This is exactly the
-    scenario the zero-shot descope (design.md §0) predicts and this eval is meant
-    to demonstrate, not accidentally paper over.
+    scenario the zero-shot descope predicts and this eval is meant to
+    demonstrate, not accidentally paper over.
 
-    pool_and_resplit=True implements eval_plan.md §2.2's actual in-domain protocol:
-    pool calib_pool+test_pool together and draw a *fresh* random calib/test
+    pool_and_resplit=True implements the correct in-domain protocol: pool
+    calib_pool+test_pool together and draw a *fresh* random calib/test
     partition every trial, rather than using calib_pool and test_pool as static,
     separately-sourced sets. This matters empirically, not just by-the-book: an
     earlier run of this script found CoNLL-2003's *official* validation and test
@@ -237,7 +234,7 @@ def trial_metrics(
         hits, ngold = 0, 0
         uncal_hits, uncal_ngold = 0, 0
         eff_sum, raw_sum = 0.0, 0.0
-        sentence_losses: List[float] = []  # CRC's own per-sentence loss (theory.md Eq. 4)
+        sentence_losses: List[float] = []  # CRC's own per-sentence loss
         test_gold_source = combined_gold if pool_and_resplit else test_gold
         test_probs_source = combined_probs if pool_and_resplit else test_pool.probs
         test_cls_source = combined_id_to_class if pool_and_resplit else test_pool.id_to_class
@@ -261,8 +258,8 @@ def trial_metrics(
                     uncal_ngold += 1
                     if s <= 0.5:
                         uncal_hits += 1
-            # CRC's own loss convention (theory.md Eq. 4): 0 for entity-free sentences,
-            # avoids a 0/0 and matches exactly what crc_lambda_search calibrated against.
+            # CRC's own loss convention: 0 for entity-free sentences, avoids a 0/0
+            # and matches exactly what crc_lambda_search calibrated against.
             sentence_losses.append(1.0 - sentence_hits / len(sentence_gold) if sentence_gold else 0.0)
             for col in range(C):
                 etype = cls_map.get(col + 1)
@@ -276,10 +273,10 @@ def trial_metrics(
         if mode == "risk_control":
             # Report the quantity CRC actually calibrates and guarantees: the mean
             # PER-SENTENCE miss rate, not entities pooled flat across sentences.
-            # These differ whenever gold-entity count per sentence is uneven (theory.md
-            # part ii's "informative m" point) -- pooling flat would silently measure a
-            # different, uncalibrated quantity and can show spurious "undercoverage"
-            # that has nothing to do with the (valid) CRC guarantee actually being tested.
+            # These differ whenever gold-entity count per sentence is uneven --
+            # pooling flat would silently measure a different, uncalibrated
+            # quantity and can show spurious "undercoverage" that has nothing to
+            # do with the (valid) CRC guarantee actually being tested.
             coverages.append(1.0 - sum(sentence_losses) / len(sentence_losses) if sentence_losses else float("nan"))
         else:
             coverages.append(hits / ngold if ngold else float("nan"))
@@ -452,19 +449,18 @@ def write_results_md(rows: List[Dict], sensitivity_rows: List[Dict], out_dir: Pa
         "",
         f"Model: `{MODEL_ID}`. Trials per (pair, mode, alpha): {n_trials}. Pool cap: {POOL_CAP} sentences.",
         "",
-        "**Disclosed scope** (docs/research/design.md's descope standard applies to the eval too): "
-        "this run covers in-domain CoNLL-2003, in-domain WNUT-17, and zero-shot Pair A "
-        "(CoNLL-2003 -> WNUT-17) from docs/research/eval_plan.md. It does not cover Pairs B/C or "
-        "the full 5-domain CrossNER sweep -- those are documented as future work, not silently "
+        "**Disclosed scope**: this run covers in-domain CoNLL-2003, in-domain WNUT-17, and a "
+        "zero-shot pair (calibrate on CoNLL-2003, measure coverage on WNUT-17). It does not "
+        "cover a full multi-domain CrossNER sweep -- documented as future work, not silently "
         "dropped.",
         "",
         "## Summary table",
         "",
-        "`coverage_mean` is over calibrated types only (guaranteed, per design.md §5). "
+        "`coverage_mean` is over calibrated types only (the actually-guaranteed number). "
         "`uncalibrated_coverage` (when present) is the raw p>0.5 empirical rate for types "
         "requested at test time that never met the calibration floor -- descriptive only, "
-        "carries no guarantee, and is exactly what design.md §0's zero-shot descope predicts "
-        "will happen for Pair A's WNUT-only types.",
+        "carries no guarantee, and is exactly what the zero-shot descope predicts will happen "
+        "for the WNUT-only types.",
         "",
         "| pair | mode | alpha | n_calib | trials_ok | coverage_mean | coverage_std "
         "| efficiency_mean | raw_candidates_mean | uncalibrated_coverage |",

@@ -1,8 +1,8 @@
 """Raw span-type score extraction for conformal calibration.
 
 Intercepts GLiNER's forward pass immediately after ``run_batch()``, before
-sigmoid/threshold/decode (docs/research/repo_map.md §5), giving the full dense
-``(B, L, K, C)`` candidate span-score tensor. Reuses ``GLiNER.prepare_base_input`` /
+sigmoid/threshold/decode, giving the full dense ``(B, L, K, C)`` candidate
+span-score tensor. Reuses ``GLiNER.prepare_base_input`` /
 ``collate_batch`` / ``run_batch`` directly -- no custom tokenization or collation
 logic, no core model changes.
 
@@ -38,7 +38,7 @@ def _assert_span_mode_supported(model: Any) -> None:
             "decoder, and relex variants apply `threshold` inside their forward "
             "pass to prune candidate spans before returning scores, so "
             "run_batch()'s output is not the full candidate universe for those "
-            "architectures. See docs/research/design.md Phase 2 addendum."
+            "architectures. See docs/conformal.md for details."
         )
 
 
@@ -109,8 +109,8 @@ def align_gold_scores(
         Tuple of parallel lists ``(scores, types, example_idx)``: nonconformity score,
         gold entity type, and the index into ``examples`` it came from. A gold span
         wider than ``max_width`` (not representable in the candidate universe at all --
-        see docs/research/design.md, GLiNER structurally cannot ever predict it) gets
-        score ``float("inf")`` -- guaranteed non-conforming, guaranteed "missed" under
+        GLiNER structurally cannot ever predict it) gets score ``float("inf")`` --
+        guaranteed non-conforming, guaranteed "missed" under
         risk-control, exactly the correct behavior for an unrepresentable entity, not
         a special case to filter out.
     """

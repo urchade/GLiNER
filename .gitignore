@@ -182,14 +182,13 @@ pyrightconfig.json
 
 .vscode
 
-# Claude Code persistent-memory scratch file (per-branch, not part of the PR)
+# Claude Code persistent-memory scratch file, not part of the PR
 /CLAUDE.md
 
-# Archived reference material (mission brief, cross-branch notes) — not part of the PR
+# Research/design notes and local PR draft kept on disk for reference, not part of the PR
 /docs/archive/
+/docs/research/
+/docs/PR_DESCRIPTION.md
 
-# Leftover scratch files from unrelated branches (feature/vocab-pruning-engine,
-# feat/focal-dice-loss-openvino), physically present but irrelevant here
-/ROADMAP.md
-/pruning_adr.md
+# Output from scripts/conformal_validation.py
 /results/

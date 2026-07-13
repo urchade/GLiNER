@@ -101,8 +101,7 @@ to fit exactly that data.
 ## Limitations — read this before you trust a number
 
 This section exists because a calibrated-looking number is more dangerous than an
-obviously-arbitrary one if the calibration doesn't actually apply. Full technical treatment
-in `docs/research/theory.md` and `docs/research/design.md`; summary here.
+obviously-arbitrary one if the calibration doesn't actually apply.
 
 **The guarantee only covers entity types you actually calibrated on, with enough data.**
 Every mode requires roughly `⌈1/alpha⌉` calibration occurrences of a type before it gets a
@@ -123,8 +122,10 @@ time. If you calibrate on `{person, organization, location}` and then ask for
 mathematical sense in which that query is exchangeable with your calibration set, and no
 theorem (here or in the broader conformal-prediction literature) licenses a coverage claim
 for it. This isn't a corner case we haven't gotten around to handling; it's a structural
-fact about what conformal prediction can prove, and `docs/research/theory.md` §vi works
-through the argument in full. GLiNER's flagship feature is arbitrary inference-time label
+fact about what conformal prediction can prove: split-conformal validity requires the
+calibration and test points to be exchangeable, and a type with zero calibration
+occurrences was never part of that exchangeable draw at all — there is no rank statistic to
+compute a quantile from. GLiNER's flagship feature is arbitrary inference-time label
 sets — this module deliberately does *not* pretend to extend a statistical guarantee to
 labels outside what you actually calibrated on. If your workflow requires open-vocabulary
 guarantees, this isn't (yet) the tool for that; treat the raw sigmoid score as the
@@ -134,10 +135,13 @@ heuristic it always was for those types.
 text and deploying on social media text, for a type name that's nominally the same
 (`location` means the same thing in both), is a milder violation of exchangeability than a
 genuinely novel type — but it's still a violation. Expect coverage to visibly sag if your
-deployment distribution meaningfully differs from your calibration distribution. See
-`docs/research/eval_plan.md`'s "Pair A" experiment and the corresponding results in
-`results/conformal/RESULTS.md` for a concrete, measured demonstration of this on
-CoNLL-2003 → WNUT-17.
+deployment distribution meaningfully differs from your calibration distribution. A concrete
+measurement: calibrating on CoNLL-2003 and measuring coverage on WNUT-17, the shared-vocabulary
+types (`location`, `person`) still reach 0.87–0.98 coverage across α ∈ {0.05, 0.1, 0.2} — good,
+but visibly softer than the ~0.90–0.95 in-domain numbers — while WNUT-17's own types with zero
+CoNLL-2003 analogue (`corporation`, `creative-work`, `group`, `product`) sit at a flat ~0.55
+regardless of α, exactly the unguaranteed number you'd expect from a raw uncalibrated cutoff.
+Reproduce via `scripts/conformal_validation.py`.
 
 **`mondrian` mode costs calibration data linearly in the number of types.** Every type
 needs its own `~1/alpha`-sized calibration pool; with a fixed calibration budget, more
@@ -148,8 +152,8 @@ types means either fewer types getting a real (non-degenerate) threshold, or a l
 risk guarantee is computed against the pre-overlap-resolution candidate set; the final
 `predict_entities` output additionally applies GLiNER's usual flat/nested-NER overlap
 resolution as a threshold-independent post-processing step. This is a deliberate design
-choice (see `docs/research/design.md` §1.2) needed to keep the Conformal Risk Control
-guarantee mathematically valid — applying overlap resolution *before* defining the
+choice needed to keep the Conformal Risk Control guarantee mathematically valid —
+applying overlap resolution *before* defining the
 calibrated set would break the nesting property the risk-control proof depends on.
 
 **Scope: span-mode models only.** `ConformalGLiNER` currently supports GLiNER's span-mode

@@ -1,8 +1,8 @@
 """Synthetic, network-free tests for gliner/conformal/calibrators.py.
 
 Mirrors tests/test_decoder.py's pattern: hand-built inputs with analytically
-known ground truth, no model download. See docs/research/design.md §4 and
-docs/research/eval_plan.md for the theory these tests check against.
+known ground truth, no model download. See docs/conformal.md for the theory
+these tests check against.
 """
 
 import random
@@ -19,7 +19,7 @@ from gliner.conformal.calibrators import (
 
 class TestCalibrationFloor:
     def test_matches_eval_plan_table(self):
-        # docs/research/eval_plan.md §2.1's worked table.
+        # Worked table: n >= ceil((1-alpha)/alpha).
         assert calibration_floor(0.20) == 4
         assert calibration_floor(0.10) == 9
         assert calibration_floor(0.05) == 19
@@ -45,8 +45,7 @@ class TestSplitConformalQuantile:
 
     def test_empirical_coverage_matches_theory(self):
         """20000 seeded trials: split-conformal coverage on Uniform(0,1) scores
-        should land within a few standard errors of the 1-alpha target
-        (theory.md part i, Eq. 1-2)."""
+        should land within a few standard errors of the 1-alpha target."""
         rng = random.Random(42)
         n, alpha, trials = 500, 0.1, 20000
         hits = 0
@@ -119,8 +118,7 @@ class TestCrcLambdaSearch:
         assert lam == float("inf")
 
     def test_empirical_risk_control_matches_theory(self):
-        """CRC's proved guarantee: E[miss_rate] <= alpha on fresh test data
-        (theory.md part iii-b, Eq. 6)."""
+        """CRC's proved guarantee: E[miss_rate] <= alpha on fresh test data."""
         rng = random.Random(7)
         alpha = 0.1
         gold_calib = [[rng.random()] for _ in range(1000)]
@@ -137,8 +135,8 @@ class TestCrcLambdaSearch:
 
     def test_monotonicity_precondition_is_checked_by_default(self):
         # Sanity: verify_monotone=True must not raise on a genuinely nested
-        # (by construction) family -- this is the runtime check tied to
-        # theory.md iii-b Claims 1-2.
+        # (by construction) family -- this is the runtime check on CRC's
+        # monotonicity precondition.
         rng = random.Random(3)
         gold = [[rng.random() for _ in range(rng.randint(0, 3))] for _ in range(100)]
         crc_lambda_search(gold, alpha=0.2, verify_monotone=True)  # must not raise

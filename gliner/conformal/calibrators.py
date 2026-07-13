@@ -2,18 +2,18 @@
 
 Pure NumPy/Python, no GLiNER or PyTorch dependency beyond optional tensor inputs
 (anything sequence-like works) -- independently testable against synthetic scores
-with analytically known coverage, per docs/research/design.md §4. Implements the
-three guarantee modes from design.md §1:
+with analytically known coverage. Implements the three guarantee modes described
+in docs/conformal.md:
 
-- ``split_conformal_quantile``: the ``⌈(n+1)(1-α)⌉``-th order statistic
-  (docs/research/theory.md part (i)) underlying "span_filter" mode.
+- ``split_conformal_quantile``: the ``⌈(n+1)(1-α)⌉``-th order statistic underlying
+  "span_filter" mode (the standard split-conformal marginal coverage guarantee).
 - ``crc_lambda_search``: Conformal Risk Control's finite-sample-conservative
-  λ search (theory.md part (iii-b), Eq. 5) underlying "risk_control" mode.
+  λ search underlying "risk_control" mode.
 - ``mondrian_calibrate``: per-type application of ``split_conformal_quantile``
-  with an explicit floor (theory.md part (v)) underlying "mondrian" mode.
+  with an explicit floor, underlying "mondrian" mode.
 
 All three raise (never silently degrade) when the finite-sample correction has
-no solution -- design.md §6.
+no solution.
 """
 
 from __future__ import annotations
@@ -25,8 +25,8 @@ from typing import Dict, Tuple, Mapping, Sequence
 def calibration_floor(alpha: float) -> int:
     """Minimum calibration-set size for which the ``⌈(n+1)(1-α)⌉ ≤ n`` correction is solvable.
 
-    Derivation (theory.md part (i)): the correction is solvable iff
-    ``n ≥ (1-α)/α``. Returns the smallest integer n satisfying that.
+    The correction is solvable iff ``n ≥ (1-α)/α``. Returns the smallest integer
+    n satisfying that.
     """
     if not 0 < alpha < 1:
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
@@ -34,7 +34,7 @@ def calibration_floor(alpha: float) -> int:
 
 
 def split_conformal_quantile(scores: Sequence[float], alpha: float) -> float:
-    """The ``⌈(n+1)(1-α)⌉``-th smallest of ``scores`` (theory.md part (i), Eq. in §0).
+    """The ``⌈(n+1)(1-α)⌉``-th smallest of ``scores`` -- the split-conformal quantile.
 
     Args:
         scores: Calibration nonconformity scores (larger = worse agreement).
@@ -47,7 +47,7 @@ def split_conformal_quantile(scores: Sequence[float], alpha: float) -> float:
     Raises:
         ValueError: if ``len(scores) < calibration_floor(alpha)`` -- the quantile
             would require a rank beyond the available calibration points
-            (undefined, not merely wide; theory.md part (i)).
+            (undefined, not merely wide).
     """
     if not 0 < alpha < 1:
         raise ValueError(f"alpha must be in (0, 1), got {alpha}")
@@ -56,7 +56,7 @@ def split_conformal_quantile(scores: Sequence[float], alpha: float) -> float:
     if n < floor:
         raise ValueError(
             f"n={n} calibration scores insufficient for alpha={alpha}: need n >= {floor} "
-            f"for the ceil((n+1)(1-alpha))/n correction to be defined (docs/research/theory.md part i). "
+            f"for the ceil((n+1)(1-alpha))/n correction to be defined. "
             "Collect more calibration data or use a larger alpha."
         )
     rank = math.ceil((n + 1) * (1 - alpha))
@@ -70,13 +70,13 @@ def mondrian_calibrate(
 
     Args:
         scores_by_type: gold nonconformity scores, grouped by entity type.
-        alpha: Miscoverage level, shared across all types (theory.md part v, Eq. 7).
+        alpha: Miscoverage level, shared across all types.
 
     Returns:
         ``(thresholds, skipped)``: ``thresholds`` maps qualifying types to their
         per-type quantile; ``skipped`` maps sub-floor types to their observed
-        calibration count (design.md §1.3: these fall back to "span_filter"'s
-        pooled threshold at predict time, not an error here).
+        calibration count (these fall back to "span_filter"'s pooled threshold
+        at predict time, not an error here).
     """
     thresholds: Dict[str, float] = {}
     skipped: Dict[str, int] = {}
@@ -89,7 +89,7 @@ def mondrian_calibrate(
 
 
 def _miss_rate(gold_nc_scores: Sequence[Sequence[float]], lam: float) -> float:
-    """Mean per-example miss rate ℓ(Cλ,y) at threshold λ (theory.md Eq. 4)."""
+    """Mean per-example miss rate ℓ(Cλ,y) at threshold λ (Conformal Risk Control's loss)."""
     losses = []
     for example_scores in gold_nc_scores:
         if len(example_scores) == 0:
@@ -105,12 +105,11 @@ def crc_lambda_search(
     alpha: float,
     verify_monotone: bool = True,
 ) -> float:
-    """Conformal Risk Control's λ̂ for the missed-entity-rate loss (theory.md Eq. 5, B=1).
+    """Conformal Risk Control's λ̂ for the missed-entity-rate loss (B=1, bounded in [0,1]).
 
     ``λ̂ = inf{λ : R̂ₙ(λ) + (1-α)/n ≤ α}``. Candidate λ breakpoints are exactly the
     observed nonconformity scores (the loss is a finite step function that only
-    changes value there -- theory.md part iii-b, right-continuity argument), so a
-    grid search over them is exact, not an approximation.
+    changes value there), so a grid search over them is exact, not an approximation.
 
     Args:
         gold_nc_scores: one sublist per calibration example, containing
@@ -122,9 +121,13 @@ def crc_lambda_search(
         alpha: target expected-miss-rate bound.
         verify_monotone: if True, assert the empirical risk is non-increasing
             across the candidate grid -- a direct runtime check of the CRC
-            precondition proved in theory.md iii-b Claims 1-2. Costs one extra
-            pass over the grid; disable only for large-scale/perf-critical calls
-            after the property has been established once.
+            precondition (GLiNER's independent-sigmoid, single-shared-threshold
+            decode rule makes the candidate family nested by construction, which
+            makes this monotone by construction too -- this assertion is a
+            regression guard on that property, not a hedge against it failing in
+            practice). Costs one extra pass over the grid; disable only for
+            large-scale/perf-critical calls after the property has been
+            established once.
 
     Returns:
         λ̂ ∈ [0, ∞]. ``float("inf")`` means even admitting every candidate
@@ -137,7 +140,7 @@ def crc_lambda_search(
             the finite-sample correction: solvable iff ``n ≥ (1-α)/α``, exactly
             :func:`calibration_floor` -- the same floor as split conformal,
             re-derived independently here from CRC's own formula as a
-            consistency check (theory.md part v).
+            consistency check.
     """
     n = len(gold_nc_scores)
     floor = calibration_floor(alpha)
@@ -145,8 +148,7 @@ def crc_lambda_search(
         raise ValueError(
             f"n={n} calibration examples insufficient for alpha={alpha}: need n >= {floor} "
             "for CRC's finite-sample correction (B-alpha)/n term to be satisfiable even at "
-            "lambda=infinity (docs/research/theory.md part v). Collect more calibration data "
-            "or use a larger alpha."
+            "lambda=infinity. Collect more calibration data or use a larger alpha."
         )
 
     finite_scores = sorted({s for ex in gold_nc_scores for s in ex if math.isfinite(s)})
@@ -160,8 +162,8 @@ def crc_lambda_search(
             assert a >= b - 1e-12, (
                 "CRC monotonicity precondition violated: empirical risk increased as λ grew. "
                 "This should be structurally impossible for GLiNER's nested-threshold decode "
-                "rule (theory.md iii-b Claims 1-2) -- if this fires, gold_nc_scores was not "
-                "built from a genuinely nested family of sets."
+                "rule -- if this fires, gold_nc_scores was not built from a genuinely nested "
+                "family of sets."
             )
     else:
         risks = None

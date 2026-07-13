@@ -1,7 +1,7 @@
 """Conformal-prediction coverage/risk guarantees for GLiNER zero-shot NER.
 
-See docs/research/design.md for the full design rationale, and
-docs/conformal.md (once written) for the practitioner-facing guide.
+See docs/conformal.md for the practitioner-facing guide, including the design
+rationale and known limitations.
 """
 
 from .scores import RawScoreBatch, align_gold_scores, extract_raw_scores

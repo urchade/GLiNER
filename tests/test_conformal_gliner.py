@@ -1,9 +1,9 @@
 """Integration tests for ConformalGLiNER against a real small checkpoint.
 
 Mirrors tests/test_models.py::test_span_model's pattern (the only other test
-in the suite that downloads a real model, gliner-community/gliner_small-v2.5 --
-see docs/research/repo_map.md §9). This is the only conformal test module that
-touches the network; tests/test_conformal_calibrators.py is fully synthetic.
+in the suite that downloads a real model, gliner-community/gliner_small-v2.5).
+This is the only conformal test module that touches the network;
+tests/test_conformal_calibrators.py is fully synthetic.
 """
 
 import warnings
@@ -178,7 +178,7 @@ class TestCoverageReport:
     def test_report_shape_and_disjoint_data_canary(self, model, calib_data):
         cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode="risk_control")
 
-        # Canary (eval_plan.md §2.2): coverage measured on the *same* data the
+        # Canary: coverage measured on the *same* data the
         # threshold was calibrated on must come out at or above the nominal
         # target, since the threshold was tuned to fit exactly this data --
         # a biased estimate, and this test documents/guards that property
@@ -191,12 +191,12 @@ class TestCoverageReport:
         assert report["raw_candidates_mean"] > 0
 
     def test_risk_control_reports_per_sentence_not_per_entity_pooled(self, model, calib_data):
-        """Regression test for a real bug found during empirical validation
-        (see CLAUDE.md / docs/research/validation_results.md): risk_control
-        calibrates and guarantees a *per-sentence* average miss rate
-        (theory.md Eq. 4), which is a different quantity from pooling every
-        gold entity flat across sentences whenever entity-count-per-sentence
-        varies. A test corpus with 1 entity in one sentence and 3 in another
+        """Regression test for a real bug found during empirical validation:
+        risk_control calibrates and guarantees a *per-sentence* average miss
+        rate (Conformal Risk Control's own loss definition), which is a
+        different quantity from pooling every gold entity flat across
+        sentences whenever entity-count-per-sentence varies. A test corpus
+        with 1 entity in one sentence and 3 in another
         makes the two quantities provably different, so a regression back to
         flat pooling shows up as a hard assertion failure, not a subtle
         drift in a coverage number."""
