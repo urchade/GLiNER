@@ -17,6 +17,7 @@ architectures
 add_custom_architectures
 convert_to_onnx
 serving
+conformal
 ```
 
 ```{toctree}
