@@ -11,7 +11,7 @@ import warnings
 import pytest
 
 from gliner import GLiNER
-from gliner.conformal import ConformalGLiNER
+from gliner.conformal import ConformalGLiNER, align_gold_scores, extract_raw_scores
 from gliner.conformal.calibrators import calibration_floor
 
 MODEL_ID = "gliner-community/gliner_small-v2.5"
@@ -189,6 +189,43 @@ class TestCoverageReport:
         assert set(report["per_type_coverage"]) == {"organization", "person", "location"}
         assert report["efficiency_mean"] >= 0
         assert report["raw_candidates_mean"] > 0
+
+    def test_risk_control_reports_per_sentence_not_per_entity_pooled(self, model, calib_data):
+        """Regression test for a real bug found during empirical validation
+        (see CLAUDE.md / docs/research/validation_results.md): risk_control
+        calibrates and guarantees a *per-sentence* average miss rate
+        (theory.md Eq. 4), which is a different quantity from pooling every
+        gold entity flat across sentences whenever entity-count-per-sentence
+        varies. A test corpus with 1 entity in one sentence and 3 in another
+        makes the two quantities provably different, so a regression back to
+        flat pooling shows up as a hard assertion failure, not a subtle
+        drift in a coverage number."""
+        cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode="risk_control")
+
+        sentence_one = ["Apple", "was", "founded", "by", "Steve", "Jobs", "in", "Cupertino", "."]
+        sentence_two = ["Google", "Microsoft", "Amazon", "dominate", "the", "market", "."]
+        test_data = [
+            {"tokenized_text": sentence_one, "ner": [[0, 0, "organization"]]},
+            {
+                "tokenized_text": sentence_two,
+                "ner": [[0, 0, "organization"], [1, 1, "organization"], [2, 2, "organization"]],
+            },
+        ]
+        report = cg.coverage_report(test_data)
+
+        raw = extract_raw_scores(model, test_data, ["organization"])
+        scores, types, example_idx = align_gold_scores(raw, test_data)
+        tau = cg._nc_threshold_for(cg._state, "organization")
+        hits_by_example = {0: [], 1: []}
+        for s, _t, i in zip(scores, types, example_idx):
+            hits_by_example[i].append(s <= tau)
+
+        pooled = sum(sum(h) for h in hits_by_example.values()) / sum(len(h) for h in hits_by_example.values())
+        per_sentence = sum((sum(h) / len(h) if h else 1.0) for h in hits_by_example.values()) / len(hits_by_example)
+
+        assert report["overall_coverage"] == pytest.approx(per_sentence)
+        if pooled != per_sentence:
+            assert report["overall_coverage"] != pytest.approx(pooled)
 
 
 class TestRequiresCalibration:

@@ -315,26 +315,51 @@ class ConformalGLiNER:
         Returns a dict with overall + per-type coverage (design.md/eval_plan.md
         §3.1/§3.3, restricted to calibrated types -- never blended with
         uncalibrated ones, design.md §5 point 3) and efficiency (§3.2).
+
+        ``overall_coverage`` reports the quantity actually calibrated for
+        ``state.mode``, not a one-size-fits-all pooled statistic: for
+        ``"span_filter"``/``"mondrian"`` that's the marginal per-entity coverage
+        (pooled over every gold entity, theory.md iii-a/iii-c); for
+        ``"risk_control"`` it's ``1 - mean_per_sentence_miss_rate``, matching
+        CRC's own loss definition (theory.md Eq. 4) exactly. These are genuinely
+        different quantities whenever gold-entity count varies across sentences
+        (theory.md part ii's "informative m" point) -- pooling entities flat for
+        risk_control would silently report an uncalibrated number and can show
+        spurious undercoverage unrelated to whether the actual CRC guarantee
+        holds. (Caught empirically while validating this module -- see
+        docs/research/validation_results.md.)
         """
         state = self._require_calibrated()
         labels = list(labels) if labels else list(state.labels)
 
         raw = extract_raw_scores(self.model, test_data, labels)
-        scores, types, _ = align_gold_scores(raw, test_data)
+        scores, types, example_idx = align_gold_scores(raw, test_data)
 
         per_type_hits: Dict[str, int] = defaultdict(int)
         per_type_n: Dict[str, int] = defaultdict(int)
         n_uncalibrated_gold = 0
-        for s, t in zip(scores, types):
+        per_example_gold: Dict[int, List[bool]] = defaultdict(list)
+        for s, t, ex_i in zip(scores, types, example_idx):
             if t not in state.calibrated_types:
                 n_uncalibrated_gold += 1
                 continue
             tau = self._nc_threshold_for(state, t)
+            hit = s <= tau
             per_type_n[t] += 1
-            per_type_hits[t] += int(s <= tau)
+            per_type_hits[t] += int(hit)
+            per_example_gold[ex_i].append(hit)
 
         total_n = sum(per_type_n.values())
         total_hits = sum(per_type_hits.values())
+
+        if state.mode == "risk_control":
+            sentence_losses = [
+                1.0 - sum(hits) / len(hits) if hits else 0.0
+                for hits in (per_example_gold.get(i, []) for i in range(len(test_data)))
+            ]
+            overall_coverage = 1.0 - sum(sentence_losses) / len(sentence_losses) if sentence_losses else float("nan")
+        else:
+            overall_coverage = (total_hits / total_n) if total_n else float("nan")
 
         # Efficiency: mean admitted (span,type) pairs per example, over the full dense
         # candidate grid (not just gold cells) -- reuses the same forward pass, no extra cost.
@@ -356,7 +381,7 @@ class ConformalGLiNER:
             "mode": state.mode,
             "alpha": state.alpha,
             "n_test_examples": len(test_data),
-            "overall_coverage": (total_hits / total_n) if total_n else float("nan"),
+            "overall_coverage": overall_coverage,
             "n_calibrated_gold": total_n,
             "n_uncalibrated_gold": n_uncalibrated_gold,
             "per_type_coverage": {t: per_type_hits[t] / per_type_n[t] for t in per_type_n},
