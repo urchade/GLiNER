@@ -1,5 +1,10 @@
 """Step 2 — Loss function ablation training script.
 
+Branch-locked: requires TrainingArguments(loss_type=, dice_gamma=, use_span_width_weight=)
+and gliner.modeling.loss_functions.span_dice_loss, which exist only on
+feat/focal-dice-loss-openvino. Running this from any other branch (e.g.
+feature/vocab-pruning-engine) raises TypeError: unexpected keyword argument. See CLAUDE.md.
+
 Runs five compact fine-tuning experiments comparing loss configurations
 on CoNLL-2003 training data, evaluating each checkpoint on WNUT-17.
 
