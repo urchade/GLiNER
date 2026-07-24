@@ -1,7 +1,8 @@
-__version__ = "0.2.27"
+__version__ = "0.2.28"
 
 from .model import GLiNER
-from .config import GLiNERConfig
+from .config import GLiNERConfig, StreamingSpanConfig
+from .streaming import StreamingBatch, AsyncStreamingEngine
 from .descriptions import (
     WNUT_DESCRIPTIONS,
     CONLL_DESCRIPTIONS,
@@ -25,10 +26,13 @@ __all__ = [
     "CONLL_DESCRIPTIONS",
     "ONTONOTES_DESCRIPTIONS",
     "WNUT_DESCRIPTIONS",
+    "AsyncStreamingEngine",
     "GLiNER",
     "GLiNERConfig",
     "InferencePackingConfig",
     "PackedBatch",
+    "StreamingBatch",
+    "StreamingSpanConfig",
     "normalise_labels",
     "pack_requests",
     "unpack_spans",

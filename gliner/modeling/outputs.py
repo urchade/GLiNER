@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Any, Optional
 from dataclasses import dataclass
 
 import torch
@@ -38,6 +38,30 @@ class GLiNERBaseOutput(ModelOutput):
     span_idx: Optional[torch.LongTensor] = None
     span_mask: Optional[torch.Tensor] = None
     span_logits: Optional[torch.FloatTensor] = None
+
+
+@dataclass
+class GLiNERRepresentationOutput(ModelOutput):
+    """Intermediate prompt and text representations produced by GLiNER backbones."""
+
+    prompts_embedding: Optional[torch.FloatTensor] = None
+    prompts_embedding_mask: Optional[torch.LongTensor] = None
+    words_embedding: Optional[torch.FloatTensor] = None
+    mask: Optional[torch.LongTensor] = None
+    past_key_values: Optional[Any] = None
+    past_word_embeddings: Optional[torch.FloatTensor] = None
+    past_word_mask: Optional[torch.LongTensor] = None
+
+
+@dataclass
+class GLiNERStreamingSpanOutput(GLiNERBaseOutput):
+    """Span-classification output with reusable decoder and word cache state."""
+
+    past_key_values: Optional[Any] = None
+    past_word_embeddings: Optional[torch.FloatTensor] = None
+    past_word_mask: Optional[torch.LongTensor] = None
+    cached_prompts_embedding: Optional[torch.FloatTensor] = None
+    cached_prompts_mask: Optional[torch.LongTensor] = None
 
 
 @dataclass

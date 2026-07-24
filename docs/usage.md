@@ -69,6 +69,16 @@ for entity in entities:
     print("---")
 ```
 
+:::{warning}
+Stateless GLiNER calls do not automatically window long documents. If the text
+contains more splitter tokens than the checkpoint's `model.config.max_len`,
+GLiNER 0.2.27 warns and predicts from only the retained prefix; the returned
+entities contain no truncation flag. Check the limit before inference or split
+the document into overlapping windows. See [Input limits and
+truncation](input_limits.md) for the exact token definition, a public preflight
+example, prompt-budget details, and architecture-specific behavior.
+:::
+
 ## Batch Processing
 
 For processing multiple texts efficiently, use the `inference` method:
@@ -1317,6 +1327,41 @@ Relevant knobs:
 Pseudo-labels are generated from the same `texts` used for compression, so one
 diverse in-domain corpus serves both roles.
 
+## StreamingSpan models
+
+StreamingSpan uses a causal text backbone and reuses its decoder, label, and
+word caches as text arrives. Load a StreamingSpan checkpoint normally; GLiNER
+selects the architecture from the saved configuration.
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained("knowledgator/gliner-stream-pii-v1.0")
+labels = ["person", "email address", "phone number"]
+session_id = "document-a"
+
+try:
+    for chunk in ["Alice Johnson's email is ", "alice@example.com."]:
+        snapshot = model.inference(
+            [chunk],
+            labels,
+            session_id=[session_id],
+            threshold=0.5,
+        )[0]
+        print(snapshot)
+finally:
+    model.clear_session(session_id)
+```
+
+Every call returns the complete current snapshot, not only newly detected
+entities. Recent predictions may be added, updated, or removed as right context
+arrives. For aligned streams, use `model.create_streaming_batch(...)`; for
+independently arriving streams, use `model.create_async_streaming_engine(...)`.
+Ordinary `predict_entities` or `inference` calls without `session_id` remain
+stateless.
+
+See the [StreamingSpan guide](streaming.md) for all inference modes, cache
+lifecycle, architecture details, configuration, and operational guidance.
 
 ## Tips and Best Practices
 
@@ -1325,6 +1370,7 @@ diverse in-domain corpus serves both roles.
    - BiEncoder: Many entity types (50-200+)
    - Token-level: Long entity spans
    - Relation extraction: Knowledge graph construction
+   - StreamingSpan: Incremental text with reusable session state
 
 2. **Optimize threshold for your use case**:
    - High precision: threshold = 0.6-0.8

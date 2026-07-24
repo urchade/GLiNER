@@ -1,8 +1,11 @@
+from __future__ import annotations
+
 import torch
 import torch.nn.functional as F
 from torch import nn
 
 from .layers import create_projection_layer
+from .context_encoders import IdentityContextEncoder, build_context_encoder
 
 
 class SpanQuery(nn.Module):
@@ -442,7 +445,7 @@ class SpanMarker(nn.Module):
         # h of shape [B, L, D]
         # query_seg of shape [D, max_width]
 
-        B, L, D = h.size()
+        B, _, D = h.size()
 
         # project start and end
         start_rep = self.project_start(h)
@@ -458,7 +461,8 @@ class SpanMarker(nn.Module):
         cat = self.out_project(cat)
 
         # reshape
-        return cat.view(B, L, self.max_width, D)
+        num_starts = span_idx.size(1) // self.max_width
+        return cat.view(B, num_starts, self.max_width, D)
 
 
 class SpanMarkerV0(nn.Module):
@@ -498,7 +502,7 @@ class SpanMarkerV0(nn.Module):
         Returns:
             torch.Tensor: Span representations of shape [B, L, max_width, D].
         """
-        B, L, D = h.size()
+        B, _, D = h.size()
 
         start_rep = self.project_start(h)
         end_rep = self.project_end(h)
@@ -508,7 +512,8 @@ class SpanMarkerV0(nn.Module):
 
         cat = torch.cat([start_span_rep, end_span_rep], dim=-1).relu()
 
-        return self.out_project(cat).view(B, L, self.max_width, D)
+        num_starts = span_idx.size(1) // self.max_width
+        return self.out_project(cat).view(B, num_starts, self.max_width, D)
 
 
 class SpanMarkerV1(nn.Module):
@@ -559,7 +564,7 @@ class SpanMarkerV1(nn.Module):
         Returns:
             torch.Tensor: Span representations, shape [B, L, max_width, D].
         """
-        B, L, D = h.size()
+        B, _, D = h.size()
 
         # Pre-compute per-token projections
         start_rep = self.project_start(h)  # [B, L, D]
@@ -581,7 +586,55 @@ class SpanMarkerV1(nn.Module):
         out = self.out_project(span_feat)  # [B, S, D]
 
         # Reshape back to [B, L, max_width, D] (S = L x max_width)
-        return out.view(B, L, self.max_width, D)
+        num_starts = span_idx.size(1) // self.max_width
+        return out.view(B, num_starts, self.max_width, D)
+
+
+class SpanMarkerV2(nn.Module):
+    """Represent spans using their endpoints and the last valid word.
+
+    The final valid word supplies later sequence context to every candidate
+    scored in the current run.  Unlike older marker layers, the output size is
+    derived from ``span_idx`` and therefore supports rolling candidate windows
+    over a longer cached word sequence.
+    """
+
+    def __init__(self, hidden_size: int, max_width: int, dropout: float = 0.4):
+        super().__init__()
+        self.max_width = max_width
+        self.project_start = create_projection_layer(hidden_size, dropout)
+        self.project_end = create_projection_layer(hidden_size, dropout)
+        self.project_context = create_projection_layer(hidden_size, dropout)
+        self.out_project = create_projection_layer(hidden_size * 3, dropout, hidden_size)
+
+    def forward(
+        self,
+        h: torch.Tensor,
+        span_idx: torch.Tensor,
+        word_mask: torch.Tensor | None = None,
+    ) -> torch.Tensor:
+        batch_size, _, hidden_size = h.shape
+        if word_mask is None:
+            word_mask = torch.ones(h.shape[:2], dtype=torch.bool, device=h.device)
+        else:
+            word_mask = word_mask.bool()
+
+        start_span_rep = extract_elements(self.project_start(h), span_idx[..., 0])
+        end_span_rep = extract_elements(self.project_end(h), span_idx[..., 1])
+
+        last_positions = word_mask.long().sum(dim=1).sub(1).clamp_min(0)
+        last_context = extract_elements(self.project_context(h), last_positions.unsqueeze(1)).squeeze(1)
+        has_words = word_mask.any(dim=1)
+        last_context = last_context * has_words.unsqueeze(-1)
+        context_span_rep = last_context.unsqueeze(1).expand_as(start_span_rep)
+
+        span_features = torch.cat(
+            [start_span_rep, end_span_rep, context_span_rep],
+            dim=-1,
+        ).relu()
+        span_rep = self.out_project(span_features)
+        num_starts = span_idx.size(1) // self.max_width
+        return span_rep.view(batch_size, num_starts, self.max_width, hidden_size)
 
 
 class ConvShareV2(nn.Module):
@@ -693,7 +746,14 @@ class SpanRepLayer(nn.Module):
         span_rep_layer (nn.Module): The underlying span representation layer.
     """
 
-    def __init__(self, hidden_size, max_width, span_mode, **kwargs):
+    def __init__(
+        self,
+        hidden_size,
+        max_width,
+        span_mode,
+        context_encoder_config=None,
+        **kwargs,
+    ):
         """Initialize the SpanRepLayer with the specified mode.
 
         Args:
@@ -703,6 +763,7 @@ class SpanRepLayer(nn.Module):
                 - 'marker': SpanMarker
                 - 'markerV0': SpanMarkerV0
                 - 'markerV1': SpanMarkerV1
+                - 'markerV2': SpanMarkerV2
                 - 'query': SpanQuery
                 - 'mlp': SpanMLP
                 - 'cat': SpanCAT
@@ -711,6 +772,8 @@ class SpanRepLayer(nn.Module):
                 - 'conv_mean': SpanConv with mean pooling
                 - 'conv_sum': SpanConv with sum pooling
                 - 'conv_share': ConvShare
+            context_encoder_config: Optional DeBERTa-v2, ModernBERT, or RNN
+                context-encoder configuration.
             **kwargs: Additional arguments passed to the span representation layer.
 
         Raises:
@@ -718,12 +781,21 @@ class SpanRepLayer(nn.Module):
         """
         super().__init__()
 
+        self.context_encoder = build_context_encoder(
+            context_encoder_config,
+            input_size=hidden_size,
+            output_size=hidden_size,
+            dropout=kwargs.get("dropout", 0.0),
+        )
+
         if span_mode == "marker":
             self.span_rep_layer = SpanMarker(hidden_size, max_width, **kwargs)
         elif span_mode == "markerV0":
             self.span_rep_layer = SpanMarkerV0(hidden_size, max_width, **kwargs)
         elif span_mode == "markerV1":
             self.span_rep_layer = SpanMarkerV1(hidden_size, max_width, **kwargs)
+        elif span_mode == "markerV2":
+            self.span_rep_layer = SpanMarkerV2(hidden_size, max_width, **kwargs)
         elif span_mode == "query":
             self.span_rep_layer = SpanQuery(hidden_size, max_width, trainable=True)
         elif span_mode == "mlp":
@@ -745,15 +817,45 @@ class SpanRepLayer(nn.Module):
         else:
             raise ValueError(f"Unknown span mode {span_mode}")
 
-    def forward(self, x, *args):
+    @property
+    def uses_bidirectional_context(self) -> bool:
+        """Whether all historical words are re-contextualized on every call."""
+        return self.context_encoder.requires_full_recompute
+
+    def forward(
+        self,
+        x,
+        span_idx,
+        word_mask=None,
+        return_words=False,
+        compact_words=False,
+    ):
         """Forward pass through the selected span representation layer.
 
         Args:
             x (torch.Tensor): Input tensor, typically of shape [B, L, D].
-            *args: Additional arguments passed to the underlying layer.
+            span_idx (torch.Tensor): Flattened absolute start/end span indices.
+            word_mask (torch.Tensor, optional): Mask for valid word embeddings.
+            return_words (bool): Return contextualized words alongside spans.
+            compact_words (bool): The supplied words are a valid compact prefix,
+                allowing the identity context encoder to return its input view.
 
         Returns:
             torch.Tensor: Span representations, typically of shape
                 [B, L, max_width, D].
         """
-        return self.span_rep_layer(x, *args)
+        if word_mask is None:
+            word_mask = torch.ones(x.shape[:2], dtype=torch.bool, device=x.device)
+        if compact_words and isinstance(self.context_encoder, IdentityContextEncoder):
+            contextualized = x
+        else:
+            contextualized = self.context_encoder(x, word_mask)
+
+        if isinstance(self.span_rep_layer, SpanMarkerV2):
+            span_rep = self.span_rep_layer(contextualized, span_idx, word_mask)
+        else:
+            span_rep = self.span_rep_layer(contextualized, span_idx)
+
+        if return_words:
+            return span_rep, contextualized
+        return span_rep

@@ -1,18 +1,8 @@
 <div align="center">
-  <a href="https://pioneer.ai/gliner" target="_blank" rel="noopener noreferrer">
-    <img src="image/GitHub.png" alt="Pioneer AI - Fine-tune GLiNER with a single prompt" width="100%"/>
-  </a>
-</div>
-
-> [!IMPORTANT]
-> **🚀 GLiNER2 is Now Available from [Fastino Labs](https://github.com/fastino-ai)!** A unified multi-task model for NER, Text Classification & Structured Data Extraction. Check out [fastino-ai/GLiNER2 →](https://github.com/fastino-ai/GLiNER2)
-
-
-<div align="center">
 
 # GLiNER: Generalist and Lightweight Model for Named Entity Recognition
 
-**Zero-shot NER | Relation Extraction | PII Detection | Information Extraction | Token Classification**
+**Zero-shot NER | Streaming NER | Relation Extraction | PII Detection | Information Extraction | Token Classification**
 
 <div>
     <!-- Docs & Resources -->
@@ -39,7 +29,7 @@
   <img src="assets/banner.png" alt="GLiNER Banner" width="100%">
 </div>
 
-GLiNER is a framework for training and deploying small Named Entity Recognition (NER) models with zero-shot capabilities. In addition to traditional NER, it also supports joint entity and relation extraction, as well as multi-task token classification. GLiNER is fine-tunable, optimized to run on CPUs and consumer hardware, and has performance competitive with LLMs several times its size, like ChatGPT and UniNER.
+GLiNER is a framework for training and deploying small Named Entity Recognition (NER) models with zero-shot capabilities. In addition to traditional NER, it supports incremental streaming NER, joint entity and relation extraction, and multi-task token classification. GLiNER is fine-tunable, optimized to run on CPUs and consumer hardware, and has performance competitive with LLMs several times its size, like ChatGPT and UniNER.
 
 Other tasks such as text classification, entity linking, and schema extraction are supported through projects in the [Ecosystem](#ecosystem).
 
@@ -234,6 +224,7 @@ GLiNER supports multiple architectures tailored to different use cases:
 | **Bi-encoder** | Scalable to massive numbers of entity types via separate text and label encoding. | [gliner-bi-base-v2.0](https://huggingface.co/knowledgator/gliner-bi-base-v2.0) |
 | **RelEx** | Joint NER and relation extraction in a single model. | [gliner-relex-large-v1.0](https://huggingface.co/knowledgator/gliner-relex-large-v1.0) |
 | **GLiNER Decoder** | Hybrid architecture for open NER: entity types are generated with a small decoder for maximum flexibility. | [gliner-decoder-large-v1.0](https://huggingface.co/knowledgator/gliner-decoder-large-v1.0) |
+| **StreamingSpan** | Causal span model that reuses decoder, label, and word caches for incremental NER and rolling prediction updates. | [gliner-stream-pii-v1.0](https://huggingface.co/knowledgator/gliner-stream-pii-v1.0) |
 
 For more details, see the [documentation](https://urchade.github.io/GLiNER/architectures.html).
 
@@ -337,6 +328,31 @@ If you find **GLiNER** useful in your research, please consider citing the origi
 ## Related and Follow-up Work
 
 The GLiNER family has since been extended to additional information extraction and classification tasks:
+
+### GLiNER multi-task
+```bibtex
+@misc{stepanov2024glinermultitaskgeneralistlightweight,
+      title={GLiNER multi-task: Generalist Lightweight Model for Various Information Extraction Tasks}, 
+      author={Ihor Stepanov and Mykhailo Shtopko},
+      year={2024},
+      eprint={2406.12925},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG},
+      url={https://arxiv.org/abs/2406.12925}, 
+}
+```
+### GLiNER bi-encoder
+```bibtex
+@misc{stepanov2026millionlabelnerbreakingscale,
+      title={The Million-Label NER: Breaking Scale Barriers with GLiNER bi-encoder}, 
+      author={Ihor Stepanov and Mykhailo Shtopko and Dmytro Vodianytskyi and Oleksandr Lukashov},
+      year={2026},
+      eprint={2602.18487},
+      archivePrefix={arXiv},
+      primaryClass={cs.CL},
+      url={https://arxiv.org/abs/2602.18487}, 
+}
+```
 
 ### GLiNER2
 

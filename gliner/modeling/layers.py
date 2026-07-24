@@ -5,6 +5,9 @@ import torch.nn.functional as F
 from torch import nn
 from torch.nn.utils.rnn import pad_packed_sequence, pack_padded_sequence
 
+from .utils import extract_prompt_features
+from .context_encoders import build_context_encoder
+
 
 class LstmSeq2SeqEncoder(nn.Module):
     """Bidirectional LSTM encoder for sequence-to-sequence models.
@@ -482,3 +485,93 @@ class LayersFuser(nn.Module):
         output = self.output_projection(U_sum)  # [B, L, output_size]
 
         return output
+
+
+class StreamingSpanLabelsEncoder(nn.Module):
+    def __init__(self, config, **kwargs):
+        super().__init__()
+        self.config = config
+        self.encoder_config = config.labels_encoder_config
+        self.encoder = build_context_encoder(
+            self.encoder_config,
+            input_size=config.hidden_size,
+            output_size=config.hidden_size,
+            dropout=config.dropout,
+        )
+
+    def _slice_prompt(self, hidden_states, input_ids, attention_mask):
+        """Compact each prompt from its first valid token through its first separator."""
+        sep_token_id = getattr(self.config, "sep_token_index", -1)
+        if sep_token_id < 0:
+            raise ValueError("StreamingSpanLabelsEncoder requires config.sep_token_index to be set")
+
+        valid_mask = attention_mask.gt(0)
+        sep_mask = input_ids.eq(sep_token_id) & valid_mask
+        has_separator = sep_mask.any(dim=1)
+        if not has_separator.all():
+            missing = (~has_separator).nonzero(as_tuple=True)[0].tolist()
+            raise ValueError(f"No separator token was found for batch rows {missing}")
+
+        batch_size, seq_length, hidden_size = hidden_states.shape
+        positions = torch.arange(seq_length, device=input_ids.device).expand(batch_size, -1)
+        first_valid = positions.masked_fill(~valid_mask, seq_length).amin(dim=1)
+        first_separator = positions.masked_fill(~sep_mask, seq_length).amin(dim=1)
+        prompt_lengths = first_separator - first_valid + 1
+        if (prompt_lengths <= 0).any():
+            invalid = prompt_lengths.le(0).nonzero(as_tuple=True)[0].tolist()
+            raise ValueError(f"Separator token precedes the prompt for batch rows {invalid}")
+
+        max_prompt_length = int(prompt_lengths.max().item())
+        prompt_offsets = torch.arange(max_prompt_length, device=input_ids.device).unsqueeze(0)
+        source_positions = first_valid.unsqueeze(1) + prompt_offsets
+        within_prompt = prompt_offsets < prompt_lengths.unsqueeze(1)
+        safe_positions = source_positions.clamp_max(seq_length - 1)
+
+        prompt_hidden_states = torch.gather(
+            hidden_states,
+            1,
+            safe_positions.unsqueeze(-1).expand(-1, -1, hidden_size),
+        )
+        prompt_input_ids = torch.gather(input_ids, 1, safe_positions)
+        gathered_attention_mask = torch.gather(attention_mask, 1, safe_positions)
+        prompt_attention_mask = gathered_attention_mask.masked_fill(~within_prompt, 0)
+        valid_prompt_mask = within_prompt & prompt_attention_mask.gt(0)
+        prompt_hidden_states = prompt_hidden_states * valid_prompt_mask.unsqueeze(-1)
+        prompt_input_ids = prompt_input_ids.masked_fill(~valid_prompt_mask, 0)
+        return prompt_hidden_states, prompt_input_ids, prompt_attention_mask
+
+    def forward(self, hidden_states, input_ids, attention_mask, **kwargs):
+        """Forward pass.
+
+        Args:
+            hidden_states: (batch_size, seq_length, hidden_size) from decoder backbone
+            input_ids: (batch_size, seq_length)
+            attention_mask: (batch_size, seq_length)
+            **kwargs: Reserved for interface compatibility.
+
+        Returns:
+            Tuple containing:
+                - label representations of shape (batch_size, num_labels, hidden_size)
+                - label mask of shape (batch_size, num_labels)
+        """
+        prompt_hidden_states, prompt_input_ids, prompt_attention_mask = self._slice_prompt(
+            hidden_states,
+            input_ids,
+            attention_mask,
+        )
+        contextualized_hidden_states = self.encoder(
+            prompt_hidden_states,
+            prompt_attention_mask,
+        )
+        if self.config.class_token_index < 0:
+            raise ValueError("StreamingSpanLabelsEncoder requires config.class_token_index to be set")
+        batch_size, _, hidden_size = contextualized_hidden_states.shape
+        return extract_prompt_features(
+            self.config.class_token_index,
+            contextualized_hidden_states,
+            prompt_input_ids,
+            prompt_attention_mask,
+            batch_size,
+            hidden_size,
+            embed_ent_token=True,
+        )

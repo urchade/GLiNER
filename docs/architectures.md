@@ -24,8 +24,16 @@ The GLiNER framework now supports multiple architecture variants, each optimized
 | **UniEncoderTokenDecoder** | Single encoder + generative decoder | Token-level with generation | Token-level detection + label generation | Long entities with open vocabulary |
 | **UniEncoderSpanRelex** | Single encoder + relation layers | Span-level + relations | Joint entity and relation extraction | Knowledge graph construction, IE |
 | **UniEncoderTokenRelex** | Single encoder + relation layers | Token-level + relations | Token-level entities with relation extraction | Long entities with relations |
+| **StreamingSpan** | Causal decoder with reusable prompt and text caches | Span-level | Incremental inference with rolling right-context rescoring | Live transcripts, logs, and chunked PII detection |
 
 The framework automatically selects the appropriate architecture based on your model configuration, providing a unified API across all variants.
+
+All stateless architectures apply the checkpoint's text-only `config.max_len`
+before encoding labels. Whether labels share a later backbone context with the
+text depends on the architecture: uni-encoders share it, while bi-encoders keep
+the two sequences separate. Cached StreamingSpan sessions use their causal
+decoder context instead. See [Input limits and truncation](input_limits.md) for
+the complete behavior and production preflight guidance.
 
 ## Vanilla GLiNER (UniEncoderSpan)
 
@@ -554,6 +562,109 @@ for relation in relations[0]:
 
 Same as UniEncoderSpanRelex - entities and relations are returned in identical formats, ensuring API consistency across architectures.
 
+## GLiNER StreamingSpan
+
+StreamingSpan (`model_type="gliner_streaming_span"`) is the incremental
+span-classification architecture. It replaces the usual bidirectional text
+encoder with a causal decoder backbone, allowing later calls to append text to
+the decoder's key-value (KV) cache instead of encoding the complete document
+again. This is useful when the input is revealed over time, such as a live
+transcript, chat, log stream, or progressively uploaded document.
+
+StreamingSpan should not be confused with `UniEncoderSpanDecoder`. The latter
+uses an auxiliary decoder to *generate* entity labels; StreamingSpan uses a
+decoder as its text backbone and still scores spans against the entity types
+provided by the caller.
+
+![GLiNER StreamingSpan architecture](images/gliner-streaming-architecture.svg)
+
+### Cold pass: prompt and first chunk
+
+The processor serializes the requested entity types before the text:
+
+```text
+person<<LABEL>>email address<<LABEL>><<SEP>>Alice can be reached at ...
+```
+
+Placing `<<LABEL>>` after each label is important for a causal model: the
+marker state can attend to every subtoken in the label that precedes it. The
+first call then performs the following work:
+
+1. The complete label prompt and first text chunk pass through the causal
+   decoder.
+2. The prompt slice, ending at `<<SEP>>`, passes through a compact label context
+   encoder. The states at `<<LABEL>>` become one representation per entity
+   type.
+3. Text subtoken states are pooled into word states.
+4. The model stores decoder KV states, label representations, word states, text
+   offsets, and span scores in the session cache.
+
+The label context encoder is independent of the causal backbone and may use a
+DeBERTa-v2, ModernBERT, or RNN context encoder. DeBERTa-v2, ModernBERT, and a
+bidirectional RNN give label names bidirectional context without making the
+text backbone non-causal.
+
+### Warm pass: append and reuse
+
+On later calls, only the new chunk is sent through the decoder. Its tokens
+attend to the cached history, use continuing position IDs, and extend the KV
+cache. The stored label representations are reused, while the new subtoken
+states are pooled and appended to the cached word states.
+
+This avoids recomputing the decoder states for the prompt and historical text.
+It does not make inference constant-cost: decoder attention, KV memory, word
+state storage, and the span-score history still grow with the session.
+
+### Rolling span representations and scores
+
+Candidate spans use absolute word indices and are limited by `max_width`. The
+default `markerV2` representation combines three projected vectors:
+
+- the candidate's first word;
+- the candidate's last word;
+- the last valid word currently visible to the session.
+
+An optional `span_encoder_config` can contextualize the cached word sequence
+before those vectors are gathered. The resulting span representation is scored
+against each projected label representation with a dot product, as in the
+standard span architecture.
+
+A causal model cannot know future context on its first attempt. StreamingSpan
+therefore maintains a rolling revision window. Every append scores all spans
+that end in the new chunk and re-scores spans whose end is within
+`right_context_width` words of the newest word. New scores replace the stored
+scores for the same `(start, end)` boundary. The default right-context width is
+`max_width`; setting it to `0` gives append-only scoring.
+
+When `span_encoder_config` is bidirectional, appending a word can change every
+contextualized word representation. In that case all historical span
+candidates are re-scored from the cached word states. Passing `recompute=True`
+goes further and rebuilds the complete decoder, prompt, word, and span state
+from the accumulated text.
+
+### Training
+
+Training uses the normal span-based GLiNER data format; examples do not need to
+be pre-split into streaming chunks. The label prompt and complete training text
+are passed through the causal backbone, all valid spans up to `max_width` are
+scored, and the causal backbone, label context encoder, span projections, and
+prompt projections are optimized with the configurable GLiNER span loss.
+Session caches are an inference optimization rather than a separate training
+objective.
+
+### Decoding and output semantics
+
+After merging new and revised scores into the session history, the normal flat
+or nested span decoder applies the threshold. A streaming call returns the
+complete current entity snapshot with document-relative character offsets. It
+is not a delta: callers that render live changes should compare consecutive
+snapshots to identify additions, updates, and removals.
+
+The [StreamingSpan guide](streaming.md) covers the session API, persistent
+batches, asynchronous microbatching, cache cleanup, configuration, and
+deployment trade-offs. A PII-oriented checkpoint is available at
+[knowledgator/gliner-stream-pii-v1.0](https://huggingface.co/knowledgator/gliner-stream-pii-v1.0).
+
 ## Choosing the Right Architecture
 
 Here's a quick guide to selecting the appropriate GLiNER architecture:
@@ -569,30 +680,33 @@ Here's a quick guide to selecting the appropriate GLiNER architecture:
 | Knowledge graph extraction | UniEncoderSpanRelex | Joint entity and relation extraction |
 | Long entities with relations | UniEncoderTokenRelex | Token-level entities with relation extraction |
 | Both long entities + many types | BiEncoderToken | Combines both advantages |
+| Incremental or live text | StreamingSpan | Reuses causal caches and revises recent predictions as context arrives |
 
 ### Decision Flowchart
 
 ```
 Start
   │
-  ├─ Need relation extraction?
-  │   ├─ Yes: Long entities expected?
-  │   │   ├─ Yes → UniEncoderTokenRelex
-  │   │   └─ No → UniEncoderSpanRelex
-  │   │
-  │   └─ No: Need open vocabulary labels?
-  │       ├─ Yes: Long entities expected?
-  │       │   ├─ Yes → UniEncoderTokenDecoder
-  │       │   └─ No → UniEncoderSpanDecoder
-  │       │
-  │       └─ No: Many entity types (>30)?
-  │           ├─ Yes: Long entities expected?
-  │           │   ├─ Yes → BiEncoderToken
-  │           │   └─ No → BiEncoderSpan
-  │           │
-  │           └─ No: Long entities expected?
-  │               ├─ Yes → UniEncoderToken
-  │               └─ No → UniEncoderSpan
+  ├─ Incremental or live input → StreamingSpan
+  │
+  └─ Complete input: Need relation extraction?
+      ├─ Yes: Long entities expected?
+      │   ├─ Yes → UniEncoderTokenRelex
+      │   └─ No → UniEncoderSpanRelex
+      │
+      └─ No: Need open vocabulary labels?
+          ├─ Yes: Long entities expected?
+          │   ├─ Yes → UniEncoderTokenDecoder
+          │   └─ No → UniEncoderSpanDecoder
+          │
+          └─ No: Many entity types (>30)?
+              ├─ Yes: Long entities expected?
+              │   ├─ Yes → BiEncoderToken
+              │   └─ No → BiEncoderSpan
+              │
+              └─ No: Long entities expected?
+                  ├─ Yes → UniEncoderToken
+                  └─ No → UniEncoderSpan
 ```
 
 ## References

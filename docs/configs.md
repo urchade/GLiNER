@@ -64,7 +64,20 @@ Whether to fine-tune the encoder during training.
 #### `subtoken_pooling`
 `str`, *optional*, defaults to `"first"`
 
-Currently only first token pooling is supported. More approaches will be added in the future.
+Controls how contextualized subtoken representations are combined into one word
+representation.
+
+**Available options:**
+
+- `"first"` — Uses the first subtoken representation. This is the default and
+  remains compatible with existing checkpoints.
+- `"last"` — Uses the last subtoken representation.
+- `"mean"` — Averages all subtoken representations belonging to the word.
+- `"max"` — Takes the element-wise maximum across all subtoken representations
+  belonging to the word.
+
+Use the same pooling strategy for training and inference. Changing this setting
+for an already-trained checkpoint can reduce prediction quality.
 
 ---
 
@@ -141,7 +154,16 @@ Maximum number of entity types supported per batch.
 #### `max_len`
 `int`, *optional*, defaults to `384`
 
-Maximum sequence length accepted by the encoder.
+Maximum number of text tokens retained from GLiNER's configured word splitter.
+This limit is applied before the entity/relation prompt is added and before
+transformer subword tokenization. If an input is longer, stateless processing
+emits a `UserWarning` and keeps the first `max_len` splitter tokens. Checkpoint
+configurations may override the base default.
+
+This is not necessarily the backbone's total context length. Uni-encoder
+prompts and text share the later transformer subword/context limit, while
+bi-encoders encode labels separately. See [Input limits and
+truncation](input_limits.md) for all limits and the StreamingSpan exception.
 
 ---
 
@@ -149,7 +171,12 @@ Maximum sequence length accepted by the encoder.
 `str`, *optional*, defaults to `"whitespace"`
 
 Heuristic used for word-level splitting during inference.  
-**Choices:** `"whitespace"`, `"spacy"`, `"moses"`, `stanza`, `universal`
+The resulting token count is what `max_len` limits. The default `whitespace`
+splitter separates punctuation as well as whitespace, so `text.split()` is not
+an equivalent counter.
+
+**Choices:** `"whitespace"`, `"universal"`, `"spacy"`, `"mecab"`, `"jieba"`,
+`"hanlp"`, `"janome"`, `"camel"`, `"hindi"`, `"stanza"`
 
 ---
 
@@ -185,6 +212,26 @@ Index of the entity token in the vocabulary. Set automatically during initializa
 `dict` or `PretrainedConfig`, *optional*
 
 A nested config dictionary for the encoder model. If a dict is passed, its `model_type` must be set or inferred.
+
+---
+
+#### `span_encoder_config`
+`dict` or `PretrainedConfig`, *optional*, defaults to `None`
+
+An optional context encoder applied to word representations immediately before
+the span representation layer. Supported `model_type` values are
+`"deberta-v2"`, `"modernbert"`, and `"rnn"`. Its internal `hidden_size` may
+differ from the model hidden size; projections are added automatically.
+
+```yaml
+span_encoder_config:
+  model_type: rnn
+  hidden_size: 512
+  num_hidden_layers: 1
+  bidirectional: true
+```
+
+Set this field to `null` to use the word representations unchanged.
 
 ---
 

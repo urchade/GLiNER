@@ -2,6 +2,135 @@ from typing import Tuple, Optional
 
 import torch
 
+from ..config import SUBTOKEN_POOLING_MODES
+
+
+def extract_first_word_embeddings(
+    token_embeds: torch.Tensor,
+    words_mask: torch.Tensor,
+    batch_size: int,
+    max_text_length: int,
+    embed_dim: int,
+) -> torch.Tensor:
+    """Select the first marked subtoken representation for each word."""
+    words_embedding = token_embeds.new_zeros((batch_size, max_text_length, embed_dim))
+    batch_indices, token_indices = torch.where(words_mask > 0)
+    target_word_indices = words_mask[batch_indices, token_indices] - 1
+    words_embedding[batch_indices, target_word_indices] = token_embeds[batch_indices, token_indices]
+    return words_embedding
+
+
+def extract_last_word_embeddings(
+    token_embeds: torch.Tensor,
+    words_mask: torch.Tensor,
+    batch_size: int,
+    max_text_length: int,
+    embed_dim: int,
+) -> torch.Tensor:
+    """Select the last marked subtoken representation for each word."""
+    words_embedding = token_embeds.new_zeros((batch_size, max_text_length, embed_dim))
+    batch_indices, token_indices = torch.where(words_mask > 0)
+    target_word_indices = words_mask[batch_indices, token_indices] - 1
+    words_embedding[batch_indices, target_word_indices] = token_embeds[batch_indices, token_indices]
+    return words_embedding
+
+
+def extract_mean_word_embeddings(
+    token_embeds: torch.Tensor,
+    words_mask: torch.Tensor,
+    attention_mask: torch.Tensor,
+    batch_size: int,
+    max_text_length: int,
+    embed_dim: int,
+) -> torch.Tensor:
+    """Mean-pool all attended subtoken representations for each word."""
+    valid_subtokens = (words_mask > 0) & attention_mask.bool() & (words_mask <= max_text_length)
+    batch_indices, token_indices = torch.where(valid_subtokens)
+    flat_word_indices = batch_indices * max_text_length + words_mask[batch_indices, token_indices] - 1
+    selected_embeddings = token_embeds[batch_indices, token_indices]
+    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    flat_output_size = batch_size * max_text_length
+
+    words_embedding = token_embeds.new_zeros((flat_output_size, embed_dim))
+    if torch.onnx.is_in_onnx_export():
+        # ONNX does not support mean reduction or include_self=False for
+        # ScatterElements. Export an equivalent sum/count formulation.
+        words_embedding.scatter_reduce_(
+            0,
+            expanded_indices,
+            selected_embeddings,
+            reduce="sum",
+            include_self=True,
+        )
+        word_counts = token_embeds.new_zeros((flat_output_size, 1))
+        word_counts.scatter_reduce_(
+            0,
+            flat_word_indices.unsqueeze(-1),
+            token_embeds.new_ones((flat_word_indices.size(0), 1)),
+            reduce="sum",
+            include_self=True,
+        )
+        words_embedding = words_embedding / word_counts.clamp_min(1)
+    else:
+        words_embedding.scatter_reduce_(
+            0,
+            expanded_indices,
+            selected_embeddings,
+            reduce="mean",
+            include_self=False,
+        )
+
+    return words_embedding.reshape(batch_size, max_text_length, embed_dim)
+
+
+def extract_max_word_embeddings(
+    token_embeds: torch.Tensor,
+    words_mask: torch.Tensor,
+    attention_mask: torch.Tensor,
+    batch_size: int,
+    max_text_length: int,
+    embed_dim: int,
+) -> torch.Tensor:
+    """Element-wise max-pool all attended subtoken representations for each word."""
+    valid_subtokens = (words_mask > 0) & attention_mask.bool() & (words_mask <= max_text_length)
+    batch_indices, token_indices = torch.where(valid_subtokens)
+    flat_word_indices = batch_indices * max_text_length + words_mask[batch_indices, token_indices] - 1
+    selected_embeddings = token_embeds[batch_indices, token_indices]
+    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    flat_output_size = batch_size * max_text_length
+
+    if torch.onnx.is_in_onnx_export():
+        # include_self=False is unsupported by the legacy ONNX exporter. Start
+        # from the dtype minimum and explicitly zero absent word positions.
+        words_embedding = token_embeds.new_full((flat_output_size, embed_dim), torch.finfo(token_embeds.dtype).min)
+        words_embedding.scatter_reduce_(
+            0,
+            expanded_indices,
+            selected_embeddings,
+            reduce="amax",
+            include_self=True,
+        )
+        word_counts = token_embeds.new_zeros((flat_output_size, 1))
+        word_counts.scatter_reduce_(
+            0,
+            flat_word_indices.unsqueeze(-1),
+            token_embeds.new_ones((flat_word_indices.size(0), 1)),
+            reduce="sum",
+            include_self=True,
+        )
+        words_embedding = words_embedding.masked_fill(word_counts == 0, 0)
+    else:
+        words_embedding = token_embeds.new_zeros((flat_output_size, embed_dim))
+        words_embedding.scatter_reduce_(
+            0,
+            expanded_indices,
+            selected_embeddings,
+            reduce="amax",
+            include_self=False,
+        )
+
+    return words_embedding.reshape(batch_size, max_text_length, embed_dim)
+
 
 def extract_word_embeddings(
     token_embeds: torch.Tensor,
@@ -11,57 +140,35 @@ def extract_word_embeddings(
     max_text_length: int,
     embed_dim: int,
     text_lengths: torch.Tensor,
+    subtoken_pooling: str = "first",
 ) -> Tuple[torch.Tensor, torch.Tensor]:
-    """Extract word-level embeddings from subword token embeddings.
+    """Dispatch to the configured subtoken pooling implementation.
 
-    Maps subword token embeddings back to word-level embeddings using a word mask
-    that indicates which subword token corresponds to which word. Only the first
-    subword token of each word is typically used for the word representation.
-
-    This is essential for span-based NER where predictions are made at the word
-    level but the transformer operates on subword tokens.
-
-    Args:
-        token_embeds: Subword token embeddings from transformer.
-            Shape: (batch_size, seq_len, embed_dim)
-        words_mask: Mask mapping subword positions to word indices. Non-zero values
-            indicate the word index (1-indexed). Zero values are special tokens or
-            continuation subwords to ignore.
-            Shape: (batch_size, seq_len)
-        attention_mask: Standard attention mask from tokenizer.
-            Shape: (batch_size, seq_len)
-        batch_size: Size of the batch.
-        max_text_length: Maximum number of words across all examples in batch.
-        embed_dim: Embedding dimension size.
-        text_lengths: Number of words in each example.
-            Shape: (batch_size, 1) or (batch_size,)
-
-    Returns:
-        Tuple containing:
-            - words_embedding: Word-level embeddings extracted from token embeddings.
-              Shape: (batch_size, max_text_length, embed_dim)
-            - mask: Boolean mask indicating valid word positions (True) vs padding (False).
-              Shape: (batch_size, max_text_length)
+    ``first`` and ``last`` expect one marked subtoken per word. ``mean`` and
+    ``max`` expect every subtoken to carry its 1-based word index.
     """
-    words_embedding = torch.zeros(
-        batch_size, max_text_length, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
-    )
+    if subtoken_pooling == "first":
+        words_embedding = extract_first_word_embeddings(
+            token_embeds, words_mask, batch_size, max_text_length, embed_dim
+        )
+    elif subtoken_pooling == "last":
+        words_embedding = extract_last_word_embeddings(token_embeds, words_mask, batch_size, max_text_length, embed_dim)
+    elif subtoken_pooling == "mean":
+        words_embedding = extract_mean_word_embeddings(
+            token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim
+        )
+    elif subtoken_pooling == "max":
+        words_embedding = extract_max_word_embeddings(
+            token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim
+        )
+    else:
+        supported = ", ".join(SUBTOKEN_POOLING_MODES)
+        raise ValueError(f"Unknown subtoken pooling strategy {subtoken_pooling!r}. Expected one of: {supported}")
 
-    # Find positions where words_mask > 0 (actual word positions)
-    batch_indices, word_idx = torch.where(words_mask > 0)
-
-    # Convert 1-indexed word mask to 0-indexed positions
-    target_word_idx = words_mask[batch_indices, word_idx] - 1
-
-    # Copy token embeddings to word positions
-    words_embedding[batch_indices, target_word_idx] = token_embeds[batch_indices, word_idx]
-
-    # Create mask for valid word positions
     aranged_word_idx = torch.arange(max_text_length, dtype=attention_mask.dtype, device=token_embeds.device).expand(
         batch_size, -1
     )
-
-    mask = aranged_word_idx < text_lengths
+    mask = aranged_word_idx < text_lengths.reshape(batch_size, -1)[:, :1]
     return words_embedding, mask
 
 
@@ -112,7 +219,7 @@ def extract_prompt_features(
               Shape: (batch_size, max_num_types)
     """
     # Find all positions with the class token
-    class_token_mask = input_ids == class_token_index
+    class_token_mask = input_ids.eq(class_token_index) & attention_mask.gt(0)
     num_class_tokens = torch.sum(class_token_mask, dim=-1, keepdim=True)
 
     # Maximum number of class tokens across batch
@@ -151,6 +258,7 @@ def extract_prompt_features_and_word_embeddings(
     text_lengths: torch.Tensor,
     words_mask: torch.Tensor,
     embed_ent_token: bool = True,
+    subtoken_pooling: str = "first",
     **kwargs,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Extract both prompt embeddings and word embeddings in one call.
@@ -177,6 +285,8 @@ def extract_prompt_features_and_word_embeddings(
             Shape: (batch_size, seq_len)
         embed_ent_token: If True, use [ENT] token embedding. If False,
             use the token after [ENT] (the entity type name). Default: True.
+        subtoken_pooling: Reduction applied to subtokens belonging to the same
+            word. One of ``first``, ``last``, ``mean``, or ``max``.
         **kwargs: Additional keyword arguments passed to extract_prompt_features.
 
     Returns:
@@ -200,7 +310,14 @@ def extract_prompt_features_and_word_embeddings(
 
     # Extract word-level embeddings
     words_embedding, mask = extract_word_embeddings(
-        token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim, text_lengths
+        token_embeds,
+        words_mask,
+        attention_mask,
+        batch_size,
+        max_text_length,
+        embed_dim,
+        text_lengths,
+        subtoken_pooling,
     )
 
     return prompts_embedding, prompts_embedding_mask, words_embedding, mask

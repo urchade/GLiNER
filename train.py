@@ -64,7 +64,7 @@ def main(cfg_path: str):
         # Schedule
         max_steps=cfg.training.num_steps,
         lr_scheduler_type=cfg.training.scheduler_type,
-        warmup_ratio=cfg.training.warmup_ratio,
+        warmup_steps=cfg.training.warmup_steps,
         # Batch & optimization
         per_device_train_batch_size=cfg.training.train_batch_size,
         per_device_eval_batch_size=cfg.training.train_batch_size,

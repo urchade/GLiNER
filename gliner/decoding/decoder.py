@@ -562,6 +562,167 @@ class SpanDecoder(BaseSpanDecoder):
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
         return Span(start=start, end=start + width, entity_type=ent_type, score=score, class_probs=class_probs)
 
+    def _decode_explicit_spans(
+        self,
+        id_to_classes,
+        model_output,
+        span_idx,
+        span_mask,
+        flat_ner=False,
+        threshold=0.5,
+        multi_label=False,
+        return_class_probs=False,
+        input_spans=None,
+    ):
+        """Decode logits paired with explicit absolute span boundaries."""
+        probabilities = torch.sigmoid(model_output)
+        if probabilities.dim() == 4:
+            probabilities = probabilities.flatten(1, 2)
+        span_idx = span_idx.view(span_idx.size(0), -1, 2)
+        span_mask = span_mask.view(span_mask.size(0), -1).bool()
+
+        batch_size, _, num_classes = probabilities.shape
+        thresholds = _expand_batch_param(threshold, batch_size, "threshold")
+        flat_values = _expand_batch_param(flat_ner, batch_size, "flat_ner")
+        multi_values = _expand_batch_param(multi_label, batch_size, "multi_label")
+
+        valid_spans = span_mask.clone()
+        if input_spans is not None:
+            if len(input_spans) != batch_size:
+                raise ValueError("input_spans must have one entry per batch item")
+            for batch_idx, allowed_spans in enumerate(input_spans):
+                if allowed_spans is None:
+                    continue
+                allowed_mask = torch.zeros_like(valid_spans[batch_idx])
+                for start, end in set(allowed_spans):
+                    allowed_mask |= (span_idx[batch_idx, :, 0] == start) & (
+                        span_idx[batch_idx, :, 1] == end
+                    )
+                valid_spans[batch_idx] &= allowed_mask
+
+        id_to_class_per_item = [
+            self._get_id_to_class_for_sample(id_to_classes, batch_idx)
+            for batch_idx in range(batch_size)
+        ]
+        valid_classes = torch.tensor(
+            [
+                [class_idx + 1 in id_to_class for class_idx in range(num_classes)]
+                for id_to_class in id_to_class_per_item
+            ],
+            dtype=torch.bool,
+            device=probabilities.device,
+        )
+
+        threshold_tensor = torch.as_tensor(
+            thresholds,
+            dtype=probabilities.dtype,
+            device=probabilities.device,
+        ).view(batch_size, 1, 1)
+        candidate_mask = (
+            valid_spans.unsqueeze(-1)
+            & valid_classes.unsqueeze(1)
+            & (probabilities > threshold_tensor)
+        )
+        batch_indices, span_positions, class_indices = torch.where(candidate_mask)
+        if batch_indices.numel() == 0:
+            return [[] for _ in range(batch_size)]
+
+        candidate_boundaries = span_idx[batch_indices, span_positions]
+        candidate_scores = probabilities[batch_indices, span_positions, class_indices]
+        index_rows = (
+            torch.column_stack((batch_indices, candidate_boundaries, class_indices))
+            .detach()
+            .cpu()
+            .tolist()
+        )
+        score_rows = candidate_scores.detach().cpu().tolist()
+
+        top_prob_rows = None
+        top_index_rows = None
+        if return_class_probs:
+            candidate_probabilities = probabilities[batch_indices, span_positions]
+            top_k = min(5, num_classes)
+            top_indices = torch.argsort(
+                candidate_probabilities,
+                dim=-1,
+                descending=True,
+                stable=True,
+            )[:, :top_k]
+            top_probabilities = torch.gather(candidate_probabilities, 1, top_indices)
+            top_prob_rows = top_probabilities.detach().cpu().tolist()
+            top_index_rows = top_indices.detach().cpu().tolist()
+
+        candidates_by_batch = [[] for _ in range(batch_size)]
+        for row_index, ((batch_idx, start, end, class_idx), score) in enumerate(
+            zip(index_rows, score_rows)
+        ):
+            id_to_class = id_to_class_per_item[batch_idx]
+            class_probs = None
+            if return_class_probs:
+                class_probs = {
+                    id_to_class.get(index + 1, f"class_{index}"): probability
+                    for index, probability in zip(
+                        top_index_rows[row_index],
+                        top_prob_rows[row_index],
+                    )
+                }
+            candidates_by_batch[batch_idx].append(
+                Span(
+                    start=start,
+                    end=end,
+                    entity_type=id_to_class[class_idx + 1],
+                    score=score,
+                    class_probs=class_probs,
+                )
+            )
+
+        return [
+            self.greedy_search(
+                candidates,
+                flat_values[batch_idx],
+                multi_label=multi_values[batch_idx],
+            )
+            for batch_idx, candidates in enumerate(candidates_by_batch)
+        ]
+
+    def decode(
+        self,
+        tokens,
+        id_to_classes,
+        model_output,
+        flat_ner=False,
+        threshold=0.5,
+        multi_label=False,
+        return_class_probs=False,
+        input_spans=None,
+        **kwargs,
+    ):
+        span_idx = kwargs.get("span_idx")
+        span_mask = kwargs.get("span_mask")
+        if span_idx is not None and span_mask is not None:
+            return self._decode_explicit_spans(
+                id_to_classes=id_to_classes,
+                model_output=model_output,
+                span_idx=span_idx,
+                span_mask=span_mask,
+                flat_ner=flat_ner,
+                threshold=threshold,
+                multi_label=multi_label,
+                return_class_probs=return_class_probs,
+                input_spans=input_spans,
+            )
+        return super().decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=model_output,
+            flat_ner=flat_ner,
+            threshold=threshold,
+            multi_label=multi_label,
+            return_class_probs=return_class_probs,
+            input_spans=input_spans,
+            **kwargs,
+        )
+
 
 class SpanGenerativeDecoder(BaseSpanDecoder):
     """

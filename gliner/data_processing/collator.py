@@ -6,6 +6,7 @@ import torch
 from .processor import (
     BaseProcessor,
     BiEncoderSpanProcessor,
+    StreamingSpanProcessor,
     BiEncoderTokenProcessor,
     UniEncoderSpanProcessor,
     UniEncoderTokenProcessor,
@@ -220,7 +221,12 @@ class SpanDataCollator(BaseSpanCollator):
         self,
         config,
         data_processor: Optional[
-            Union[UniEncoderSpanProcessor, BiEncoderSpanProcessor, UniEncoderSpanDecoderProcessor]
+            Union[
+                UniEncoderSpanProcessor,
+                BiEncoderSpanProcessor,
+                UniEncoderSpanDecoderProcessor,
+                StreamingSpanProcessor,
+            ]
         ] = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
@@ -515,6 +521,12 @@ class UniEncoderSpanDataCollator(SpanDataCollator):
 
     Use SpanDataCollator directly for new code.
     """
+
+    pass
+
+
+class StreamingSpanDataCollator(SpanDataCollator):
+    """Data collator for :class:`StreamingSpanProcessor`."""
 
     pass
 
