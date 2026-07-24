@@ -239,6 +239,51 @@ class TestRequiresCalibration:
         with pytest.raises(RuntimeError, match="not calibrated"):
             cg.coverage_report(calib_data)
 
+    def test_thresholds_before_calibrate_raises(self, model):
+        cg = ConformalGLiNER(model)
+        with pytest.raises(RuntimeError, match="not calibrated"):
+            cg.thresholds()
+
+    def test_calibrated_types_before_calibrate_raises(self, model):
+        cg = ConformalGLiNER(model)
+        with pytest.raises(RuntimeError, match="not calibrated"):
+            _ = cg.calibrated_types
+
+
+class TestPublicThresholdAPI:
+    """Regression coverage for the per-label threshold API requested in PR review
+    (urchade/GLiNER#374) -- exposing what was previously only reachable via the
+    private ``_state`` attribute."""
+
+    @pytest.mark.parametrize("mode", ["span_filter", "risk_control", "mondrian"])
+    def test_calibrated_types_matches_internal_state(self, model, calib_data, mode):
+        cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode=mode)
+        assert set(cg.calibrated_types) == {"organization", "person", "location"}
+        # public accessor, not a live reference to internal state
+        cg.calibrated_types.append("tampered")
+        assert "tampered" not in cg.calibrated_types
+
+    @pytest.mark.parametrize("mode", ["span_filter", "risk_control", "mondrian"])
+    def test_thresholds_covers_every_calibrated_type(self, model, calib_data, mode):
+        cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode=mode)
+        thresholds = cg.thresholds()
+        assert set(thresholds.keys()) == set(cg.calibrated_types)
+        assert all(isinstance(v, float) for v in thresholds.values())
+
+    def test_mondrian_thresholds_can_differ_per_type(self, model, calib_data):
+        cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode="mondrian")
+        thresholds = cg.thresholds()
+        # Not asserting they DO differ (real calibration data may coincidentally
+        # produce equal thresholds) -- asserting the API *can* express a
+        # per-type difference, unlike span_filter/risk_control below.
+        assert isinstance(thresholds, dict) and len(thresholds) == 3
+
+    @pytest.mark.parametrize("mode", ["span_filter", "risk_control"])
+    def test_pooled_modes_share_one_threshold_across_labels(self, model, calib_data, mode):
+        cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode=mode)
+        thresholds = cg.thresholds()
+        assert len(set(thresholds.values())) == 1
+
 
 class TestTokenModeRejected:
     def test_non_span_mode_model_raises_not_implemented(self):

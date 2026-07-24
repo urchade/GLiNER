@@ -73,6 +73,28 @@ class ConformalGLiNER:
     def is_calibrated(self) -> bool:
         return self._state is not None
 
+    @property
+    def calibrated_types(self) -> List[str]:
+        """Entity types that reached the calibration floor and carry the coverage guarantee.
+
+        Any label requested at predict time that is *not* in this list falls back to
+        GLiNER's original uncalibrated ``p > 0.5`` rule -- see ``predict_entities``.
+        """
+        return list(self._require_calibrated().calibrated_types)
+
+    def thresholds(self) -> Dict[str, float]:
+        """Per-label nonconformity threshold actually applied at prediction time.
+
+        Keyed by every entry in ``calibrated_types``. For ``mode="mondrian"`` these
+        differ per label by design (that's the whole point of Mondrian calibration --
+        no type "subsidizes" another). For ``"span_filter"``/``"risk_control"`` every
+        calibrated label currently shares one pooled threshold/lambda; returned
+        per-label here anyway for a uniform API across modes, not because the value
+        differs. Raises if not yet calibrated, same as every other query method here.
+        """
+        state = self._require_calibrated()
+        return {etype: self._nc_threshold_for(state, etype) for etype in state.calibrated_types}
+
     def _require_calibrated(self) -> _CalibrationState:
         if self._state is None:
             raise RuntimeError("ConformalGLiNER is not calibrated. Call calibrate() first.")

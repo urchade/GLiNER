@@ -84,6 +84,19 @@ care about (see Limitations).
 cg.calibrate(calib_data, alpha=0.1, mode="mondrian")
 ```
 
+## Inspecting the calibrated thresholds
+
+```python
+cg.calibrated_types      # ['location', 'organization', 'person'] -- types that got a guarantee
+cg.thresholds()          # {'location': 0.14, 'organization': 0.09, 'person': 0.11}
+```
+
+`thresholds()` returns the nonconformity threshold actually applied per label, for every mode:
+under `"mondrian"` these genuinely differ per label (that's the point — no type subsidizes
+another); under `"span_filter"`/`"risk_control"` every calibrated label currently shares one
+pooled value, returned per-label anyway so the API doesn't change shape across modes. Both raise
+`RuntimeError` if called before `calibrate()`, same as `predict_entities`/`coverage_report`.
+
 ## Validating and saving a calibration
 
 ```python
