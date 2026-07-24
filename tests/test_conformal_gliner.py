@@ -13,6 +13,7 @@ import pytest
 from gliner import GLiNER
 from gliner.conformal import ConformalGLiNER, align_gold_scores, extract_raw_scores
 from gliner.conformal.calibrators import calibration_floor
+from gliner.conformal.scores import _assert_span_mode_supported
 
 MODEL_ID = "gliner-community/gliner_small-v2.5"
 
@@ -283,6 +284,59 @@ class TestPublicThresholdAPI:
         cg = ConformalGLiNER(model).calibrate(calib_data, alpha=0.2, mode=mode)
         thresholds = cg.thresholds()
         assert len(set(thresholds.values())) == 1
+
+
+class TestModelCalibrateConvenienceMethod:
+    """Regression coverage for the `model.calibrate()` / `model.conformal` API
+    requested in PR review (urchade/GLiNER#374) -- calibration and inference on
+    the same object, not just through a separately-constructed ConformalGLiNER.
+
+    ``model`` is a module-scoped fixture shared across this whole test file --
+    every test here must undo its own calibration afterward so it doesn't leak
+    into unrelated tests that assume an uncalibrated model."""
+
+    @pytest.fixture
+    def calibrated_model(self, model, calib_data):
+        model.calibrate(calib_data, alpha=0.2, mode="risk_control")
+        yield model
+        model._conformal_model = None
+
+    def test_conformal_is_none_before_calibrate(self, model):
+        assert model.conformal is None
+
+    def test_calibrate_returns_self_for_chaining(self, model, calib_data):
+        try:
+            result = model.calibrate(calib_data, alpha=0.2, mode="risk_control")
+            assert result is model
+        finally:
+            model._conformal_model = None
+
+    def test_conformal_property_exposes_a_calibrated_wrapper(self, calibrated_model):
+        assert isinstance(calibrated_model.conformal, ConformalGLiNER)
+        assert calibrated_model.conformal.is_calibrated
+        assert set(calibrated_model.conformal.calibrated_types) == {"organization", "person", "location"}
+
+    def test_predicting_through_the_stored_wrapper_matches_direct_wrapper_use(self, calibrated_model):
+        text = "Netflix was founded by Reed Hastings in Los Gatos ."
+        labels = ["organization", "person", "location"]
+
+        via_model = calibrated_model.conformal.predict_entities(text, labels)
+
+        fresh_wrapper = ConformalGLiNER(calibrated_model)
+        fresh_wrapper._state = calibrated_model.conformal._state  # same calibration, no re-fitting
+        via_fresh_wrapper = fresh_wrapper.predict_entities(text, labels)
+
+        assert via_model == via_fresh_wrapper
+
+    def test_unsupported_architecture_raises_not_implemented(self):
+        class _FakeTokenModel:
+            pass
+
+        # calibrate() is only meaningful on real BaseEncoderGLiNER instances;
+        # this documents that the NotImplementedError comes from ConformalGLiNER
+        # itself (see TestTokenModeRejected), not duplicated validation here.
+        with pytest.raises(NotImplementedError, match="span-mode"):
+            _assert_span_mode_supported(_FakeTokenModel())
 
 
 class TestTokenModeRejected:

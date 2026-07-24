@@ -2413,6 +2413,51 @@ class BaseEncoderGLiNER(BaseGLiNER):
             **kwargs,
         )
 
+    def calibrate(
+        self,
+        calib_data: List[Dict[str, Any]],
+        alpha: float,
+        mode: str = "risk_control",
+        labels: Optional[List[str]] = None,
+    ) -> "BaseEncoderGLiNER":
+        """Calibrate this model with a conformal coverage/risk guarantee.
+
+        Thin convenience wrapper around `gliner.conformal.ConformalGLiNER`: builds
+        one around `self`, calibrates it, and stores it on this instance (accessible
+        via the `conformal` property) so calibration and inference live on the same
+        object instead of requiring callers to juggle a separate wrapper. For
+        anything beyond predicting with the calibrated threshold -- coverage_report,
+        save_calibration/load_calibration, inspecting per-label thresholds -- use
+        `self.conformal` directly, or construct `ConformalGLiNER(model)` yourself;
+        this method does not duplicate that surface.
+
+        Only span-mode models (the default `UniEncoderSpanGLiNER`/`BiEncoderSpanGLiNER`
+        architecture) are supported; other architectures raise `NotImplementedError`
+        from `ConformalGLiNER` itself -- see `docs/conformal.md`'s Scope section.
+
+        Args:
+            calib_data: Held-out labeled examples, same schema as GLiNER's own
+                training/eval data: `[{"tokenized_text": [...], "ner": [[start,
+                end, type], ...]}, ...]`. Must be disjoint from any data later
+                passed to `self.conformal.coverage_report(...)`.
+            alpha: Target miscoverage/risk level in (0, 1).
+            mode: One of `"span_filter"`, `"risk_control"`, `"mondrian"`.
+            labels: The fixed target label set to calibrate against. Defaults to
+                every type appearing at least once in `calib_data`.
+
+        Returns:
+            `self`, for chaining (e.g. `model.calibrate(data, alpha=0.1).predict_entities(...)`).
+        """
+        from .conformal import ConformalGLiNER  # noqa: PLC0415 (opt-in, not a hard dependency)
+
+        self._conformal_model = ConformalGLiNER(self).calibrate(calib_data, alpha=alpha, mode=mode, labels=labels)
+        return self
+
+    @property
+    def conformal(self) -> Optional[Any]:
+        """The `ConformalGLiNER` wrapper built by `calibrate()`, or `None` if not yet calibrated."""
+        return getattr(self, "_conformal_model", None)
+
     @torch.no_grad()
     def evaluate(
         self,

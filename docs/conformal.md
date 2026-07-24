@@ -47,6 +47,26 @@ entities = cg.predict_entities(
 #  "conformal": {"mode": "risk_control", "alpha": 0.1, "calibrated": True}}
 ```
 
+### Shortcut: calibrate on the model itself
+
+`ConformalGLiNER(model)` above is the full API — `coverage_report`, `save_calibration`,
+`thresholds()`, everything. If all you want is to calibrate once and keep predicting from the
+same object, `GLiNER` itself exposes a thin convenience wrapper around exactly that:
+
+```python
+model = GLiNER.from_pretrained("gliner-community/gliner_small-v2.5")
+model.calibrate(calib_data, alpha=0.1, mode="risk_control")  # returns self, chainable
+
+model.conformal.predict_entities(text, labels)   # same ConformalGLiNER instance
+model.conformal.thresholds()                     # per-label thresholds, etc.
+```
+
+`model.conformal` is `None` until `calibrate()` is called, and is exactly the
+`ConformalGLiNER` instance `calibrate()` built — nothing is duplicated between the two APIs,
+this just saves constructing the wrapper yourself when you don't need a separate reference to
+an uncalibrated model. Same scope restriction applies (`NotImplementedError` on non-span-mode
+architectures).
+
 ## The three guarantee modes
 
 All three are calibrated from the *same* raw span scores GLiNER already computes — no
