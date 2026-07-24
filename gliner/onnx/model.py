@@ -9,16 +9,20 @@ from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-import numpy as np
-import torch
-try:
-    import onnxruntime as ort
-except (ImportError, Exception):
-    ort = None
-
+from ..utils import is_module_available
 from ..modeling.outputs import GLiNERBaseOutput, GLiNERRelexOutput
+
+if TYPE_CHECKING:
+    import numpy as np
+    import torch
+
+IS_ONNXRUNTIME = is_module_available("onnxruntime")
+if IS_ONNXRUNTIME:
+    import onnxruntime as ort
+else:
+    ort = None
 
 
 class BaseORTModel(ABC):

@@ -11,7 +11,7 @@ Configs (in order):
     dice_width   — SpanDiceLoss + span-width weighting
 
 Usage:
-    python scripts/train_ablation.py \
+    python scripts/dice_loss_study/train_ablation.py \
         --base_model knowledgator/gliner-bi-small-v1.0 \
         --max_steps 200 \
         --output_dir results/ablation

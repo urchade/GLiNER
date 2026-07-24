@@ -5,7 +5,7 @@ Also measures CPU inference latency and computes the positive-span imbalance rat
 that mathematically motivates the Focal / Dice loss work in Step 2.
 
 Usage:
-    python scripts/baseline_eval.py \
+    python scripts/dice_loss_study/baseline_eval.py \
         --model knowledgator/gliner-bi-small-v1.0 \
         --output results/baseline_table.csv
 """

@@ -7,7 +7,7 @@ Generates four publication-ready plots from the CSV outputs of Steps 1-3:
     4. Span imbalance histogram (positive vs negative candidates)
 
 Usage:
-    python scripts/visualize_results.py \
+    python scripts/dice_loss_study/visualize_results.py \
         --baseline    results/baseline_table.csv \
         --ablation    results/ablation/ablation_results.csv \
         --benchmark   results/openvino/openvino_benchmark.csv \
