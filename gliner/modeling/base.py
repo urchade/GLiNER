@@ -39,7 +39,7 @@ from .encoder import Encoder, BiEncoder
 from .outputs import GLiNERBaseOutput, GLiNERRelexOutput, GLiNERDecoderOutput
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
-from .loss_functions import cross_entropy_loss, focal_loss_with_logits, span_dice_loss
+from .loss_functions import span_dice_loss, cross_entropy_loss, focal_loss_with_logits
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 
@@ -201,6 +201,8 @@ class BaseModel(ABC, nn.Module):
             negatives: Probability of sampling negative examples.
             masking: Masking strategy, one of "none", "global", "label", or "span".
             normalize_prob: Whether to normalize probabilities in loss computation.
+            loss_type: One of "focal" (default) or "dice"; "bce" is focal with alpha=-1, gamma=0.
+            dice_gamma: Focusing exponent used by span_dice_loss when loss_type="dice".
 
         Returns:
             Loss tensor of same shape as labels.
@@ -537,7 +539,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         batch_size = scores.shape[0]
         num_classes = prompts_embedding_mask.shape[-1]
 
-        BS, L, K, CL = scores.shape
+        BS, _L, K, CL = scores.shape
 
         # Span-width-aware positive weighting: w(k) = 1 + log(k+1), k in [1..K].
         # Applied before flattening so the K axis is still accessible.

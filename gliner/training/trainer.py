@@ -14,12 +14,13 @@ from dataclasses import field, dataclass
 import torch
 import transformers
 from torch import nn
-from transformers.trainer_utils import set_seed
 from torch.utils.data import Dataset, DataLoader
+from transformers.trainer_utils import set_seed
 
 
 def _get_trainer_imports():
-    from transformers.trainer import get_parameter_names, is_sagemaker_mp_enabled
+    from transformers.trainer import get_parameter_names, is_sagemaker_mp_enabled  # noqa: PLC0415
+
     return get_parameter_names, is_sagemaker_mp_enabled
 
 ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
@@ -190,7 +191,8 @@ class Trainer(transformers.Trainer):
         try:
             _, is_sagemaker_mp_enabled = _get_trainer_imports()
             if is_sagemaker_mp_enabled():
-                from transformers.trainer_pt_utils import smp_forward_backward
+                from transformers.trainer_pt_utils import smp_forward_backward  # noqa: PLC0415
+
                 loss_mb = smp_forward_backward(model, inputs, self.args.gradient_accumulation_steps)
                 return loss_mb.reduce_mean().detach().to(self.args.device)
 

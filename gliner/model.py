@@ -4,14 +4,10 @@ import json
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
-try:
-    import onnxruntime as ort
-except (ImportError, Exception):
-    ort = None
 import transformers
 from tqdm import tqdm
 from torch import nn
@@ -54,12 +50,6 @@ from .decoding import (
     SpanGenerativeDecoder,
     TokenGenerativeDecoder,
 )
-# Lazy import — transformers.Trainer triggers torch.distributed import which
-# deadlocks on macOS ARM when multiple OpenMP runtimes are present.
-# Only load when train_model() is actually called.
-def _get_trainer_classes():
-    from .training import Trainer, TrainingArguments
-    return Trainer, TrainingArguments
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
 from .onnx.model import (
     BaseORTModel,
@@ -107,14 +97,30 @@ from .data_processing.collator import (
 )
 from .data_processing.tokenizer import WordsSplitter
 
-if is_module_available("onnxruntime"):
+ONNX_AVAILABLE = is_module_available("onnxruntime")
+if ONNX_AVAILABLE:
     import onnxruntime as ort
-    ONNX_AVAILABLE = True
 else:
     ort = None
-    # export_to_onnx only needs torch.onnx.export (always available).
-    # onnxruntime is only required for ORT inference, not for the export itself.
-    ONNX_AVAILABLE = True
+
+
+def _get_trainer_classes():
+    """Lazily import Trainer/TrainingArguments.
+
+    transformers.Trainer triggers a torch.distributed import that deadlocks on
+    macOS ARM when multiple OpenMP runtimes are present -- only load it when
+    train_model()/create_training_args() are actually called.
+    """
+    from .training import Trainer, TrainingArguments  # noqa: PLC0415
+
+    return Trainer, TrainingArguments
+
+
+if TYPE_CHECKING:
+    # Only for static analysis / IDEs -- see _get_trainer_classes for why this
+    # isn't a real top-level import.
+    from .training import Trainer, TrainingArguments
+
 
 logger = logging.getLogger(__name__)
 
@@ -761,9 +767,13 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         tokenizer_config_path = model_dir / "tokenizer_config.json"
 
         if tokenizer_config_path.is_file():
-            tokenizer = AutoTokenizer.from_pretrained(model_dir, cache_dir=cache_dir, local_files_only=local_files_only)
+            tokenizer = AutoTokenizer.from_pretrained(
+                model_dir, cache_dir=cache_dir, local_files_only=local_files_only
+            )
         else:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir, local_files_only=local_files_only)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
 
         return cls._set_tokenizer_spec_tokens(tokenizer)
 
@@ -1334,8 +1344,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             raise RuntimeError(
                 "This instance already wraps an ONNX/ORT model. Export is intended for PyTorch-based models."
             )
-        if not ONNX_AVAILABLE:
-            raise RuntimeError("onnxruntime is not available. Install `onnxruntime` to export to ONNX.")
+        # No ONNX_AVAILABLE check here: exporting only needs torch.onnx.export (always
+        # available). onnxruntime is required to later *load*/*run* the exported model
+        # (BaseORTModel / from_pretrained(..., load_onnx_model=True)), not to export it;
+        # quantize=True degrades gracefully on its own if onnxruntime.quantization is
+        # missing (see _maybe_quantize_onnx).
         if not hasattr(self, "data_processor") or not hasattr(self, "data_collator_class"):
             raise RuntimeError("Model is not fully initialized (missing data_processor or data_collator).")
 
@@ -1666,8 +1679,41 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         dataloader_num_workers: int = 1,
         report_to: str = "none",
         **kwargs,
-    ):
-        """Create training arguments with sensible defaults."""
+    ) -> "TrainingArguments":
+        """Create training arguments with sensible defaults.
+
+        Args:
+            output_dir: Directory to save model checkpoints.
+            learning_rate: Learning rate for main parameters.
+            weight_decay: Weight decay for main parameters.
+            others_lr: Learning rate for other parameters.
+            others_weight_decay: Weight decay for other parameters.
+            focal_loss_alpha: Alpha for focal loss.
+            focal_loss_gamma: Gamma for focal loss.
+            rel_focal_loss_alpha: Alpha for relation focal loss. Defaults to entity alpha.
+            rel_focal_loss_gamma: Gamma for relation focal loss. Defaults to entity gamma.
+            focal_loss_prob_margin: Probability margin for focal loss.
+            loss_reduction: Loss reduction method.
+            negatives: Negative sampling ratio.
+            masking: Masking strategy.
+            lr_scheduler_type: Learning rate scheduler type.
+            warmup_ratio: Warmup ratio.
+            per_device_train_batch_size: Training batch size.
+            per_device_eval_batch_size: Evaluation batch size.
+            max_grad_norm: Maximum gradient norm.
+            max_steps: Maximum training steps.
+            save_steps: Save checkpoint every N steps.
+            save_total_limit: Maximum number of checkpoints to keep.
+            logging_steps: Log every N steps.
+            use_cpu: Whether to use CPU.
+            bf16: Whether to use bfloat16.
+            dataloader_num_workers: Number of dataloader workers.
+            report_to: Where to report metrics.
+            **kwargs: Additional training arguments.
+
+        Returns:
+            TrainingArguments instance.
+        """
         _, TrainingArguments = _get_trainer_classes()
         return TrainingArguments(
             output_dir=output_dir,
@@ -1703,12 +1749,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         self,
         train_dataset,
         eval_dataset,
-        training_args=None,
+        training_args: Optional["TrainingArguments"] = None,
         freeze_components: Optional[list[str]] = None,
         compile_model: bool = False,
         output_dir: Optional[Union[str, Path]] = None,
         **training_kwargs,
-    ):
+    ) -> "Trainer":
         """Train the model.
 
         Args:

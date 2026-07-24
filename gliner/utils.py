@@ -1,6 +1,6 @@
-import importlib.util
 import json
 import argparse
+import importlib.util
 from typing import Any, Dict, Union
 from pathlib import Path
 
