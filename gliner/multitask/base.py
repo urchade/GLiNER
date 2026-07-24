@@ -96,6 +96,22 @@ class GLiNERBasePipeline(ABC):
         """
         pass
 
+    def _run_model(self, texts, labels, threshold: float = 0.5, batch_size: int = 8):
+        """Run inference across GLiNER versions with different public APIs."""
+        run = getattr(self.model, "run", None)
+        if callable(run):
+            return run(texts, labels, threshold=threshold, batch_size=batch_size)
+
+        inference = getattr(self.model, "inference", None)
+        if callable(inference):
+            return inference(texts, labels, threshold=threshold, batch_size=batch_size)
+
+        batch_predict_entities = getattr(self.model, "batch_predict_entities", None)
+        if callable(batch_predict_entities):
+            return batch_predict_entities(texts, labels, threshold=threshold, batch_size=batch_size)
+
+        raise AttributeError("GLiNER model must define 'run', 'inference', or 'batch_predict_entities'.")
+
     def __call__(
         self,
         texts: Union[str, List[str]],
@@ -122,7 +138,7 @@ class GLiNERBasePipeline(ABC):
 
         prompts = self.prepare_texts(texts, **kwargs)
 
-        predictions = self.model.run(prompts, labels, threshold=threshold, batch_size=batch_size)
+        predictions = self._run_model(prompts, labels, threshold=threshold, batch_size=batch_size)
 
         results = self.process_predictions(predictions, **kwargs)
 

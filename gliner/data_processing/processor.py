@@ -270,16 +270,21 @@ class BaseProcessor(ABC):
             tokenized_inputs: Tokenized inputs from transformer tokenizer.
             skip_first_words: Optional list of word counts to skip per example
                 (e.g., prompt words).
-            token_level: If True, create token-level masks instead of word-level.
+            token_level: If True, assign word indices to every subtoken,
+                independently of the configured pooling strategy.
 
         Returns:
             Word mask array.
         """
+        subtoken_pooling = getattr(self.config, "subtoken_pooling", "first")
+        if not isinstance(subtoken_pooling, str):
+            subtoken_pooling = "first"
         return prepare_word_mask(
             texts,
             tokenized_inputs,
             skip_first_words=skip_first_words,
             token_level=token_level,
+            subtoken_pooling=subtoken_pooling,
         )
 
     def tokenize_inputs(self, texts, entities, blank=None, **kwargs):
@@ -618,6 +623,99 @@ class UniEncoderSpanProcessor(BaseProcessor):
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
 
+        return tokenized_input
+
+
+class StreamingSpanProcessor(UniEncoderSpanProcessor):
+    """Span processor for a causal-decoder text backbone.
+
+    Labels are terminated by a marker rather than introduced by one.  This is
+    important for causal backbones: the hidden state at ``<<LABEL>>`` can then
+    attend to all subtokens of the label that precedes it.
+    """
+
+    def __init__(self, config, tokenizer, words_splitter):
+        super().__init__(config, tokenizer, words_splitter)
+        self.label_token = getattr(config, "label_token", "<<LABEL>>")
+
+    def prepare_inputs(
+        self,
+        texts: Sequence[Sequence[str]],
+        entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
+        blank: Optional[str] = None,
+        add_entities: Optional[bool] = True,
+        include_prompt: Union[bool, Sequence[bool]] = True,
+        **kwargs,
+    ) -> Tuple[List[List[str]], List[int]]:
+        """Build ``label<<LABEL>>...<<SEP>>text`` token sequences."""
+        del kwargs
+        include_flags = (
+            [include_prompt] * len(texts) if isinstance(include_prompt, bool) else list(include_prompt)
+        )
+        if len(include_flags) != len(texts):
+            raise ValueError("include_prompt must match the number of texts")
+
+        input_texts: List[List[str]] = []
+        prompt_lengths: List[int] = []
+        for i, text in enumerate(texts):
+            prompt: List[str] = []
+            if include_flags[i]:
+                ents = self._maybe_remap_entities(self._select_entities(i, entities, blank))
+                for ent in ents:
+                    if add_entities:
+                        prompt.append(str(ent))
+                    prompt.append(self.label_token)
+                prompt.append(self.sep_token)
+
+            prompt_lengths.append(len(prompt))
+            input_texts.append(prompt + list(text))
+        return input_texts, prompt_lengths
+
+    def tokenize_inputs(
+        self,
+        texts,
+        entities,
+        blank=None,
+        include_prompt=True,
+        truncation=True,
+        **kwargs,
+    ):
+        """Tokenize without an implicit EOS so cached sessions can be extended."""
+        input_texts, prompt_lengths = self.prepare_inputs(
+            texts,
+            entities,
+            blank=blank,
+            include_prompt=include_prompt,
+            **kwargs,
+        )
+        tokenized_inputs = self.transformer_tokenizer(
+            input_texts,
+            is_split_into_words=True,
+            return_tensors="pt",
+            truncation=truncation,
+            padding="longest",
+            add_special_tokens=False,
+        )
+        words_masks = self.prepare_word_mask(texts, tokenized_inputs, prompt_lengths)
+        tokenized_inputs["words_mask"] = torch.tensor(words_masks)
+        return tokenized_inputs
+
+    def tokenize_and_prepare_labels(
+        self,
+        batch,
+        prepare_labels,
+        *args,
+        include_prompt=True,
+        **kwargs,
+    ):
+        tokenized_input = self.tokenize_inputs(
+            batch["tokens"],
+            batch["classes_to_id"],
+            include_prompt=include_prompt,
+            **kwargs,
+        )
+        if prepare_labels:
+            tokenized_input["labels"] = self.create_labels(batch)
         return tokenized_input
 
 

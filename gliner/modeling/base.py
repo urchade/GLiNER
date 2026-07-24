@@ -33,10 +33,16 @@ from .utils import (
     extract_spans_from_tokens,
     extract_prompt_features_and_word_embeddings,
 )
-from .layers import CrossFuser, LstmSeq2SeqEncoder, create_projection_layer
+from .layers import CrossFuser, LstmSeq2SeqEncoder, StreamingSpanLabelsEncoder, create_projection_layer
 from .decoder import Decoder
 from .encoder import Encoder, BiEncoder
-from .outputs import GLiNERBaseOutput, GLiNERRelexOutput, GLiNERDecoderOutput
+from .outputs import (
+    GLiNERBaseOutput,
+    GLiNERRelexOutput,
+    GLiNERDecoderOutput,
+    GLiNERStreamingSpanOutput,
+    GLiNERRepresentationOutput,
+)
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
 from .loss_functions import span_dice_loss, cross_entropy_loss, focal_loss_with_logits
@@ -121,11 +127,11 @@ class BaseModel(ABC, nn.Module):
         return out, mask
 
     @abstractmethod
-    def get_representations(self) -> Tuple[torch.Tensor, ...]:
+    def get_representations(self) -> GLiNERRepresentationOutput:
         """Get intermediate representations from the model.
 
         Returns:
-            Tuple of tensors representing intermediate model outputs.
+            Structured intermediate model representations.
         """
         pass
 
@@ -159,6 +165,17 @@ class BaseModel(ABC, nn.Module):
             mask = mask[:, :target_len]
 
         return embedding, mask
+
+    @staticmethod
+    def _get_num_attention_heads(token_rep_layer: nn.Module) -> int:
+        """Read the attention-head count from encoder or decoder wrappers."""
+        if hasattr(token_rep_layer, "bert_layer"):
+            model_config = token_rep_layer.bert_layer.model.config
+        elif hasattr(token_rep_layer, "decoder_layer"):
+            model_config = token_rep_layer.decoder_layer.model.config
+        else:
+            raise TypeError("Unsupported token representation layer")
+        return model_config.num_attention_heads
 
     @abstractmethod
     def forward(self, x: Any) -> Any:
@@ -284,7 +301,7 @@ class BaseUniEncoderModel(BaseModel):
             cache_dir: Directory for caching pretrained models.
         """
         super().__init__(config, from_pretrained, cache_dir)
-        self.token_rep_layer = Encoder(config, from_pretrained, cache_dir=cache_dir)
+        self.token_rep_layer = self._init_token_rep_layer(config, from_pretrained, cache_dir=cache_dir)
 
         if self.config.num_rnn_layers > 0:
             self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
@@ -293,11 +310,26 @@ class BaseUniEncoderModel(BaseModel):
             self.cross_fuser = CrossFuser(
                 self.config.hidden_size,
                 self.config.hidden_size,
-                num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
+                num_heads=self._get_num_attention_heads(self.token_rep_layer),
                 num_layers=self.config.num_post_fusion_layers,
                 dropout=config.dropout,
                 schema=config.post_fusion_schema,
             )
+
+    def _init_token_rep_layer(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: Optional[Union[str, Path]] = None,
+    ) -> nn.Module:
+        """Initialize the token representation layer.
+
+        Args:
+            config: Model configuration object.
+            from_pretrained: Whether to load from pretrained weights.
+            cache_dir: Directory for caching pretrained models.
+        """
+        return Encoder(config, from_pretrained, cache_dir=cache_dir)
 
     def _extract_prompt_features_and_word_embeddings(
         self,
@@ -331,6 +363,7 @@ class BaseUniEncoderModel(BaseModel):
             text_lengths,
             words_mask,
             self.config.embed_ent_token,
+            subtoken_pooling=getattr(self.config, "subtoken_pooling", "first"),
         )
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
@@ -341,7 +374,7 @@ class BaseUniEncoderModel(BaseModel):
         text_lengths: Optional[torch.Tensor] = None,
         words_mask: Optional[torch.LongTensor] = None,
         **kwargs: Any,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> GLiNERRepresentationOutput:
         """Get entity label and word representations from input.
 
         Args:
@@ -352,11 +385,7 @@ class BaseUniEncoderModel(BaseModel):
             **kwargs: Additional arguments for the encoder.
 
         Returns:
-            Tuple containing:
-                - prompts_embedding: Entity label embeddings of shape (B, C, D).
-                - prompts_embedding_mask: Mask for prompts of shape (B, C).
-                - words_embedding: Word embeddings of shape (B, W, D).
-                - mask: Mask for words of shape (B, W).
+            Structured prompt and word representations.
         """
         word_lengths = kwargs.pop("word_lengths", None)
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
@@ -369,7 +398,14 @@ class BaseUniEncoderModel(BaseModel):
             batch_size, _, embed_dim = token_embeds.shape
             max_text_length = text_lengths.max()
             words_embedding, mask = extract_word_embeddings(
-                token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim, text_lengths
+                token_embeds,
+                words_mask,
+                attention_mask,
+                batch_size,
+                max_text_length,
+                embed_dim,
+                text_lengths,
+                getattr(self.config, "subtoken_pooling", "first"),
             )
             prompts_embedding, prompts_embedding_mask = self.lookup_precomputed_prompts(
                 batch_size, device=token_embeds.device, rel=False
@@ -384,7 +420,12 @@ class BaseUniEncoderModel(BaseModel):
         if hasattr(self, "rnn"):
             words_embedding = self.rnn(words_embedding, mask, lengths=word_lengths)
 
-        return prompts_embedding, prompts_embedding_mask, words_embedding, mask
+        return GLiNERRepresentationOutput(
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            words_embedding=words_embedding,
+            mask=mask,
+        )
 
 
 class UniEncoderSpanModel(BaseUniEncoderModel):
@@ -414,6 +455,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             hidden_size=config.hidden_size,
             max_width=config.max_width,
             dropout=config.dropout,
+            context_encoder_config=getattr(config, "span_encoder_config", None),
         )
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
@@ -458,9 +500,13 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
@@ -596,6 +642,445 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         return loss
 
 
+class StreamingSpanModel(UniEncoderSpanModel):
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: Optional[Union[str, Path]] = None,
+    ) -> None:
+        """Initialize the streaming span model.
+
+        Args:
+            config: Model configuration object.
+            from_pretrained: Whether to load from pretrained weights.
+            cache_dir: Directory for caching pretrained models.
+        """
+        super().__init__(config, from_pretrained, cache_dir)
+        if self.token_rep_layer.decoder_hidden_size != config.hidden_size:
+            self.token_projection = nn.Linear(self.token_rep_layer.decoder_hidden_size, config.hidden_size)
+        self.labels_encoder = StreamingSpanLabelsEncoder(config)
+        self.span_rep_layer = SpanRepLayer(
+            span_mode=config.span_mode,
+            hidden_size=config.hidden_size,
+            max_width=config.max_width,
+            dropout=config.dropout,
+            context_encoder_config=getattr(config, "span_encoder_config", None),
+        )
+
+    def _init_token_rep_layer(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: Optional[Union[str, Path]] = None,
+    ) -> Decoder:
+        """Initialize the token representation layer for the streaming span model.
+
+        Args:
+            config: Model configuration object.
+            from_pretrained: Whether to load from pretrained weights.
+            cache_dir: Directory for caching pretrained models.
+        """
+        return Decoder(config, from_pretrained, cache_dir=cache_dir, use_causal_lm=False)
+
+    @staticmethod
+    def _merge_cached_words(
+        past_word_embeddings: torch.Tensor,
+        past_word_mask: torch.Tensor,
+        current_word_embeddings: torch.Tensor,
+        current_word_mask: torch.Tensor,
+        past_word_length: Optional[Union[int, torch.Tensor]] = None,
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
+        """Append each row's valid words into reusable capacity-backed storage.
+
+        ``past_word_length`` may be a scalar for the legacy batch-size-one path
+        or a vector for cached streaming batches.  When omitted, valid cached
+        words are compacted according to ``past_word_mask`` before appending.
+        """
+        if past_word_embeddings.dim() != 3 or current_word_embeddings.dim() != 3:
+            raise ValueError("Word embeddings must have shape (batch, words, hidden)")
+        if past_word_mask.shape != past_word_embeddings.shape[:2]:
+            raise ValueError("past_word_mask must match past_word_embeddings")
+        if current_word_mask.shape != current_word_embeddings.shape[:2]:
+            raise ValueError("current_word_mask must match current_word_embeddings")
+        if past_word_embeddings.size(0) != current_word_embeddings.size(0):
+            raise ValueError("Cached and current word batches must have the same size")
+
+        batch_size = past_word_embeddings.size(0)
+        inferred_lengths = past_word_length is None
+        if inferred_lengths:
+            past_lengths = past_word_mask.long().sum(dim=1)
+        elif isinstance(past_word_length, torch.Tensor):
+            past_lengths = past_word_length.to(device=past_word_mask.device, dtype=torch.long).reshape(-1)
+        else:
+            past_lengths = torch.full(
+                (batch_size,),
+                int(past_word_length),
+                dtype=torch.long,
+                device=past_word_mask.device,
+            )
+        if past_lengths.numel() == 1 and batch_size != 1:
+            past_lengths = past_lengths.expand(batch_size)
+        if past_lengths.numel() != batch_size:
+            raise ValueError("past_word_length must contain one value per batch row")
+
+        current_lengths = current_word_mask.long().sum(dim=1)
+        required_lengths = past_lengths + current_lengths
+        required = int(required_lengths.max().item()) if batch_size else 0
+        capacity = past_word_embeddings.size(1)
+
+        if inferred_lengths:
+            # Backward-compatible direct model calls return a compact tensor
+            # sized for the padded current word width. Capacity reservation is
+            # enabled only when callers supply authoritative cached lengths.
+            new_capacity = max(
+                required,
+                int(past_lengths.max().item()) + current_word_embeddings.size(1),
+            )
+            merged_embeddings = past_word_embeddings.new_empty(
+                past_word_embeddings.size(0),
+                new_capacity,
+                past_word_embeddings.size(2),
+            )
+            merged_mask = torch.zeros(
+                past_word_mask.size(0),
+                new_capacity,
+                dtype=torch.bool,
+                device=past_word_mask.device,
+            )
+        elif required > capacity:
+            new_capacity = max(required, max(1, capacity) * 2)
+            merged_embeddings = past_word_embeddings.new_empty(
+                past_word_embeddings.size(0),
+                new_capacity,
+                past_word_embeddings.size(2),
+            )
+            merged_mask = torch.zeros(
+                past_word_mask.size(0),
+                new_capacity,
+                dtype=torch.bool,
+                device=past_word_mask.device,
+            )
+            if capacity:
+                merged_embeddings[:, :capacity].copy_(past_word_embeddings)
+                merged_mask[:, :capacity] = past_word_mask.bool()
+        else:
+            merged_embeddings = past_word_embeddings
+            merged_mask = past_word_mask
+
+        # Older callers may supply a padded cache without authoritative lengths.
+        # Compact it once; explicit-length streaming paths preserve the prefix
+        # invariant and avoid copying historical words on every append.
+        if inferred_lengths:
+            past_valid = past_word_mask.bool()
+            past_rank = past_valid.long().cumsum(dim=1) - 1
+            past_rows = torch.arange(batch_size, device=past_word_mask.device).unsqueeze(1).expand_as(past_valid)
+            valid_values = past_word_embeddings[past_valid].clone()
+            valid_rows = past_rows[past_valid]
+            valid_columns = past_rank[past_valid]
+            merged_mask.zero_()
+            if valid_values.numel():
+                merged_embeddings[valid_rows, valid_columns] = valid_values
+                merged_mask[valid_rows, valid_columns] = True
+
+        current_valid = current_word_mask.bool()
+        current_rank = current_valid.long().cumsum(dim=1) - 1
+        destinations = past_lengths.unsqueeze(1) + current_rank
+        current_rows = torch.arange(batch_size, device=current_word_mask.device).unsqueeze(1).expand_as(current_valid)
+        if current_valid.any():
+            valid_rows = current_rows[current_valid]
+            valid_columns = destinations[current_valid]
+            merged_embeddings[valid_rows, valid_columns] = current_word_embeddings[current_valid]
+            merged_mask[valid_rows, valid_columns] = True
+        return merged_embeddings, merged_mask
+
+    def get_representations(
+        self,
+        input_ids: Optional[torch.FloatTensor] = None,
+        attention_mask: Optional[torch.LongTensor] = None,
+        label_attention_mask: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[Any] = None,
+        past_word_embeddings: Optional[torch.FloatTensor] = None,
+        past_word_mask: Optional[torch.LongTensor] = None,
+        prompts_embedding: Optional[torch.FloatTensor] = None,
+        prompts_embedding_mask: Optional[torch.LongTensor] = None,
+        text_lengths: Optional[torch.Tensor] = None,
+        words_mask: Optional[torch.LongTensor] = None,
+        **kwargs: Any,
+    ) -> GLiNERRepresentationOutput:
+        """Get entity label and word representations from input.
+
+        Args:
+            input_ids: Input token IDs of shape (B, L).
+            attention_mask: Decoder attention mask. With cached keys this may include
+                both cached and current positions.
+            label_attention_mask: Mask for the current ``input_ids`` only. If omitted,
+                it is derived from the trailing part of ``attention_mask``.
+            past_key_values: Past key values for attention layers.
+            past_word_embeddings: Unprocessed word representations cached from prior calls.
+            past_word_mask: Valid-position mask for ``past_word_embeddings``.
+            prompts_embedding: Optional precomputed prompt representations.
+            prompts_embedding_mask: Mask for ``prompts_embedding``.
+            text_lengths: Length of each text in batch.
+            words_mask: Word boundary mask.
+            **kwargs: Additional arguments for the encoder.
+
+        Returns:
+            Structured prompt, word, and cache representations.
+        """
+        word_lengths = kwargs.pop("word_lengths", None)
+        past_word_length = kwargs.pop("past_word_length", None)
+        label_attention_mask = kwargs.pop("label_mask", label_attention_mask)
+        if input_ids is None or attention_mask is None:
+            raise ValueError("input_ids and attention_mask are required")
+
+        current_seq_length = input_ids.size(1)
+        if label_attention_mask is None:
+            if attention_mask.size(1) < current_seq_length:
+                raise ValueError("attention_mask cannot be shorter than input_ids")
+            label_attention_mask = attention_mask[:, -current_seq_length:]
+        elif label_attention_mask.shape != input_ids.shape:
+            raise ValueError("label_attention_mask must have the same shape as input_ids")
+
+        decoder_kwargs = dict(kwargs)
+        decoder_kwargs.setdefault("use_cache", True)
+        if past_key_values is not None:
+            decoder_kwargs["past_key_values"] = past_key_values
+        token_embeds, past_key_values = self.token_rep_layer(
+            input_ids,
+            attention_mask=attention_mask,
+            **decoder_kwargs,
+        )
+        if hasattr(self, "token_projection"):
+            # A pretrained causal backbone may honor its source config's BF16
+            # dtype while newly initialized GLiNER projections remain FP32.
+            # Cross the module boundary in the receiving layer's dtype.
+            token_embeds = token_embeds.to(dtype=self.token_projection.weight.dtype)
+            token_embeds = self.token_projection(token_embeds)
+
+        labels_encoder_dtype = next(self.labels_encoder.parameters()).dtype
+        if token_embeds.dtype != labels_encoder_dtype:
+            token_embeds = token_embeds.to(dtype=labels_encoder_dtype)
+
+        batch_size, _, embed_dim = token_embeds.shape
+        max_text_length = text_lengths.max()
+        current_words_embedding, current_word_mask = extract_word_embeddings(
+            token_embeds,
+            words_mask,
+            label_attention_mask,
+            batch_size,
+            max_text_length,
+            embed_dim,
+            text_lengths,
+            getattr(self.config, "subtoken_pooling", "first"),
+        )
+
+        use_precomputed = (
+            getattr(self.config, "precomputed_prompts_mode", False)
+            and getattr(self, "precomputed_prompts", None) is not None
+        )
+        if use_precomputed:
+            prompts_embedding, prompts_embedding_mask = self.lookup_precomputed_prompts(
+                batch_size, device=token_embeds.device, rel=False
+            )
+        elif prompts_embedding is not None:
+            if prompts_embedding_mask is None:
+                raise ValueError("prompts_embedding_mask is required with prompts_embedding")
+        else:
+            prompts_embedding, prompts_embedding_mask = self.labels_encoder(
+                token_embeds,
+                input_ids,
+                label_attention_mask,
+            )
+
+        if past_word_embeddings is not None:
+            if past_word_mask is None:
+                raise ValueError("past_word_mask is required with past_word_embeddings")
+            if past_word_length is None:
+                past_lengths = past_word_mask.long().sum(dim=1)
+            elif isinstance(past_word_length, torch.Tensor):
+                past_lengths = past_word_length.to(device=current_word_mask.device, dtype=torch.long).reshape(-1)
+                if past_lengths.numel() == 1 and batch_size != 1:
+                    past_lengths = past_lengths.expand(batch_size)
+            else:
+                past_lengths = torch.full(
+                    (batch_size,),
+                    int(past_word_length),
+                    dtype=torch.long,
+                    device=current_word_mask.device,
+                )
+            cached_words_embedding, cached_word_mask = self._merge_cached_words(
+                past_word_embeddings,
+                past_word_mask,
+                current_words_embedding,
+                current_word_mask,
+                past_word_length,
+            )
+            active_word_lengths = past_lengths + current_word_mask.long().sum(dim=1)
+            active_word_length = int(active_word_lengths.max().item())
+        else:
+            cached_words_embedding = current_words_embedding
+            cached_word_mask = current_word_mask
+            active_word_length = current_words_embedding.size(1)
+
+        active = slice(0, active_word_length)
+        active_words_embedding = cached_words_embedding[:, active]
+        active_word_mask = cached_word_mask[:, active]
+        words_embedding = active_words_embedding
+        if hasattr(self, "rnn"):
+            rnn_lengths = word_lengths if past_word_embeddings is None else None
+            words_embedding = self.rnn(words_embedding, active_word_mask, lengths=rnn_lengths)
+
+        return GLiNERRepresentationOutput(
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            words_embedding=words_embedding,
+            mask=active_word_mask,
+            past_key_values=past_key_values,
+            past_word_embeddings=cached_words_embedding,
+            past_word_mask=cached_word_mask,
+        )
+
+    def forward(
+        self,
+        input_ids: Optional[torch.FloatTensor] = None,
+        attention_mask: Optional[torch.LongTensor] = None,
+        label_attention_mask: Optional[torch.LongTensor] = None,
+        label_mask: Optional[torch.LongTensor] = None,
+        past_key_values: Optional[Any] = None,
+        past_word_embeddings: Optional[torch.FloatTensor] = None,
+        past_word_mask: Optional[torch.LongTensor] = None,
+        words_embedding: Optional[torch.FloatTensor] = None,
+        mask: Optional[torch.LongTensor] = None,
+        prompts_embedding: Optional[torch.FloatTensor] = None,
+        prompts_embedding_mask: Optional[torch.LongTensor] = None,
+        words_mask: Optional[torch.LongTensor] = None,
+        text_lengths: Optional[torch.Tensor] = None,
+        span_idx: Optional[torch.LongTensor] = None,
+        span_mask: Optional[torch.LongTensor] = None,
+        labels: Optional[torch.FloatTensor] = None,
+        **kwargs: Any,
+    ) -> GLiNERStreamingSpanOutput:
+        """Forward pass through the span-based model.
+
+        Args:
+            input_ids: Input token IDs of shape (B, L).
+            attention_mask: Attention mask of shape (B, L).
+            label_attention_mask: Mask for current input positions when the decoder
+                attention mask also contains cached positions.
+            label_mask: Alias for ``label_attention_mask`` used by cache batching helpers.
+            past_key_values: Optional reusable decoder KV cache.
+            past_word_embeddings: Optional reusable unprocessed word representations.
+            past_word_mask: Valid-position mask for cached word representations.
+            words_embedding: Backward-compatible alias for ``past_word_embeddings``.
+            mask: Backward-compatible alias for ``past_word_mask``.
+            prompts_embedding: Pre-computed entity label embeddings of shape (B, C, D).
+            prompts_embedding_mask: Mask for prompts of shape (B, C).
+            words_mask: Word boundary mask.
+            text_lengths: Length of each text sequence.
+            span_idx: Span indices of shape (B, L*K, 2).
+            span_mask: Mask for valid spans of shape (B, L, K).
+            labels: Ground truth labels of shape (B, L, K, C).
+            **kwargs: Additional arguments.
+
+        Returns:
+            Cache-aware streaming span output.
+        """
+        compact_cached_words = kwargs.get("past_word_length") is not None
+        representation_kwargs = {
+            key: kwargs[key]
+            for key in (
+                "position_ids",
+                "cache_position",
+                "use_cache",
+                "word_lengths",
+                "past_word_length",
+            )
+            if key in kwargs
+        }
+
+        if past_word_embeddings is None:
+            past_word_embeddings = words_embedding
+        if past_word_mask is None:
+            past_word_mask = mask
+        if label_attention_mask is None:
+            label_attention_mask = label_mask
+
+        representations = self.get_representations(
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            label_attention_mask=label_attention_mask,
+            past_key_values=past_key_values,
+            past_word_embeddings=past_word_embeddings,
+            past_word_mask=past_word_mask,
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            text_lengths=text_lengths,
+            words_mask=words_mask,
+            **representation_kwargs,
+        )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
+
+        if span_idx is None or span_mask is None:
+            raise ValueError("span_idx and span_mask are required")
+
+        batch_size = words_embedding.size(0)
+        flat_span_idx = span_idx.view(batch_size, -1, 2)
+        flat_span_mask = span_mask.view(batch_size, -1).bool()
+        safe_span_idx = flat_span_idx * flat_span_mask.unsqueeze(-1).long()
+
+        span_rep, contextualized_words = self.span_rep_layer(
+            words_embedding,
+            safe_span_idx,
+            word_mask=mask,
+            return_words=True,
+            compact_words=compact_cached_words,
+        )
+
+        cached_prompts_embedding = prompts_embedding
+        cached_prompts_mask = prompts_embedding_mask
+        target_C = cached_prompts_embedding.size(1)
+        if labels is not None:
+            target_C = max(target_C, labels.size(-1))
+
+        cached_prompts_embedding, prompts_embedding_mask = self._fit_length(
+            cached_prompts_embedding, cached_prompts_mask, target_C
+        )
+
+        prompts_embedding = self.prompt_rep_layer(cached_prompts_embedding)
+        scores = torch.einsum("BLKD,BCD->BLKC", span_rep, prompts_embedding)
+
+        loss = None
+        if labels is not None:
+            loss = self.loss(
+                scores,
+                labels,
+                prompts_embedding_mask,
+                flat_span_mask,
+                **kwargs,
+            )
+
+        output = GLiNERStreamingSpanOutput(
+            logits=scores,
+            loss=loss,
+            prompts_embedding=prompts_embedding,
+            prompts_embedding_mask=prompts_embedding_mask,
+            words_embedding=contextualized_words,
+            mask=mask,
+            span_idx=flat_span_idx,
+            span_mask=flat_span_mask,
+            past_key_values=representations.past_key_values,
+            past_word_embeddings=representations.past_word_embeddings,
+            past_word_mask=representations.past_word_mask,
+            cached_prompts_embedding=cached_prompts_embedding,
+            cached_prompts_mask=prompts_embedding_mask,
+        )
+        return output
+
+
 class UniEncoderTokenModel(BaseUniEncoderModel):
     """Token-based NER model using uni-encoder architecture.
 
@@ -624,6 +1109,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
                 hidden_size=config.hidden_size,
                 max_width=getattr(config, "max_width", 12),
                 dropout=config.dropout,
+                context_encoder_config=getattr(config, "span_encoder_config", None),
             )
 
     def get_span_representations(self, scores, span_idx, span_mask, words_embedding, labels, threshold):
@@ -691,9 +1177,13 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         if labels is not None:
             target_W = labels.shape[1]
@@ -834,7 +1324,7 @@ class BaseBiEncoderModel(BaseModel):
             self.cross_fuser = CrossFuser(
                 self.config.hidden_size,
                 self.config.hidden_size,
-                num_heads=self.token_rep_layer.bert_layer.model.config.num_attention_heads,
+                num_heads=self._get_num_attention_heads(self.token_rep_layer),
                 num_layers=self.config.num_post_fusion_layers,
                 dropout=config.dropout,
                 schema=config.post_fusion_schema,
@@ -873,7 +1363,7 @@ class BaseBiEncoderModel(BaseModel):
         text_lengths: Optional[torch.Tensor] = None,
         words_mask: Optional[torch.LongTensor] = None,
         **kwargs: Any,
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> GLiNERRepresentationOutput:
         """Get entity label and word representations using bi-encoder.
 
         Args:
@@ -887,11 +1377,7 @@ class BaseBiEncoderModel(BaseModel):
             **kwargs: Additional arguments for the encoder.
 
         Returns:
-            Tuple containing:
-                - labels_embeds: Label embeddings of shape (B, C, D).
-                - labels_mask: Mask for labels of shape (B, C).
-                - words_embedding: Word embeddings of shape (B, W, D).
-                - mask: Mask for words of shape (B, W).
+            Structured label and word representations.
         """
         # word_lengths is only consumed by the RNN path; drop it here so it does
         # not leak into the label encoder's forward as an unexpected kwarg.
@@ -908,7 +1394,14 @@ class BaseBiEncoderModel(BaseModel):
         max_text_length = text_lengths.max()
 
         words_embedding, mask = extract_word_embeddings(
-            token_embeds, words_mask, attention_mask, batch_size, max_text_length, embed_dim, text_lengths
+            token_embeds,
+            words_mask,
+            attention_mask,
+            batch_size,
+            max_text_length,
+            embed_dim,
+            text_lengths,
+            getattr(self.config, "subtoken_pooling", "first"),
         )
 
         labels_embeds = labels_embeds.unsqueeze(0)
@@ -922,7 +1415,12 @@ class BaseBiEncoderModel(BaseModel):
                 words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask
             )
 
-        return labels_embeds, labels_mask, words_embedding, mask
+        return GLiNERRepresentationOutput(
+            prompts_embedding=labels_embeds,
+            prompts_embedding_mask=labels_mask,
+            words_embedding=words_embedding,
+            mask=mask,
+        )
 
 
 class BiEncoderSpanModel(BaseBiEncoderModel):
@@ -949,6 +1447,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             hidden_size=config.hidden_size,
             max_width=config.max_width,
             dropout=config.dropout,
+            context_encoder_config=getattr(config, "span_encoder_config", None),
         )
 
         self.prompt_rep_layer = create_projection_layer(config.hidden_size, config.dropout)
@@ -999,7 +1498,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids,
             attention_mask,
             labels_embeds,
@@ -1009,6 +1508,10 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             words_mask,
             **encoder_kwargs,
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
@@ -1180,7 +1683,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids,
             attention_mask,
             labels_embeds,
@@ -1190,6 +1693,10 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
             words_mask,
             **encoder_kwargs,
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         if labels is not None:
             target_W = labels.shape[1]
@@ -1258,16 +1765,17 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             cache_dir: Directory for caching pretrained models.
         """
         super().__init__(config, from_pretrained, cache_dir)
-        self.__init_decoder__(config, from_pretrained, cache_dir)
+        self.decoder = self._init_decoder(config, from_pretrained, cache_dir)
 
-    def __init_decoder__(self, config, from_pretrained, cache_dir):
-        self.decoder = Decoder(config, from_pretrained, cache_dir=cache_dir)
-        if self.config.hidden_size != self.decoder.decoder_hidden_size:
+    def _init_decoder(self, config, from_pretrained, cache_dir) -> Decoder:
+        decoder = Decoder(config, from_pretrained, cache_dir=cache_dir)
+        if self.config.hidden_size != decoder.decoder_hidden_size:
             self._enc2dec_proj = create_projection_layer(
                 self.config.hidden_size,
                 self.config.dropout,
-                self.decoder.decoder_hidden_size,
+                decoder.decoder_hidden_size,
             )
+        return decoder
 
     def select_decoder_embedding(
         self,
@@ -1379,7 +1887,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
 
         attn_inputs = torch.cat([span_tokens_mask.to(decoder_labels_mask.dtype), decoder_labels_mask[:, :-1]], dim=1)
 
-        decoder_outputs = self.decoder(inputs_embeds=decoder_inputs, attention_mask=attn_inputs)
+        decoder_outputs, _ = self.decoder(inputs_embeds=decoder_inputs, attention_mask=attn_inputs)
 
         blank_for_spans = torch.full(
             (decoder_labels.size(0), span_tokens.size(1)),
@@ -1605,9 +2113,13 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
@@ -1771,9 +2283,8 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
         """
-        # Initialize through UniEncoderTokenModel's chain to get scorer
+        # Cooperative MRO initializes both the token scorer and decoder.
         super().__init__(config, from_pretrained, cache_dir)
-        self.__init_decoder__(config, from_pretrained, cache_dir)
 
     def select_token_decoder_embedding(
         self,
@@ -1957,9 +2468,13 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
             if key in kwargs
         }
 
-        prompts_embedding, prompts_embedding_mask, words_embedding, mask = self.get_representations(
+        representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
         )
+        prompts_embedding = representations.prompts_embedding
+        prompts_embedding_mask = representations.prompts_embedding_mask
+        words_embedding = representations.words_embedding
+        mask = representations.mask
 
         if labels is not None:
             target_W = labels.shape[1]
@@ -2358,6 +2873,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 max_text_length,
                 embed_dim_e,
                 text_lengths,
+                getattr(self.config, "subtoken_pooling", "first"),
             )
             prompts_embedding, prompts_embedding_mask = self.lookup_precomputed_prompts(
                 batch_size_e, device=token_embeds.device, rel=False

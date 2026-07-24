@@ -6,12 +6,12 @@ includes custom generation implementations and numerical stability improvements.
 """
 
 import warnings
-from typing import Any, List, Union, Optional
+from typing import Any, List, Tuple, Union, Optional
 from pathlib import Path
 
 import torch
 from torch import nn
-from transformers import AutoConfig, LogitsProcessor, LogitsProcessorList, AutoModelForCausalLM
+from transformers import AutoModel, AutoConfig, LogitsProcessor, LogitsProcessorList, AutoModelForCausalLM
 
 from ..utils import is_module_available
 from ..decoding.trie import LabelsTrie
@@ -75,36 +75,67 @@ class DecoderTransformer(nn.Module):
     """
 
     def __init__(
-        self, model_name: str, config: Any, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]] = None
+        self,
+        model_name: str,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: Optional[Union[str, Path]] = None,
+        use_causal_lm: bool = True,
     ) -> None:
         """Initializes the decoder transformer.
 
         Args:
             model_name: Name or path of the pretrained model to load.
-            config: Configuration object containing model hyperparameters. Must have
-                a `labels_decoder_config` attribute.
+            config: Configuration object containing model hyperparameters. StreamingSpan
+                models use ``decoder_config``; auxiliary generative decoders retain
+                the legacy ``labels_decoder_config`` field.
             from_pretrained: If True, loads pretrained weights. If False, initializes
                 from config only. Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            use_causal_lm: Use ``AutoModelForCausalLM`` and return vocabulary logits.
+                When False, use ``AutoModel`` and return backbone hidden states.
 
         Raises:
             Warning: If adapter config is found but PEFT package is not installed.
         """
         super().__init__()
-        decoder_config = config.labels_decoder_config
+        decoder_config = getattr(config, "decoder_config", None)
+        if decoder_config is None:
+            decoder_config = getattr(config, "labels_decoder_config", None)
         if decoder_config is None:
             decoder_config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
 
-        kwargs = {}
-        custom = False
-        ModelClass = AutoModelForCausalLM
+        # Decoder backbones are constructed separately from encoder backbones,
+        # so explicitly propagate GLiNER's top-level attention override.
+        attn_implementation = getattr(config, "_attn_implementation", None)
+        if attn_implementation is not None:
+            decoder_config._attn_implementation = attn_implementation
+
+        is_streaming_span = getattr(config, "model_type", None) == "gliner_streaming_span"
+        saved_vocab_size = getattr(config, "vocab_size", -1)
+        if is_streaming_span and not from_pretrained and saved_vocab_size > 0:
+            # StreamingSpan adds <<LABEL>> and <<SEP>> to the backbone tokenizer.
+            # The top-level size is saved with the trained embedding matrix and
+            # must win over a stale/base decoder config during reconstruction.
+            decoder_config.vocab_size = saved_vocab_size
+
+        model_class = AutoModelForCausalLM if use_causal_lm else AutoModel
 
         if from_pretrained:
-            self.model = ModelClass.from_pretrained(model_name, trust_remote_code=True)
-        elif not custom:
-            self.model = ModelClass.from_config(decoder_config, trust_remote_code=True)
+            model_kwargs = {
+                "cache_dir": cache_dir,
+                "trust_remote_code": True,
+            }
+            if attn_implementation is not None:
+                model_kwargs["attn_implementation"] = attn_implementation
+            self.model = model_class.from_pretrained(model_name, **model_kwargs)
         else:
-            self.model = ModelClass(decoder_config, **kwargs)
+            self.model = model_class.from_config(decoder_config, trust_remote_code=True)
+
+        if is_streaming_span:
+            # Keep the resolved Hugging Face config attached to GLiNER so later
+            # token resizing is serialized into gliner_config.json.
+            config.decoder_config = self.model.config
 
         adapter_config_file = Path(model_name) / "adapter_config.json"
 
@@ -119,8 +150,9 @@ class DecoderTransformer(nn.Module):
                 self.model = get_peft_model(self.model, adapter_config)
 
         self.config = config
+        self.use_causal_lm = use_causal_lm
 
-    def forward(self, *args: Any, **kwargs: Any) -> torch.Tensor:
+    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Optional[Any]]:
         """Forward pass through the decoder model.
 
         Args:
@@ -128,11 +160,14 @@ class DecoderTransformer(nn.Module):
             **kwargs: Variable keyword arguments passed to the model.
 
         Returns:
-            Logits tensor of shape (batch_size, seq_len, vocab_size).
+            A tuple containing model representations and optional KV cache. The
+            representations are vocabulary logits in causal-LM mode and backbone
+            hidden states otherwise.
         """
         output = self.model(*args, **kwargs)
         encoder_layer = output[0]
-        return encoder_layer
+        past_key_values = output.past_key_values if hasattr(output, "past_key_values") else None
+        return encoder_layer, past_key_values
 
 
 class Decoder(nn.Module):
@@ -149,22 +184,37 @@ class Decoder(nn.Module):
     """
 
     def __init__(
-        self, config: Any, from_pretrained: bool = False, cache_dir: Optional[Union[str, Path]] = None
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: Optional[Union[str, Path]] = None,
+        use_causal_lm: bool = True,
     ) -> None:
         """Initializes the decoder.
 
         Args:
-            config: Configuration object containing model hyperparameters including
-                `labels_decoder` (model name) and decoder-specific settings.
+            config: Configuration object containing model hyperparameters. StreamingSpan
+                uses ``model_name`` for its backbone; legacy generative architectures
+                use ``labels_decoder`` for their separate decoder.
             from_pretrained: If True, loads pretrained weights for the decoder.
                 Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            use_causal_lm: Use a causal language-model head when True, or return
+                backbone hidden states through ``AutoModel`` when False.
         """
         super().__init__()
 
-        self.decoder_layer = DecoderTransformer(config.labels_decoder, config, from_pretrained, cache_dir=cache_dir)
+        model_name = getattr(config, "labels_decoder", None) or config.model_name
+        self.decoder_layer = DecoderTransformer(
+            model_name,
+            config,
+            from_pretrained,
+            cache_dir=cache_dir,
+            use_causal_lm=use_causal_lm,
+        )
 
         self.decoder_hidden_size = self.decoder_layer.model.config.hidden_size
+        self.use_causal_lm = use_causal_lm
 
     def ids_to_embeds(self, input_ids: torch.LongTensor) -> torch.FloatTensor:
         """Converts token IDs to their corresponding embeddings.
@@ -424,7 +474,7 @@ class Decoder(nn.Module):
         else:
             return self.decoder_layer.model.generate(*args, **kwargs)
 
-    def forward(self, *args: Any, **kwargs: Any) -> torch.Tensor:
+    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Optional[Any]]:
         """Forward pass through the decoder.
 
         Computes logits for the input sequence without generation.
@@ -434,7 +484,9 @@ class Decoder(nn.Module):
             **kwargs: Variable keyword arguments passed to the decoder layer.
 
         Returns:
-            Logits tensor of shape (batch_size, seq_len, vocab_size).
+            A tuple containing model representations and optional KV cache. The
+            representations are vocabulary logits in causal-LM mode and backbone
+            hidden states otherwise.
         """
-        decoded_embeddings = self.decoder_layer(*args, **kwargs)
-        return decoded_embeddings
+        decoded_embeddings, past_key_values = self.decoder_layer(*args, **kwargs)
+        return decoded_embeddings, past_key_values

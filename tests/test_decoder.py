@@ -226,6 +226,86 @@ class TestSpanDecoder:
         assert len(result) == 1
         assert len(result[0]) == 0
 
+    def test_per_sample_thresholds(self, basic_config):
+        """Should apply threshold independently for each batch item."""
+        decoder = SpanDecoder(basic_config)
+
+        logits = torch.ones(2, 2, 1, 1) * -5.0
+        logits[0, 0, 0, 0] = 1.0
+        logits[1, 0, 0, 0] = 1.0
+        tokens = [["A", "B"], ["C", "D"]]
+        id_to_classes = {1: "TYPE"}
+
+        result = decoder.decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=logits,
+            threshold=[0.5, 0.9],
+        )
+
+        assert len(result[0]) == 1
+        assert result[1] == []
+
+    def test_per_sample_flat_ner(self, basic_config):
+        """Should apply flat/nested NER independently for each batch item."""
+        decoder = SpanDecoder(basic_config)
+
+        logits = torch.ones(2, 4, 3, 1) * -5.0
+        logits[0, 0, 0, 0] = 5.0
+        logits[0, 0, 2, 0] = 4.0
+        logits[1, 0, 0, 0] = 5.0
+        logits[1, 0, 2, 0] = 4.0
+        tokens = [["A", "B", "C", "D"], ["E", "F", "G", "H"]]
+        id_to_classes = {1: "TYPE"}
+
+        result = decoder.decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=logits,
+            threshold=0.5,
+            flat_ner=[True, False],
+        )
+
+        assert len(result[0]) == 1
+        assert len(result[1]) == 2
+
+    def test_per_sample_multi_label(self, basic_config):
+        """Should apply multi-label overlap handling per batch item."""
+        decoder = SpanDecoder(basic_config)
+
+        logits = torch.ones(2, 2, 1, 2) * -5.0
+        logits[0, 0, 0, 0] = 5.0
+        logits[0, 0, 0, 1] = 4.0
+        logits[1, 0, 0, 0] = 5.0
+        logits[1, 0, 0, 1] = 4.0
+        tokens = [["A", "B"], ["C", "D"]]
+        id_to_classes = {1: "A", 2: "B"}
+
+        result = decoder.decode(
+            tokens=tokens,
+            id_to_classes=id_to_classes,
+            model_output=logits,
+            threshold=0.5,
+            flat_ner=True,
+            multi_label=[False, True],
+        )
+
+        assert len(result[0]) == 1
+        assert len(result[1]) == 2
+
+    def test_per_sample_parameter_length_validation(self, basic_config):
+        """Should reject per-sample controls with the wrong batch length."""
+        decoder = SpanDecoder(basic_config)
+        logits = torch.ones(2, 2, 1, 1)
+
+        with pytest.raises(ValueError, match="threshold must have length 2"):
+            decoder.decode(
+                tokens=[["A"], ["B"]],
+                id_to_classes={1: "TYPE"},
+                model_output=logits,
+                threshold=[0.5],
+            )
+
 
 class TestSpanGenerativeDecoder:
     """Test suite for SpanGenerativeDecoder class."""
@@ -778,6 +858,20 @@ class TestTokenDecoder:
         assert len(result) == 1
         assert len(result[0]) == 0
 
+    def test_per_sample_thresholds(self, token_config, token_inputs):
+        """Should apply token-decoder thresholds independently per batch item."""
+        decoder = TokenDecoder(token_config)
+
+        result = decoder.decode(
+            tokens=token_inputs["tokens"],
+            id_to_classes=token_inputs["id_to_classes"],
+            model_output=token_inputs["model_output"],
+            threshold=[0.5, 0.999],
+        )
+
+        assert len(result[0]) > 0
+        assert result[1] == []
+
 class TestGreedySearch:
     """Test suite for greedy_search method across decoders."""
 
@@ -1072,3 +1166,28 @@ class TestDecodeRelationsBatch:
         rel_id_to_classes = {1: "rel"}
         self._compare(rel_idx, rel_logits, rel_mask, 0.5,
                        spans, rel_id_to_classes, B)
+
+    def test_per_sample_thresholds(self):
+        """Should apply relation threshold independently per batch item."""
+        B, R, C = 2, 1, 1
+        rel_idx = torch.tensor([[[0, 1]], [[0, 1]]])
+        rel_logits = torch.tensor([[[1.0]], [[1.0]]])
+        rel_mask = torch.ones(B, R, dtype=torch.bool)
+        spans = [
+            [(0, 1, "A", 0.9), (1, 2, "B", 0.8)],
+            [(0, 1, "X", 0.9), (1, 2, "Y", 0.8)],
+        ]
+        rel_id_to_classes = {1: "rel"}
+
+        relations = _decode_relations_batch(
+            rel_idx,
+            rel_logits,
+            rel_mask,
+            [0.5, 0.9],
+            spans,
+            rel_id_to_classes,
+            B,
+        )
+
+        assert len(relations[0]) == 1
+        assert relations[1] == []

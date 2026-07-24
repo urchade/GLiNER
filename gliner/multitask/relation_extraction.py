@@ -144,11 +144,11 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
         if relation_labels is None:
             # ner
-            ner_predictions = self.model.run(texts, entities, threshold=ner_threshold, batch_size=batch_size)
+            ner_predictions = self._run_model(texts, entities, threshold=ner_threshold, batch_size=batch_size)
             # rex
             relation_labels = self.prepare_source_relation(ner_predictions, relations)
 
-        predictions = self.model.run(prompts, relation_labels, threshold=rel_threshold, batch_size=batch_size)
+        predictions = self._run_model(prompts, relation_labels, threshold=rel_threshold, batch_size=batch_size)
 
         results = self.process_predictions(predictions, **kwargs)
 

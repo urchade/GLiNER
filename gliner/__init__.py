@@ -1,7 +1,8 @@
-__version__ = "0.2.27"
+__version__ = "0.2.28"
 
 from .model import GLiNER
-from .config import GLiNERConfig
+from .config import GLiNERConfig, StreamingSpanConfig
+from .streaming import StreamingBatch, AsyncStreamingEngine
 from .infer_packing import (
     PackedBatch,
     InferencePackingConfig,
@@ -14,10 +15,13 @@ from .infer_packing import (
 #                                     GLiNERDocREDEvaluator)
 
 __all__ = [
+    "AsyncStreamingEngine",
     "GLiNER",
     "GLiNERConfig",
     "InferencePackingConfig",
     "PackedBatch",
+    "StreamingBatch",
+    "StreamingSpanConfig",
     "pack_requests",
     "unpack_spans",
 ]

@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2100" height="1320" viewBox="0 0 2100 1320" role="img" aria-labelledby="title desc">
+  <title id="title">GLiNER StreamingSpan architecture</title>
+  <desc id="desc">Minimal architecture diagram showing a cached entity-type prompt on the left, an incrementally appended input stream on the right, a causal transformer with a reusable key-value cache, cached label and word states, rolling span representations, similarity scores, and a revised entity snapshot.</desc>
+
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#31383f"/>
+    </marker>
+    <marker id="arrowRed" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#df5961"/>
+    </marker>
+
+    <g id="vecPrompt">
+      <rect width="48" height="64" fill="#f7f5f5" stroke="#9b6870" stroke-width="1.4"/>
+      <rect x="8" y="7" width="32" height="8" fill="#c7a2a8"/>
+      <rect x="8" y="19" width="32" height="8" fill="#7f666b"/>
+      <rect x="8" y="31" width="32" height="8" fill="#d9c2c5"/>
+      <rect x="8" y="43" width="32" height="8" fill="#9d7b80"/>
+      <rect x="8" y="55" width="32" height="5" fill="#5e4f52"/>
+    </g>
+    <g id="vecCached">
+      <rect width="48" height="64" fill="#f4f6f7" stroke="#75828a" stroke-width="1.4"/>
+      <rect x="8" y="7" width="32" height="8" fill="#c0c8cc"/>
+      <rect x="8" y="19" width="32" height="8" fill="#7b878e"/>
+      <rect x="8" y="31" width="32" height="8" fill="#d3d9dc"/>
+      <rect x="8" y="43" width="32" height="8" fill="#929da3"/>
+      <rect x="8" y="55" width="32" height="5" fill="#626d73"/>
+    </g>
+    <g id="vecNew">
+      <rect width="48" height="64" fill="#edf7fb" stroke="#3885a8" stroke-width="2"/>
+      <rect x="8" y="7" width="32" height="8" fill="#a7d0e1"/>
+      <rect x="8" y="19" width="32" height="8" fill="#4f90ae"/>
+      <rect x="8" y="31" width="32" height="8" fill="#c7e2ed"/>
+      <rect x="8" y="43" width="32" height="8" fill="#72abc4"/>
+      <rect x="8" y="55" width="32" height="5" fill="#2f6f8d"/>
+    </g>
+    <g id="vecRevised">
+      <rect width="48" height="64" fill="#fff4f4" stroke="#df5961" stroke-width="2" stroke-dasharray="5 4"/>
+      <rect x="8" y="7" width="32" height="8" fill="#efb4b8"/>
+      <rect x="8" y="19" width="32" height="8" fill="#b36c72"/>
+      <rect x="8" y="31" width="32" height="8" fill="#f4d2d5"/>
+      <rect x="8" y="43" width="32" height="8" fill="#d78b91"/>
+      <rect x="8" y="55" width="32" height="5" fill="#8f555a"/>
+    </g>
+
+    <style>
+      text { font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #111820; }
+      .title { font-size: 26.1px; font-weight: 720; letter-spacing: .2px; }
+      .subtitle { font-size: 11.3px; fill: #596570; }
+      .section { font-size: 18.3px; font-weight: 720; }
+      .heading { font-size: 14.8px; font-weight: 720; }
+      .body { font-size: 11.3px; }
+      .small { font-size: 9.6px; fill: #4f5b65; }
+      .tiny { font-size: 8.3px; fill: #59646d; }
+      .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+      .chip-text { font-size: 9.6px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; text-anchor: middle; dominant-baseline: middle; }
+      .panel { stroke: #4f5962; stroke-width: 1.35; }
+      .dash { stroke-dasharray: 6 5; }
+      .flow { fill: none; stroke: #31383f; stroke-width: 1.8; marker-end: url(#arrow); }
+      .flow-red { fill: none; stroke: #df5961; stroke-width: 1.8; stroke-dasharray: 6 5; marker-end: url(#arrowRed); }
+      .prompt { fill: #eadff0; stroke: #725d82; stroke-width: 1.25; }
+      .marker { fill: #faeeee; stroke: #df6770; stroke-width: 1.25; }
+      .sep { fill: #d8e9ee; stroke: #537581; stroke-width: 1.25; }
+      .cached { fill: #e1e9ed; stroke: #70808a; stroke-width: 1.25; }
+      .current { fill: #cce5f0; stroke: #397c9b; stroke-width: 1.4; }
+      .person { fill: #eadff2; stroke: #7658a0; stroke-width: 1.2; }
+      .organization { fill: #f2e3a9; stroke: #a17a00; stroke-width: 1.2; }
+      .location { fill: #d6e8d5; stroke: #398148; stroke-width: 1.2; }
+    </style>
+  </defs>
+
+  <rect width="2100" height="1320" fill="#f1f2f2"/>
+  <g transform="translate(15 4.5) scale(1.15)">
+  <rect x="22" y="18" width="1756" height="1104" fill="none" stroke="#323a41" stroke-width="1.4" stroke-dasharray="6 5"/>
+
+  <!-- Title and legend -->
+  <text x="900" y="52" class="title" text-anchor="middle">GLiNER StreamingSpan Architecture</text>
+  <text x="900" y="75" class="subtitle" text-anchor="middle">Causal cache reuse · rolling span revision · complete entity snapshots</text>
+  <g transform="translate(1435 49)">
+    <rect x="0" y="-10" width="13" height="13" rx="2" class="cached"/>
+    <text x="20" y="1" class="tiny">cached</text>
+    <rect x="79" y="-10" width="13" height="13" rx="2" class="current"/>
+    <text x="99" y="1" class="tiny">new</text>
+    <line x1="145" y1="-3" x2="171" y2="-3" stroke="#df5961" stroke-width="2" stroke-dasharray="6 4"/>
+    <text x="179" y="1" class="tiny">rescored</text>
+  </g>
+
+  <!-- Prompt on the left -->
+  <text x="435" y="108" class="heading" text-anchor="middle" fill="#cf4e55">Target entity types prompt</text>
+  <line x1="322" y1="114" x2="548" y2="114" stroke="#cf4e55" stroke-width="1.5"/>
+  <rect x="55" y="122" width="760" height="153" fill="#f8e9e7" class="panel dash"/>
+  <text x="82" y="151" class="tiny" font-weight="700">SERIALIZED ON THE COLD PASS</text>
+  <g>
+    <rect x="80" y="172" width="100" height="43" rx="5" class="person"/>
+    <text x="130" y="193.5" class="chip-text">person</text>
+    <rect x="188" y="172" width="90" height="43" rx="5" class="marker"/>
+    <text x="233" y="193.5" class="chip-text">&lt;&lt;LABEL&gt;&gt;</text>
+    <rect x="286" y="172" width="140" height="43" rx="5" class="organization"/>
+    <text x="356" y="193.5" class="chip-text">organization</text>
+    <rect x="434" y="172" width="90" height="43" rx="5" class="marker"/>
+    <text x="479" y="193.5" class="chip-text">&lt;&lt;LABEL&gt;&gt;</text>
+    <rect x="532" y="172" width="110" height="43" rx="5" class="location"/>
+    <text x="587" y="193.5" class="chip-text">location</text>
+    <rect x="650" y="172" width="90" height="43" rx="5" class="marker"/>
+    <text x="695" y="193.5" class="chip-text">&lt;&lt;LABEL&gt;&gt;</text>
+  </g>
+  <text x="435" y="249" class="small" text-anchor="middle">label marker states → compact label encoder → cached label embeddings</text>
+
+  <!-- Separator between prompt and text -->
+  <text x="870" y="154" class="tiny" text-anchor="middle" font-weight="700">BOUNDARY</text>
+  <rect x="827" y="172" width="86" height="43" rx="5" class="sep"/>
+  <text x="870" y="193.5" class="chip-text">&lt;&lt;SEP&gt;&gt;</text>
+
+  <!-- Stream on the right -->
+  <text x="1345" y="108" class="heading" text-anchor="middle" fill="#3d8a31">Input text stream</text>
+  <line x1="1262" y1="114" x2="1428" y2="114" stroke="#3d8a31" stroke-width="1.5"/>
+  <rect x="925" y="122" width="820" height="153" fill="#e7f2e2" class="panel dash"/>
+  <text x="950" y="151" class="tiny" font-weight="700">CACHED TEXT · t−1</text>
+  <text x="1234" y="151" class="tiny" font-weight="700" fill="#28718f">APPEND · t</text>
+  <g>
+    <rect x="950" y="172" width="80" height="43" rx="5" class="cached"/>
+    <text x="990" y="193.5" class="chip-text">Alice</text>
+    <rect x="1038" y="172" width="100" height="43" rx="5" class="cached"/>
+    <text x="1088" y="193.5" class="chip-text">Johnson</text>
+    <rect x="1146" y="172" width="46" height="43" rx="5" class="cached"/>
+    <text x="1169" y="193.5" class="chip-text">…</text>
+    <line x1="1213" y1="158" x2="1213" y2="226" stroke="#3985a7" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <rect x="1233" y="172" width="88" height="43" rx="5" class="current"/>
+    <text x="1277" y="193.5" class="chip-text">joined</text>
+    <rect x="1329" y="172" width="76" height="43" rx="5" class="current"/>
+    <text x="1367" y="193.5" class="chip-text">Acme</text>
+    <rect x="1413" y="172" width="46" height="43" rx="5" class="current"/>
+    <text x="1436" y="193.5" class="chip-text">in</text>
+    <rect x="1467" y="172" width="76" height="43" rx="5" class="current"/>
+    <text x="1505" y="193.5" class="chip-text">Paris</text>
+  </g>
+  <text x="1335" y="249" class="small" text-anchor="middle">the session may receive one word, sentence, or arbitrary text chunk per call</text>
+
+  <path d="M435 275L435 307" class="flow"/>
+  <path d="M1335 275L1335 307" class="flow"/>
+
+  <!-- Causal backbone -->
+  <rect x="55" y="309" width="1690" height="132" rx="7" fill="#cfe2f3" class="panel"/>
+  <text x="900" y="344" class="section" text-anchor="middle">1 · Causal Transformer Language Model</text>
+  <text x="900" y="368" class="body" text-anchor="middle">SmolLM2, Qwen, or another compatible decoder backbone</text>
+  <text x="900" y="388" class="small" text-anchor="middle">Cold pass: prompt + first chunk · warm pass: current tokens attend to cached history</text>
+
+  <rect x="430" y="398" width="207" height="31" rx="5" fill="#e9e5f0" stroke="#716485" stroke-width="1.15"/>
+  <text x="533.5" y="413.5" class="chip-text">KV cache · t−1</text>
+  <path d="M637 413.5L721 413.5" class="flow"/>
+  <rect x="723" y="398" width="354" height="31" rx="5" fill="#eef5f8" stroke="#628092" stroke-width="1.15"/>
+  <text x="900" y="413.5" class="chip-text">new token IDs + absolute positions</text>
+  <path d="M1077 413.5L1161 413.5" class="flow"/>
+  <rect x="1163" y="398" width="207" height="31" rx="5" fill="#e9e5f0" stroke="#716485" stroke-width="1.15"/>
+  <text x="1266.5" y="413.5" class="chip-text">updated KV cache · t</text>
+
+  <path d="M900 441L900 472" class="flow"/>
+
+  <!-- Decoder states -->
+  <text x="900" y="485" class="heading" text-anchor="middle">Reusable decoder token / word representations</text>
+  <text x="286" y="507" class="tiny" text-anchor="middle" font-weight="700">LABEL MARKER STATES · COLD ONLY</text>
+  <text x="842" y="507" class="tiny" text-anchor="middle" font-weight="700">CACHED WORD STATES</text>
+  <text x="1266" y="507" class="tiny" text-anchor="middle" font-weight="700" fill="#28718f">NEW WORD STATES</text>
+  <g>
+    <use href="#vecPrompt" x="145" y="518"/>
+    <use href="#vecPrompt" x="255" y="518"/>
+    <use href="#vecPrompt" x="365" y="518"/>
+    <rect x="483" y="518" width="48" height="64" fill="#eef6f7" stroke="#537581" stroke-width="1.4"/>
+    <rect x="491" y="527" width="32" height="8" fill="#aac5ce"/><rect x="491" y="539" width="32" height="8" fill="#62828e"/><rect x="491" y="551" width="32" height="8" fill="#d1e1e6"/><rect x="491" y="563" width="32" height="13" fill="#7898a3"/>
+
+    <use href="#vecCached" x="710" y="518"/>
+    <use href="#vecCached" x="785" y="518"/>
+    <use href="#vecCached" x="860" y="518"/>
+    <use href="#vecCached" x="935" y="518"/>
+    <line x1="1026" y1="507" x2="1026" y2="592" stroke="#3985a7" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <use href="#vecNew" x="1095" y="518"/>
+    <use href="#vecNew" x="1170" y="518"/>
+    <use href="#vecNew" x="1245" y="518"/>
+    <use href="#vecNew" x="1320" y="518"/>
+  </g>
+  <g class="tiny" text-anchor="middle">
+    <text x="169" y="598">person</text><text x="279" y="598">organization</text><text x="389" y="598">location</text><text x="507" y="598">SEP</text>
+    <text x="734" y="598">Alice</text><text x="809" y="598">Johnson</text><text x="884" y="598">…</text><text x="959" y="598">past</text>
+    <text x="1119" y="598">joined</text><text x="1194" y="598">Acme</text><text x="1269" y="598">in</text><text x="1344" y="598">latest</text>
+  </g>
+  <path d="M1368 550L1448 550" class="flow"/>
+  <rect x="1450" y="520" width="235" height="59" rx="5" fill="#ece9f0" stroke="#7a7087" stroke-width="1.2"/>
+  <text x="1567.5" y="541" class="body" text-anchor="middle" font-weight="700">Session cache</text>
+  <text x="1567.5" y="561" class="small mono" text-anchor="middle">KV · words · labels · span scores</text>
+
+  <path d="M450 608L450 631" class="flow"/>
+  <path d="M1315 608L1315 631" class="flow"/>
+
+  <!-- Representation branches -->
+  <rect x="70" y="633" width="760" height="91" rx="5" fill="#f3b9bf" class="panel"/>
+  <text x="450" y="666" class="heading" text-anchor="middle">2A · Label representation layer</text>
+  <text x="450" y="691" class="body" text-anchor="middle">prompt slice through &lt;&lt;SEP&gt;&gt; → compact context encoder → one vector per &lt;&lt;LABEL&gt;&gt;</text>
+  <text x="450" y="710" class="tiny" text-anchor="middle">computed on the cold pass and reused for every warm append</text>
+
+  <rect x="900" y="633" width="830" height="91" rx="5" fill="#f3b9bf" class="panel"/>
+  <text x="1315" y="666" class="heading" text-anchor="middle">2B · Rolling span representation layer</text>
+  <text x="1315" y="691" class="body" text-anchor="middle">MarkerV2(start ⊕ end ⊕ latest) · width ≤ max_width</text>
+  <text x="1315" y="710" class="tiny" text-anchor="middle">all new endings + recent endings where latest − end ≤ right_context_width</text>
+
+  <path d="M450 724L450 751" class="flow"/>
+  <path d="M1315 724L1315 751" class="flow"/>
+
+  <!-- Label and span embeddings -->
+  <text x="450" y="760" class="small" text-anchor="middle" font-weight="700">CACHED LABEL EMBEDDINGS</text>
+  <g>
+    <use href="#vecPrompt" x="205" y="773"/>
+    <use href="#vecPrompt" x="425" y="773"/>
+    <use href="#vecPrompt" x="645" y="773"/>
+    <rect x="180" y="844" width="98" height="25" rx="3" class="person"/>
+    <text x="229" y="856.5" class="chip-text">ℓ_person</text>
+    <rect x="376" y="844" width="146" height="25" rx="3" class="organization"/>
+    <text x="449" y="856.5" class="chip-text">ℓ_organization</text>
+    <rect x="620" y="844" width="98" height="25" rx="3" class="location"/>
+    <text x="669" y="856.5" class="chip-text">ℓ_location</text>
+  </g>
+
+  <text x="1315" y="760" class="small" text-anchor="middle" font-weight="700">ROLLING SPAN EMBEDDINGS</text>
+  <g>
+    <use href="#vecRevised" x="978" y="773"/>
+    <use href="#vecNew" x="1110" y="773"/>
+    <use href="#vecNew" x="1242" y="773"/>
+    <use href="#vecNew" x="1374" y="773"/>
+    <use href="#vecNew" x="1506" y="773"/>
+    <use href="#vecNew" x="1638" y="773"/>
+  </g>
+  <g class="tiny" text-anchor="middle">
+    <text x="1002" y="850" fill="#c84f56">(0,1) revised</text>
+    <text x="1134" y="850">(1,3)</text>
+    <text x="1266" y="850">(3,4)</text>
+    <text x="1398" y="850">(4,4)</text>
+    <text x="1530" y="850">(4,6)</text>
+    <text x="1662" y="850">(6,6)</text>
+  </g>
+
+  <path d="M450 869L450 886" class="flow"/>
+  <path d="M1100 869L1100 886" class="flow"/>
+
+  <!-- Similarity matrix -->
+  <rect x="70" y="888" width="1055" height="165" fill="#ffffff" fill-opacity="0.42" class="panel"/>
+  <text x="610" y="913" class="heading" text-anchor="middle">3 · Entity type × span similarity</text>
+  <text x="1097" y="912" class="tiny" text-anchor="end">illustrative probabilities</text>
+
+  <g class="tiny" text-anchor="middle">
+    <text x="405" y="936">Alice Johnson</text>
+    <text x="555" y="936">Johnson … joined</text>
+    <text x="705" y="936">Acme</text>
+    <text x="855" y="936">Acme in Paris</text>
+    <text x="1005" y="936">Paris</text>
+  </g>
+
+  <rect x="115" y="945" width="185" height="26" class="person"/>
+  <text x="207.5" y="958" class="chip-text">person</text>
+  <rect x="115" y="974" width="185" height="26" class="organization"/>
+  <text x="207.5" y="987" class="chip-text">organization</text>
+  <rect x="115" y="1003" width="185" height="26" class="location"/>
+  <text x="207.5" y="1016" class="chip-text">location</text>
+
+  <g class="chip-text">
+    <!-- person row -->
+    <rect x="330" y="945" width="150" height="26" fill="#d9c9e9" stroke="#63717a"/><text x="405" y="958">0.93</text>
+    <rect x="480" y="945" width="150" height="26" fill="#eef2f3" stroke="#63717a"/><text x="555" y="958">0.21</text>
+    <rect x="630" y="945" width="150" height="26" fill="#f6f7f7" stroke="#63717a"/><text x="705" y="958">0.03</text>
+    <rect x="780" y="945" width="150" height="26" fill="#f5f6f6" stroke="#63717a"/><text x="855" y="958">0.05</text>
+    <rect x="930" y="945" width="150" height="26" fill="#f7f8f8" stroke="#63717a"/><text x="1005" y="958">0.02</text>
+    <!-- organization row -->
+    <rect x="330" y="974" width="150" height="26" fill="#f6f7f7" stroke="#63717a"/><text x="405" y="987">0.04</text>
+    <rect x="480" y="974" width="150" height="26" fill="#f2f3f3" stroke="#63717a"/><text x="555" y="987">0.10</text>
+    <rect x="630" y="974" width="150" height="26" fill="#eedb8d" stroke="#63717a"/><text x="705" y="987">0.88</text>
+    <rect x="780" y="974" width="150" height="26" fill="#f3e9c4" stroke="#63717a"/><text x="855" y="987">0.44</text>
+    <rect x="930" y="974" width="150" height="26" fill="#f7f8f8" stroke="#63717a"/><text x="1005" y="987">0.02</text>
+    <!-- location row -->
+    <rect x="330" y="1003" width="150" height="26" fill="#f6f7f7" stroke="#63717a"/><text x="405" y="1016">0.03</text>
+    <rect x="480" y="1003" width="150" height="26" fill="#f4f5f5" stroke="#63717a"/><text x="555" y="1016">0.08</text>
+    <rect x="630" y="1003" width="150" height="26" fill="#f5f6f6" stroke="#63717a"/><text x="705" y="1016">0.06</text>
+    <rect x="780" y="1003" width="150" height="26" fill="#e8f0e7" stroke="#63717a"/><text x="855" y="1016">0.33</text>
+    <rect x="930" y="1003" width="150" height="26" fill="#c9e2c8" stroke="#63717a"/><text x="1005" y="1016">0.91</text>
+  </g>
+
+  <path d="M1125 970L1148 970" class="flow"/>
+
+  <!-- Revision and output -->
+  <rect x="1150" y="888" width="580" height="165" fill="#dcebdc" class="panel"/>
+  <text x="1440" y="917" class="heading" text-anchor="middle">4 · Revise history and decode</text>
+  <text x="1180" y="946" class="body">• matching (start, end): replace the recent score</text>
+  <text x="1180" y="970" class="body">• new boundary: append → threshold → flat / nested NER</text>
+  <line x1="1180" y1="983" x2="1700" y2="983" stroke="#7d9680" stroke-width="1"/>
+  <text x="1180" y="1002" class="tiny" font-weight="700">COMPLETE SNAPSHOT · t</text>
+  <rect x="1180" y="1010" width="225" height="30" rx="4" fill="#f8f7fb" stroke="#7658a0" stroke-width="1.2"/>
+  <circle cx="1196" cy="1025" r="4" fill="#7658a0"/>
+  <text x="1300" y="1025" class="chip-text">Alice Johnson · person .93</text>
+  <rect x="1420" y="1010" width="145" height="30" rx="4" fill="#fffaf0" stroke="#a17a00" stroke-width="1.2"/>
+  <circle cx="1436" cy="1025" r="4" fill="#a17a00"/>
+  <text x="1498" y="1025" class="chip-text">Acme · org .88</text>
+  <rect x="1580" y="1010" width="130" height="30" rx="4" fill="#f5faf5" stroke="#398148" stroke-width="1.2"/>
+  <circle cx="1596" cy="1025" r="4" fill="#398148"/>
+  <text x="1649" y="1025" class="chip-text">Paris · loc .91</text>
+
+  <!-- Compact operational note -->
+  <text x="900" y="1082" class="body" text-anchor="middle" font-weight="650">Every append reuses KV, word, and label caches · only rolling candidates are rescored · the result is the full current snapshot</text>
+  <text x="900" y="1106" class="small mono" text-anchor="middle">StreamingBatch  ·  AsyncStreamingEngine  ·  inference(session_id=…)</text>
+  </g>
+</svg>

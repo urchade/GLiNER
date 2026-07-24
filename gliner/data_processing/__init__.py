@@ -1,5 +1,6 @@
 from .collator import (
     BiEncoderSpanDataCollator,
+    StreamingSpanDataCollator,
     BiEncoderTokenDataCollator,
     UniEncoderSpanDataCollator,
     UniEncoderTokenDataCollator,
@@ -12,6 +13,7 @@ from .processor import (
     BaseProcessor,
     BaseBiEncoderProcessor,
     BiEncoderSpanProcessor,
+    StreamingSpanProcessor,
     BiEncoderTokenProcessor,
     UniEncoderSpanProcessor,
     UniEncoderTokenProcessor,

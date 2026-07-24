@@ -98,6 +98,7 @@ def prepare_word_mask(
     *,
     skip_first_words: Optional[Sequence[int]] = None,
     token_level: bool = False,
+    subtoken_pooling: str = "first",
 ) -> List[List[int]]:
     """Create word-level masks for subword tokenized sequences.
 
@@ -117,15 +118,16 @@ def prepare_word_mask(
         skip_first_words: Optional number of words to skip at the beginning of
             each sequence (e.g., prompt words). Must have the same length as texts
             if provided. Skipped words are masked as 0.
-        token_level: If True, assign a unique mask value to every token of a word
-            (enabling token-level granularity). If False, only the first subword
-            token of each word gets a mask value; continuation tokens are masked
-            as 0 (default: False).
+        token_level: If True, assign the word index to every subtoken, overriding
+            ``subtoken_pooling``. Defaults to False.
+        subtoken_pooling: Determines which subtokens receive a word index when
+            ``token_level`` is False: the first subtoken for ``first``, the last
+            for ``last``, or every subtoken for ``mean`` and ``max``.
 
     Returns:
         List of word mask lists, one per input sequence. Each mask list has the
         same length as the corresponding tokenized sequence. Values are:
-            - 0: Special tokens, skipped words, or continuation subwords
+            - 0: Special tokens, skipped words, or unselected subtokens
             - 1, 2, 3, ...: Word indices (1-indexed) after skipping
 
     Raises:
@@ -139,6 +141,11 @@ def prepare_word_mask(
         >>> # Result might be: [[0, 1, 0, 2, 0]]
         >>> #                   [CLS, Hel, ##lo, world, SEP]
     """
+    supported_pooling = {"first", "last", "mean", "max"}
+    if subtoken_pooling not in supported_pooling:
+        supported = ", ".join(sorted(supported_pooling))
+        raise ValueError(f"Unknown subtoken pooling strategy {subtoken_pooling!r}. Expected one of: {supported}")
+
     n = len(texts)
 
     if skip_first_words is None:
@@ -149,28 +156,33 @@ def prepare_word_mask(
     words_masks: List[List[int]] = []
 
     for i in range(n):
+        word_ids = tokenized_inputs.word_ids(i)
         mask: List[int] = []
         prev_word_id: Optional[int] = None
         seen_words = 0  # counts distinct word_ids we've traversed in this sequence
 
-        for wid in tokenized_inputs.word_ids(i):
+        for token_idx, wid in enumerate(word_ids):
             if wid is None:
                 # Special tokens (CLS, SEP, PAD, etc.)
                 mask.append(0)
-            elif wid != prev_word_id or token_level:
-                # If we just moved to a new word, update seen_words
-                if wid != prev_word_id:
+            else:
+                is_first_subtoken = wid != prev_word_id
+                if is_first_subtoken:
                     seen_words += 1
 
-                if seen_words <= skip_first_words[i]:
-                    # This word is in the skip range (e.g., prompt tokens)
+                next_word_id = word_ids[token_idx + 1] if token_idx + 1 < len(word_ids) else None
+                is_last_subtoken = next_word_id != wid
+                select_subtoken = (
+                    token_level
+                    or subtoken_pooling in {"mean", "max"}
+                    or (subtoken_pooling == "first" and is_first_subtoken)
+                    or (subtoken_pooling == "last" and is_last_subtoken)
+                )
+
+                if seen_words <= skip_first_words[i] or not select_subtoken:
                     mask.append(0)
                 else:
-                    # 1-based word index after skipping
                     mask.append(seen_words - skip_first_words[i])
-            else:
-                # same word continuation and token_level=False -> mask as 0
-                mask.append(0)
 
             prev_word_id = wid
 
@@ -253,3 +265,55 @@ def prepare_span_idx(num_tokens, max_width):
     starts = torch.arange(num_tokens, dtype=torch.long).unsqueeze(1).expand(-1, max_width).reshape(-1)
     offsets = torch.arange(max_width, dtype=torch.long).unsqueeze(0).expand(num_tokens, -1).reshape(-1)
     return torch.stack([starts, starts + offsets], dim=1)
+
+
+def prepare_streaming_span_idx(
+    past_tokens: int,
+    new_tokens: int,
+    max_width: int,
+    recompute_all: bool = False,
+    right_context_width: int = 0,
+):
+    """Generate absolute span candidates for the next streaming chunk.
+
+    In incremental mode, all spans ending in the new chunk are valid.  Spans
+    ending up to ``right_context_width`` words before the latest word are also
+    regenerated so future context can revise their scores.  A zero-width right
+    context preserves append-only scoring.  Full-recompute mode enumerates
+    every historical span again.
+
+    Returns:
+        A tuple ``(span_idx, span_mask)`` where ``span_idx`` has shape
+        ``(num_starts * max_width, 2)`` and uses absolute session word indices.
+    """
+    if past_tokens < 0 or new_tokens < 0:
+        raise ValueError("past_tokens and new_tokens must be non-negative")
+    if max_width < 1:
+        raise ValueError("max_width must be positive")
+    if right_context_width < 0:
+        raise ValueError("right_context_width must be non-negative")
+
+    total_tokens = past_tokens + new_tokens
+    if total_tokens == 0:
+        return torch.zeros((0, 2), dtype=torch.long), torch.zeros(0, dtype=torch.bool)
+
+    if recompute_all:
+        minimum_end = 0
+    else:
+        latest_word = total_tokens - 1
+        rolling_minimum_end = max(0, latest_word - right_context_width)
+        # Always score every span ending in the newly supplied chunk, even when
+        # a caller appends more words than the configured right-context window.
+        minimum_end = min(past_tokens, rolling_minimum_end)
+
+    first_start = max(0, minimum_end - (max_width - 1))
+    num_starts = total_tokens - first_start
+    span_idx = prepare_span_idx(num_starts, max_width) + first_start
+
+    span_mask = span_idx[:, 1] < total_tokens
+    if not recompute_all:
+        span_mask = span_mask & span_idx[:, 1].ge(minimum_end)
+        if new_tokens == 0:
+            span_mask.zero_()
+
+    return span_idx, span_mask
