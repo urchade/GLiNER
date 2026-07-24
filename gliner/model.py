@@ -1077,6 +1077,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     f"which can degrade quality. Consider setting class_token_index: -1 and "
                     f"vocab_size: -1 so GLiNER adds all special tokens automatically.",
                     UserWarning,
+                    stacklevel=2,
                 )
 
         if ent_token is not None:
@@ -1087,6 +1088,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     f"tokenizer id of {ent_token!r} ({ent_token_id}). The class-token mask will "
                     f"match a different token, which can silently disable learning.",
                     UserWarning,
+                    stacklevel=2,
                 )
 
         if config_instance.vocab_size != tokenizer_size:
@@ -1094,6 +1096,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 f"config.vocab_size={config_instance.vocab_size} differs from the tokenizer size "
                 f"({tokenizer_size}). Embedding lookups may be misaligned or fail at runtime.",
                 UserWarning,
+                stacklevel=2,
             )
 
     @staticmethod
