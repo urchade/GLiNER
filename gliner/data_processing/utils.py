@@ -55,41 +55,71 @@ def pad_2d_tensor(key_data, padding_value=0.0):
     return padded_tensors
 
 
-def get_negatives(batch_list: List[Dict], sampled_neg: int = 5, key="ner") -> List[str]:
+def get_negatives(
+    batch_list: List[Dict],
+    sampled_neg: int = 5,
+    key: str = "ner",
+    similarity_index=None,
+    hard_negative_ratio: float = 0.0,
+) -> List[str]:
     """Sample negative entity or relation types from a batch.
 
     Extracts all unique entity/relation types from a batch of examples and
-    randomly samples a subset to use as negative types for contrastive learning.
-    This helps the model learn to distinguish between similar but incorrect types.
+    samples a subset to use as negative types during training.
+
+    When similarity_index is provided and hard_negative_ratio > 0, a fraction of
+    negatives are drawn from semantically similar (confusable) types — hard negatives
+    that force the model to learn finer-grained distinctions. The remainder are drawn
+    randomly. This mixed strategy prevents over-specialisation to the similarity index.
 
     Args:
-        batch_list: List of example dictionaries. Each dictionary should contain
-            the specified key with annotations in the format where the last element
-            of each annotation tuple is the type label.
-        sampled_neg: Maximum number of negative types to sample (default: 5).
-            If fewer unique types exist, all will be returned.
-        key: Dictionary key to access annotations (default: "ner"). Common values
-            are "ner" for entities or "relations" for relation types.
+        batch_list: List of example dictionaries containing NER annotations.
+        sampled_neg: Maximum total number of negative types to return.
+        key: Dictionary key to access annotations ("ner" or "relations").
+        similarity_index: Optional TypeSimilarityIndex for hard-negative retrieval.
+                          When None, all negatives are sampled randomly (original behaviour).
+        hard_negative_ratio: Fraction of negatives to draw from hard (semantically similar)
+                             types. 0.0 = all random (default, no behaviour change).
+                             0.5 = recommended. 1.0 = all hard.
 
     Returns:
-        List of randomly sampled type strings. Length will be min(sampled_neg,
-        number of unique types in batch).
+        List of negative type strings. Length will be ≤ sampled_neg.
 
     Example:
-        >>> batch = [{"ner": [(0, 1, "PERSON"), (2, 3, "ORG")]}, {"ner": [(0, 1, "LOC"), (3, 4, "PERSON")]}]
-        >>> negatives = get_negatives(batch, sampled_neg=2, key="ner")
+        >>> batch = [{"ner": [(0, 1, "PERSON"), (2, 3, "ORG")]}, {"ner": [(0, 1, "LOC")]}]
+        >>> negatives = get_negatives(batch, sampled_neg=2)
         >>> len(negatives) <= 2
         True
     """
-    element_types = set()
+    element_types: set = set()
+    positive_types: set = set()
     for b in batch_list:
-        if b.get(key, False):
+        if b.get(key):
             types = {el[-1] for el in b[key]}
             element_types.update(types)
+            positive_types.update(types)
 
     element_types = list(element_types)
-    selected_elements = random.sample(element_types, k=min(sampled_neg, len(element_types)))
-    return selected_elements
+
+    # Fast path: pure random sampling (original behaviour, hard_negative_ratio=0)
+    if similarity_index is None or hard_negative_ratio <= 0.0 or not similarity_index.is_ready():
+        return random.sample(element_types, k=min(sampled_neg, len(element_types)))
+
+    # Mixed hard + random sampling
+    n_hard = max(0, int(sampled_neg * hard_negative_ratio))
+    n_rand = sampled_neg - n_hard
+
+    hard_negs = similarity_index.get_hard_negatives(
+        list(positive_types), n=n_hard, exclude=positive_types
+    )
+
+    # Pool for random: exclude positives and already-chosen hard negatives
+    rand_pool = [t for t in element_types if t not in positive_types and t not in set(hard_negs)]
+    rand_negs = random.sample(rand_pool, k=min(n_rand, len(rand_pool)))
+
+    combined = hard_negs + rand_negs
+    random.shuffle(combined)
+    return combined[:sampled_neg]
 
 
 def prepare_word_mask(

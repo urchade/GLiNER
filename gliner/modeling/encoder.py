@@ -114,9 +114,18 @@ class Transformer(nn.Module):
                 ModelClass = T5EncoderModel
         elif config_name in {"DebertaV2Config"}:
             custom = True
-            if os.environ.get("USE_FLASHDEBERTA", "") and IS_FLASHDEBERTA:
+            want_flash = getattr(config, "use_flash_attention", False) or os.environ.get("USE_FLASHDEBERTA", "")
+            if want_flash and IS_FLASHDEBERTA:
                 ModelClass = FlashDebertaV2Model
             else:
+                if want_flash and not IS_FLASHDEBERTA:
+                    warnings.warn(
+                        "use_flash_attention=True requested but 'flashdeberta' is not installed. "
+                        "Falling back to standard DeBERTa attention. "
+                        "Install with: pip install flashdeberta",
+                        UserWarning,
+                        stacklevel=3,
+                    )
                 ModelClass = DebertaV2Model
 
         else:

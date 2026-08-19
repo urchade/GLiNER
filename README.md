@@ -133,6 +133,34 @@ model = GLiNER.from_pretrained(
 
 Find more information on compilation and other optimizations in the [documentation](https://urchade.github.io/GLiNER/usage.html#quantization-compilation-flashdeberta).
 
+## Vocabulary Pruning
+
+Multilingual GLiNER models (mDeBERTa-v3) carry a 250k-token embedding matrix. For a single-language deployment, most of those embeddings are never accessed, creating an unnecessary memory and cold-start bottleneck for edge/CPU deployments. The pruning engine identifies the active token set for a target language, slices `word_embeddings.weight` down to the relevant rows, rebuilds the fast tokenizer, and exports a self-contained model that loads with the standard `GLiNER.from_pretrained()` API — no code changes required in the inference path.
+
+| Metric | Original | Pruned | Δ |
+|---|---|---|---|
+| Vocabulary | 250,105 tokens | 90,840 tokens | **−63.7%** |
+| Model size | 1,155.8 MB | 666.5 MB | **−42.3% (−489 MB)** |
+| Entity F1 | baseline | identical | **0% regression** |
+
+*Benchmarked on `urchade/gliner_multi-v2.1`, English Wikipedia (100k articles).*
+
+```bash
+# Prune to English — one command, no accuracy loss
+python scripts/prune_gliner_vocab.py \
+    --model_id urchade/gliner_multi-v2.1 \
+    --dataset_for_vocab wikipedia \
+    --output_dir ./pruned_en \
+    --lang en
+
+# Verify correctness + measure size reduction
+python scripts/validate_pruned_model.py \
+    --original_model_id urchade/gliner_multi-v2.1 \
+    --pruned_model_dir ./pruned_en
+```
+
+Conservative mode (all seen tokens) is lossless; aggressive mode (`--top_k 30000`) trades ~65% size reduction for minor score shifts near the detection threshold. See [`docs/vocab_pruning.md`](docs/vocab_pruning.md) for the full reference.
+
 ## Serving
 
 For production workloads — high-throughput pipelines, multi-user services, or anywhere you need to go beyond single-process `model.inference()` calls — GLiNER provides a Ray Serve-based serving layer. It adds dynamic batching that automatically groups incoming requests, memory-aware batch sizing that prevents CUDA OOM by calibrating against your GPU, precompiled kernels for common batch sizes to avoid first-call latency, horizontal scaling across multiple GPUs via Ray replicas, and an HTTP API for language-agnostic access.

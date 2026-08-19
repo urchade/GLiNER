@@ -171,6 +171,8 @@ ignore = [
     "RUF012",
     # Too many arguments
     "PLR0913",
+    # Too many positional arguments
+    "PLR0917",
     # Too many branches
     "PLR0912",
     # Too many statements

@@ -153,6 +153,9 @@ class BaseGLiNERConfig(PretrainedConfig):
         ent_token: str = "<<ENT>>",
         sep_token: str = "<<SEP>>",
         _attn_implementation: Optional[str] = None,
+        use_flash_attention: bool = False,
+        contrastive_loss_coef: float = 0.0,
+        contrastive_temperature: float = 0.07,
         token_loss_coef: float = 1.0,
         span_loss_coef: float = 1.0,
         represent_spans: bool = False,
@@ -191,6 +194,9 @@ class BaseGLiNERConfig(PretrainedConfig):
             ent_token (str, optional): Entity marker token. Defaults to "<<ENT>>".
             sep_token (str, optional): Separator token. Defaults to "<<SEP>>".
             _attn_implementation (str, optional): Attention implementation. Defaults to None.
+            use_flash_attention (bool, optional): Whether to enable flash attention. Defaults to False.
+            contrastive_loss_coef (float, optional): Weight for auxiliary contrastive loss. Defaults to 0.0.
+            contrastive_temperature (float, optional): Temperature for contrastive loss scaling. Defaults to 0.07.
             token_loss_coef (float, optional): Token loss coefficient. Defaults to 1.0.
             span_loss_coef (float, optional): Span loss coefficient. Defaults to 1.0.
             represent_spans (bool, optional): Whether to represent spans. Defaults to False.
@@ -237,12 +243,46 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.ent_token = ent_token
         self.sep_token = sep_token
         self._attn_implementation = _attn_implementation
+        self.use_flash_attention = use_flash_attention
+        self.contrastive_loss_coef = contrastive_loss_coef
+        self.contrastive_temperature = contrastive_temperature
         self.token_loss_coef = token_loss_coef
         self.span_loss_coef = span_loss_coef
         self.represent_spans = represent_spans
         self.neg_spans_ratio = neg_spans_ratio
         self.precomputed_prompts_mode = precomputed_prompts_mode
         self.id_to_classes = id_to_classes
+        self._validate_backbone()
+
+    def _validate_backbone(self) -> None:
+        """Emit helpful warnings for backbone-specific configuration issues."""
+        import warnings as _w  # noqa: PLC0415
+        name_lower = (self.model_name or "").lower()
+        # Match: answerdotai/ModernBERT-*, knowledgator/modern-gliner-*, modern_bert, etc.
+        is_modernbert = (
+            "modernbert" in name_lower
+            or "modern_bert" in name_lower
+            or "modern-bert" in name_lower
+            or ("modern" in name_lower and "gliner" in name_lower)
+        )
+        if is_modernbert:
+            # ModernBERT has its own efficient attention; flashdeberta is not applicable
+            if self.use_flash_attention:
+                _w.warn(
+                    f"use_flash_attention=True has no effect for ModernBERT ({self.model_name!r}). "
+                    "ModernBERT uses its own flex_attn implementation. "
+                    "Set use_flash_attention=False to silence this warning.",
+                    UserWarning,
+                    stacklevel=3,
+                )
+            # ModernBERT supports up to 8192 tokens; 384 is unnecessarily restrictive
+            if self.max_len <= 384:
+                _w.warn(
+                    f"ModernBERT supports sequences up to 8192 tokens but max_len={self.max_len}. "
+                    "Consider setting max_len=1024 or higher for full long-context benefit.",
+                    UserWarning,
+                    stacklevel=3,
+                )
 
 
 class UniEncoderConfig(BaseGLiNERConfig):

@@ -18,6 +18,9 @@ training
 architectures
 add_custom_architecture
 convert_to_onnx
+vocab_pruning
+flash_attention
+relation_extraction
 serving
 ```
 
