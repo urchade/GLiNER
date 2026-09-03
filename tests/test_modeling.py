@@ -6,6 +6,7 @@ import pytest
 from gliner.config import (
     BaseGLiNERConfig,
     BiEncoderSpanConfig,
+    BiEncoderTokenConfig,
     UniEncoderSpanConfig,
     UniEncoderTokenConfig,
     UniEncoderSpanRelexConfig,
@@ -13,7 +14,9 @@ from gliner.config import (
 )
 from gliner.modeling.base import (
     BaseModel,
+    BaseBiEncoderModel,
     BiEncoderSpanModel,
+    BiEncoderTokenModel,
     UniEncoderSpanModel,
     UniEncoderTokenModel,
     UniEncoderSpanRelexModel,
@@ -25,6 +28,7 @@ from gliner.modeling.utils import (
     extract_word_embeddings,
     extract_prompt_features_and_word_embeddings,
 )
+from gliner.modeling.layers import MultiheadAttention
 
 
 class TestExtractWordEmbeddings:
@@ -739,6 +743,72 @@ class TestBaseModel:
         assert losses.shape == (B, N, C)
 
 
+def test_biencoder_representations_gather_labels_for_each_row():
+    """Shared union embeddings should be restored to each row's local class order."""
+
+    class TokenRepresentationLayer:
+        def __call__(self, input_ids, attention_mask, labels_input_ids, labels_attention_mask, **kwargs):
+            token_embeddings = torch.zeros(*input_ids.shape, 1)
+            return token_embeddings, labels_input_ids.float()
+
+    model = Mock()
+    model.token_rep_layer = TokenRepresentationLayer()
+    model.config.subtoken_pooling = "first"
+    del model.cross_fuser
+
+    result = BaseBiEncoderModel.get_representations(
+        model,
+        input_ids=torch.ones(2, 2, dtype=torch.long),
+        attention_mask=torch.ones(2, 2, dtype=torch.long),
+        labels_input_ids=torch.tensor([[10], [20], [30]]),
+        labels_attention_mask=torch.ones(3, 1, dtype=torch.long),
+        text_lengths=torch.ones(2, 1, dtype=torch.long),
+        words_mask=torch.tensor([[1, 0], [1, 0]]),
+        labels_gather_indices=torch.tensor([[0, 1], [2, 0]]),
+        prompts_embedding_mask=torch.tensor([[True, True], [True, False]]),
+    )
+
+    assert result.prompts_embedding.squeeze(-1).tolist() == [[10.0, 20.0], [30.0, 0.0]]
+    assert result.prompts_embedding_mask.tolist() == [[1, 1], [1, 0]]
+
+    empty_result = BaseBiEncoderModel.get_representations(
+        model,
+        input_ids=torch.ones(2, 2, dtype=torch.long),
+        attention_mask=torch.ones(2, 2, dtype=torch.long),
+        labels_input_ids=torch.tensor([[0]]),
+        labels_attention_mask=torch.ones(1, 1, dtype=torch.long),
+        text_lengths=torch.ones(2, 1, dtype=torch.long),
+        words_mask=torch.tensor([[1, 0], [1, 0]]),
+        labels_gather_indices=torch.empty(2, 0, dtype=torch.long),
+        prompts_embedding_mask=torch.empty(2, 0, dtype=torch.bool),
+    )
+
+    assert empty_result.prompts_embedding.shape == (2, 0, 1)
+    assert empty_result.prompts_embedding_mask.shape == (2, 0)
+
+
+def test_multihead_attention_applies_per_row_attention_mask():
+    """Changing masked keys must not change attention output for either row."""
+    torch.manual_seed(0)
+    attention = MultiheadAttention(hidden_size=6, num_heads=3, dropout=0.0).eval()
+    query = torch.randn(2, 1, 6)
+    key = torch.randn(2, 2, 6)
+    value = torch.randn(2, 2, 6)
+    mask = torch.tensor([[[1, 0]], [[0, 1]]], dtype=torch.long)
+
+    changed_key = key.clone()
+    changed_value = value.clone()
+    changed_key[0, 1] += 1000
+    changed_value[0, 1] += 1000
+    changed_key[1, 0] -= 1000
+    changed_value[1, 0] -= 1000
+
+    expected, _ = attention(query, key, value, attn_mask=mask)
+    actual, _ = attention(query, changed_key, changed_value, attn_mask=mask)
+
+    assert torch.allclose(actual, expected)
+
+
 class TestUniEncoderSpanModel:
     """Test suite for UniEncoderSpanModel."""
 
@@ -1139,6 +1209,19 @@ class TestBiEncoderSpanModel:
         assert output.logits.shape[0] == B  # Batch dimension
         assert output.logits.shape[1] == L  # Sequence dimension
 
+    def test_forward_uses_per_row_label_layout(self, mock_config, model_inputs):
+        """Span forward should score the gathered local label layout, including padding."""
+        inputs = {k: v for k, v in model_inputs.items() if k != "labels"}
+        inputs["labels_gather_indices"] = torch.tensor([[0, 2], [4, 0]])
+        inputs["prompts_embedding_mask"] = torch.tensor([[True, True], [True, False]])
+        model = BiEncoderSpanModel(mock_config, from_pretrained=False)
+
+        with torch.no_grad():
+            output = model(**inputs)
+
+        assert output.logits.shape[-1] == 2
+        assert output.prompts_embedding_mask.tolist() == [[1, 1], [1, 0]]
+
     def test_forward_with_precomputed_labels_embeds(self, mock_config, model_inputs):
         """Should accept precomputed labels embeddings instead of ids."""
 
@@ -1248,3 +1331,34 @@ class TestBiEncoderSpanModel:
         assert isinstance(loss, torch.Tensor)
         assert loss.ndim == 0
         assert loss.item() >= 0
+
+
+def test_biencoder_token_forward_uses_per_row_label_layout():
+    """Token forward should propagate the gather indices and per-row label mask."""
+    config = BiEncoderTokenConfig(
+        model_name="bert-base-uncased",
+        labels_encoder="bert-base-uncased",
+        hidden_size=64,
+        dropout=0.1,
+        max_width=12,
+        class_token_index=103,
+        has_rnn=False,
+        post_fusion_schema="",
+        embed_ent_token=True,
+    )
+    model = BiEncoderTokenModel(config, from_pretrained=False)
+
+    with torch.no_grad():
+        output = model(
+            input_ids=torch.randint(0, 1000, (2, 4)),
+            attention_mask=torch.ones(2, 4, dtype=torch.long),
+            labels_input_ids=torch.randint(0, 1000, (3, 4)),
+            labels_attention_mask=torch.ones(3, 4, dtype=torch.long),
+            words_mask=torch.tensor([[0, 1, 2, 0], [0, 1, 2, 0]]),
+            text_lengths=torch.tensor([[2], [2]]),
+            labels_gather_indices=torch.tensor([[0, 1], [2, 0]]),
+            prompts_embedding_mask=torch.tensor([[True, True], [True, False]]),
+        )
+
+    assert output.logits.shape == (2, 2, 2, 3)
+    assert output.prompts_embedding_mask.tolist() == [[1, 1], [1, 0]]

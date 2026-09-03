@@ -1323,6 +1323,8 @@ class BaseBiEncoderModel(BaseModel):
         labels_attention_mask: Optional[torch.LongTensor] = None,
         text_lengths: Optional[torch.Tensor] = None,
         words_mask: Optional[torch.LongTensor] = None,
+        labels_gather_indices: Optional[torch.LongTensor] = None,
+        prompts_embedding_mask: Optional[torch.LongTensor] = None,
         **kwargs: Any,
     ) -> GLiNERRepresentationOutput:
         """Get entity label and word representations using bi-encoder.
@@ -1335,6 +1337,8 @@ class BaseBiEncoderModel(BaseModel):
             labels_attention_mask: Attention mask for labels.
             text_lengths: Length of each text in batch.
             words_mask: Word boundary mask.
+            labels_gather_indices: Per-row indices into the shared label embeddings.
+            prompts_embedding_mask: Mask for valid labels in each row.
             **kwargs: Additional arguments for the encoder.
 
         Returns:
@@ -1365,16 +1369,41 @@ class BaseBiEncoderModel(BaseModel):
             getattr(self.config, "subtoken_pooling", "first"),
         )
 
-        labels_embeds = labels_embeds.unsqueeze(0)
-        labels_embeds = labels_embeds.expand(batch_size, -1, -1)
-        labels_mask = torch.ones(labels_embeds.shape[:-1], dtype=attention_mask.dtype, device=attention_mask.device)
+        if labels_gather_indices is not None:
+            if labels_embeds.dim() != 2:
+                raise ValueError("labels_gather_indices requires 2D shared label embeddings")
+            if labels_gather_indices.dim() != 2:
+                raise ValueError("labels_gather_indices must have shape (B, C)")
+            if labels_gather_indices.shape[0] != batch_size:
+                raise ValueError("labels_gather_indices must have one row per input text")
+
+            labels_gather_indices = labels_gather_indices.to(device=labels_embeds.device, dtype=torch.long)
+            labels_embeds = labels_embeds[labels_gather_indices]
+        elif labels_embeds.dim() == 2:
+            labels_embeds = labels_embeds.unsqueeze(0).expand(batch_size, -1, -1)
+        elif labels_embeds.dim() == 3:
+            if labels_embeds.shape[0] != batch_size:
+                raise ValueError("Batched label embeddings must have one row per input text")
+        else:
+            raise ValueError("labels_embeds must have shape (C, D) or (B, C, D)")
+
+        if prompts_embedding_mask is None:
+            labels_mask = torch.ones(
+                labels_embeds.shape[:-1], dtype=attention_mask.dtype, device=labels_embeds.device
+            )
+        else:
+            if prompts_embedding_mask.shape != labels_embeds.shape[:-1]:
+                raise ValueError("prompts_embedding_mask must match the batched label layout")
+            labels_mask = prompts_embedding_mask.to(device=labels_embeds.device, dtype=attention_mask.dtype)
 
         labels_embeds = labels_embeds.to(words_embedding.dtype)
+        labels_embeds = labels_embeds * labels_mask.unsqueeze(-1).to(labels_embeds.dtype)
 
         if hasattr(self, "cross_fuser"):
             words_embedding, labels_embeds = self.features_enhancement(
                 words_embedding, labels_embeds, text_mask=mask, labels_mask=labels_mask
             )
+            labels_embeds = labels_embeds * labels_mask.unsqueeze(-1).to(labels_embeds.dtype)
 
         return GLiNERRepresentationOutput(
             prompts_embedding=labels_embeds,
@@ -1429,6 +1458,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         span_idx: Optional[torch.LongTensor] = None,
         span_mask: Optional[torch.LongTensor] = None,
         labels: Optional[torch.FloatTensor] = None,
+        labels_gather_indices: Optional[torch.LongTensor] = None,
         **kwargs: Any,
     ) -> GLiNERBaseOutput:
         """Forward pass through the bi-encoder span model.
@@ -1448,6 +1478,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             span_idx: Span indices of shape (B, L*K, 2).
             span_mask: Mask for valid spans of shape (B, L, K).
             labels: Ground truth labels of shape (B, L, K, C).
+            labels_gather_indices: Per-row indices into the shared label embeddings.
             **kwargs: Additional arguments.
 
         Returns:
@@ -1460,13 +1491,15 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         }
 
         representations = self.get_representations(
-            input_ids,
-            attention_mask,
-            labels_embeds,
-            labels_input_ids,
-            labels_attention_mask,
-            text_lengths,
-            words_mask,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels_embeds=labels_embeds,
+            labels_input_ids=labels_input_ids,
+            labels_attention_mask=labels_attention_mask,
+            text_lengths=text_lengths,
+            words_mask=words_mask,
+            labels_gather_indices=labels_gather_indices,
+            prompts_embedding_mask=prompts_embedding_mask,
             **encoder_kwargs,
         )
         prompts_embedding = representations.prompts_embedding
@@ -1611,6 +1644,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         text_lengths: Optional[torch.Tensor] = None,
         labels: Optional[torch.FloatTensor] = None,
         threshold: Optional[float] = 0.5,
+        labels_gather_indices: Optional[torch.LongTensor] = None,
         **kwargs: Any,
     ) -> GLiNERBaseOutput:
         """Forward pass through the bi-encoder token model.
@@ -1633,6 +1667,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
             text_lengths: Length of each text sequence.
             labels: Ground truth labels of shape (B, W, C).
             threshold: float value for filtering spans.
+            labels_gather_indices: Per-row indices into the shared label embeddings.
             **kwargs: Additional arguments.
 
         Returns:
@@ -1645,13 +1680,15 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         }
 
         representations = self.get_representations(
-            input_ids,
-            attention_mask,
-            labels_embeds,
-            labels_input_ids,
-            labels_attention_mask,
-            text_lengths,
-            words_mask,
+            input_ids=input_ids,
+            attention_mask=attention_mask,
+            labels_embeds=labels_embeds,
+            labels_input_ids=labels_input_ids,
+            labels_attention_mask=labels_attention_mask,
+            text_lengths=text_lengths,
+            words_mask=words_mask,
+            labels_gather_indices=labels_gather_indices,
+            prompts_embedding_mask=prompts_embedding_mask,
             **encoder_kwargs,
         )
         prompts_embedding = representations.prompts_embedding

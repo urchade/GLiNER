@@ -9,6 +9,7 @@ from gliner.decoding.decoder import (
     TokenDecoder,
     BaseSpanDecoder,
     SpanRelexDecoder,
+    TokenRelexDecoder,
     SpanGenerativeDecoder,
     _decode_relations_batch,
 )
@@ -206,6 +207,119 @@ class TestSpanDecoder:
 
             assert batch_0_types.issubset({'PERSON', 'ORG'})
             assert batch_1_types.issubset({'LOCATION', 'DATE'})
+
+    def test_ragged_per_sample_id_to_classes(self, basic_config, basic_inputs):
+        """Per-sample mappings of DIFFERENT sizes must decode without raising.
+
+        The class dimension is padded to the batch-wide maximum, so a sample with fewer labels
+        still carries scores in class slots it never asked for. Those slots have no entry in that
+        sample's id_to_class and previously raised KeyError.
+        """
+        decoder = SpanDecoder(basic_config)
+
+        # sample 0 has two classes, sample 1 only one -- logits still have C=2
+        id_to_classes_list = [{1: 'PERSON', 2: 'ORG'}, {1: 'LOCATION'}]
+
+        result = decoder.decode(
+            tokens=basic_inputs['tokens'],
+            id_to_classes=id_to_classes_list,
+            model_output=basic_inputs['logits'],
+            threshold=0.5,
+        )
+
+        assert {span.entity_type for span in result[0]}.issubset({'PERSON', 'ORG'})
+        assert {span.entity_type for span in result[1]}.issubset({'LOCATION'})
+
+    def test_ragged_per_sample_id_to_classes_single_item(self, basic_config):
+        """Same guard on the B == 1 path, which decodes per item rather than per batch."""
+        decoder = SpanDecoder(basic_config)
+
+        logits = torch.full((1, 3, 2, 3), -10.0)
+        logits[0, 0, 0, 0] = 5.0   # class 1 -- present in the mapping
+        logits[0, 1, 0, 2] = 5.0   # class 3 -- a padding slot, must be ignored
+
+        result = decoder.decode(
+            tokens=[['Alice', 'met', 'Bob']],
+            id_to_classes=[{1: 'PERSON'}],
+            model_output=logits,
+            threshold=0.5,
+        )
+
+        assert {span.entity_type for span in result[0]} == {'PERSON'}
+
+    def test_return_class_probs_excludes_padded_classes_single_item(self, basic_config):
+        """The B == 1 path should report probabilities only for mapped classes."""
+        decoder = SpanDecoder(basic_config)
+        logits = torch.tensor([[[[5.0, 10.0, 9.0]]]])
+
+        result = decoder.decode(
+            tokens=[["Alice"]],
+            id_to_classes=[{1: "PERSON"}],
+            model_output=logits,
+            threshold=0.5,
+            return_class_probs=True,
+        )
+
+        assert len(result[0]) == 1
+        assert result[0][0].class_probs == pytest.approx(
+            {"PERSON": torch.sigmoid(torch.tensor(5.0)).item()}
+        )
+
+    def test_return_class_probs_excludes_padded_classes_batched(self, basic_config):
+        """The vectorized path should not expose another row's padded class slots."""
+        decoder = SpanDecoder(basic_config)
+        logits = torch.tensor(
+            [
+                [[[5.0, -1.0, 100.0]]],
+                [[[4.0, 100.0, 100.0]]],
+            ]
+        )
+
+        result = decoder.decode(
+            tokens=[["Alice"], ["Kyiv"]],
+            id_to_classes=[
+                {1: "PERSON", 2: "ORG"},
+                {1: "PLACE"},
+            ],
+            model_output=logits,
+            threshold=0.5,
+            return_class_probs=True,
+        )
+
+        assert len(result[0]) == 1
+        assert len(result[1]) == 1
+        assert result[0][0].class_probs == pytest.approx(
+            {
+                "PERSON": torch.sigmoid(torch.tensor(5.0)).item(),
+                "ORG": torch.sigmoid(torch.tensor(-1.0)).item(),
+            }
+        )
+        assert result[1][0].class_probs == pytest.approx(
+            {"PLACE": torch.sigmoid(torch.tensor(4.0)).item()}
+        )
+
+    def test_return_class_probs_excludes_padded_classes_explicit_spans(self, basic_config):
+        """Explicit-span decoding should rank only classes present in the row mapping."""
+        decoder = SpanDecoder(basic_config)
+        logits = torch.tensor([[[5.0, 4.0, 100.0, 90.0, 80.0, 70.0, 60.0]]])
+
+        result = decoder.decode(
+            tokens=[["Alice"]],
+            id_to_classes=[{1: "PERSON", 2: "ORG"}],
+            model_output=logits,
+            span_idx=torch.tensor([[[0, 0]]]),
+            span_mask=torch.tensor([[True]]),
+            threshold=0.5,
+            return_class_probs=True,
+        )
+
+        assert len(result[0]) == 1
+        assert result[0][0].class_probs == pytest.approx(
+            {
+                "PERSON": torch.sigmoid(torch.tensor(5.0)).item(),
+                "ORG": torch.sigmoid(torch.tensor(4.0)).item(),
+            }
+        )
 
     def test_empty_predictions(self, basic_config):
         """Should handle case with no predictions above threshold."""
@@ -677,6 +791,37 @@ class TestSpanRelexDecoder:
         assert all(len(rels) == 0 for rels in relations)
 
 
+@pytest.mark.parametrize("decoder_class", [SpanRelexDecoder, TokenRelexDecoder])
+def test_relex_decoders_mask_ragged_relation_classes(decoder_class):
+    """Padded relation classes must not enter decoding for a row with fewer labels."""
+    decoder = decoder_class(Mock())
+    spans = [
+        [Span(0, 0, "A", 0.9), Span(1, 1, "B", 0.8)],
+        [Span(0, 0, "X", 0.9), Span(1, 1, "Y", 0.8)],
+    ]
+    rel_idx = torch.tensor([[[0, 1]], [[0, 1]]])
+    rel_logits = torch.full((2, 1, 2), -10.0)
+    rel_logits[0, 0, 1] = 5.0  # valid class 2 for sample 0
+    rel_logits[1, 0, 0] = 5.0  # valid class 1 for sample 1
+    rel_logits[1, 0, 1] = 10.0  # padded class 2 for sample 1
+
+    decode_kwargs = {
+        "spans": spans,
+        "rel_idx": rel_idx,
+        "rel_logits": rel_logits,
+        "rel_mask": torch.ones(2, 1, dtype=torch.bool),
+        "rel_id_to_classes": [{1: "REL_A", 2: "REL_B"}, {1: "REL_C"}],
+        "threshold": 0.1,
+        "batch_size": 2,
+    }
+    if decoder_class is SpanRelexDecoder:
+        decode_kwargs["model_output"] = None
+
+    relations = decoder._decode_relations(**decode_kwargs)
+
+    assert [[relation[1] for relation in sample] for sample in relations] == [["REL_B"], ["REL_C"]]
+
+
 class TestTokenDecoder:
     """Test suite for TokenDecoder class."""
 
@@ -857,6 +1002,44 @@ class TestTokenDecoder:
 
         assert len(result) == 1
         assert len(result[0]) == 0
+
+    def test_ragged_per_sample_id_to_classes(self, token_config):
+        """Should ignore padded class slots for per-sample mappings of different sizes."""
+        decoder = TokenDecoder(token_config)
+
+        model_output = torch.full((2, 2, 2, 3), -10.0)
+        model_output[0, 0, 0] = 5.0  # valid class 1 for sample 0
+        model_output[1, 1, 0] = 5.0  # valid class 1 for sample 1
+        model_output[1, 0, 1] = 10.0  # padded class 2 for sample 1
+
+        result = decoder.decode(
+            tokens=[["Alice", "x"], ["y", "Kyiv"]],
+            id_to_classes=[{1: "PERSON", 2: "ORG"}, {1: "LOCATION"}],
+            model_output=model_output,
+            threshold=0.1,
+        )
+
+        assert [[(span.start, span.end, span.entity_type) for span in spans] for spans in result] == [
+            [(0, 0, "PERSON")],
+            [(1, 1, "LOCATION")],
+        ]
+
+    def test_ragged_per_sample_id_to_classes_single_item(self, token_config):
+        """Should also ignore padded class slots for a single decoded item."""
+        decoder = TokenDecoder(token_config)
+
+        model_output = torch.full((1, 2, 3, 3), -10.0)
+        model_output[0, 0, 0] = 5.0  # valid class 1
+        model_output[0, 1, 2] = 10.0  # padded class 3
+
+        result = decoder.decode(
+            tokens=[["Alice", "x"]],
+            id_to_classes=[{1: "PERSON"}],
+            model_output=model_output,
+            threshold=0.1,
+        )
+
+        assert [(span.start, span.end, span.entity_type) for span in result[0]] == [(0, 0, "PERSON")]
 
     def test_per_sample_thresholds(self, token_config, token_inputs):
         """Should apply token-decoder thresholds independently per batch item."""

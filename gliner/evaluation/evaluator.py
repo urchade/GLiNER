@@ -265,9 +265,9 @@ class BaseRelexEvaluator(BaseEvaluator):
             else:
                 t_ent_start = t_ent[0]
                 t_ent_end = t_ent[1]
-            
+
             all_rels.append([lab, (h_ent_start, h_ent_end, t_ent_start, t_ent_end)])
-            
+
         return all_rels
 
     def transform_data(self):

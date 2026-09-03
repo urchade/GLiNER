@@ -115,6 +115,19 @@ from .data_processing.collator import (
 )
 from .data_processing.tokenizer import WordsSplitter
 
+
+def _entity_types_for_chunk(entity_types, indices):
+    """Select the label sets belonging to the rows in one DataLoader chunk.
+
+    ``entity_types`` is either a single flat list shared by every row, or -- when ``inference`` is
+    called with ``labels=List[List[str]]`` -- one list per row. Only the per-row form may be
+    sliced; slicing the shared form would silently drop labels.
+    """
+    if entity_types and isinstance(entity_types[0], list):
+        return [entity_types[i] for i in indices]
+    return entity_types
+
+
 if is_module_available("onnxruntime"):
     import onnxruntime as ort
 
@@ -2359,6 +2372,17 @@ class BaseEncoderGLiNER(BaseGLiNER):
         Returns:
             Model output containing logits and span information.
         """
+        labels_gather_indices = batch.get("labels_gather_indices")
+        if (
+            self.onnx_model
+            and isinstance(labels_gather_indices, torch.Tensor)
+            and labels_gather_indices.shape[0] > 1
+        ):
+            raise ValueError(
+                "Batched per-row labels are not supported by existing bi-encoder ONNX graphs; "
+                "use inference() or collate singleton batches"
+            )
+
         if move_to_device and not self.onnx_model:
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
@@ -2510,12 +2534,31 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         collator = self.create_collator()
 
-        def collate_fn(batch):
-            return self.collate_batch(batch, prepared["entity_types"], collator)
+        def collate_fn(indices):
+            return self.collate_batch(
+                [prepared["input_x"][i] for i in indices],
+                _entity_types_for_chunk(prepared["entity_types"], indices),
+                collator,
+            )
+
+        loader_batch_size = batch_size
+        entity_types = prepared["entity_types"]
+        has_per_row_entity_types = bool(entity_types and isinstance(entity_types[0], list))
+        needs_per_row_label_layout = has_per_row_entity_types and (
+            not entity_types[0] or any(row != entity_types[0] for row in entity_types[1:])
+        )
+        if (
+            self.onnx_model
+            and isinstance(self.data_processor, (BiEncoderSpanProcessor, BiEncoderTokenProcessor))
+            and needs_per_row_label_layout
+        ):
+            # Existing bi-encoder ONNX graphs expose one shared label matrix and
+            # cannot consume the per-row gather metadata used by the PyTorch model.
+            loader_batch_size = 1
 
         data_loader = torch.utils.data.DataLoader(
-            prepared["input_x"],
-            batch_size=batch_size,
+            list(range(len(prepared["input_x"]))),
+            batch_size=loader_batch_size,
             shuffle=False,
             collate_fn=collate_fn,
         )
@@ -4937,11 +4980,15 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
 
         collator = self.create_collator()
 
-        def collate_fn(batch):
-            return self.collate_batch(batch, prepared["entity_types"], collator)
+        def collate_fn(indices):
+            return self.collate_batch(
+                [prepared["input_x"][i] for i in indices],
+                _entity_types_for_chunk(prepared["entity_types"], indices),
+                collator,
+            )
 
         data_loader = torch.utils.data.DataLoader(
-            prepared["input_x"],
+            list(range(len(prepared["input_x"]))),
             batch_size=batch_size,
             shuffle=False,
             collate_fn=collate_fn,
@@ -5485,11 +5532,16 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         collator = self.create_collator()
 
-        def collate_fn(batch):
-            return self.collate_batch(batch, prepared["entity_types"], collator, prepared["relation_types"])
+        def collate_fn(indices):
+            return self.collate_batch(
+                [prepared["input_x"][i] for i in indices],
+                _entity_types_for_chunk(prepared["entity_types"], indices),
+                collator,
+                _entity_types_for_chunk(prepared["relation_types"], indices),
+            )
 
         data_loader = torch.utils.data.DataLoader(
-            prepared["input_x"],
+            list(range(len(prepared["input_x"]))),
             batch_size=batch_size,
             shuffle=False,
             collate_fn=collate_fn,
@@ -5726,7 +5778,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             relation_threshold: The threshold for relation predictions. Defaults to threshold.
             batch_size: The batch size for evaluation. Defaults to 12.
             entity_types: Optional list of entity types to evaluate. If None, extracts from test data. Defaults to None.
-            relation_types: Optional list of relation types to evaluate. If None, extracts from test data. Defaults to None.
+            relation_types: Optional list of relation types to evaluate. If None, extracts from test
+                data. Defaults to None.
 
         Returns:
             Tuple of ((ner_output, ner_f1), (rel_output, rel_f1)) containing:

@@ -179,11 +179,17 @@ class MultiheadAttention(nn.Module):
         else:
             value = self.transpose_for_scores(self.value_layer(value))
 
+        attention_mask = attn_mask.to(torch.bool) if attn_mask is not None else head_mask
+        # CrossFuser builds masks with shape (B, Q, K). SDPA expects them to
+        # broadcast across the attention-head dimension.
+        if attention_mask is not None and attention_mask.dim() == 3:
+            attention_mask = attention_mask.unsqueeze(1)
+
         context_layer = torch.nn.functional.scaled_dot_product_attention(
             query,
             key,
             value,
-            head_mask,
+            attention_mask,
             self.attention_probs_dropout_prob if self.training else 0.0,
             is_causal=False,
             scale=None,

@@ -1071,6 +1071,50 @@ class BaseBiEncoderProcessor(BaseProcessor):
         tokenized_inputs["words_mask"] = torch.tensor(words_masks)
         return tokenized_inputs
 
+    @staticmethod
+    def _prepare_entity_batch(classes_to_id):
+        """Prepare one shared label-encoder input without losing per-row order.
+
+        A bi-encoder can encode the distinct labels in a batch once.  For
+        per-example mappings, the returned gather indices restore those shared
+        embeddings to each example's local (1-indexed) class layout.
+        """
+        if isinstance(classes_to_id, dict):
+            entities = [label for label, _ in sorted(classes_to_id.items(), key=lambda item: item[1])]
+            return entities, None, None
+
+        entity_rows = [
+            [label for label, _ in sorted(mapping.items(), key=lambda item: item[1])]
+            for mapping in classes_to_id
+        ]
+        if not entity_rows:
+            return [], None, None
+        if not any(entity_rows):
+            # Tokenizers generally reject an empty batch. Encode one internal
+            # placeholder, then gather it down to a zero-width class layout.
+            empty_indices = torch.empty(len(entity_rows), 0, dtype=torch.long)
+            empty_mask = torch.empty(len(entity_rows), 0, dtype=torch.bool)
+            return [""], empty_indices, empty_mask
+        if all(row == entity_rows[0] for row in entity_rows[1:]):
+            return entity_rows[0], None, None
+
+        entities = list(dict.fromkeys(label for row in entity_rows for label in row))
+
+        max_classes = max((max(mapping.values(), default=0) for mapping in classes_to_id), default=0)
+        labels_gather_indices = torch.zeros(len(classes_to_id), max_classes, dtype=torch.long)
+        prompts_embedding_mask = torch.zeros(len(classes_to_id), max_classes, dtype=torch.bool)
+
+        entity_to_index = {label: index for index, label in enumerate(entities)}
+        for batch_index, mapping in enumerate(classes_to_id):
+            for label, class_id in mapping.items():
+                class_index = class_id - 1
+                if class_index < 0:
+                    raise ValueError("Bi-encoder class IDs must be positive")
+                labels_gather_indices[batch_index, class_index] = entity_to_index[label]
+                prompts_embedding_mask[batch_index, class_index] = True
+
+        return entities, labels_gather_indices, prompts_embedding_mask
+
     def batch_generate_class_mappings(
         self, batch_list: List[Dict], *args
     ) -> Tuple[List[Dict[str, int]], List[Dict[int, str]]]:
@@ -1133,14 +1177,18 @@ class BiEncoderSpanProcessor(UniEncoderSpanProcessor, BaseBiEncoderProcessor):
         Returns:
             Dictionary containing tokenized inputs, entity encodings, and optionally labels.
         """
+        labels_gather_indices = None
+        prompts_embedding_mask = None
         if prepare_entities:
-            if isinstance(batch["classes_to_id"], dict):
-                entities = list(batch["classes_to_id"])
-            else:
-                entities = list(batch["classes_to_id"][0])
+            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(
+                batch["classes_to_id"]
+            )
         else:
             entities = None
         tokenized_input = self.tokenize_inputs(batch["tokens"], entities)
+        if labels_gather_indices is not None:
+            tokenized_input["labels_gather_indices"] = labels_gather_indices
+            tokenized_input["prompts_embedding_mask"] = prompts_embedding_mask
         if prepare_labels:
             labels = self.create_labels(batch)
             tokenized_input["labels"] = labels
@@ -1166,15 +1214,19 @@ class BiEncoderTokenProcessor(UniEncoderTokenProcessor, BaseBiEncoderProcessor):
         Returns:
             Dictionary containing tokenized inputs, entity encodings, and optionally labels.
         """
+        labels_gather_indices = None
+        prompts_embedding_mask = None
         if prepare_entities:
-            if isinstance(batch["classes_to_id"], dict):
-                entities = list(batch["classes_to_id"])
-            else:
-                entities = list(batch["classes_to_id"][0])
+            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(
+                batch["classes_to_id"]
+            )
         else:
             entities = None
 
         tokenized_input = self.tokenize_inputs(batch["tokens"], entities)
+        if labels_gather_indices is not None:
+            tokenized_input["labels_gather_indices"] = labels_gather_indices
+            tokenized_input["prompts_embedding_mask"] = prompts_embedding_mask
 
         if prepare_labels:
             labels = self.create_labels(batch)
@@ -1777,24 +1829,19 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             else:
                 rel_class_to_ids, rel_id_to_classes = make_mapping(relation_types or [])
 
-        if isinstance(class_to_ids, list):
-            batch = [
+        batch = []
+        for i, example in enumerate(batch_list):
+            class_to_id_i = class_to_ids[i] if isinstance(class_to_ids, list) else class_to_ids
+            rel_class_to_id_i = rel_class_to_ids[i] if isinstance(rel_class_to_ids, list) else rel_class_to_ids
+            batch.append(
                 self.preprocess_example(
-                    b["tokenized_text"],
-                    b[key],
-                    class_to_ids[i],
-                    b.get("relations", []),
-                    rel_class_to_ids[i] if isinstance(rel_class_to_ids, list) else rel_class_to_ids,
+                    example["tokenized_text"],
+                    example[key],
+                    class_to_id_i,
+                    example.get("relations", []),
+                    rel_class_to_id_i,
                 )
-                for i, b in enumerate(batch_list)
-            ]
-        else:
-            batch = [
-                self.preprocess_example(
-                    b["tokenized_text"], b[key], class_to_ids, b.get("relations", []), rel_class_to_ids
-                )
-                for b in batch_list
-            ]
+            )
 
         return self.create_batch_dict(batch, class_to_ids, id_to_classes, rel_class_to_ids, rel_id_to_classes)
 
