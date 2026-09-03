@@ -1,4 +1,3 @@
-import os
 import re
 import json
 import logging
@@ -45,6 +44,7 @@ from .config import (
     UniEncoderSpanDecoderConfig,
     UniEncoderTokenDecoderConfig,
 )
+from .runtime import OpenVINOModel, BaseRuntimeModel, ONNXRuntimeModel
 from .decoding import (
     SpanDecoder,
     TokenDecoder,
@@ -55,15 +55,6 @@ from .decoding import (
 )
 from .streaming import StreamingBatch, AsyncStreamingEngine, _PersistentBatchState
 from .evaluation import BaseNEREvaluator, BaseRelexEvaluator
-from .onnx.model import (
-    BaseORTModel,
-    BiEncoderSpanORTModel,
-    BiEncoderTokenORTModel,
-    UniEncoderSpanORTModel,
-    UniEncoderTokenORTModel,
-    UniEncoderSpanRelexORTModel,
-    UniEncoderTokenRelexORTModel,
-)
 from .decoding.trie import LabelsTrie
 from .infer_packing import InferencePackingConfig
 from .modeling.base import (
@@ -126,13 +117,6 @@ def _entity_types_for_chunk(entity_types, indices):
     return entity_types
 
 
-ONNX_AVAILABLE = is_module_available("onnxruntime")
-if ONNX_AVAILABLE:
-    import onnxruntime as ort
-else:
-    ort = None
-
-
 def _get_trainer_classes():
     """Lazily import Trainer/TrainingArguments.
 
@@ -157,6 +141,8 @@ logger = logging.getLogger(__name__)
 class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     config_class: type = None
     model_class: type = None
+    # ``None`` is also the compatibility marker for architectures whose
+    # exported graph cannot be run by the external runtimes yet.
     ort_model_class: type = None
     data_processor_class: type = None
     data_collator_class: type = None
@@ -165,7 +151,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def __init__(
         self,
         config: BaseGLiNERConfig,
-        model: Optional[BaseModel] = None,
+        model: Optional[Union[BaseModel, BaseRuntimeModel]] = None,
         tokenizer: Optional[BaseModel] = None,
         data_processor: Optional[BaseProcessor] = None,
         backbone_from_pretrained: Optional[bool] = False,
@@ -196,10 +182,15 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         else:
             self.data_processor = self._create_data_processor(config, cache_dir, tokenizer, **kwargs)
 
-        if isinstance(self.model, BaseORTModel):
-            self.onnx_model = True
+        if isinstance(self.model, BaseRuntimeModel):
+            self.runtime = self.model.runtime_name
+            self.runtime_model = True
         else:
-            self.onnx_model = False
+            self.runtime = "torch"
+            self.runtime_model = False
+        # Backwards-compatible public state. Internal control flow must use
+        # ``runtime_model`` because OpenVINO has the same host-input behavior.
+        self.onnx_model = self.runtime == "onnxruntime"
 
         self.decoder = self.decoder_class(config)
 
@@ -258,13 +249,19 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         Returns:
             Torch device object (CPU or CUDA).
         """
-        if self.onnx_model:
-            providers = self.model.session.get_providers()
-            if "CUDAExecutionProvider" in providers:
-                return torch.device("cuda")
-            return torch.device("cpu")
+        if self.is_runtime_model:
+            return self.model.device
         device = next(self.model.parameters()).device
         return device
+
+    @property
+    def is_runtime_model(self) -> bool:
+        """Whether inference is delegated to ONNX Runtime or OpenVINO.
+
+        The legacy fallback keeps lightweight subclasses and integrations that
+        set only ``onnx_model`` working during the namespace migration.
+        """
+        return bool(getattr(self, "runtime_model", False) or getattr(self, "onnx_model", False))
 
     def configure_inference_packing(self, config: Optional[InferencePackingConfig]) -> None:
         """Configure default packing behavior for inference calls.
@@ -293,6 +290,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         wrapped with ``torch.compiler.disable`` so the rest of the model
         (span representation, scoring, etc.) still benefits from compilation.
         """
+        if self.is_runtime_model:
+            raise RuntimeError(
+                "torch.compile is only available for PyTorch-backed models; "
+                "configure optimization through the selected external runtime instead."
+            )
+
         torch._dynamo.config.capture_scalar_outputs = True
 
         # FlashDeBERTa uses hand-written Triton kernels that torch.compile cannot trace.
@@ -334,6 +337,67 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         "bf16": "bf16",
         "bfloat16": "bf16",
     }
+
+    _RUNTIME_ALIASES = {
+        "torch": "torch",
+        "pytorch": "torch",
+        "onnx": "onnxruntime",
+        "ort": "onnxruntime",
+        "onnxruntime": "onnxruntime",
+        "ov": "openvino",
+        "openvino": "openvino",
+    }
+
+    @classmethod
+    def _normalize_runtime(cls, runtime: Optional[str], load_onnx_model: bool = False) -> str:
+        """Resolve the canonical inference runtime, including legacy ONNX arguments."""
+        if runtime is None:
+            return "onnxruntime" if load_onnx_model else "torch"
+        if not isinstance(runtime, str):
+            raise TypeError(f"runtime must be str or None, got {type(runtime).__name__}")
+
+        key = runtime.lower()
+        if key not in cls._RUNTIME_ALIASES:
+            raise ValueError(
+                f"Unknown runtime {runtime!r}. Supported runtimes are 'torch', 'onnxruntime', and 'openvino'."
+            )
+
+        normalized = cls._RUNTIME_ALIASES[key]
+        if load_onnx_model and normalized != "onnxruntime":
+            raise ValueError(
+                "load_onnx_model=True conflicts with "
+                f"runtime={runtime!r}; use runtime='onnxruntime' or remove the legacy argument."
+            )
+        return normalized
+
+    @staticmethod
+    def _validate_runtime_only_options(
+        runtime: str,
+        *,
+        variant,
+        dtype,
+        quantize,
+        compile_torch_model: bool,
+        low_cpu_mem_usage: bool,
+    ) -> None:
+        """Reject PyTorch-only loading options for external runtime artifacts."""
+        if runtime == "torch":
+            return
+
+        incompatible = []
+        if variant is not None:
+            incompatible.append("variant")
+        if dtype is not None:
+            incompatible.append("dtype")
+        if quantize is not None:
+            incompatible.append("quantize")
+        if compile_torch_model:
+            incompatible.append("compile_torch_model")
+        if low_cpu_mem_usage:
+            incompatible.append("low_cpu_mem_usage")
+        if incompatible:
+            joined = ", ".join(incompatible)
+            raise ValueError(f"{joined} only apply to the PyTorch runtime; selected runtime={runtime!r}.")
 
     @classmethod
     def _normalize_variant(cls, variant) -> Optional[str]:
@@ -603,10 +667,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             >>> # For precision-only changes, prefer:
             >>> model = GLiNER.from_pretrained("urchade/gliner_small-v2.1", dtype="bf16")
         """
-        if self.onnx_model:
+        if self.is_runtime_model:
             raise RuntimeError(
-                "Cannot apply PyTorch quantization to an ONNX model. "
-                "Use export_to_onnx(quantize=True) for ONNX quantization."
+                "Cannot apply PyTorch quantization to an ONNX/OpenVINO runtime-backed model. "
+                "Quantize the exported artifact with tooling for the selected runtime."
             )
 
         if not isinstance(dtype, str):
@@ -766,6 +830,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         Returns:
             Repository URL if pushed to hub, None otherwise.
         """
+        if self.is_runtime_model:
+            raise RuntimeError(
+                "save_pretrained() is only available for PyTorch-backed models. "
+                "Copy the runtime artifact, GLiNER config, and tokenizer files together instead."
+            )
+
         save_directory = Path(save_directory)
         save_directory.mkdir(parents=True, exist_ok=True)
 
@@ -1299,6 +1369,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        runtime: Optional[str] = None,
+        runtime_model_file: Optional[str] = None,
+        runtime_options: Optional[dict] = None,
         **model_kwargs,
     ):
         """Load pretrained model from HuggingFace Hub or local directory.
@@ -1354,16 +1427,36 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             max_width: Override max_width in config.
             post_fusion_schema: Override post_fusion_schema in config.
             _attn_implementation: Override attention implementation.
+            runtime: Inference runtime: ``"torch"``, ``"onnxruntime"``, or
+                ``"openvino"``. ``None`` preserves the legacy
+                ``load_onnx_model`` behavior.
+            runtime_model_file: Runtime artifact relative to the model directory.
+                Both ONNX Runtime and OpenVINO can load ``model.onnx``;
+                OpenVINO also accepts an IR ``.xml`` file with its matching ``.bin``.
+            runtime_options: Backend-specific construction options. ONNX Runtime
+                accepts ``session``, ``session_options``, and ``providers``;
+                OpenVINO accepts ``compiled_model``, ``device_name``, ``config``,
+                and ``core``.
             **model_kwargs: Additional model initialization arguments.
 
         Returns:
             Loaded model instance.
         """
+        runtime = cls._normalize_runtime(runtime, load_onnx_model=bool(load_onnx_model))
+        cls._validate_runtime_only_options(
+            runtime,
+            variant=variant,
+            dtype=dtype,
+            quantize=quantize,
+            compile_torch_model=bool(compile_torch_model),
+            low_cpu_mem_usage=low_cpu_mem_usage,
+        )
+
         # Resolve variant + dtype up front so the download path can be
         # narrowed *before* hitting the network. Must happen before any
         # snapshot_download call so allow_patterns can apply.
-        variant = cls._normalize_variant(variant)
-        torch_dtype = cls._parse_dtype(dtype)
+        variant = cls._normalize_variant(variant) if runtime == "torch" else None
+        torch_dtype = cls._parse_dtype(dtype) if runtime == "torch" else None
         if variant is not None:
             variant_dtype = cls._VARIANT_TO_DTYPE[variant]
             if torch_dtype is None:
@@ -1403,6 +1496,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 local_files_only,
                 variant=variant,
             )
+        else:
+            model_dir = Path(model_dir)
 
         # Load config
         config_file = model_dir / "gliner_config.json"
@@ -1425,7 +1520,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if load_tokenizer:
             tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
 
-        if not load_onnx_model:
+        if runtime == "torch":
             # Find the model file. _resolve_model_file picks the variant file
             # if present, falls back to the default fp32 file with a warning if
             # the variant is missing (e.g. caller passed model_dir directly to
@@ -1550,31 +1645,100 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             instance.eval()
         else:
-            model_file = model_dir / onnx_model_file
-            if not os.path.exists(model_file):
-                raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
-            if session_options is None:
-                session_options = ort.SessionOptions()
-                session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-            providers = ["CPUExecutionProvider"]
-            if "cuda" in map_location:
-                if not torch.cuda.is_available():
-                    raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
-                providers = ["CUDAExecutionProvider"]
-            ort_session = ort.InferenceSession(model_file, session_options, providers=providers)
-            model = cls.ort_model_class(ort_session)
+            if cls.ort_model_class is None:
+                raise NotImplementedError(f"{cls.__name__} does not support the {runtime!r} runtime.")
+
+            if runtime_options is None:
+                options = {}
+            elif isinstance(runtime_options, dict):
+                options = runtime_options.copy()
+            else:
+                raise TypeError(f"runtime_options must be a dictionary or None, got {type(runtime_options).__name__}")
+
+            if (
+                runtime_model_file is not None
+                and onnx_model_file not in {None, "model.onnx", runtime_model_file}
+            ):
+                raise ValueError(
+                    "runtime_model_file conflicts with the legacy onnx_model_file argument; provide only one."
+                )
+            artifact_name = runtime_model_file or onnx_model_file or "model.onnx"
+            model_file = model_dir / artifact_name
+
+            if runtime == "onnxruntime":
+                injected_session = options.pop("session", None)
+                option_session_options = options.pop("session_options", None)
+                if session_options is not None and option_session_options is not None:
+                    raise ValueError(
+                        "session_options was provided both directly and through runtime_options; provide only one."
+                    )
+                effective_session_options = (
+                    option_session_options if option_session_options is not None else session_options
+                )
+                providers = options.pop("providers", None)
+                if providers is None and injected_session is None:
+                    providers = ["CPUExecutionProvider"]
+                    if "cuda" in map_location:
+                        if not torch.cuda.is_available():
+                            raise RuntimeError("CUDA is not available but `map_location` is set to 'cuda'.")
+                        providers = ["CUDAExecutionProvider"]
+                if options:
+                    raise ValueError(f"Unknown ONNX Runtime options: {sorted(options)}")
+                if injected_session is None and not model_file.exists():
+                    raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
+                onnx_model = ONNXRuntimeModel(
+                    session=injected_session,
+                    model_path=None if injected_session is not None else model_file,
+                    session_options=effective_session_options,
+                    providers=providers,
+                )
+                # Preserve the long-standing customization hook for downstream
+                # architectures with a specialized ONNX wrapper. Built-in
+                # architectures use the graph-driven adapter directly.
+                model = (
+                    onnx_model
+                    if cls.ort_model_class is ONNXRuntimeModel
+                    else cls.ort_model_class(onnx_model.session)
+                )
+            else:
+                if session_options is not None:
+                    raise ValueError(
+                        "session_options only applies to ONNX Runtime; pass OpenVINO compile properties in "
+                        "runtime_options['config']."
+                    )
+                if str(map_location).lower() != "cpu":
+                    raise ValueError(
+                        "map_location does not select an OpenVINO device; use "
+                        "runtime_options={'device_name': 'GPU'} (or CPU/AUTO/NPU)."
+                    )
+                compiled_model = options.pop("compiled_model", None)
+                device_name = options.pop("device_name", "CPU")
+                compile_config = options.pop("config", None)
+                core = options.pop("core", None)
+                if options:
+                    raise ValueError(f"Unknown OpenVINO options: {sorted(options)}")
+                if compiled_model is None and not model_file.exists():
+                    raise FileNotFoundError(f"The OpenVINO model can't be loaded from {model_file}.")
+                model = OpenVINOModel(
+                    compiled_model=compiled_model,
+                    model_path=None if compiled_model is not None else model_file,
+                    device_name=device_name,
+                    config=compile_config,
+                    core=core,
+                )
+
             instance = cls(config, tokenizer=tokenizer, model=model)
 
         return instance
 
     def _check_onnx_export_preconditions(self):
-        if self.onnx_model:
+        if self.is_runtime_model:
             raise RuntimeError(
-                "This instance already wraps an ONNX/ORT model. Export is intended for PyTorch-based models."
+                "This instance already wraps an external runtime model. Export is intended for PyTorch-based models."
             )
         # No ONNX_AVAILABLE check here: exporting only needs torch.onnx.export (always
-        # available). onnxruntime is required to later *load*/*run* the exported model
-        # (BaseORTModel / from_pretrained(..., load_onnx_model=True)), not to export it;
+        # available). A graph runtime is only required to later *load*/*run* the
+        # exported model, not to export it;
         # quantize=True degrades gracefully on its own if onnxruntime.quantization is
         # missing (see _maybe_quantize_onnx).
         if not hasattr(self, "data_processor") or not hasattr(self, "data_collator_class"):
@@ -2397,7 +2561,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         """
         labels_gather_indices = batch.get("labels_gather_indices")
         if (
-            self.onnx_model
+            self.is_runtime_model
             and isinstance(labels_gather_indices, torch.Tensor)
             and labels_gather_indices.shape[0] > 1
         ):
@@ -2406,7 +2570,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 "use inference() or collate singleton batches"
             )
 
-        if move_to_device and not self.onnx_model:
+        if move_to_device and not self.is_runtime_model:
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         if packing_config is not None or external_inputs:
@@ -2571,7 +2735,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             not entity_types[0] or any(row != entity_types[0] for row in entity_types[1:])
         )
         if (
-            self.onnx_model
+            self.is_runtime_model
             and isinstance(self.data_processor, (BiEncoderSpanProcessor, BiEncoderTokenProcessor))
             and needs_per_row_label_layout
         ):
@@ -3213,7 +3377,7 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
 class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderSpanConfig
     model_class = UniEncoderSpanModel
-    ort_model_class: type = UniEncoderSpanORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = UniEncoderSpanProcessor
     data_collator_class = UniEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -4540,7 +4704,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
 class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderTokenConfig
     model_class = UniEncoderTokenModel
-    ort_model_class: type = UniEncoderTokenORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = UniEncoderTokenProcessor
     data_collator_class = UniEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -4598,7 +4762,7 @@ class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
 class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderSpanConfig
     model_class = BiEncoderSpanModel
-    ort_model_class: type = BiEncoderSpanORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = BiEncoderSpanProcessor
     data_collator_class = BiEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -4640,7 +4804,7 @@ class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
 class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderTokenConfig
     model_class = BiEncoderTokenModel
-    ort_model_class: type = BiEncoderTokenORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = BiEncoderTokenProcessor
     data_collator_class = BiEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -4793,7 +4957,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         Returns:
             Model output with generated labels attached.
         """
-        if move_to_device and not self.onnx_model:
+        if move_to_device and not self.is_runtime_model:
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
@@ -5132,7 +5296,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
     config_class = UniEncoderSpanRelexConfig
     model_class = UniEncoderSpanRelexModel
-    ort_model_class: type = UniEncoderSpanRelexORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = RelationExtractionSpanProcessor
     data_collator_class = RelationExtractionSpanDataCollator
     decoder_class = SpanRelexDecoder
@@ -5275,7 +5439,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         if adjacency_threshold is None:
             adjacency_threshold = threshold
 
-        if move_to_device and not self.onnx_model:
+        if move_to_device and not self.is_runtime_model:
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         if packing_config is not None or external_inputs:
@@ -5844,7 +6008,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         # Iterate over data batches
         for batch in data_loader:
-            if not self.onnx_model:
+            if not self.is_runtime_model:
                 batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}  # noqa: PLW2901
 
             # Get model predictions
@@ -6002,7 +6166,7 @@ class UniEncoderTokenRelexGLiNER(UniEncoderSpanRelexGLiNER):
 
     config_class = UniEncoderTokenRelexConfig
     model_class = UniEncoderTokenRelexModel
-    ort_model_class: type = UniEncoderTokenRelexORTModel
+    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = RelationExtractionTokenProcessor
     data_collator_class = RelationExtractionTokenDataCollator
     decoder_class = TokenRelexDecoder
@@ -6223,6 +6387,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
         max_width: Optional[int] = None,
         post_fusion_schema: Optional[str] = None,
         _attn_implementation: Optional[str] = None,
+        runtime: Optional[str] = None,
+        runtime_model_file: Optional[str] = None,
+        runtime_options: Optional[dict] = None,
         **model_kwargs,
     ):
         """Load a pretrained GLiNER model with automatic type detection.
@@ -6269,6 +6436,10 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             max_width: Override max_width in config.
             post_fusion_schema: Override post_fusion_schema in config.
             _attn_implementation: Override attention implementation.
+            runtime: Inference runtime: ``"torch"``, ``"onnxruntime"``, or
+                ``"openvino"``.
+            runtime_model_file: Runtime artifact relative to the model directory.
+            runtime_options: Backend-specific session or compilation options.
             **model_kwargs: Additional model initialization arguments.
 
         Returns:
@@ -6282,43 +6453,50 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             >>> # If the repo publishes model.bf16.safetensors, download only that:
             >>> model = GLiNER.from_pretrained("org/gliner_bf16-v1", variant="bf16")
         """
+        normalized_runtime = BaseGLiNER._normalize_runtime(runtime, load_onnx_model=bool(load_onnx_model))
+        BaseGLiNER._validate_runtime_only_options(
+            normalized_runtime,
+            variant=variant,
+            dtype=dtype,
+            quantize=quantize,
+            compile_torch_model=bool(compile_torch_model),
+            low_cpu_mem_usage=low_cpu_mem_usage,
+        )
+
         # Canonicalize variant up front so it can narrow the download. The
         # outer ``GLiNER`` class doesn't inherit from ``BaseGLiNER``; reuse
         # the helpers directly so behavior stays in lockstep.
-        normalized_variant = BaseGLiNER._normalize_variant(variant)
+        normalized_variant = None
+        if normalized_runtime == "torch":
+            normalized_variant = BaseGLiNER._normalize_variant(variant)
 
-        # dtype-vs-variant consistency check MUST run before the probe.
-        # Otherwise, when the variant file is missing on the Hub,
-        # ``_resolve_variant`` downgrades to ``None`` and the inner
-        # ``from_pretrained``'s consistency check is skipped — silently
-        # accepting a ``variant="bf16", dtype="fp16"`` mismatch instead of
-        # raising as documented.
-        torch_dtype = BaseGLiNER._parse_dtype(dtype)
-        if normalized_variant is not None:
-            variant_dtype = BaseGLiNER._VARIANT_TO_DTYPE[normalized_variant]
-            if torch_dtype is None:
-                torch_dtype = variant_dtype
-                # Propagate the variant's dtype so the inner cast-on-read still
-                # produces the requested precision after a fallback.
-                dtype = variant_dtype
-            elif torch_dtype != variant_dtype:
-                raise ValueError(
-                    f"variant={normalized_variant!r} requires dtype={variant_dtype}; "
-                    f"got dtype={torch_dtype}. Drop dtype= to inherit from variant, "
-                    f"or unset variant= to load the default file."
-                )
+            # dtype-vs-variant consistency check MUST run before the probe.
+            # Otherwise, when the variant file is missing on the Hub,
+            # ``_resolve_variant`` downgrades to ``None`` and the inner
+            # ``from_pretrained``'s consistency check is skipped.
+            torch_dtype = BaseGLiNER._parse_dtype(dtype)
+            if normalized_variant is not None:
+                variant_dtype = BaseGLiNER._VARIANT_TO_DTYPE[normalized_variant]
+                if torch_dtype is None:
+                    torch_dtype = variant_dtype
+                    dtype = variant_dtype
+                elif torch_dtype != variant_dtype:
+                    raise ValueError(
+                        f"variant={normalized_variant!r} requires dtype={variant_dtype}; "
+                        f"got dtype={torch_dtype}. Drop dtype= to inherit from variant, "
+                        f"or unset variant= to load the default file."
+                    )
 
-        # Probe for availability and warn-and-fall-back to None if the variant
-        # file isn't published. The inner from_pretrained will see model_dir
-        # is already populated and skip its own probe — no double round-trip.
-        normalized_variant = BaseGLiNER._resolve_variant(
-            model_id,
-            normalized_variant,
-            revision=revision,
-            cache_dir=cache_dir,
-            token=token,
-            local_files_only=local_files_only,
-        )
+            # Probe for availability and warn-and-fall-back to None if the
+            # variant file isn't published.
+            normalized_variant = BaseGLiNER._resolve_variant(
+                model_id,
+                normalized_variant,
+                revision=revision,
+                cache_dir=cache_dir,
+                token=token,
+                local_files_only=local_files_only,
+            )
 
         model_dir = BaseGLiNER._download_model(
             model_id,
@@ -6372,6 +6550,9 @@ class GLiNER(nn.Module, PyTorchModelHubMixin):
             _attn_implementation=_attn_implementation,
             load_onnx_model=load_onnx_model,
             onnx_model_file=onnx_model_file,
+            runtime=normalized_runtime,
+            runtime_model_file=runtime_model_file,
+            runtime_options=runtime_options,
             **model_kwargs,
         )
 
