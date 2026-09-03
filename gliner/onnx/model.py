@@ -5,16 +5,24 @@ architectures, including uni-encoder and bi-encoder variants for both
 span-level and token-level named entity recognition, as well as relation
 extraction models.
 """
+from __future__ import annotations
 
 import warnings
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional
+from typing import TYPE_CHECKING, Any, Dict, Optional
 
-import numpy as np
-import torch
-import onnxruntime as ort
-
+from ..utils import is_module_available
 from ..modeling.outputs import GLiNERBaseOutput, GLiNERRelexOutput
+
+if TYPE_CHECKING:
+    import numpy as np
+    import torch
+
+IS_ONNXRUNTIME = is_module_available("onnxruntime")
+if IS_ONNXRUNTIME:
+    import onnxruntime as ort
+else:
+    ort = None
 
 
 class BaseORTModel(ABC):

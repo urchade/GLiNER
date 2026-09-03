@@ -174,6 +174,7 @@ class Transformer(nn.Module):
         """
         pair_attention_mask = kwargs.pop("pair_attention_mask", None)
         base_attention_mask = kwargs.pop("attention_mask", None)
+        kwargs.pop("token_lengths", None)  # GLiNER-internal kwarg, not accepted by HF models
         # Extract input_ids if present
         args = list(args)
         input_ids = kwargs.pop("input_ids", None)

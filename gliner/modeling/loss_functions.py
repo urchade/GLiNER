@@ -2,6 +2,70 @@ import torch
 import torch.nn.functional as F
 
 
+def span_dice_loss(
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
+    gamma: float = 1.0,
+    reduction: str = "none",
+    ignore_index: int = -100,
+    eps: float = 1e-6,
+) -> torch.Tensor:
+    """Per-element self-adjusting Dice loss for span-level NER.
+
+    Adapted from Li et al. (ACL 2020) "Dice Loss for Data-imbalanced NLP Tasks"
+    to operate element-wise over the (B, L*K, C) span-prediction tensor.
+
+    Unlike BCE, Dice is directly optimizing a surrogate of the F1 coefficient
+    and is immune to O-label domination because false negatives and false positives
+    are balanced in the denominator regardless of class prevalence.
+
+    The self-adjusting modulator (1-p)^gamma down-weights easy-to-classify
+    negative spans (high confidence, low p), focusing gradient on hard positives.
+
+    Loss per element:
+        adjusted_p = (1 - sigmoid(input))^gamma * sigmoid(input)
+        DSC_adj    = (2 * adjusted_p * y + eps) / (adjusted_p + y + eps)
+        loss       = 1 - DSC_adj
+
+    Args:
+        inputs: Predicted logits of arbitrary shape.
+        targets: Ground truth binary labels, same shape as inputs.
+            Values in {0, 1} or ignore_index.
+        gamma: Self-adjustment exponent. Higher values focus more on hard negatives.
+            Defaults to 1.0. Set to 0.0 to recover standard soft Dice.
+        reduction: 'none', 'mean', or 'sum'. Defaults to 'none'.
+        ignore_index: Target values to mask out from the loss. Defaults to -100.
+        eps: Numerical stability epsilon. Defaults to 1e-6.
+
+    Returns:
+        Loss tensor. Shape depends on reduction.
+    """
+    valid_mask = targets != ignore_index
+
+    p = torch.sigmoid(inputs)
+    y = targets.clamp(min=0.0)
+
+    adjusted_p = (1.0 - p).pow(gamma) * p
+
+    numerator = 2.0 * adjusted_p * y
+    denominator = adjusted_p + y
+
+    per_element = 1.0 - (numerator + eps) / (denominator + eps)
+    per_element = per_element * valid_mask.float()
+
+    if reduction == "none":
+        return per_element
+    elif reduction == "mean":
+        return per_element.sum() / valid_mask.float().sum().clamp(min=1)
+    elif reduction == "sum":
+        return per_element.sum()
+    else:
+        raise ValueError(
+            f"Invalid value for argument 'reduction': '{reduction}'. "
+            "Supported modes: 'none', 'mean', 'sum'"
+        )
+
+
 def focal_loss_with_logits(
     inputs: torch.Tensor,
     targets: torch.Tensor,
