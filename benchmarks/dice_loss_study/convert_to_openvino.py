@@ -12,7 +12,7 @@ Usage:
     # Install deps first:
     pip install openvino nncf onnx onnxruntime
 
-    python scripts/dice_loss_study/convert_to_openvino.py \
+    python benchmarks/dice_loss_study/convert_to_openvino.py \
         --model knowledgator/gliner-bi-small-v1.0 \
         --output_dir results/openvino \
         --baseline_f1 0.27
