@@ -4,6 +4,7 @@ import numpy as np
 import torch
 
 from .utils import _prf_divide, flatten_for_eval, extract_tp_actual_correct
+from ..decoding.decoder import Span
 
 
 class BaseEvaluator(ABC):
@@ -251,7 +252,22 @@ class BaseRelexEvaluator(BaseEvaluator):
             t = rel[2]
             h_ent = ents[h]
             t_ent = ents[t]
-            all_rels.append([lab, (h_ent[0], h_ent[1], t_ent[0], t_ent[1])])
+
+            if isinstance(h_ent, Span):
+                h_ent_start = h_ent.start
+                h_ent_end = h_ent.end
+            else:
+                h_ent_start = h_ent[0]
+                h_ent_end = h_ent[1]
+            if isinstance(t_ent, Span):
+                t_ent_start = t_ent.start
+                t_ent_end = t_ent.end
+            else:
+                t_ent_start = t_ent[0]
+                t_ent_end = t_ent[1]
+
+            all_rels.append([lab, (h_ent_start, h_ent_end, t_ent_start, t_ent_end)])
+
         return all_rels
 
     def transform_data(self):

@@ -7,6 +7,7 @@ import torch
 import pytest
 from transformers import AutoTokenizer
 
+from gliner.data_processing import BiEncoderSpanProcessor, BiEncoderTokenProcessor
 from gliner.data_processing.utils import make_mapping, get_negatives, pad_2d_tensor, prepare_span_idx, prepare_word_mask
 
 
@@ -1184,6 +1185,143 @@ class TestBiEncoderSpanProcessor:
         assert "MISC" in all_types
 
 
+@pytest.mark.parametrize("processor_class", [BiEncoderSpanProcessor, BiEncoderTokenProcessor])
+@pytest.mark.parametrize(
+    ("classes_to_id", "expected_entities", "expected_indices", "expected_mask"),
+    [
+        (
+            [{"B": 2, "A": 1}, {"D": 2, "C": 1}],
+            ["A", "B", "C", "D"],
+            [[0, 1], [2, 3]],
+            [[True, True], [True, True]],
+        ),
+        (
+            [{"A": 1, "B": 2}, {"C": 1}],
+            ["A", "B", "C"],
+            [[0, 1], [2, 0]],
+            [[True, True], [True, False]],
+        ),
+        (
+            [{"A": 1, "B": 2}, {"B": 1, "C": 2}],
+            ["A", "B", "C"],
+            [[0, 1], [1, 2]],
+            [[True, True], [True, True]],
+        ),
+        (
+            [{}, {"C": 1}],
+            ["C"],
+            [[0], [0]],
+            [[False], [True]],
+        ),
+        (
+            [{}, {}],
+            [""],
+            [[], []],
+            [[], []],
+        ),
+    ],
+)
+def test_biencoder_processors_preserve_per_row_label_layout(
+    mock_config,
+    mock_tokenizer,
+    mock_words_splitter,
+    processor_class,
+    classes_to_id,
+    expected_entities,
+    expected_indices,
+    expected_mask,
+):
+    """Both bi-encoder processors should encode the union and restore each row's order."""
+    encoded_values = {"": 0, "A": 10, "B": 20, "C": 30, "D": 40}
+    encoded_entities = []
+    labels_tokenizer = Mock()
+    labels_tokenizer.unk_token = "[UNK]"
+    labels_tokenizer.pad_token = "[PAD]"
+
+    def tokenize_labels(entities, **kwargs):
+        encoded_entities.append(list(entities))
+        return {
+            "input_ids": torch.tensor([[encoded_values[label]] for label in entities]),
+            "attention_mask": torch.ones(len(entities), 1, dtype=torch.long),
+        }
+
+    labels_tokenizer.side_effect = tokenize_labels
+    processor = processor_class(mock_config, mock_tokenizer, mock_words_splitter, labels_tokenizer)
+    batch = {
+        "tokens": [["first"], ["second"]],
+        "classes_to_id": classes_to_id,
+    }
+
+    result = processor.tokenize_and_prepare_labels(batch, prepare_labels=False)
+
+    assert encoded_entities[-1] == expected_entities
+    assert result["labels_input_ids"].squeeze(-1).tolist() == [encoded_values[label] for label in expected_entities]
+    assert result["labels_gather_indices"].tolist() == expected_indices
+    assert result["prompts_embedding_mask"].tolist() == expected_mask
+
+
+@pytest.mark.parametrize("processor_class", [BiEncoderSpanProcessor, BiEncoderTokenProcessor])
+@pytest.mark.parametrize(
+    "classes_to_id",
+    [
+        {"A": 1, "B": 2},
+        [{"A": 1, "B": 2}, {"A": 1, "B": 2}],
+    ],
+)
+def test_biencoder_processors_keep_shared_label_fast_path(
+    mock_config, mock_tokenizer, mock_words_splitter, processor_class, classes_to_id
+):
+    """A flat shared mapping should retain the existing 2D label-embedding path."""
+    labels_tokenizer = Mock()
+    labels_tokenizer.unk_token = "[UNK]"
+    labels_tokenizer.pad_token = "[PAD]"
+    labels_tokenizer.return_value = {
+        "input_ids": torch.tensor([[10], [20]]),
+        "attention_mask": torch.ones(2, 1, dtype=torch.long),
+    }
+    processor = processor_class(mock_config, mock_tokenizer, mock_words_splitter, labels_tokenizer)
+    batch = {
+        "tokens": [["first"], ["second"]],
+        "classes_to_id": classes_to_id,
+    }
+
+    result = processor.tokenize_and_prepare_labels(batch, prepare_labels=False)
+
+    assert labels_tokenizer.call_args.args[0] == ["A", "B"]
+    assert "labels_gather_indices" not in result
+    assert "prompts_embedding_mask" not in result
+
+
+@pytest.mark.parametrize("processor_class", [BiEncoderSpanProcessor, BiEncoderTokenProcessor])
+def test_biencoder_per_row_training_targets_keep_local_class_ids(
+    mock_config, mock_tokenizer, mock_words_splitter, processor_class
+):
+    """Per-row embedding gathering must stay aligned with inherited training targets."""
+    labels_tokenizer = Mock()
+    labels_tokenizer.unk_token = "[UNK]"
+    labels_tokenizer.pad_token = "[PAD]"
+    labels_tokenizer.return_value = {
+        "input_ids": torch.tensor([[10], [20], [30]]),
+        "attention_mask": torch.ones(3, 1, dtype=torch.long),
+    }
+    processor = processor_class(mock_config, mock_tokenizer, mock_words_splitter, labels_tokenizer)
+    batch = {
+        "tokens": [["first"], ["second"]],
+        "seq_length": torch.ones(2, 1, dtype=torch.long),
+        "classes_to_id": [{"A": 1, "B": 2}, {"C": 1}],
+        "entities": [[(0, 0, "B")], [(0, 0, "C")]],
+    }
+
+    result = processor.tokenize_and_prepare_labels(batch, prepare_labels=True)
+
+    if processor_class is BiEncoderSpanProcessor:
+        assert result["labels"][0, 0].tolist() == [0.0, 1.0]
+        assert result["labels"][1, 0].tolist() == [1.0, 0.0]
+    else:
+        assert result["labels"][0, 0, :, 0].tolist() == [0.0, 1.0]
+        assert result["labels"][1, 0, :, 0].tolist() == [1.0, 0.0]
+
+
 class TestUniEncoderSpanDecoderProcessor:
     """Test suite for UniEncoderSpanDecoderProcessor."""
 
@@ -1347,6 +1485,31 @@ class TestRelationExtractionSpanProcessor:
         assert "rel_label" in result
         assert result["rel_idx"].shape[0] == 1  # batch size
         assert result["rel_label"].shape[0] == 1
+
+    def test_collate_raw_batch_selects_relation_mapping_per_sample(self, processor):
+        """Shared entity labels and per-sample relation labels should remain independently aligned."""
+        processor.config.augment_data_prob = 0.0
+        batch = [
+            {
+                "tokenized_text": ["Alice", "Acme"],
+                "ner": [(0, 0, "PER"), (1, 1, "ORG")],
+                "relations": [(0, 1, "WORKS_FOR")],
+            },
+            {
+                "tokenized_text": ["Kyiv", "Ukraine"],
+                "ner": [(0, 0, "PER"), (1, 1, "ORG")],
+                "relations": [(0, 1, "LOCATED_IN")],
+            },
+        ]
+
+        result = processor.collate_raw_batch(
+            batch,
+            entity_types=["PER", "ORG"],
+            relation_types=[["WORKS_FOR"], ["LOCATED_IN"]],
+        )
+
+        assert result["rel_label"].tolist() == [[1], [1]]
+        assert result["rel_id_to_classes"] == [{1: "WORKS_FOR"}, {1: "LOCATED_IN"}]
 
     def test_prepare_inputs_with_relations(self, processor):
         """Should add relation tokens to input."""

@@ -25,6 +25,40 @@ def _threshold_compare_tensor(threshold, batch_size: int, device, dims: int):
     return threshold
 
 
+def _get_valid_classes_mask(
+    num_classes, id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], device
+) -> torch.Tensor:
+    """
+    Create a boolean mask indicating valid classes for each batch item.
+
+    Args:
+        num_classes (int): Total number of classes (C).
+        id_to_classes (Union[Dict[int, str], List[Dict[int, str]]]): Mapping from class IDs to class names.
+        device: Device on which to create the tensor.
+
+    Returns:
+        torch.Tensor: Boolean tensor of shape (C,) for a shared mapping or
+            (B, C) for per-sample mappings, where True indicates a valid class.
+    """
+    if isinstance(id_to_classes, list):
+        # For batch-level decoding, we need to create a mask for each batch item
+        valid_classes = torch.tensor(
+            [
+                [class_idx + 1 in id_to_class for class_idx in range(num_classes)]
+                for id_to_class in id_to_classes
+            ],
+            dtype=torch.bool,
+            device=device,
+        )
+    else:
+        valid_classes = torch.tensor(
+            [class_idx + 1 in id_to_classes for class_idx in range(num_classes)],
+            dtype=torch.bool,
+            device=device,
+        )
+    return valid_classes
+
+
 @dataclass
 class Span:
     """Represents a detected entity span with its properties.
@@ -192,21 +226,30 @@ class BaseSpanDecoder(BaseDecoder):
             Dict[str, float]: Dictionary mapping class names to probabilities,
                 sorted by probability in descending order, containing up to k entries.
         """
-        # Get the actual number of classes (might be less than k)
         num_classes = probs_tensor.shape[0]
-        k = min(k, num_classes)
+        valid_indices = [
+            class_id - 1
+            for class_id in sorted(id_to_class)
+            if 1 <= class_id <= num_classes
+        ]
+        if not valid_indices:
+            return {}
 
-        # Get top-k probabilities and their indices
-        top_probs, top_indices = torch.topk(probs_tensor, k=k, sorted=True)
+        valid_indices_tensor = torch.tensor(valid_indices, dtype=torch.long, device=probs_tensor.device)
+        valid_probs = probs_tensor.index_select(0, valid_indices_tensor)
+        k = min(k, len(valid_indices))
+
+        # Rank only real classes from this sample's mapping. The model output may
+        # include batch-padding slots that must never appear in class_probs.
+        top_probs, top_positions = torch.topk(valid_probs, k=k, sorted=True)
+        top_indices = valid_indices_tensor[top_positions]
 
         # Convert to dict, mapping class names to probabilities
         # Note: class indices are 1-indexed (0 is padding), so we add 1
-        class_probs = {}
-        for idx, prob in zip(top_indices.tolist(), top_probs.tolist()):
-            class_name = id_to_class.get(idx + 1, f"class_{idx}")
-            class_probs[class_name] = prob
-
-        return class_probs
+        return {
+            id_to_class[idx + 1]: prob
+            for idx, prob in zip(top_indices.tolist(), top_probs.tolist())
+        }
 
     @abstractmethod
     def _build_span_tuple(
@@ -276,15 +319,23 @@ class BaseSpanDecoder(BaseDecoder):
         Returns:
             List[tuple]: List of decoded span tuples for this sample.
         """
+        device = probs_i.device
         # Mask probabilities to only include input spans (for efficiency)
         if input_spans_i is not None:
             L, K_dim, _ = probs_i.shape
-            span_filter = torch.zeros(L, K_dim, dtype=torch.bool, device=probs_i.device)
+            span_filter = torch.zeros(L, K_dim, dtype=torch.bool, device=device)
             for word_start, word_end in input_spans_i:
                 width = word_end - word_start
                 if 0 <= width < K_dim and 0 <= word_start < L:
                     span_filter[word_start, width] = True
             probs_i = probs_i * span_filter.unsqueeze(-1)
+
+        # Same padding guard as _decode_batch: with per-row label sets this row's scores may span
+        # more class slots than its own label set has.
+        num_classes = probs_i.shape[-1]
+        if any(class_idx + 1 not in id_to_class_i for class_idx in range(num_classes)):
+            valid_classes = _get_valid_classes_mask(num_classes, id_to_class_i, device)
+            probs_i = probs_i.masked_fill(~valid_classes, float("-inf"))
 
         span_i = []
 
@@ -367,6 +418,8 @@ class BaseSpanDecoder(BaseDecoder):
         Returns:
             List[List[Span]]: For each sample in batch, list of Span objects.
         """
+        device = probs.device
+
         B, L, K_dim, C = probs.shape
         thresholds = _expand_batch_param(threshold, B, "threshold")
         flat_ner_values = _expand_batch_param(flat_ner, B, "flat_ner")
@@ -396,7 +449,7 @@ class BaseSpanDecoder(BaseDecoder):
 
         # Apply input_spans mask at batch level (one mask, one multiply)
         if input_spans is not None:
-            span_filter = torch.zeros(B, L, K_dim, dtype=torch.bool, device=probs.device)
+            span_filter = torch.zeros(B, L, K_dim, dtype=torch.bool, device=device)
             for i, spans_i in enumerate(input_spans):
                 if spans_i is not None:
                     for word_start, word_end in spans_i:
@@ -407,6 +460,21 @@ class BaseSpanDecoder(BaseDecoder):
                     # No filter for this item — allow all spans
                     span_filter[i] = True
             probs = probs * span_filter.unsqueeze(-1)
+
+        # Pre-resolve id_to_class mappings per batch item
+        id_to_class_per_item = [self._get_id_to_class_for_sample(id_to_classes, i) for i in range(B)]
+
+        # With per-row label sets the class dimension is padded to the batch-wide maximum, so a row
+        # with fewer labels carries scores in class slots it never asked for. Mask them out — the
+        # same guard _decode_explicit_spans already applies — or torch.where returns class indices
+        # that are absent from that row's id_to_class and _build_span_tuple raises KeyError.
+        num_classes = probs.shape[-1]
+        if any(
+            any(class_idx + 1 not in mapping for class_idx in range(num_classes))
+            for mapping in id_to_class_per_item
+        ):
+            valid_classes = _get_valid_classes_mask(num_classes, id_to_class_per_item, device)
+            probs = probs.masked_fill(~valid_classes[:, None, None, :], float("-inf"))
 
         # ONE torch.where on the full (B, L, K, C) tensor
         threshold_tensor = _threshold_compare_tensor(threshold, B, probs.device, probs.dim())
@@ -448,9 +516,6 @@ class BaseSpanDecoder(BaseDecoder):
             top_probs_list = all_top_probs.tolist()
             top_indices_list = all_top_indices.tolist()
 
-        # Pre-resolve id_to_class mappings per batch item
-        id_to_class_per_item = [self._get_id_to_class_for_sample(id_to_classes, i) for i in range(B)]
-
         # Group by batch item and build Span objects (pure Python)
         batch_spans: List[List[Span]] = [[] for _ in range(B)]
         for j, (b, s, k, c, flat_idx, score) in enumerate(zip(b_list, s_list, k_list, c_list, flat_idxs, scores)):
@@ -458,10 +523,11 @@ class BaseSpanDecoder(BaseDecoder):
 
             class_probs = None
             if return_class_probs:
-                class_probs = {}
-                for idx, prob in zip(top_indices_list[j], top_probs_list[j]):
-                    class_name = id_to_class_i.get(idx + 1, f"class_{idx}")
-                    class_probs[class_name] = prob
+                class_probs = {
+                    id_to_class_i[idx + 1]: prob
+                    for idx, prob in zip(top_indices_list[j], top_probs_list[j])
+                    if idx + 1 in id_to_class_i
+                }
 
             span = self._build_span_tuple(s, k, c, flat_idx, score, id_to_class_i, span_label_maps[b], class_probs)
             batch_spans[b].append(span)
@@ -641,6 +707,10 @@ class SpanDecoder(BaseSpanDecoder):
         top_index_rows = None
         if return_class_probs:
             candidate_probabilities = probabilities[batch_indices, span_positions]
+            candidate_probabilities = candidate_probabilities.masked_fill(
+                ~valid_classes[batch_indices],
+                float("-inf"),
+            )
             top_k = min(5, num_classes)
             top_indices = torch.argsort(
                 candidate_probabilities,
@@ -660,11 +730,12 @@ class SpanDecoder(BaseSpanDecoder):
             class_probs = None
             if return_class_probs:
                 class_probs = {
-                    id_to_class.get(index + 1, f"class_{index}"): probability
+                    id_to_class[index + 1]: probability
                     for index, probability in zip(
                         top_index_rows[row_index],
                         top_prob_rows[row_index],
                     )
+                    if index + 1 in id_to_class
                 }
             candidates_by_batch[batch_idx].append(
                 Span(
@@ -1026,8 +1097,18 @@ def _decode_relations_batch(
     """
     relations: List[List[tuple]] = [[] for _ in range(batch_size)]
 
+    rel_id_to_class_per_item = [
+        rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+        for i in range(batch_size)
+    ]
+
     # 1. Sigmoid — one kernel
     rel_probs = torch.sigmoid(rel_logits)
+
+    num_classes = rel_probs.shape[-1]
+    if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
+        valid_classes = _get_valid_classes_mask(num_classes, rel_id_to_class_per_item, rel_probs.device)
+        rel_probs = rel_probs.masked_fill(~valid_classes[:, None, :], float("-inf"))
 
     # 2. Apply relation mask — zeros out padded relations
     rel_probs = rel_probs * rel_mask.unsqueeze(-1)
@@ -1053,14 +1134,11 @@ def _decode_relations_batch(
     b_list = b_idx.tolist()
     c_list = c_idx.tolist()
 
-    # 6. Pre-resolve per-sample class mappings
-    is_list = isinstance(rel_id_to_classes, list)
-
-    # 7. Pure-Python grouping — no more GPU access
+    # 6. Pure-Python grouping — no more GPU access
     for k in range(len(b_list)):
         b = b_list[k]
         c1 = c_list[k] + 1  # class IDs are 1-indexed
-        mapping = rel_id_to_classes[b] if is_list else rel_id_to_classes
+        mapping = rel_id_to_class_per_item[b]
         if c1 not in mapping:
             continue
         relations[b].append((int(head_list[k]), mapping[c1], int(tail_list[k]), scores[k]))
@@ -1215,7 +1293,15 @@ class SpanRelexDecoder(BaseSpanDecoder):
         if rel_mask is None:
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
+        rel_id_to_class_per_item = [
+            self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)
+        ]
+
         rel_probs = torch.sigmoid(rel_logits)
+        num_classes = rel_probs.shape[-1]
+        if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
+            valid_classes = _get_valid_classes_mask(num_classes, rel_id_to_class_per_item, rel_probs.device)
+            rel_probs = rel_probs.masked_fill(~valid_classes[:, None, :], float("-inf"))
 
         # Batch CPU transfer to avoid per-element .item() sync
         rel_idx_cpu = rel_idx.tolist()
@@ -1230,7 +1316,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         # Decode relations for each sample
         thresholds = _expand_batch_param(threshold, batch_size, "relation_threshold")
         for i in range(batch_size):
-            rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+            rel_id_to_class_i = rel_id_to_class_per_item[i]
             idx_map = idx_mappings[i]
             num_spans_i = len(spans[i])
             threshold_i = thresholds[i]
@@ -1583,16 +1669,30 @@ class TokenDecoder(BaseDecoder):
 
         # Check if token-level decoding is requested
         if model_output is not None:
+            batch_size = len(tokens)
+            num_classes = model_output.shape[-2]
+            id_to_class_per_item = [
+                self._get_id_to_class_for_sample(id_to_classes, i) for i in range(batch_size)
+            ]
+
+            # Per-sample label sets share a batch-wide class dimension. Exclude padded
+            # class slots before candidate search so they cannot produce unmapped spans.
+            if any(len(mapping) < num_classes for mapping in id_to_class_per_item):
+                valid_classes = _get_valid_classes_mask(num_classes, id_to_class_per_item, model_output.device)
+                model_output = model_output.masked_fill(
+                    ~valid_classes[:, None, :, None],
+                    float("-inf"),
+                )
+
             model_output = model_output.permute(3, 0, 1, 2)
             scores_start, scores_end, scores_inside = model_output
-            batch_size = len(tokens)
             thresholds = _expand_batch_param(threshold, batch_size, "threshold")
             flat_ner_values = _expand_batch_param(flat_ner, batch_size, "flat_ner")
             multi_label_values = _expand_batch_param(multi_label, batch_size, "multi_label")
             spans = []
 
             for i, _ in enumerate(tokens):
-                id_to_class_i = self._get_id_to_class_for_sample(id_to_classes, i)
+                id_to_class_i = id_to_class_per_item[i]
                 input_spans_i = set(input_spans[i]) if input_spans is not None else None
                 threshold_i = thresholds[i]
                 span_scores = self._calculate_span_score(
@@ -1716,7 +1816,15 @@ class TokenRelexDecoder(TokenDecoder):
         if rel_mask is None:
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
+        rel_id_to_class_per_item = [
+            self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)
+        ]
+
         rel_probs = torch.sigmoid(rel_logits)
+        num_classes = rel_probs.shape[-1]
+        if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
+            valid_classes = _get_valid_classes_mask(num_classes, rel_id_to_class_per_item, rel_probs.device)
+            rel_probs = rel_probs.masked_fill(~valid_classes[:, None, :], float("-inf"))
 
         # Batch CPU transfer to avoid per-element .item() sync
         rel_idx_cpu = rel_idx.tolist()
@@ -1731,7 +1839,7 @@ class TokenRelexDecoder(TokenDecoder):
         # Decode relations for each sample
         thresholds = _expand_batch_param(threshold, batch_size, "relation_threshold")
         for i in range(batch_size):
-            rel_id_to_class_i = rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
+            rel_id_to_class_i = rel_id_to_class_per_item[i]
             idx_map = idx_mappings[i]
             num_spans_i = len(spans[i])
             threshold_i = thresholds[i]
