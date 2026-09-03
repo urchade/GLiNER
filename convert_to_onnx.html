@@ -251,31 +251,31 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="15">        <span class="n">opset</span><span class="o">=</span><span class="n">args</span><span class="o">.</span><span class="n">opset</span><span class="p">,</span>
 </span><span data-line="16">    <span class="p">)</span>
 </span><span data-line="17">    
-</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Model exported successfully to </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Model exported successfully to </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="19">
-</span><span data-line="20"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
-</span><span data-line="21">    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">&#39;Convert GLiNER model to ONNX format&#39;</span><span class="p">)</span>
-</span><span data-line="22">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--model_path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="23">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Path or HuggingFace model ID (e.g., urchade/gliner_small-v2.1)&#39;</span><span class="p">)</span>
-</span><span data-line="24">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--save_path&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;./onnx_models&#39;</span><span class="p">,</span>
-</span><span data-line="25">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to save ONNX model&#39;</span><span class="p">)</span>
-</span><span data-line="26">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--file_name&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;model.onnx&#39;</span><span class="p">,</span>
-</span><span data-line="27">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the ONNX model file&#39;</span><span class="p">)</span>
-</span><span data-line="28">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--quantized_file_name&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">&#39;model_quantized.onnx&#39;</span><span class="p">,</span>
-</span><span data-line="29">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Name of the quantized ONNX model file&#39;</span><span class="p">)</span>
-</span><span data-line="30">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--opset&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span>
-</span><span data-line="31">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;ONNX opset version (default: 19)&#39;</span><span class="p">)</span>
-</span><span data-line="32">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--quantize&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
-</span><span data-line="33">                        <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Also create a quantized INT8 version&#39;</span><span class="p">)</span>
+</span><span data-line="20"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"__main__"</span><span class="p">:</span>
+</span><span data-line="21">    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s1">'Convert GLiNER model to ONNX format'</span><span class="p">)</span>
+</span><span data-line="22">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--model_path'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="23">                        <span class="n">help</span><span class="o">=</span><span class="s1">'Path or HuggingFace model ID (e.g., urchade/gliner_small-v2.1)'</span><span class="p">)</span>
+</span><span data-line="24">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--save_path'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">'./onnx_models'</span><span class="p">,</span>
+</span><span data-line="25">                        <span class="n">help</span><span class="o">=</span><span class="s1">'Directory to save ONNX model'</span><span class="p">)</span>
+</span><span data-line="26">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--file_name'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">'model.onnx'</span><span class="p">,</span>
+</span><span data-line="27">                        <span class="n">help</span><span class="o">=</span><span class="s1">'Name of the ONNX model file'</span><span class="p">)</span>
+</span><span data-line="28">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--quantized_file_name'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s1">'model_quantized.onnx'</span><span class="p">,</span>
+</span><span data-line="29">                        <span class="n">help</span><span class="o">=</span><span class="s1">'Name of the quantized ONNX model file'</span><span class="p">)</span>
+</span><span data-line="30">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--opset'</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="mi">19</span><span class="p">,</span>
+</span><span data-line="31">                        <span class="n">help</span><span class="o">=</span><span class="s1">'ONNX opset version (default: 19)'</span><span class="p">)</span>
+</span><span data-line="32">    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">'--quantize'</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">'store_true'</span><span class="p">,</span>
+</span><span data-line="33">                        <span class="n">help</span><span class="o">=</span><span class="s1">'Also create a quantized INT8 version'</span><span class="p">)</span>
 </span><span data-line="34">    
 </span><span data-line="35">    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
 </span><span data-line="36">    
-</span><span data-line="37">    <span class="c1"># Create output directory if it doesn&#39;t exist</span>
+</span><span data-line="37">    <span class="c1"># Create output directory if it doesn't exist</span>
 </span><span data-line="38">    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="p">):</span>
 </span><span data-line="39">        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">save_path</span><span class="p">)</span>
 </span><span data-line="40">    
 </span><span data-line="41">    <span class="n">main</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-</span><span data-line="42">    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+</span><span data-line="42">    <span class="nb">print</span><span class="p">(</span><span class="s2">"Done!"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -416,15 +416,15 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load ONNX model</span>
 </span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="5">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"path/to/model"</span><span class="p">,</span>
 </span><span data-line="6">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span>
+</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">"model.onnx"</span>
 </span><span data-line="8"><span class="p">)</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="c1"># Use exactly like PyTorch models</span>
 </span><span data-line="11"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
-</span><span data-line="12">    <span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">,</span>
-</span><span data-line="13">    <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">]</span>
+</span><span data-line="12">    <span class="s2">"Apple Inc. was founded by Steve Jobs."</span><span class="p">,</span>
+</span><span data-line="13">    <span class="p">[</span><span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"person"</span><span class="p">]</span>
 </span><span data-line="14"><span class="p">)</span>
 </span></pre></div>
 </div>
@@ -439,18 +439,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="6"><span class="n">session_options</span><span class="o">.</span><span class="n">intra_op_num_threads</span> <span class="o">=</span> <span class="mi">4</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="9">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="9">    <span class="s2">"path/to/model"</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="11">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">"model.onnx"</span><span class="p">,</span>
 </span><span data-line="12">    <span class="n">session_options</span><span class="o">=</span><span class="n">session_options</span>
 </span><span data-line="13"><span class="p">)</span>
 </span><span data-line="14">
 </span><span data-line="15"><span class="c1"># GPU (CUDA) inference</span>
 </span><span data-line="16"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="17">    <span class="s2">&quot;path/to/model&quot;</span><span class="p">,</span>
+</span><span data-line="17">    <span class="s2">"path/to/model"</span><span class="p">,</span>
 </span><span data-line="18">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="19">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
-</span><span data-line="20">    <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span>
+</span><span data-line="19">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">"model.onnx"</span><span class="p">,</span>
+</span><span data-line="20">    <span class="n">map_location</span><span class="o">=</span><span class="s2">"cuda"</span>
 </span><span data-line="21"><span class="p">)</span>
 </span></pre></div>
 </div>
@@ -467,13 +467,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="3"><span class="kd">let</span><span class="w"> </span><span class="n">model</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">GLiNER</span><span class="p">::</span><span class="o">&lt;</span><span class="n">SpanMode</span><span class="o">&gt;</span><span class="p">::</span><span class="n">new</span><span class="p">(</span>
 </span><span data-line="4"><span class="w">    </span><span class="n">Parameters</span><span class="p">::</span><span class="n">default</span><span class="p">(),</span>
 </span><span data-line="5"><span class="w">    </span><span class="n">RuntimeParameters</span><span class="p">::</span><span class="n">default</span><span class="p">(),</span>
-</span><span data-line="6"><span class="w">    </span><span class="s">&quot;tokenizer.json&quot;</span><span class="p">,</span>
-</span><span data-line="7"><span class="w">    </span><span class="s">&quot;model.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="s">"tokenizer.json"</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">    </span><span class="s">"model.onnx"</span><span class="p">,</span>
 </span><span data-line="8"><span class="p">)</span><span class="o">?</span><span class="p">;</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="kd">let</span><span class="w"> </span><span class="n">input</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">TextInput</span><span class="p">::</span><span class="n">from_str</span><span class="p">(</span>
-</span><span data-line="11"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">],</span>
-</span><span data-line="12"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="11"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">"Apple Inc. was founded by Steve Jobs."</span><span class="p">],</span>
+</span><span data-line="12"><span class="w">    </span><span class="o">&amp;</span><span class="p">[</span><span class="s">"organization"</span><span class="p">,</span><span class="w"> </span><span class="s">"person"</span><span class="p">],</span>
 </span><span data-line="13"><span class="p">)</span><span class="o">?</span><span class="p">;</span>
 </span><span data-line="14">
 </span><span data-line="15"><span class="kd">let</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">inference</span><span class="p">(</span><span class="n">input</span><span class="p">)</span><span class="o">?</span><span class="p">;</span>
@@ -498,21 +498,21 @@ data-aria-dark="Switch to auto color mode">
 <section id="javascript-typescript-gliner-js">
 <h4>🌐 JavaScript/TypeScript: GLiNER.js<a class="headerlink" href="#javascript-typescript-gliner-js" title="Link to this heading">¶</a></h4>
 <p>Browser and Node.js inference engine.</p>
-<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Gliner</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">&#39;gliner&#39;</span><span class="p">;</span>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">Gliner</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'gliner'</span><span class="p">;</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="kd">const</span><span class="w"> </span><span class="nx">gliner</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Gliner</span><span class="p">({</span>
-</span><span data-line="4"><span class="w">  </span><span class="nx">tokenizerPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;path/to/tokenizer&quot;</span><span class="p">,</span>
+</span><span data-line="4"><span class="w">  </span><span class="nx">tokenizerPath</span><span class="o">:</span><span class="w"> </span><span class="s2">"path/to/tokenizer"</span><span class="p">,</span>
 </span><span data-line="5"><span class="w">  </span><span class="nx">onnxSettings</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-</span><span data-line="6"><span class="w">    </span><span class="nx">modelPath</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;model.onnx&quot;</span><span class="p">,</span>
-</span><span data-line="7"><span class="w">    </span><span class="nx">executionProvider</span><span class="o">:</span><span class="w"> </span><span class="s2">&quot;webgpu&quot;</span><span class="p">,</span><span class="w"> </span><span class="c1">// or &quot;cpu&quot;, &quot;wasm&quot;, &quot;webgl&quot;</span>
+</span><span data-line="6"><span class="w">    </span><span class="nx">modelPath</span><span class="o">:</span><span class="w"> </span><span class="s2">"model.onnx"</span><span class="p">,</span>
+</span><span data-line="7"><span class="w">    </span><span class="nx">executionProvider</span><span class="o">:</span><span class="w"> </span><span class="s2">"webgpu"</span><span class="p">,</span><span class="w"> </span><span class="c1">// or "cpu", "wasm", "webgl"</span>
 </span><span data-line="8"><span class="w">  </span><span class="p">},</span>
 </span><span data-line="9"><span class="p">});</span>
 </span><span data-line="10">
 </span><span data-line="11"><span class="k">await</span><span class="w"> </span><span class="nx">gliner</span><span class="p">.</span><span class="nx">initialize</span><span class="p">();</span>
 </span><span data-line="12">
 </span><span data-line="13"><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">gliner</span><span class="p">.</span><span class="nx">inference</span><span class="p">({</span>
-</span><span data-line="14"><span class="w">  </span><span class="nx">texts</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span><span class="p">],</span>
-</span><span data-line="15"><span class="w">  </span><span class="nx">entities</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;person&quot;</span><span class="p">],</span>
+</span><span data-line="14"><span class="w">  </span><span class="nx">texts</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"Apple Inc. was founded by Steve Jobs."</span><span class="p">],</span>
+</span><span data-line="15"><span class="w">  </span><span class="nx">entities</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"organization"</span><span class="p">,</span><span class="w"> </span><span class="s2">"person"</span><span class="p">],</span>
 </span><span data-line="16"><span class="w">  </span><span class="nx">threshold</span><span class="o">:</span><span class="w"> </span><span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="17"><span class="p">});</span>
 </span></pre></div>
@@ -536,19 +536,19 @@ data-aria-dark="Switch to auto color mode">
 <section id="c-gliner-cpp">
 <h4>⚡ C++: GLiNER.cpp<a class="headerlink" href="#c-gliner-cpp" title="Link to this heading">¶</a></h4>
 <p>Lightweight inference for embedded and high-performance systems.</p>
-<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">&quot;GLiNER/model.hpp&quot;</span>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="cp">#include</span><span class="w"> </span><span class="cpf">"GLiNER/model.hpp"</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">gliner</span><span class="o">::</span><span class="n">Config</span><span class="w"> </span><span class="n">config</span><span class="p">{</span><span class="mi">12</span><span class="p">,</span><span class="w"> </span><span class="mi">512</span><span class="p">};</span><span class="w">  </span><span class="c1">// max_width, max_length</span>
 </span><span data-line="4"><span class="n">gliner</span><span class="o">::</span><span class="n">Model</span><span class="w"> </span><span class="n">model</span><span class="p">(</span>
-</span><span data-line="5"><span class="w">    </span><span class="s">&quot;model.onnx&quot;</span><span class="p">,</span>
-</span><span data-line="6"><span class="w">    </span><span class="s">&quot;tokenizer.json&quot;</span><span class="p">,</span>
+</span><span data-line="5"><span class="w">    </span><span class="s">"model.onnx"</span><span class="p">,</span>
+</span><span data-line="6"><span class="w">    </span><span class="s">"tokenizer.json"</span><span class="p">,</span>
 </span><span data-line="7"><span class="w">    </span><span class="n">config</span>
 </span><span data-line="8"><span class="p">);</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">texts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
-</span><span data-line="11"><span class="w">    </span><span class="s">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span>
+</span><span data-line="11"><span class="w">    </span><span class="s">"Apple Inc. was founded by Steve Jobs."</span>
 </span><span data-line="12"><span class="p">};</span>
-</span><span data-line="13"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">&quot;organization&quot;</span><span class="p">,</span><span class="w"> </span><span class="s">&quot;person&quot;</span><span class="p">};</span>
+</span><span data-line="13"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="o">&gt;</span><span class="w"> </span><span class="n">entities</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span><span class="s">"organization"</span><span class="p">,</span><span class="w"> </span><span class="s">"person"</span><span class="p">};</span>
 </span><span data-line="14">
 </span><span data-line="15"><span class="k">auto</span><span class="w"> </span><span class="n">output</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">model</span><span class="p">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span><span class="w"> </span><span class="n">entities</span><span class="p">);</span>
 </span></pre></div>
@@ -663,7 +663,7 @@ data-aria-dark="Switch to auto color mode">
 <h3>Bi-Encoder Export Options<a class="headerlink" href="#bi-encoder-export-options" title="Link to this heading">¶</a></h3>
 <p>For bi-encoder models, you can export with pre-computed label embeddings:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span>
-</span><span data-line="2">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span>
+</span><span data-line="2">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">"./onnx_models"</span><span class="p">,</span>
 </span><span data-line="3">    <span class="n">from_labels_embeddings</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Use pre-computed embeddings mode</span>
 </span><span data-line="4"><span class="p">)</span>
 </span></pre></div>
@@ -678,10 +678,10 @@ data-aria-dark="Switch to auto color mode">
 <h3>Custom Opset Versions<a class="headerlink" href="#custom-opset-versions" title="Link to this heading">¶</a></h3>
 <p>Different ONNX runtimes support different opset versions:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="c1"># For older ONNX Runtime versions</span>
-</span><span data-line="2"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
+</span><span data-line="2"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">"./onnx_models"</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">14</span><span class="p">)</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="c1"># For latest features (default)</span>
-</span><span data-line="5"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
+</span><span data-line="5"><span class="n">gliner_model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span><span class="n">save_dir</span><span class="o">=</span><span class="s2">"./onnx_models"</span><span class="p">,</span> <span class="n">opset</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -690,19 +690,19 @@ data-aria-dark="Switch to auto color mode">
 <p>Export from Python code:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">)</span>
 </span><span data-line="4">
 </span><span data-line="5"><span class="c1"># Export with all options</span>
 </span><span data-line="6"><span class="n">paths</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">export_to_onnx</span><span class="p">(</span>
-</span><span data-line="7">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./models&quot;</span><span class="p">,</span>
-</span><span data-line="8">    <span class="n">onnx_filename</span><span class="o">=</span><span class="s2">&quot;gliner.onnx&quot;</span><span class="p">,</span>
-</span><span data-line="9">    <span class="n">quantized_filename</span><span class="o">=</span><span class="s2">&quot;gliner_int8.onnx&quot;</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">save_dir</span><span class="o">=</span><span class="s2">"./models"</span><span class="p">,</span>
+</span><span data-line="8">    <span class="n">onnx_filename</span><span class="o">=</span><span class="s2">"gliner.onnx"</span><span class="p">,</span>
+</span><span data-line="9">    <span class="n">quantized_filename</span><span class="o">=</span><span class="s2">"gliner_int8.onnx"</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">quantize</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="11">    <span class="n">opset</span><span class="o">=</span><span class="mi">19</span>
 </span><span data-line="12"><span class="p">)</span>
 </span><span data-line="13">
-</span><span data-line="14"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Standard model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;onnx_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="15"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Quantized model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">&#39;quantized_path&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="14"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Standard model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">'onnx_path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="15"><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Quantized model: </span><span class="si">{</span><span class="n">paths</span><span class="p">[</span><span class="s1">'quantized_path'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -736,23 +736,23 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load ONNX model</span>
 </span><span data-line="4"><span class="n">onnx_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="5">    <span class="s2">&quot;./onnx_models&quot;</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"./onnx_models"</span><span class="p">,</span>
 </span><span data-line="6">    <span class="n">load_onnx_model</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">&quot;model.onnx&quot;</span>
+</span><span data-line="7">    <span class="n">onnx_model_file</span><span class="o">=</span><span class="s2">"model.onnx"</span>
 </span><span data-line="8"><span class="p">)</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="c1"># Compare with PyTorch model</span>
-</span><span data-line="11"><span class="n">pytorch_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
+</span><span data-line="11"><span class="n">pytorch_model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">)</span>
 </span><span data-line="12">
-</span><span data-line="13"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. was founded by Steve Jobs.&quot;</span>
-</span><span data-line="14"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">]</span>
+</span><span data-line="13"><span class="n">text</span> <span class="o">=</span> <span class="s2">"Apple Inc. was founded by Steve Jobs."</span>
+</span><span data-line="14"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"person"</span><span class="p">]</span>
 </span><span data-line="15">
 </span><span data-line="16"><span class="c1"># Should produce identical results</span>
 </span><span data-line="17"><span class="n">onnx_results</span> <span class="o">=</span> <span class="n">onnx_model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </span><span data-line="18"><span class="n">pytorch_results</span> <span class="o">=</span> <span class="n">pytorch_model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </span><span data-line="19">
-</span><span data-line="20"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;ONNX:&quot;</span><span class="p">,</span> <span class="n">onnx_results</span><span class="p">)</span>
-</span><span data-line="21"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;PyTorch:&quot;</span><span class="p">,</span> <span class="n">pytorch_results</span><span class="p">)</span>
+</span><span data-line="20"><span class="nb">print</span><span class="p">(</span><span class="s2">"ONNX:"</span><span class="p">,</span> <span class="n">onnx_results</span><span class="p">)</span>
+</span><span data-line="21"><span class="nb">print</span><span class="p">(</span><span class="s2">"PyTorch:"</span><span class="p">,</span> <span class="n">pytorch_results</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>

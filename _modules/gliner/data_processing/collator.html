@@ -190,12 +190,12 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BaseDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseDataCollator">[docs]</a>
 </span><span data-line="18"><span class="k">class</span><span class="w"> </span><span class="nc">BaseDataCollator</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-</span><span data-line="19"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="19"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="20"><span class="sd">    Abstract base class for all data collators.</span>
 </span><span data-line="21">
 </span><span data-line="22"><span class="sd">    Provides common functionality for collating batches and preparing model inputs.</span>
 </span><span data-line="23"><span class="sd">    Subclasses should implement processor-specific logic and field handling.</span>
-</span><span data-line="24"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="24"><span class="sd">    """</span>
 </span><span data-line="25">
 <div class="viewcode-block" id="BaseDataCollator.__init__">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseDataCollator.__init__">[docs]</a>
@@ -208,7 +208,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="32">        <span class="n">return_entities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="33">        <span class="n">prepare_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="34">    <span class="p">):</span>
-</span><span data-line="35"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="35"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="36"><span class="sd">        Initialize the base data collator.</span>
 </span><span data-line="37">
 </span><span data-line="38"><span class="sd">        Args:</span>
@@ -219,7 +219,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="43"><span class="sd">            return_id_to_classes: Whether to include class ID to name mappings.</span>
 </span><span data-line="44"><span class="sd">            return_entities: Whether to include entity annotations.</span>
 </span><span data-line="45"><span class="sd">            prepare_labels: Whether to prepare labels for training.</span>
-</span><span data-line="46"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="46"><span class="sd">        """</span>
 </span><span data-line="47">        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
 </span><span data-line="48">        <span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span> <span class="o">=</span> <span class="n">data_processor</span>
 </span><span data-line="49">        <span class="bp">self</span><span class="o">.</span><span class="n">return_tokens</span> <span class="o">=</span> <span class="n">return_tokens</span>
@@ -231,16 +231,16 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BaseDataCollator.collate_batch">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseDataCollator.collate_batch">[docs]</a>
 </span><span data-line="54">    <span class="k">def</span><span class="w"> </span><span class="nf">collate_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="55"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="55"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="56"><span class="sd">        Collate raw input examples into a batch.</span>
 </span><span data-line="57">
 </span><span data-line="58"><span class="sd">        Args:</span>
 </span><span data-line="59"><span class="sd">            input_x: List of raw input examples.</span>
-</span><span data-line="60"><span class="sd">            **kwargs: Additional arguments passed to the processor&#39;s collate_raw_batch.</span>
+</span><span data-line="60"><span class="sd">            **kwargs: Additional arguments passed to the processor's collate_raw_batch.</span>
 </span><span data-line="61">
 </span><span data-line="62"><span class="sd">        Returns:</span>
 </span><span data-line="63"><span class="sd">            Dict containing collated raw batch data.</span>
-</span><span data-line="64"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="64"><span class="sd">        """</span>
 </span><span data-line="65">        <span class="n">raw_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="o">.</span><span class="n">collate_raw_batch</span><span class="p">(</span><span class="n">input_x</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="66">        <span class="k">return</span> <span class="n">raw_batch</span></div>
 
@@ -248,55 +248,55 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BaseDataCollator.collate_function">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseDataCollator.collate_function">[docs]</a>
 </span><span data-line="68">    <span class="k">def</span><span class="w"> </span><span class="nf">collate_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">raw_batch</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="69"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="69"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="70"><span class="sd">        Transform raw batch into model input format.</span>
 </span><span data-line="71">
 </span><span data-line="72"><span class="sd">        Args:</span>
 </span><span data-line="73"><span class="sd">            raw_batch: Raw collated batch from collate_batch.</span>
-</span><span data-line="74"><span class="sd">            **kwargs: Additional arguments passed to the processor&#39;s collate_fn.</span>
+</span><span data-line="74"><span class="sd">            **kwargs: Additional arguments passed to the processor's collate_fn.</span>
 </span><span data-line="75">
 </span><span data-line="76"><span class="sd">        Returns:</span>
 </span><span data-line="77"><span class="sd">            Dict containing model-ready inputs.</span>
-</span><span data-line="78"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="78"><span class="sd">        """</span>
 </span><span data-line="79">        <span class="n">model_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="o">.</span><span class="n">collate_fn</span><span class="p">(</span><span class="n">raw_batch</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="80">        <span class="k">return</span> <span class="n">model_input</span></div>
 
 </span><span data-line="81">
 </span><span data-line="82">    <span class="nd">@staticmethod</span>
 </span><span data-line="83">    <span class="k">def</span><span class="w"> </span><span class="nf">_add_precomputed_lengths</span><span class="p">(</span><span class="n">model_input</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="84"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Precompute CPU-side lengths that the forward would otherwise derive via a GPU→CPU sync.</span>
+</span><span data-line="84"><span class="w">        </span><span class="sd">"""Precompute CPU-side lengths that the forward would otherwise derive via a GPU→CPU sync.</span>
 </span><span data-line="85">
 </span><span data-line="86"><span class="sd">        Call this while ``attention_mask`` / ``text_lengths`` are still on CPU (before</span>
 </span><span data-line="87"><span class="sd">        ``run_batch`` moves tensors to device). The resulting ``token_lengths`` and</span>
 </span><span data-line="88"><span class="sd">        ``word_lengths`` are Python lists, so they survive the move step unchanged and</span>
 </span><span data-line="89"><span class="sd">        are consumed by the encoder packing short-circuit and the LSTM packer.</span>
-</span><span data-line="90"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="91">        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">model_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">)</span>
-</span><span data-line="92">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attention_mask</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;token_lengths&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input</span><span class="p">:</span>
-</span><span data-line="93">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;token_lengths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span data-line="90"><span class="sd">        """</span>
+</span><span data-line="91">        <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">model_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"attention_mask"</span><span class="p">)</span>
+</span><span data-line="92">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attention_mask</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"token_lengths"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input</span><span class="p">:</span>
+</span><span data-line="93">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"token_lengths"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span data-line="94">
-</span><span data-line="95">        <span class="n">text_lengths</span> <span class="o">=</span> <span class="n">model_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;text_lengths&quot;</span><span class="p">)</span>
-</span><span data-line="96">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text_lengths</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;word_lengths&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input</span><span class="p">:</span>
-</span><span data-line="97">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;word_lengths&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">text_lengths</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+</span><span data-line="95">        <span class="n">text_lengths</span> <span class="o">=</span> <span class="n">model_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"text_lengths"</span><span class="p">)</span>
+</span><span data-line="96">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text_lengths</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">"word_lengths"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">model_input</span><span class="p">:</span>
+</span><span data-line="97">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"word_lengths"</span><span class="p">]</span> <span class="o">=</span> <span class="n">text_lengths</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span data-line="98">
 </span><span data-line="99">    <span class="k">def</span><span class="w"> </span><span class="nf">_add_conditional_returns</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">raw_batch</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="100"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="100"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="101"><span class="sd">        Add optional fields to model input based on collator configuration.</span>
 </span><span data-line="102">
 </span><span data-line="103"><span class="sd">        Args:</span>
 </span><span data-line="104"><span class="sd">            model_input: Model input dictionary to update in-place.</span>
 </span><span data-line="105"><span class="sd">            raw_batch: Raw batch containing optional fields.</span>
-</span><span data-line="106"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="106"><span class="sd">        """</span>
 </span><span data-line="107">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_tokens</span><span class="p">:</span>
-</span><span data-line="108">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tokens&quot;</span><span class="p">)</span>
+</span><span data-line="108">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"tokens"</span><span class="p">)</span>
 </span><span data-line="109">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_id_to_classes</span><span class="p">:</span>
-</span><span data-line="110">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;id_to_classes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;id_to_classes&quot;</span><span class="p">)</span>
+</span><span data-line="110">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"id_to_classes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"id_to_classes"</span><span class="p">)</span>
 </span><span data-line="111">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_entities</span><span class="p">:</span>
-</span><span data-line="112">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;entities&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entities&quot;</span><span class="p">)</span>
+</span><span data-line="112">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"entities"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"entities"</span><span class="p">)</span>
 </span><span data-line="113">
 </span><span data-line="114">    <span class="nd">@staticmethod</span>
 </span><span data-line="115">    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_none_values</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="116"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="116"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="117"><span class="sd">        Remove entries with None values from dictionary.</span>
 </span><span data-line="118">
 </span><span data-line="119"><span class="sd">        Args:</span>
@@ -304,14 +304,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="121">
 </span><span data-line="122"><span class="sd">        Returns:</span>
 </span><span data-line="123"><span class="sd">            Dictionary with all None values filtered out.</span>
-</span><span data-line="124"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="124"><span class="sd">        """</span>
 </span><span data-line="125">        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
 </span><span data-line="126">
 </span><span data-line="127">    <span class="nd">@staticmethod</span>
 </span><span data-line="128">    <span class="k">def</span><span class="w"> </span><span class="nf">_get_id_to_classes_for_sample</span><span class="p">(</span>
 </span><span data-line="129">        <span class="n">id_to_classes</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]],</span> <span class="n">sample_idx</span><span class="p">:</span> <span class="nb">int</span>
 </span><span data-line="130">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="131"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="131"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="132"><span class="sd">        Get id_to_classes mapping for a specific sample.</span>
 </span><span data-line="133">
 </span><span data-line="134"><span class="sd">        Args:</span>
@@ -321,14 +321,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="138">
 </span><span data-line="139"><span class="sd">        Returns:</span>
 </span><span data-line="140"><span class="sd">            Mapping from class IDs to class names for this sample.</span>
-</span><span data-line="141"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="141"><span class="sd">        """</span>
 </span><span data-line="142">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">id_to_classes</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
 </span><span data-line="143">            <span class="k">return</span> <span class="n">id_to_classes</span><span class="p">[</span><span class="n">sample_idx</span><span class="p">]</span>
 </span><span data-line="144">        <span class="k">return</span> <span class="n">id_to_classes</span>
 </span><span data-line="145">
 </span><span data-line="146">    <span class="nd">@abstractmethod</span>
 </span><span data-line="147">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="148"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="148"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="149"><span class="sd">        Main collation method to be implemented by subclasses.</span>
 </span><span data-line="150">
 </span><span data-line="151"><span class="sd">        Args:</span>
@@ -337,34 +337,34 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="154">
 </span><span data-line="155"><span class="sd">        Returns:</span>
 </span><span data-line="156"><span class="sd">            Collated and processed batch ready for model input.</span>
-</span><span data-line="157"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="158">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Subclasses must implement __call__ method&quot;</span><span class="p">)</span></div>
+</span><span data-line="157"><span class="sd">        """</span>
+</span><span data-line="158">        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Subclasses must implement __call__ method"</span><span class="p">)</span></div>
 
 </span><span data-line="159">
 </span><span data-line="160">
 <div class="viewcode-block" id="BaseSpanCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseSpanCollator">[docs]</a>
 </span><span data-line="161"><span class="k">class</span><span class="w"> </span><span class="nc">BaseSpanCollator</span><span class="p">(</span><span class="n">BaseDataCollator</span><span class="p">):</span>
-</span><span data-line="162"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="162"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="163"><span class="sd">    Base collator for span-based processors.</span>
 </span><span data-line="164">
 </span><span data-line="165"><span class="sd">    Provides common logic for handling span indices, span masks, and span labels.</span>
 </span><span data-line="166"><span class="sd">    Used by all span-level NER/RE models.</span>
-</span><span data-line="167"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="167"><span class="sd">    """</span>
 </span><span data-line="168">
 </span><span data-line="169">    <span class="k">def</span><span class="w"> </span><span class="nf">_add_span_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">raw_batch</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="170"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="170"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="171"><span class="sd">        Add span-specific fields to model input.</span>
 </span><span data-line="172">
 </span><span data-line="173"><span class="sd">        Args:</span>
 </span><span data-line="174"><span class="sd">            model_input: Model input dictionary to update in-place.</span>
 </span><span data-line="175"><span class="sd">            raw_batch: Raw batch containing span-related fields.</span>
-</span><span data-line="176"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="176"><span class="sd">        """</span>
 </span><span data-line="177">        <span class="n">model_input</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
 </span><span data-line="178">            <span class="p">{</span>
-</span><span data-line="179">                <span class="s2">&quot;span_idx&quot;</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;span_idx&quot;</span><span class="p">),</span>
-</span><span data-line="180">                <span class="s2">&quot;span_mask&quot;</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;span_mask&quot;</span><span class="p">),</span>
-</span><span data-line="181">                <span class="s2">&quot;text_lengths&quot;</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seq_length&quot;</span><span class="p">),</span>
+</span><span data-line="179">                <span class="s2">"span_idx"</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"span_idx"</span><span class="p">),</span>
+</span><span data-line="180">                <span class="s2">"span_mask"</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"span_mask"</span><span class="p">),</span>
+</span><span data-line="181">                <span class="s2">"text_lengths"</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"seq_length"</span><span class="p">),</span>
 </span><span data-line="182">            <span class="p">}</span>
 </span><span data-line="183">        <span class="p">)</span></div>
 
@@ -373,29 +373,29 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BaseTokenCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BaseTokenCollator">[docs]</a>
 </span><span data-line="186"><span class="k">class</span><span class="w"> </span><span class="nc">BaseTokenCollator</span><span class="p">(</span><span class="n">BaseDataCollator</span><span class="p">):</span>
-</span><span data-line="187"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="187"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="188"><span class="sd">    Base collator for token-based processors.</span>
 </span><span data-line="189">
 </span><span data-line="190"><span class="sd">    Provides common logic for handling token-level annotations and entity IDs.</span>
 </span><span data-line="191"><span class="sd">    Used by all token-level NER models.</span>
-</span><span data-line="192"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="192"><span class="sd">    """</span>
 </span><span data-line="193">
 </span><span data-line="194">    <span class="k">def</span><span class="w"> </span><span class="nf">_add_token_fields</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model_input</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="n">raw_batch</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="195"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="195"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="196"><span class="sd">        Add token-specific fields to model input.</span>
 </span><span data-line="197">
 </span><span data-line="198"><span class="sd">        Args:</span>
 </span><span data-line="199"><span class="sd">            model_input: Model input dictionary to update in-place.</span>
 </span><span data-line="200"><span class="sd">            raw_batch: Raw batch containing token-related fields.</span>
-</span><span data-line="201"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="202">        <span class="n">model_input</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;text_lengths&quot;</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;seq_length&quot;</span><span class="p">),</span> <span class="s2">&quot;entities_id&quot;</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;entities_id&quot;</span><span class="p">)})</span></div>
+</span><span data-line="201"><span class="sd">        """</span>
+</span><span data-line="202">        <span class="n">model_input</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"text_lengths"</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"seq_length"</span><span class="p">),</span> <span class="s2">"entities_id"</span><span class="p">:</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"entities_id"</span><span class="p">)})</span></div>
 
 </span><span data-line="203">
 </span><span data-line="204">
 <div class="viewcode-block" id="SpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.SpanDataCollator">[docs]</a>
 </span><span data-line="205"><span class="k">class</span><span class="w"> </span><span class="nc">SpanDataCollator</span><span class="p">(</span><span class="n">BaseSpanCollator</span><span class="p">):</span>
-</span><span data-line="206"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="206"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="207"><span class="sd">    Unified data collator for all span-based processors.</span>
 </span><span data-line="208">
 </span><span data-line="209"><span class="sd">    Handles span-based NER with various architectures:</span>
@@ -407,7 +407,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="215">
 </span><span data-line="216"><span class="sd">    Required Processors: UniEncoderSpanProcessor, BiEncoderSpanProcessor,</span>
 </span><span data-line="217"><span class="sd">                         or UniEncoderSpanDecoderProcessor</span>
-</span><span data-line="218"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="218"><span class="sd">    """</span>
 </span><span data-line="219">
 <div class="viewcode-block" id="SpanDataCollator.__init__">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.SpanDataCollator.__init__">[docs]</a>
@@ -428,7 +428,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="234">        <span class="n">prepare_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="235">        <span class="n">prepare_entities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="236">    <span class="p">):</span>
-</span><span data-line="237"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="237"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="238"><span class="sd">        Initialize unified span collator.</span>
 </span><span data-line="239">
 </span><span data-line="240"><span class="sd">        Args:</span>
@@ -439,7 +439,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="245"><span class="sd">            return_entities: Whether to return entity annotations.</span>
 </span><span data-line="246"><span class="sd">            prepare_labels: Whether to prepare training labels.</span>
 </span><span data-line="247"><span class="sd">            prepare_entities: Whether to encode entity types (BiEncoder only).</span>
-</span><span data-line="248"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="248"><span class="sd">        """</span>
 </span><span data-line="249">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">data_processor</span><span class="p">,</span> <span class="n">return_tokens</span><span class="p">,</span> <span class="n">return_id_to_classes</span><span class="p">,</span> <span class="n">return_entities</span><span class="p">,</span> <span class="n">prepare_labels</span><span class="p">)</span>
 </span><span data-line="250">        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span> <span class="o">=</span> <span class="n">prepare_entities</span></div>
 
@@ -447,23 +447,23 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="252">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
 </span><span data-line="253">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">entity_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 </span><span data-line="254">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="255"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="255"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="256"><span class="sd">        Collate batch for span-based model.</span>
 </span><span data-line="257">
 </span><span data-line="258"><span class="sd">        Args:</span>
-</span><span data-line="259"><span class="sd">            input_x: List of input examples with &#39;tokenized_text&#39; and &#39;ner&#39; fields.</span>
+</span><span data-line="259"><span class="sd">            input_x: List of input examples with 'tokenized_text' and 'ner' fields.</span>
 </span><span data-line="260"><span class="sd">            entity_types: Optional entity type specifications.</span>
 </span><span data-line="261"><span class="sd">            **kwargs: Additional arguments for collation.</span>
 </span><span data-line="262">
 </span><span data-line="263"><span class="sd">        Returns:</span>
 </span><span data-line="264"><span class="sd">            Model-ready batch dictionary adapted to processor type.</span>
-</span><span data-line="265"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="265"><span class="sd">        """</span>
 </span><span data-line="266">        <span class="n">raw_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">(</span><span class="n">input_x</span><span class="p">,</span> <span class="n">entity_types</span><span class="o">=</span><span class="n">entity_types</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="267">
 </span><span data-line="268">        <span class="c1"># Build collate_fn kwargs based on processor type</span>
-</span><span data-line="269">        <span class="n">collate_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;prepare_labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+</span><span data-line="269">        <span class="n">collate_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prepare_labels"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 </span><span data-line="270">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="p">,</span> <span class="n">BiEncoderSpanProcessor</span><span class="p">):</span>
-</span><span data-line="271">            <span class="n">collate_kwargs</span><span class="p">[</span><span class="s2">&quot;prepare_entities&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span>
+</span><span data-line="271">            <span class="n">collate_kwargs</span><span class="p">[</span><span class="s2">"prepare_entities"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span>
 </span><span data-line="272">
 </span><span data-line="273">        <span class="n">model_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_function</span><span class="p">(</span><span class="n">raw_batch</span><span class="p">,</span> <span class="o">**</span><span class="n">collate_kwargs</span><span class="p">)</span>
 </span><span data-line="274">
@@ -471,7 +471,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="276">
 </span><span data-line="277">        <span class="c1"># Add decoder-specific fields for EncoderDecoder models</span>
 </span><span data-line="278">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="p">,</span> <span class="n">UniEncoderSpanDecoderProcessor</span><span class="p">):</span>
-</span><span data-line="279">            <span class="n">decoder_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;decoder_labels_ids&quot;</span><span class="p">,</span> <span class="s2">&quot;decoder_labels_mask&quot;</span><span class="p">,</span> <span class="s2">&quot;decoder_labels&quot;</span><span class="p">]</span>
+</span><span data-line="279">            <span class="n">decoder_fields</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"decoder_labels_ids"</span><span class="p">,</span> <span class="s2">"decoder_labels_mask"</span><span class="p">,</span> <span class="s2">"decoder_labels"</span><span class="p">]</span>
 </span><span data-line="280">            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">decoder_fields</span><span class="p">:</span>
 </span><span data-line="281">                <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">model_input</span><span class="p">:</span>
 </span><span data-line="282">                    <span class="n">model_input</span><span class="p">[</span><span class="n">field</span><span class="p">]</span> <span class="o">=</span> <span class="n">model_input</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">field</span><span class="p">)</span>
@@ -486,7 +486,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TokenDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.TokenDataCollator">[docs]</a>
 </span><span data-line="290"><span class="k">class</span><span class="w"> </span><span class="nc">TokenDataCollator</span><span class="p">(</span><span class="n">BaseTokenCollator</span><span class="p">):</span>
-</span><span data-line="291"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="291"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="292"><span class="sd">    Unified data collator for all token-based processors.</span>
 </span><span data-line="293">
 </span><span data-line="294"><span class="sd">    Handles token-level NER with various architectures:</span>
@@ -496,7 +496,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="298"><span class="sd">    Automatically adapts behavior based on processor type.</span>
 </span><span data-line="299">
 </span><span data-line="300"><span class="sd">    Required Processors: UniEncoderTokenProcessor or BiEncoderTokenProcessor</span>
-</span><span data-line="301"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="301"><span class="sd">    """</span>
 </span><span data-line="302">
 <div class="viewcode-block" id="TokenDataCollator.__init__">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.TokenDataCollator.__init__">[docs]</a>
@@ -510,7 +510,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="310">        <span class="n">prepare_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="311">        <span class="n">prepare_entities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="312">    <span class="p">):</span>
-</span><span data-line="313"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="313"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="314"><span class="sd">        Initialize unified token collator.</span>
 </span><span data-line="315">
 </span><span data-line="316"><span class="sd">        Args:</span>
@@ -521,7 +521,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="321"><span class="sd">            return_entities: Whether to return entity annotations.</span>
 </span><span data-line="322"><span class="sd">            prepare_labels: Whether to prepare training labels.</span>
 </span><span data-line="323"><span class="sd">            prepare_entities: Whether to encode entity types (BiEncoder only).</span>
-</span><span data-line="324"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="324"><span class="sd">        """</span>
 </span><span data-line="325">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">data_processor</span><span class="p">,</span> <span class="n">return_tokens</span><span class="p">,</span> <span class="n">return_id_to_classes</span><span class="p">,</span> <span class="n">return_entities</span><span class="p">,</span> <span class="n">prepare_labels</span><span class="p">)</span>
 </span><span data-line="326">        <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span> <span class="o">=</span> <span class="n">prepare_entities</span></div>
 
@@ -529,23 +529,23 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="328">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span>
 </span><span data-line="329">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_x</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]],</span> <span class="n">entity_types</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
 </span><span data-line="330">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="331"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="331"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="332"><span class="sd">        Collate batch for token-based model.</span>
 </span><span data-line="333">
 </span><span data-line="334"><span class="sd">        Args:</span>
-</span><span data-line="335"><span class="sd">            input_x: List of input examples with &#39;tokenized_text&#39; and &#39;ner&#39; fields.</span>
+</span><span data-line="335"><span class="sd">            input_x: List of input examples with 'tokenized_text' and 'ner' fields.</span>
 </span><span data-line="336"><span class="sd">            entity_types: Optional entity type specifications.</span>
 </span><span data-line="337"><span class="sd">            **kwargs: Additional arguments for collation.</span>
 </span><span data-line="338">
 </span><span data-line="339"><span class="sd">        Returns:</span>
 </span><span data-line="340"><span class="sd">            Model-ready batch with token-level labels adapted to processor type.</span>
-</span><span data-line="341"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="341"><span class="sd">        """</span>
 </span><span data-line="342">        <span class="n">raw_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">(</span><span class="n">input_x</span><span class="p">,</span> <span class="n">entity_types</span><span class="o">=</span><span class="n">entity_types</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="343">
 </span><span data-line="344">        <span class="c1"># Build collate_fn kwargs based on processor type</span>
-</span><span data-line="345">        <span class="n">collate_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;prepare_labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+</span><span data-line="345">        <span class="n">collate_kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"prepare_labels"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 </span><span data-line="346">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="p">,</span> <span class="n">BiEncoderTokenProcessor</span><span class="p">):</span>
-</span><span data-line="347">            <span class="n">collate_kwargs</span><span class="p">[</span><span class="s2">&quot;prepare_entities&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span>
+</span><span data-line="347">            <span class="n">collate_kwargs</span><span class="p">[</span><span class="s2">"prepare_entities"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prepare_entities</span>
 </span><span data-line="348">
 </span><span data-line="349">        <span class="n">model_input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_function</span><span class="p">(</span><span class="n">raw_batch</span><span class="p">,</span> <span class="o">**</span><span class="n">collate_kwargs</span><span class="p">)</span>
 </span><span data-line="350">
@@ -560,7 +560,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="RelationExtractionSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.RelationExtractionSpanDataCollator">[docs]</a>
 </span><span data-line="358"><span class="k">class</span><span class="w"> </span><span class="nc">RelationExtractionSpanDataCollator</span><span class="p">(</span><span class="n">BaseSpanCollator</span><span class="p">):</span>
-</span><span data-line="359"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Data collator for RelationExtractionSpanProcessor.</span>
+</span><span data-line="359"><span class="w">    </span><span class="sd">"""Data collator for RelationExtractionSpanProcessor.</span>
 </span><span data-line="360">
 </span><span data-line="361"><span class="sd">    Handles joint entity and relation extraction at span level.</span>
 </span><span data-line="362"><span class="sd">    Produces both entity labels and relation adjacency matrices.</span>
@@ -571,7 +571,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="367"><span class="sd">    - Relation-specific configuration</span>
 </span><span data-line="368">
 </span><span data-line="369"><span class="sd">    Required Processor: RelationExtractionSpanProcessor</span>
-</span><span data-line="370"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="370"><span class="sd">    """</span>
 </span><span data-line="371">
 <div class="viewcode-block" id="RelationExtractionSpanDataCollator.__init__">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.RelationExtractionSpanDataCollator.__init__">[docs]</a>
@@ -586,7 +586,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="380">        <span class="n">return_relations</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="381">        <span class="n">prepare_labels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="382">    <span class="p">):</span>
-</span><span data-line="383"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="383"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="384"><span class="sd">        Initialize RelationExtraction span collator.</span>
 </span><span data-line="385">
 </span><span data-line="386"><span class="sd">        Args:</span>
@@ -598,7 +598,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="392"><span class="sd">            return_rel_id_to_classes: Whether to return relation class mappings.</span>
 </span><span data-line="393"><span class="sd">            return_relations: Whether to return relation annotations.</span>
 </span><span data-line="394"><span class="sd">            prepare_labels: Whether to prepare training labels.</span>
-</span><span data-line="395"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="395"><span class="sd">        """</span>
 </span><span data-line="396">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">data_processor</span><span class="p">,</span> <span class="n">return_tokens</span><span class="p">,</span> <span class="n">return_id_to_classes</span><span class="p">,</span> <span class="n">return_entities</span><span class="p">,</span> <span class="n">prepare_labels</span><span class="p">)</span>
 </span><span data-line="397">        <span class="bp">self</span><span class="o">.</span><span class="n">return_rel_id_to_classes</span> <span class="o">=</span> <span class="n">return_rel_id_to_classes</span>
 </span><span data-line="398">        <span class="bp">self</span><span class="o">.</span><span class="n">return_relations</span> <span class="o">=</span> <span class="n">return_relations</span></div>
@@ -615,7 +615,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="406">        <span class="n">rel_negatives</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="407">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span data-line="408">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="409"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="409"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="410"><span class="sd">        Collate raw batch data for relation extraction.</span>
 </span><span data-line="411">
 </span><span data-line="412"><span class="sd">        Args:</span>
@@ -628,18 +628,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="419">
 </span><span data-line="420"><span class="sd">        Returns:</span>
 </span><span data-line="421"><span class="sd">            Collated raw batch with entity and relation information.</span>
-</span><span data-line="422"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="422"><span class="sd">        """</span>
 </span><span data-line="423">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="p">:</span>
-</span><span data-line="424">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;data_processor must be provided for collate_batch&quot;</span><span class="p">)</span>
+</span><span data-line="424">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"data_processor must be provided for collate_batch"</span><span class="p">)</span>
 </span><span data-line="425">
-</span><span data-line="426">        <span class="c1"># Call processor&#39;s collate_raw_batch with both entity and relation types</span>
+</span><span data-line="426">        <span class="c1"># Call processor's collate_raw_batch with both entity and relation types</span>
 </span><span data-line="427">        <span class="n">raw_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor</span><span class="o">.</span><span class="n">collate_raw_batch</span><span class="p">(</span>
 </span><span data-line="428">            <span class="n">input_x</span><span class="p">,</span>
 </span><span data-line="429">            <span class="n">entity_types</span><span class="o">=</span><span class="n">entity_types</span><span class="p">,</span>
 </span><span data-line="430">            <span class="n">relation_types</span><span class="o">=</span><span class="n">relation_types</span><span class="p">,</span>
 </span><span data-line="431">            <span class="n">ner_negatives</span><span class="o">=</span><span class="n">ner_negatives</span><span class="p">,</span>
 </span><span data-line="432">            <span class="n">rel_negatives</span><span class="o">=</span><span class="n">rel_negatives</span><span class="p">,</span>
-</span><span data-line="433">            <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">,</span>
+</span><span data-line="433">            <span class="n">key</span><span class="o">=</span><span class="s2">"ner"</span><span class="p">,</span>
 </span><span data-line="434">            <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span data-line="435">        <span class="p">)</span>
 </span><span data-line="436">
@@ -655,12 +655,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="445">        <span class="n">rel_negatives</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="446">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span data-line="447">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="448"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="448"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="449"><span class="sd">        Collate batch for RelationExtraction span model.</span>
 </span><span data-line="450">
 </span><span data-line="451"><span class="sd">        Args:</span>
-</span><span data-line="452"><span class="sd">            input_x: List of input examples with &#39;tokenized_text&#39;, &#39;ner&#39;,</span>
-</span><span data-line="453"><span class="sd">                and &#39;relations&#39; fields.</span>
+</span><span data-line="452"><span class="sd">            input_x: List of input examples with 'tokenized_text', 'ner',</span>
+</span><span data-line="453"><span class="sd">                and 'relations' fields.</span>
 </span><span data-line="454"><span class="sd">            entity_types: Optional entity type specifications.</span>
 </span><span data-line="455"><span class="sd">            relation_types: Optional relation type specifications.</span>
 </span><span data-line="456"><span class="sd">            ner_negatives: Optional negative entity types for sampling.</span>
@@ -670,7 +670,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="460"><span class="sd">        Returns:</span>
 </span><span data-line="461"><span class="sd">            Model-ready batch with entity spans, relation adjacency matrix,</span>
 </span><span data-line="462"><span class="sd">            and relation classification targets.</span>
-</span><span data-line="463"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="463"><span class="sd">        """</span>
 </span><span data-line="464">        <span class="c1"># Collate raw batch with both entity and relation types</span>
 </span><span data-line="465">        <span class="n">raw_batch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">collate_batch</span><span class="p">(</span>
 </span><span data-line="466">            <span class="n">input_x</span><span class="p">,</span>
@@ -690,18 +690,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="480">        <span class="bp">self</span><span class="o">.</span><span class="n">_add_conditional_returns</span><span class="p">(</span><span class="n">model_input</span><span class="p">,</span> <span class="n">raw_batch</span><span class="p">)</span>
 </span><span data-line="481">
 </span><span data-line="482">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_rel_id_to_classes</span><span class="p">:</span>
-</span><span data-line="483">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;rel_id_to_classes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;rel_id_to_classes&quot;</span><span class="p">)</span>
+</span><span data-line="483">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"rel_id_to_classes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"rel_id_to_classes"</span><span class="p">)</span>
 </span><span data-line="484">
-</span><span data-line="485">        <span class="k">if</span> <span class="s2">&quot;rel_class_to_ids&quot;</span> <span class="ow">in</span> <span class="n">raw_batch</span><span class="p">:</span>
-</span><span data-line="486">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;rel_class_to_ids&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="p">[</span><span class="s2">&quot;rel_class_to_ids&quot;</span><span class="p">]</span>
+</span><span data-line="485">        <span class="k">if</span> <span class="s2">"rel_class_to_ids"</span> <span class="ow">in</span> <span class="n">raw_batch</span><span class="p">:</span>
+</span><span data-line="486">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"rel_class_to_ids"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="p">[</span><span class="s2">"rel_class_to_ids"</span><span class="p">]</span>
 </span><span data-line="487">
 </span><span data-line="488">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_relations</span><span class="p">:</span>
-</span><span data-line="489">            <span class="n">model_input</span><span class="p">[</span><span class="s2">&quot;relations&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;relations&quot;</span><span class="p">)</span>
+</span><span data-line="489">            <span class="n">model_input</span><span class="p">[</span><span class="s2">"relations"</span><span class="p">]</span> <span class="o">=</span> <span class="n">raw_batch</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"relations"</span><span class="p">)</span>
 </span><span data-line="490">        <span class="bp">self</span><span class="o">.</span><span class="n">_add_precomputed_lengths</span><span class="p">(</span><span class="n">model_input</span><span class="p">)</span>
 </span><span data-line="491">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_filter_none_values</span><span class="p">(</span><span class="n">model_input</span><span class="p">)</span>
 </span><span data-line="492">
 </span><span data-line="493">    <span class="k">def</span><span class="w"> </span><span class="nf">_filter_none_values</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch_dict</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="494"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="494"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="495"><span class="sd">        Remove None values from batch dictionary.</span>
 </span><span data-line="496">
 </span><span data-line="497"><span class="sd">        Args:</span>
@@ -709,7 +709,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="499">
 </span><span data-line="500"><span class="sd">        Returns:</span>
 </span><span data-line="501"><span class="sd">            Dictionary with None values removed.</span>
-</span><span data-line="502"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="502"><span class="sd">        """</span>
 </span><span data-line="503">        <span class="k">return</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">batch_dict</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span></div>
 
 </span><span data-line="504">
@@ -717,13 +717,13 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="RelationExtractionTokenDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.RelationExtractionTokenDataCollator">[docs]</a>
 </span><span data-line="506"><span class="k">class</span><span class="w"> </span><span class="nc">RelationExtractionTokenDataCollator</span><span class="p">(</span><span class="n">RelationExtractionSpanDataCollator</span><span class="p">):</span>
-</span><span data-line="507"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Data collator for RelationExtractionTokenProcessor.</span>
+</span><span data-line="507"><span class="w">    </span><span class="sd">"""Data collator for RelationExtractionTokenProcessor.</span>
 </span><span data-line="508">
 </span><span data-line="509"><span class="sd">    Handles joint entity and relation extraction at token level.</span>
 </span><span data-line="510"><span class="sd">    Produces both entity labels and relation adjacency matrices.</span>
 </span><span data-line="511">
 </span><span data-line="512"><span class="sd">    Required Processor: RelationExtractionTokenProcessor</span>
-</span><span data-line="513"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="513"><span class="sd">    """</span>
 </span><span data-line="514">
 </span><span data-line="515">    <span class="k">pass</span></div>
 
@@ -732,11 +732,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="UniEncoderSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderSpanDataCollator">[docs]</a>
 </span><span data-line="518"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="519"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="519"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="520"><span class="sd">    Backward compatibility alias for SpanDataCollator with UniEncoderSpanProcessor.</span>
 </span><span data-line="521">
 </span><span data-line="522"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="523"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="523"><span class="sd">    """</span>
 </span><span data-line="524">
 </span><span data-line="525">    <span class="k">pass</span></div>
 
@@ -745,7 +745,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="StreamingSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.StreamingSpanDataCollator">[docs]</a>
 </span><span data-line="528"><span class="k">class</span><span class="w"> </span><span class="nc">StreamingSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="529"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Data collator for :class:`StreamingSpanProcessor`.&quot;&quot;&quot;</span>
+</span><span data-line="529"><span class="w">    </span><span class="sd">"""Data collator for :class:`StreamingSpanProcessor`."""</span>
 </span><span data-line="530">
 </span><span data-line="531">    <span class="k">pass</span></div>
 
@@ -754,11 +754,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BiEncoderSpanDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BiEncoderSpanDataCollator">[docs]</a>
 </span><span data-line="534"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="535"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="535"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="536"><span class="sd">    Backward compatibility alias for SpanDataCollator with BiEncoderSpanProcessor.</span>
 </span><span data-line="537">
 </span><span data-line="538"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="539"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="539"><span class="sd">    """</span>
 </span><span data-line="540">
 </span><span data-line="541">    <span class="k">pass</span></div>
 
@@ -767,11 +767,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="UniEncoderSpanDecoderDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderSpanDecoderDataCollator">[docs]</a>
 </span><span data-line="544"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderDataCollator</span><span class="p">(</span><span class="n">SpanDataCollator</span><span class="p">):</span>
-</span><span data-line="545"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="545"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="546"><span class="sd">    Backward compatibility alias for SpanDataCollator with EncoderDecoderSpanProcessor.</span>
 </span><span data-line="547">
 </span><span data-line="548"><span class="sd">    Use SpanDataCollator directly for new code.</span>
-</span><span data-line="549"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="549"><span class="sd">    """</span>
 </span><span data-line="550">
 </span><span data-line="551">    <span class="k">pass</span></div>
 
@@ -780,9 +780,9 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="UniEncoderTokenDecoderDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDecoderDataCollator">[docs]</a>
 </span><span data-line="554"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDecoderDataCollator</span><span class="p">(</span><span class="n">UniEncoderSpanDecoderDataCollator</span><span class="p">):</span>
-</span><span data-line="555"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="555"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="556"><span class="sd">    Backward compatibility alias for UniEncoderTokenDecoderDataCollator with UniEncoderSpanDecoderDataCollator.</span>
-</span><span data-line="557"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="557"><span class="sd">    """</span>
 </span><span data-line="558">
 </span><span data-line="559">    <span class="k">pass</span></div>
 
@@ -791,11 +791,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="UniEncoderTokenDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.UniEncoderTokenDataCollator">[docs]</a>
 </span><span data-line="562"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
-</span><span data-line="563"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="563"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="564"><span class="sd">    Backward compatibility alias for TokenDataCollator with UniEncoderTokenProcessor.</span>
 </span><span data-line="565">
 </span><span data-line="566"><span class="sd">    Use TokenDataCollator directly for new code.</span>
-</span><span data-line="567"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="567"><span class="sd">    """</span>
 </span><span data-line="568">
 </span><span data-line="569">    <span class="k">pass</span></div>
 
@@ -804,11 +804,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BiEncoderTokenDataCollator">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.collator.html#gliner.data_processing.collator.BiEncoderTokenDataCollator">[docs]</a>
 </span><span data-line="572"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenDataCollator</span><span class="p">(</span><span class="n">TokenDataCollator</span><span class="p">):</span>
-</span><span data-line="573"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="573"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="574"><span class="sd">    Backward compatibility alias for TokenDataCollator with BiEncoderTokenProcessor.</span>
 </span><span data-line="575">
 </span><span data-line="576"><span class="sd">    Use TokenDataCollator directly for new code.</span>
-</span><span data-line="577"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="577"><span class="sd">    """</span>
 </span><span data-line="578">
 </span><span data-line="579">    <span class="k">pass</span></div>
 

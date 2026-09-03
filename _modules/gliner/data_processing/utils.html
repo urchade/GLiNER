@@ -179,7 +179,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="pad_2d_tensor">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.utils.html#gliner.data_processing.utils.pad_2d_tensor">[docs]</a>
 </span><span data-line="7"><span class="k">def</span><span class="w"> </span><span class="nf">pad_2d_tensor</span><span class="p">(</span><span class="n">key_data</span><span class="p">,</span> <span class="n">padding_value</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
-</span><span data-line="8"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Pad a list of 2D tensors to uniform dimensions.</span>
+</span><span data-line="8"><span class="w">    </span><span class="sd">"""Pad a list of 2D tensors to uniform dimensions.</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="sd">    Takes a list of 2D tensors with potentially different shapes and pads them</span>
 </span><span data-line="11"><span class="sd">    to match the maximum dimensions across all tensors. All tensors are padded</span>
@@ -204,9 +204,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="30"><span class="sd">        &gt;&gt;&gt; result = pad_2d_tensor([tensor1, tensor2])</span>
 </span><span data-line="31"><span class="sd">        &gt;&gt;&gt; result.shape</span>
 </span><span data-line="32"><span class="sd">        torch.Size([2, 2, 3])</span>
-</span><span data-line="33"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="33"><span class="sd">    """</span>
 </span><span data-line="34">    <span class="k">if</span> <span class="ow">not</span> <span class="n">key_data</span><span class="p">:</span>
-</span><span data-line="35">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The input list &#39;key_data&#39; should not be empty.&quot;</span><span class="p">)</span>
+</span><span data-line="35">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The input list 'key_data' should not be empty."</span><span class="p">)</span>
 </span><span data-line="36">
 </span><span data-line="37">    <span class="c1"># Determine the maximum size along both dimensions</span>
 </span><span data-line="38">    <span class="n">max_rows</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">tensor</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="n">key_data</span><span class="p">)</span>
@@ -220,7 +220,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="46">
 </span><span data-line="47">        <span class="c1"># Pad the tensor along both dimensions</span>
 </span><span data-line="48">        <span class="n">padded_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span>
-</span><span data-line="49">            <span class="n">tensor</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">col_padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">row_padding</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;constant&quot;</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">padding_value</span>
+</span><span data-line="49">            <span class="n">tensor</span><span class="p">,</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">col_padding</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">row_padding</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"constant"</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="n">padding_value</span>
 </span><span data-line="50">        <span class="p">)</span>
 </span><span data-line="51">        <span class="n">tensors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">padded_tensor</span><span class="p">)</span>
 </span><span data-line="52">
@@ -232,8 +232,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="57">
 <div class="viewcode-block" id="get_negatives">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.utils.html#gliner.data_processing.utils.get_negatives">[docs]</a>
-</span><span data-line="58"><span class="k">def</span><span class="w"> </span><span class="nf">get_negatives</span><span class="p">(</span><span class="n">batch_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">sampled_neg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span><span data-line="59"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Sample negative entity or relation types from a batch.</span>
+</span><span data-line="58"><span class="k">def</span><span class="w"> </span><span class="nf">get_negatives</span><span class="p">(</span><span class="n">batch_list</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Dict</span><span class="p">],</span> <span class="n">sampled_neg</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">5</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"ner"</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span><span data-line="59"><span class="w">    </span><span class="sd">"""Sample negative entity or relation types from a batch.</span>
 </span><span data-line="60">
 </span><span data-line="61"><span class="sd">    Extracts all unique entity/relation types from a batch of examples and</span>
 </span><span data-line="62"><span class="sd">    randomly samples a subset to use as negative types for contrastive learning.</span>
@@ -245,19 +245,19 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="68"><span class="sd">            of each annotation tuple is the type label.</span>
 </span><span data-line="69"><span class="sd">        sampled_neg: Maximum number of negative types to sample (default: 5).</span>
 </span><span data-line="70"><span class="sd">            If fewer unique types exist, all will be returned.</span>
-</span><span data-line="71"><span class="sd">        key: Dictionary key to access annotations (default: &quot;ner&quot;). Common values</span>
-</span><span data-line="72"><span class="sd">            are &quot;ner&quot; for entities or &quot;relations&quot; for relation types.</span>
+</span><span data-line="71"><span class="sd">        key: Dictionary key to access annotations (default: "ner"). Common values</span>
+</span><span data-line="72"><span class="sd">            are "ner" for entities or "relations" for relation types.</span>
 </span><span data-line="73">
 </span><span data-line="74"><span class="sd">    Returns:</span>
 </span><span data-line="75"><span class="sd">        List of randomly sampled type strings. Length will be min(sampled_neg,</span>
 </span><span data-line="76"><span class="sd">        number of unique types in batch).</span>
 </span><span data-line="77">
 </span><span data-line="78"><span class="sd">    Example:</span>
-</span><span data-line="79"><span class="sd">        &gt;&gt;&gt; batch = [{&quot;ner&quot;: [(0, 1, &quot;PERSON&quot;), (2, 3, &quot;ORG&quot;)]}, {&quot;ner&quot;: [(0, 1, &quot;LOC&quot;), (3, 4, &quot;PERSON&quot;)]}]</span>
-</span><span data-line="80"><span class="sd">        &gt;&gt;&gt; negatives = get_negatives(batch, sampled_neg=2, key=&quot;ner&quot;)</span>
+</span><span data-line="79"><span class="sd">        &gt;&gt;&gt; batch = [{"ner": [(0, 1, "PERSON"), (2, 3, "ORG")]}, {"ner": [(0, 1, "LOC"), (3, 4, "PERSON")]}]</span>
+</span><span data-line="80"><span class="sd">        &gt;&gt;&gt; negatives = get_negatives(batch, sampled_neg=2, key="ner")</span>
 </span><span data-line="81"><span class="sd">        &gt;&gt;&gt; len(negatives) &lt;= 2</span>
 </span><span data-line="82"><span class="sd">        True</span>
-</span><span data-line="83"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="83"><span class="sd">    """</span>
 </span><span data-line="84">    <span class="n">element_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
 </span><span data-line="85">    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">batch_list</span><span class="p">:</span>
 </span><span data-line="86">        <span class="k">if</span> <span class="n">b</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
@@ -278,9 +278,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="98">    <span class="o">*</span><span class="p">,</span>
 </span><span data-line="99">    <span class="n">skip_first_words</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Sequence</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="100">    <span class="n">token_level</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-</span><span data-line="101">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;first&quot;</span><span class="p">,</span>
+</span><span data-line="101">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"first"</span><span class="p">,</span>
 </span><span data-line="102"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
-</span><span data-line="103"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create word-level masks for subword tokenized sequences.</span>
+</span><span data-line="103"><span class="w">    </span><span class="sd">"""Create word-level masks for subword tokenized sequences.</span>
 </span><span data-line="104">
 </span><span data-line="105"><span class="sd">    Maps subword tokens back to their original word positions, enabling span</span>
 </span><span data-line="106"><span class="sd">    extraction at the word level. Each subword token is assigned an integer</span>
@@ -311,27 +311,27 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="131"><span class="sd">            - 1, 2, 3, ...: Word indices (1-indexed) after skipping</span>
 </span><span data-line="132">
 </span><span data-line="133"><span class="sd">    Raises:</span>
-</span><span data-line="134"><span class="sd">        ValueError: If skip_first_words length doesn&#39;t match texts length.</span>
+</span><span data-line="134"><span class="sd">        ValueError: If skip_first_words length doesn't match texts length.</span>
 </span><span data-line="135">
 </span><span data-line="136"><span class="sd">    Example:</span>
-</span><span data-line="137"><span class="sd">        &gt;&gt;&gt; texts = [[&quot;Hello&quot;, &quot;world&quot;]]</span>
-</span><span data-line="138"><span class="sd">        &gt;&gt;&gt; # Assuming tokenizer splits &quot;Hello&quot; -&gt; [&quot;Hel&quot;, &quot;##lo&quot;]</span>
-</span><span data-line="139"><span class="sd">        &gt;&gt;&gt; # and &quot;world&quot; -&gt; [&quot;world&quot;]</span>
+</span><span data-line="137"><span class="sd">        &gt;&gt;&gt; texts = [["Hello", "world"]]</span>
+</span><span data-line="138"><span class="sd">        &gt;&gt;&gt; # Assuming tokenizer splits "Hello" -&gt; ["Hel", "##lo"]</span>
+</span><span data-line="139"><span class="sd">        &gt;&gt;&gt; # and "world" -&gt; ["world"]</span>
 </span><span data-line="140"><span class="sd">        &gt;&gt;&gt; mask = prepare_word_mask(texts, tokenized_inputs)</span>
 </span><span data-line="141"><span class="sd">        &gt;&gt;&gt; # Result might be: [[0, 1, 0, 2, 0]]</span>
 </span><span data-line="142"><span class="sd">        &gt;&gt;&gt; #                   [CLS, Hel, ##lo, world, SEP]</span>
-</span><span data-line="143"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="144">    <span class="n">supported_pooling</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;first&quot;</span><span class="p">,</span> <span class="s2">&quot;last&quot;</span><span class="p">,</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">}</span>
+</span><span data-line="143"><span class="sd">    """</span>
+</span><span data-line="144">    <span class="n">supported_pooling</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"first"</span><span class="p">,</span> <span class="s2">"last"</span><span class="p">,</span> <span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">}</span>
 </span><span data-line="145">    <span class="k">if</span> <span class="n">subtoken_pooling</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">supported_pooling</span><span class="p">:</span>
-</span><span data-line="146">        <span class="n">supported</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">supported_pooling</span><span class="p">))</span>
-</span><span data-line="147">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown subtoken pooling strategy </span><span class="si">{</span><span class="n">subtoken_pooling</span><span class="si">!r}</span><span class="s2">. Expected one of: </span><span class="si">{</span><span class="n">supported</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="146">        <span class="n">supported</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="n">supported_pooling</span><span class="p">))</span>
+</span><span data-line="147">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown subtoken pooling strategy </span><span class="si">{</span><span class="n">subtoken_pooling</span><span class="si">!r}</span><span class="s2">. Expected one of: </span><span class="si">{</span><span class="n">supported</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="148">
 </span><span data-line="149">    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
 </span><span data-line="150">
 </span><span data-line="151">    <span class="k">if</span> <span class="n">skip_first_words</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="152">        <span class="n">skip_first_words</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">n</span>
 </span><span data-line="153">    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">skip_first_words</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="p">:</span>
-</span><span data-line="154">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;skip_first_words must have same length as texts&quot;</span><span class="p">)</span>
+</span><span data-line="154">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"skip_first_words must have same length as texts"</span><span class="p">)</span>
 </span><span data-line="155">
 </span><span data-line="156">    <span class="n">words_masks</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="157">
@@ -339,7 +339,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="159">        <span class="n">word_ids</span> <span class="o">=</span> <span class="n">tokenized_inputs</span><span class="o">.</span><span class="n">word_ids</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
 </span><span data-line="160">        <span class="n">mask</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="161">        <span class="n">prev_word_id</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="162">        <span class="n">seen_words</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># counts distinct word_ids we&#39;ve traversed in this sequence</span>
+</span><span data-line="162">        <span class="n">seen_words</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># counts distinct word_ids we've traversed in this sequence</span>
 </span><span data-line="163">
 </span><span data-line="164">        <span class="k">for</span> <span class="n">token_idx</span><span class="p">,</span> <span class="n">wid</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">word_ids</span><span class="p">):</span>
 </span><span data-line="165">            <span class="k">if</span> <span class="n">wid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -354,9 +354,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="174">                <span class="n">is_last_subtoken</span> <span class="o">=</span> <span class="n">next_word_id</span> <span class="o">!=</span> <span class="n">wid</span>
 </span><span data-line="175">                <span class="n">select_subtoken</span> <span class="o">=</span> <span class="p">(</span>
 </span><span data-line="176">                    <span class="n">token_level</span>
-</span><span data-line="177">                    <span class="ow">or</span> <span class="n">subtoken_pooling</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">}</span>
-</span><span data-line="178">                    <span class="ow">or</span> <span class="p">(</span><span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span> <span class="ow">and</span> <span class="n">is_first_subtoken</span><span class="p">)</span>
-</span><span data-line="179">                    <span class="ow">or</span> <span class="p">(</span><span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span> <span class="ow">and</span> <span class="n">is_last_subtoken</span><span class="p">)</span>
+</span><span data-line="177">                    <span class="ow">or</span> <span class="n">subtoken_pooling</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"mean"</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">}</span>
+</span><span data-line="178">                    <span class="ow">or</span> <span class="p">(</span><span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"first"</span> <span class="ow">and</span> <span class="n">is_first_subtoken</span><span class="p">)</span>
+</span><span data-line="179">                    <span class="ow">or</span> <span class="p">(</span><span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"last"</span> <span class="ow">and</span> <span class="n">is_last_subtoken</span><span class="p">)</span>
 </span><span data-line="180">                <span class="p">)</span>
 </span><span data-line="181">
 </span><span data-line="182">                <span class="k">if</span> <span class="n">seen_words</span> <span class="o">&lt;=</span> <span class="n">skip_first_words</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">select_subtoken</span><span class="p">:</span>
@@ -375,7 +375,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="make_mapping">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.utils.html#gliner.data_processing.utils.make_mapping">[docs]</a>
 </span><span data-line="194"><span class="k">def</span><span class="w"> </span><span class="nf">make_mapping</span><span class="p">(</span><span class="n">types</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]:</span>
-</span><span data-line="195"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create bidirectional mappings between type labels and integer IDs.</span>
+</span><span data-line="195"><span class="w">    </span><span class="sd">"""Create bidirectional mappings between type labels and integer IDs.</span>
 </span><span data-line="196">
 </span><span data-line="197"><span class="sd">    Generates forward and reverse dictionaries for converting between string</span>
 </span><span data-line="198"><span class="sd">    labels (e.g., entity or relation types) and integer IDs used in model training.</span>
@@ -393,13 +393,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="210"><span class="sd">            - Reverse mapping (Dict[int, str]): Maps integer IDs back to type labels</span>
 </span><span data-line="211">
 </span><span data-line="212"><span class="sd">    Example:</span>
-</span><span data-line="213"><span class="sd">        &gt;&gt;&gt; types = [&quot;PERSON&quot;, &quot;ORG&quot;, &quot;LOC&quot;, &quot;PERSON&quot;]  # &quot;PERSON&quot; duplicated</span>
+</span><span data-line="213"><span class="sd">        &gt;&gt;&gt; types = ["PERSON", "ORG", "LOC", "PERSON"]  # "PERSON" duplicated</span>
 </span><span data-line="214"><span class="sd">        &gt;&gt;&gt; fwd, rev = make_mapping(types)</span>
 </span><span data-line="215"><span class="sd">        &gt;&gt;&gt; fwd</span>
-</span><span data-line="216"><span class="sd">        {&#39;PERSON&#39;: 1, &#39;ORG&#39;: 2, &#39;LOC&#39;: 3}</span>
+</span><span data-line="216"><span class="sd">        {'PERSON': 1, 'ORG': 2, 'LOC': 3}</span>
 </span><span data-line="217"><span class="sd">        &gt;&gt;&gt; rev</span>
-</span><span data-line="218"><span class="sd">        {1: &#39;PERSON&#39;, 2: &#39;ORG&#39;, 3: &#39;LOC&#39;}</span>
-</span><span data-line="219"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="218"><span class="sd">        {1: 'PERSON', 2: 'ORG', 3: 'LOC'}</span>
+</span><span data-line="219"><span class="sd">    """</span>
 </span><span data-line="220">    <span class="c1"># de-duplicate while preserving order</span>
 </span><span data-line="221">    <span class="n">uniq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">types</span><span class="p">))</span>
 </span><span data-line="222">    <span class="n">fwd</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">i</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">uniq</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">)}</span>
@@ -411,7 +411,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="prepare_span_idx">
 <a class="viewcode-back" href="../../../api/gliner.data_processing.utils.html#gliner.data_processing.utils.prepare_span_idx">[docs]</a>
 </span><span data-line="227"><span class="k">def</span><span class="w"> </span><span class="nf">prepare_span_idx</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">,</span> <span class="n">max_width</span><span class="p">):</span>
-</span><span data-line="228"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate all possible span indices for a sequence.</span>
+</span><span data-line="228"><span class="w">    </span><span class="sd">"""Generate all possible span indices for a sequence.</span>
 </span><span data-line="229">
 </span><span data-line="230"><span class="sd">    Creates a list of all possible (start, end) span pairs for a sequence,</span>
 </span><span data-line="231"><span class="sd">    where each span has a width (end - start) less than max_width. This is used</span>
@@ -437,17 +437,17 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="251"><span class="sd">    Example:</span>
 </span><span data-line="252"><span class="sd">        &gt;&gt;&gt; spans = prepare_span_idx(num_tokens=3, max_width=2)</span>
 </span><span data-line="253"><span class="sd">        &gt;&gt;&gt; spans  # tensor([[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]])</span>
-</span><span data-line="254"><span class="sd">        &gt;&gt;&gt; # For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
-</span><span data-line="255"><span class="sd">        &gt;&gt;&gt; # (0, 0) = &quot;The&quot;</span>
-</span><span data-line="256"><span class="sd">        &gt;&gt;&gt; # (0, 1) = &quot;The cat&quot;</span>
-</span><span data-line="257"><span class="sd">        &gt;&gt;&gt; # (1, 1) = &quot;cat&quot;</span>
-</span><span data-line="258"><span class="sd">        &gt;&gt;&gt; # (1, 2) = &quot;cat sat&quot;</span>
-</span><span data-line="259"><span class="sd">        &gt;&gt;&gt; # (2, 2) = &quot;sat&quot;</span>
+</span><span data-line="254"><span class="sd">        &gt;&gt;&gt; # For sequence ["The", "cat", "sat"]:</span>
+</span><span data-line="255"><span class="sd">        &gt;&gt;&gt; # (0, 0) = "The"</span>
+</span><span data-line="256"><span class="sd">        &gt;&gt;&gt; # (0, 1) = "The cat"</span>
+</span><span data-line="257"><span class="sd">        &gt;&gt;&gt; # (1, 1) = "cat"</span>
+</span><span data-line="258"><span class="sd">        &gt;&gt;&gt; # (1, 2) = "cat sat"</span>
+</span><span data-line="259"><span class="sd">        &gt;&gt;&gt; # (2, 2) = "sat"</span>
 </span><span data-line="260"><span class="sd">        &gt;&gt;&gt; # (2, 3) would be invalid (beyond sequence length)</span>
 </span><span data-line="261">
 </span><span data-line="262"><span class="sd">    Returns:</span>
 </span><span data-line="263"><span class="sd">        torch.LongTensor of shape (num_tokens * max_width, 2) with columns [start, end].</span>
-</span><span data-line="264"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="264"><span class="sd">    """</span>
 </span><span data-line="265">    <span class="n">starts</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_width</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="266">    <span class="n">offsets</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_width</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">num_tokens</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="267">    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">starts</span><span class="p">,</span> <span class="n">starts</span> <span class="o">+</span> <span class="n">offsets</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span></div>
@@ -463,7 +463,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="274">    <span class="n">recompute_all</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="275">    <span class="n">right_context_width</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="276"><span class="p">):</span>
-</span><span data-line="277"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate absolute span candidates for the next streaming chunk.</span>
+</span><span data-line="277"><span class="w">    </span><span class="sd">"""Generate absolute span candidates for the next streaming chunk.</span>
 </span><span data-line="278">
 </span><span data-line="279"><span class="sd">    In incremental mode, all spans ending in the new chunk are valid.  Spans</span>
 </span><span data-line="280"><span class="sd">    ending up to ``right_context_width`` words before the latest word are also</span>
@@ -474,13 +474,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="285"><span class="sd">    Returns:</span>
 </span><span data-line="286"><span class="sd">        A tuple ``(span_idx, span_mask)`` where ``span_idx`` has shape</span>
 </span><span data-line="287"><span class="sd">        ``(num_starts * max_width, 2)`` and uses absolute session word indices.</span>
-</span><span data-line="288"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="288"><span class="sd">    """</span>
 </span><span data-line="289">    <span class="k">if</span> <span class="n">past_tokens</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">new_tokens</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="290">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;past_tokens and new_tokens must be non-negative&quot;</span><span class="p">)</span>
+</span><span data-line="290">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"past_tokens and new_tokens must be non-negative"</span><span class="p">)</span>
 </span><span data-line="291">    <span class="k">if</span> <span class="n">max_width</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="292">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_width must be positive&quot;</span><span class="p">)</span>
+</span><span data-line="292">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"max_width must be positive"</span><span class="p">)</span>
 </span><span data-line="293">    <span class="k">if</span> <span class="n">right_context_width</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="294">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;right_context_width must be non-negative&quot;</span><span class="p">)</span>
+</span><span data-line="294">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"right_context_width must be non-negative"</span><span class="p">)</span>
 </span><span data-line="295">
 </span><span data-line="296">    <span class="n">total_tokens</span> <span class="o">=</span> <span class="n">past_tokens</span> <span class="o">+</span> <span class="n">new_tokens</span>
 </span><span data-line="297">    <span class="k">if</span> <span class="n">total_tokens</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>

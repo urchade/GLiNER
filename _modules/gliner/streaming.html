@@ -170,7 +170,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.streaming</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Synchronous fixed-batch and asynchronous streaming inference surfaces.&quot;&quot;&quot;</span>
+<span></span><span data-line="1"><span class="sd">"""Synchronous fixed-batch and asynchronous streaming inference surfaces."""</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span data-line="4">
@@ -191,7 +191,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="19">
 </span><span data-line="20"><span class="nd">@dataclass</span>
 </span><span data-line="21"><span class="k">class</span><span class="w"> </span><span class="nc">_PersistentBatchState</span><span class="p">:</span>
-</span><span data-line="22"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Tensor and semantic state owned by one fixed-order streaming batch.&quot;&quot;&quot;</span>
+</span><span data-line="22"><span class="w">    </span><span class="sd">"""Tensor and semantic state owned by one fixed-order streaming batch."""</span>
 </span><span data-line="23">
 </span><span data-line="24">    <span class="n">past_key_values</span><span class="p">:</span> <span class="n">Any</span>
 </span><span data-line="25">    <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
@@ -215,11 +215,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="StreamingBatch">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.StreamingBatch">[docs]</a>
 </span><span data-line="43"><span class="k">class</span><span class="w"> </span><span class="nc">StreamingBatch</span><span class="p">:</span>
-</span><span data-line="44"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Persistent fixed-order batch for synchronous streaming inference.</span>
+</span><span data-line="44"><span class="w">    </span><span class="sd">"""Persistent fixed-order batch for synchronous streaming inference.</span>
 </span><span data-line="45">
 </span><span data-line="46"><span class="sd">    The session-to-row mapping is immutable, allowing the decoder KV cache to</span>
 </span><span data-line="47"><span class="sd">    remain batched between calls without stacking or splitting historical keys.</span>
-</span><span data-line="48"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="48"><span class="sd">    """</span>
 </span><span data-line="49">
 <div class="viewcode-block" id="StreamingBatch.__init__">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.StreamingBatch.__init__">[docs]</a>
@@ -231,12 +231,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="55">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="56">        <span class="n">normalized_ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
 </span><span data-line="57">        <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_ids</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="n">value</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">normalized_ids</span><span class="p">):</span>
-</span><span data-line="58">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;session_ids must be a non-empty list of non-empty strings&quot;</span><span class="p">)</span>
+</span><span data-line="58">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"session_ids must be a non-empty list of non-empty strings"</span><span class="p">)</span>
 </span><span data-line="59">        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">normalized_ids</span><span class="p">))</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">normalized_ids</span><span class="p">):</span>
-</span><span data-line="60">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;session_ids must be unique within a streaming batch&quot;</span><span class="p">)</span>
+</span><span data-line="60">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"session_ids must be unique within a streaming batch"</span><span class="p">)</span>
 </span><span data-line="61">        <span class="n">normalized_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
 </span><span data-line="62">        <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_labels</span><span class="p">:</span>
-</span><span data-line="63">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one label is required&quot;</span><span class="p">)</span>
+</span><span data-line="63">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"At least one label is required"</span><span class="p">)</span>
 </span><span data-line="64">
 </span><span data-line="65">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 </span><span data-line="66">        <span class="bp">self</span><span class="o">.</span><span class="n">session_ids</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">normalized_ids</span><span class="p">)</span>
@@ -266,15 +266,15 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="87">        <span class="n">return_class_probs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="88">        <span class="n">recompute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="89">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]]:</span>
-</span><span data-line="90"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Append one text chunk per fixed session row and return snapshots.&quot;&quot;&quot;</span>
+</span><span data-line="90"><span class="w">        </span><span class="sd">"""Append one text chunk per fixed session row and return snapshots."""</span>
 </span><span data-line="91">        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
 </span><span data-line="92">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="93">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;StreamingBatch is closed&quot;</span><span class="p">)</span>
+</span><span data-line="93">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"StreamingBatch is closed"</span><span class="p">)</span>
 </span><span data-line="94">            <span class="n">chunks</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">texts</span><span class="p">)</span>
 </span><span data-line="95">            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chunks</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session_ids</span><span class="p">):</span>
-</span><span data-line="96">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;texts must contain one chunk per session row&quot;</span><span class="p">)</span>
+</span><span data-line="96">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"texts must contain one chunk per session row"</span><span class="p">)</span>
 </span><span data-line="97">            <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">for</span> <span class="n">text</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">):</span>
-</span><span data-line="98">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Every streaming chunk must be a string&quot;</span><span class="p">)</span>
+</span><span data-line="98">                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Every streaming chunk must be a string"</span><span class="p">)</span>
 </span><span data-line="99">            <span class="k">try</span><span class="p">:</span>
 </span><span data-line="100">                <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">,</span> <span class="n">outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_run_persistent_stream_batch</span><span class="p">(</span>
 </span><span data-line="101">                    <span class="bp">self</span><span class="o">.</span><span class="n">_state</span><span class="p">,</span>
@@ -298,17 +298,17 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="StreamingBatch.reset">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.StreamingBatch.reset">[docs]</a>
 </span><span data-line="118">    <span class="k">def</span><span class="w"> </span><span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="119"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Discard the entire persistent cache while retaining row ownership.&quot;&quot;&quot;</span>
+</span><span data-line="119"><span class="w">        </span><span class="sd">"""Discard the entire persistent cache while retaining row ownership."""</span>
 </span><span data-line="120">        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
 </span><span data-line="121">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="122">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;StreamingBatch is closed&quot;</span><span class="p">)</span>
+</span><span data-line="122">                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"StreamingBatch is closed"</span><span class="p">)</span>
 </span><span data-line="123">            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 </span><span data-line="124">
 <div class="viewcode-block" id="StreamingBatch.close">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.StreamingBatch.close">[docs]</a>
 </span><span data-line="125">    <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="126"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Release the persistent batch cache. Idempotent.&quot;&quot;&quot;</span>
+</span><span data-line="126"><span class="w">        </span><span class="sd">"""Release the persistent batch cache. Idempotent."""</span>
 </span><span data-line="127">        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
 </span><span data-line="128">            <span class="bp">self</span><span class="o">.</span><span class="n">_state</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="129">            <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span> <span class="o">=</span> <span class="kc">True</span></div>
@@ -316,7 +316,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="130">
 </span><span data-line="131">    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">StreamingBatch</span><span class="p">:</span>
 </span><span data-line="132">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="133">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;StreamingBatch is closed&quot;</span><span class="p">)</span>
+</span><span data-line="133">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"StreamingBatch is closed"</span><span class="p">)</span>
 </span><span data-line="134">        <span class="k">return</span> <span class="bp">self</span>
 </span><span data-line="135">
 </span><span data-line="136">    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_exc_type</span><span class="p">,</span> <span class="n">_exc</span><span class="p">,</span> <span class="n">_traceback</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
@@ -338,21 +338,21 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="151">
 </span><span data-line="152">    <span class="k">def</span><span class="w"> </span><span class="nf">as_model_request</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
 </span><span data-line="153">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="154">            <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
-</span><span data-line="155">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
-</span><span data-line="156">            <span class="s2">&quot;session_id&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
-</span><span data-line="157">            <span class="s2">&quot;recompute&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompute</span><span class="p">,</span>
-</span><span data-line="158">            <span class="s2">&quot;threshold&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
-</span><span data-line="159">            <span class="s2">&quot;flat_ner&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flat_ner</span><span class="p">,</span>
-</span><span data-line="160">            <span class="s2">&quot;multi_label&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">multi_label</span><span class="p">,</span>
-</span><span data-line="161">            <span class="s2">&quot;return_class_probs&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_class_probs</span><span class="p">,</span>
+</span><span data-line="154">            <span class="s2">"text"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+</span><span data-line="155">            <span class="s2">"labels"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span>
+</span><span data-line="156">            <span class="s2">"session_id"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">session_id</span><span class="p">,</span>
+</span><span data-line="157">            <span class="s2">"recompute"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">recompute</span><span class="p">,</span>
+</span><span data-line="158">            <span class="s2">"threshold"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">threshold</span><span class="p">,</span>
+</span><span data-line="159">            <span class="s2">"flat_ner"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">flat_ner</span><span class="p">,</span>
+</span><span data-line="160">            <span class="s2">"multi_label"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">multi_label</span><span class="p">,</span>
+</span><span data-line="161">            <span class="s2">"return_class_probs"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">return_class_probs</span><span class="p">,</span>
 </span><span data-line="162">        <span class="p">}</span>
 </span><span data-line="163">
 </span><span data-line="164">
 <div class="viewcode-block" id="AsyncStreamingEngine">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.AsyncStreamingEngine">[docs]</a>
 </span><span data-line="165"><span class="k">class</span><span class="w"> </span><span class="nc">AsyncStreamingEngine</span><span class="p">:</span>
-</span><span data-line="166"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Dynamically microbatch independently arriving streaming sessions.&quot;&quot;&quot;</span>
+</span><span data-line="166"><span class="w">    </span><span class="sd">"""Dynamically microbatch independently arriving streaming sessions."""</span>
 </span><span data-line="167">
 </span><span data-line="168">    <span class="n">_STOP</span> <span class="o">=</span> <span class="nb">object</span><span class="p">()</span>
 </span><span data-line="169">
@@ -367,11 +367,11 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="176">        <span class="n">queue_capacity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span><span class="p">,</span>
 </span><span data-line="177">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="178">        <span class="k">if</span> <span class="n">max_batch_size</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="179">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;max_batch_size must be positive&quot;</span><span class="p">)</span>
+</span><span data-line="179">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"max_batch_size must be positive"</span><span class="p">)</span>
 </span><span data-line="180">        <span class="k">if</span> <span class="n">batch_wait_timeout_ms</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="181">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;batch_wait_timeout_ms must be non-negative&quot;</span><span class="p">)</span>
+</span><span data-line="181">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"batch_wait_timeout_ms must be non-negative"</span><span class="p">)</span>
 </span><span data-line="182">        <span class="k">if</span> <span class="n">queue_capacity</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="183">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;queue_capacity must be positive&quot;</span><span class="p">)</span>
+</span><span data-line="183">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"queue_capacity must be positive"</span><span class="p">)</span>
 </span><span data-line="184">
 </span><span data-line="185">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
 </span><span data-line="186">        <span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">max_batch_size</span><span class="p">)</span>
@@ -388,19 +388,19 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="AsyncStreamingEngine.start">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.AsyncStreamingEngine.start">[docs]</a>
 </span><span data-line="196">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AsyncStreamingEngine</span><span class="p">:</span>
-</span><span data-line="197"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Start the scheduler lazily on the current event loop.&quot;&quot;&quot;</span>
+</span><span data-line="197"><span class="w">        </span><span class="sd">"""Start the scheduler lazily on the current event loop."""</span>
 </span><span data-line="198">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="199">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;AsyncStreamingEngine is closed&quot;</span><span class="p">)</span>
+</span><span data-line="199">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"AsyncStreamingEngine is closed"</span><span class="p">)</span>
 </span><span data-line="200">        <span class="n">loop</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_running_loop</span><span class="p">()</span>
 </span><span data-line="201">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">loop</span><span class="p">:</span>
-</span><span data-line="202">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;AsyncStreamingEngine cannot move between event loops&quot;</span><span class="p">)</span>
+</span><span data-line="202">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"AsyncStreamingEngine cannot move between event loops"</span><span class="p">)</span>
 </span><span data-line="203">        <span class="bp">self</span><span class="o">.</span><span class="n">_loop</span> <span class="o">=</span> <span class="n">loop</span>
 </span><span data-line="204">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_worker_task</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="205">            <span class="bp">self</span><span class="o">.</span><span class="n">_executor</span> <span class="o">=</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span>
 </span><span data-line="206">                <span class="n">max_workers</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-</span><span data-line="207">                <span class="n">thread_name_prefix</span><span class="o">=</span><span class="s2">&quot;gliner-streaming&quot;</span><span class="p">,</span>
+</span><span data-line="207">                <span class="n">thread_name_prefix</span><span class="o">=</span><span class="s2">"gliner-streaming"</span><span class="p">,</span>
 </span><span data-line="208">            <span class="p">)</span>
-</span><span data-line="209">            <span class="bp">self</span><span class="o">.</span><span class="n">_worker_task</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_worker</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;gliner-streaming-scheduler&quot;</span><span class="p">)</span>
+</span><span data-line="209">            <span class="bp">self</span><span class="o">.</span><span class="n">_worker_task</span> <span class="o">=</span> <span class="n">loop</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_worker</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">"gliner-streaming-scheduler"</span><span class="p">)</span>
 </span><span data-line="210">        <span class="k">return</span> <span class="bp">self</span></div>
 
 </span><span data-line="211">
@@ -418,16 +418,16 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="221">        <span class="n">return_class_probs</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="222">        <span class="n">recompute</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="223">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]:</span>
-</span><span data-line="224"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Queue one append; concurrent callers are dynamically microbatched.&quot;&quot;&quot;</span>
+</span><span data-line="224"><span class="w">        </span><span class="sd">"""Queue one append; concurrent callers are dynamically microbatched."""</span>
 </span><span data-line="225">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
-</span><span data-line="226">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;session_id must be a non-empty string&quot;</span><span class="p">)</span>
+</span><span data-line="226">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"session_id must be a non-empty string"</span><span class="p">)</span>
 </span><span data-line="227">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="228">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;text must be a string&quot;</span><span class="p">)</span>
+</span><span data-line="228">            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"text must be a string"</span><span class="p">)</span>
 </span><span data-line="229">        <span class="n">normalized_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">dict</span><span class="o">.</span><span class="n">fromkeys</span><span class="p">(</span><span class="n">labels</span><span class="p">))</span>
 </span><span data-line="230">        <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_labels</span><span class="p">:</span>
-</span><span data-line="231">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one label is required&quot;</span><span class="p">)</span>
+</span><span data-line="231">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"At least one label is required"</span><span class="p">)</span>
 </span><span data-line="232">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closing</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
-</span><span data-line="233">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;AsyncStreamingEngine is closing or closed&quot;</span><span class="p">)</span>
+</span><span data-line="233">            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">"AsyncStreamingEngine is closing or closed"</span><span class="p">)</span>
 </span><span data-line="234">        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 </span><span data-line="235">
 </span><span data-line="236">        <span class="c1"># Match the synchronous compatibility API: blank appends do not mutate</span>
@@ -473,7 +473,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="273">        <span class="n">labels</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span>
 </span><span data-line="274">        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span data-line="275">    <span class="p">):</span>
-</span><span data-line="276"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Yield a session snapshot for every chunk from sync or async input.&quot;&quot;&quot;</span>
+</span><span data-line="276"><span class="w">        </span><span class="sd">"""Yield a session snapshot for every chunk from sync or async input."""</span>
 </span><span data-line="277">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chunks</span><span class="p">,</span> <span class="n">AsyncIterable</span><span class="p">):</span>
 </span><span data-line="278">            <span class="k">async</span> <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
 </span><span data-line="279">                <span class="k">yield</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">chunk</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -485,9 +485,9 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="AsyncStreamingEngine.clear_session">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.AsyncStreamingEngine.clear_session">[docs]</a>
 </span><span data-line="284">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">clear_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="285"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Wait for prior work on a session, then discard its cache.&quot;&quot;&quot;</span>
+</span><span data-line="285"><span class="w">        </span><span class="sd">"""Wait for prior work on a session, then discard its cache."""</span>
 </span><span data-line="286">        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">session_id</span><span class="p">:</span>
-</span><span data-line="287">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;session_id must be a non-empty string&quot;</span><span class="p">)</span>
+</span><span data-line="287">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"session_id must be a non-empty string"</span><span class="p">)</span>
 </span><span data-line="288">        <span class="n">lock</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_session_locks</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">Lock</span><span class="p">())</span>
 </span><span data-line="289">        <span class="k">async</span> <span class="k">with</span> <span class="n">lock</span><span class="p">:</span>
 </span><span data-line="290">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span></div>
@@ -548,8 +548,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="344">                    <span class="p">),</span>
 </span><span data-line="345">                <span class="p">)</span>
 </span><span data-line="346">                <span class="c1"># Polling keeps the event loop responsive on runtimes where a</span>
-</span><span data-line="347">                <span class="c1"># PyTorch worker&#39;s cross-thread wakeup can be delayed until the</span>
-</span><span data-line="348">                <span class="c1"># selector&#39;s next timer event.</span>
+</span><span data-line="347">                <span class="c1"># PyTorch worker's cross-thread wakeup can be delayed until the</span>
+</span><span data-line="348">                <span class="c1"># selector's next timer event.</span>
 </span><span data-line="349">                <span class="k">while</span> <span class="ow">not</span> <span class="n">job</span><span class="o">.</span><span class="n">done</span><span class="p">():</span>
 </span><span data-line="350">                    <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.001</span><span class="p">)</span>
 </span><span data-line="351">                <span class="n">outputs</span> <span class="o">=</span> <span class="n">job</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
@@ -571,7 +571,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="AsyncStreamingEngine.close">
 <a class="viewcode-back" href="../../api/gliner.streaming.html#gliner.AsyncStreamingEngine.close">[docs]</a>
 </span><span data-line="367">    <span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="368"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Drain queued work and stop the scheduler. Idempotent.&quot;&quot;&quot;</span>
+</span><span data-line="368"><span class="w">        </span><span class="sd">"""Drain queued work and stop the scheduler. Idempotent."""</span>
 </span><span data-line="369">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_closed</span><span class="p">:</span>
 </span><span data-line="370">            <span class="k">return</span>
 </span><span data-line="371">        <span class="bp">self</span><span class="o">.</span><span class="n">_closing</span> <span class="o">=</span> <span class="kc">True</span>
@@ -594,7 +594,7 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="387">
 </span><span data-line="388">
-</span><span data-line="389"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;AsyncStreamingEngine&quot;</span><span class="p">,</span> <span class="s2">&quot;StreamingBatch&quot;</span><span class="p">]</span>
+</span><span data-line="389"><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"AsyncStreamingEngine"</span><span class="p">,</span> <span class="s2">"StreamingBatch"</span><span class="p">]</span>
 </span></pre></div>
         </article><button class="back-to-top" type="button">
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">

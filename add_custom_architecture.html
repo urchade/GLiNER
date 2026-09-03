@@ -248,12 +248,12 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseGLiNERConfig</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
-</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for custom GLiNER architecture.&quot;&quot;&quot;</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">"""Configuration for custom GLiNER architecture."""</span>
 </span><span data-line="5">    
 </span><span data-line="6">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="7">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="8">        <span class="c1"># Custom parameters</span>
-</span><span data-line="9">        <span class="n">pooling_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+</span><span data-line="9">        <span class="n">pooling_strategy</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"mean"</span><span class="p">,</span>
 </span><span data-line="10">        <span class="n">use_cnn</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="11">        <span class="n">cnn_filters</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span><span class="p">,</span>
 </span><span data-line="12">        <span class="c1"># Inherit base parameters</span>
@@ -267,7 +267,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="20">        <span class="bp">self</span><span class="o">.</span><span class="n">cnn_filters</span> <span class="o">=</span> <span class="n">cnn_filters</span>
 </span><span data-line="21">        
 </span><span data-line="22">        <span class="c1"># Set model type for identification</span>
-</span><span data-line="23">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">&quot;custom_gliner&quot;</span>
+</span><span data-line="23">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"custom_gliner"</span>
 </span></pre></div>
 </div>
 </section>
@@ -280,7 +280,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">nn</span>
 </span><span data-line="5">
 </span><span data-line="6"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-</span><span data-line="7"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom GLiNER model architecture.&quot;&quot;&quot;</span>
+</span><span data-line="7"><span class="w">    </span><span class="sd">"""Custom GLiNER model architecture."""</span>
 </span><span data-line="8">    
 </span><span data-line="9">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 </span><span data-line="10">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">)</span>
@@ -290,7 +290,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="14">        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Your classifier</span>
 </span><span data-line="15">        
 </span><span data-line="16">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="17"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the model.&quot;&quot;&quot;</span>
+</span><span data-line="17"><span class="w">        </span><span class="sd">"""Forward pass through the model."""</span>
 </span><span data-line="18">        <span class="c1"># 1. Encode inputs</span>
 </span><span data-line="19">        <span class="n">embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
 </span><span data-line="20">        
@@ -299,8 +299,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="23">        
 </span><span data-line="24">        <span class="c1"># 3. Compute loss if labels provided</span>
 </span><span data-line="25">        <span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="26">        <span class="k">if</span> <span class="s2">&quot;labels&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
-</span><span data-line="27">            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</span><span data-line="26">        <span class="k">if</span> <span class="s2">"labels"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+</span><span data-line="27">            <span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="p">(</span><span class="n">logits</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="28">        
 </span><span data-line="29">        <span class="c1"># 4. Return structured output</span>
 </span><span data-line="30">        <span class="k">return</span> <span class="n">GLiNERBaseOutput</span><span class="p">(</span>
@@ -310,14 +310,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="34">        <span class="p">)</span>
 </span><span data-line="35">    
 </span><span data-line="36">    <span class="k">def</span><span class="w"> </span><span class="nf">loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="37"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute training loss.&quot;&quot;&quot;</span>
+</span><span data-line="37"><span class="w">        </span><span class="sd">"""Compute training loss."""</span>
 </span><span data-line="38">        <span class="c1"># Implement your loss function</span>
 </span><span data-line="39">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">binary_cross_entropy_with_logits</span><span class="p">(</span>
 </span><span data-line="40">            <span class="n">logits</span><span class="p">,</span> <span class="n">labels</span>
 </span><span data-line="41">        <span class="p">)</span>
 </span><span data-line="42">    
 </span><span data-line="43">    <span class="k">def</span><span class="w"> </span><span class="nf">get_representations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="44"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract intermediate representations.&quot;&quot;&quot;</span>
+</span><span data-line="44"><span class="w">        </span><span class="sd">"""Extract intermediate representations."""</span>
 </span><span data-line="45">        <span class="c1"># Return embeddings for analysis/debugging</span>
 </span><span data-line="46">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
 </span></pre></div>
@@ -330,45 +330,45 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="2"><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
 </span><span data-line="3">
 </span><span data-line="4"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomProcessor</span><span class="p">(</span><span class="n">BaseProcessor</span><span class="p">):</span>
-</span><span data-line="5"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom data processor.&quot;&quot;&quot;</span>
+</span><span data-line="5"><span class="w">    </span><span class="sd">"""Custom data processor."""</span>
 </span><span data-line="6">    
 </span><span data-line="7">    <span class="k">def</span><span class="w"> </span><span class="nf">preprocess_example</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">):</span>
-</span><span data-line="8"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Preprocess a single training example.&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="w">        </span><span class="sd">"""Preprocess a single training example."""</span>
 </span><span data-line="9">        <span class="c1"># Convert tokens and entities to model inputs</span>
 </span><span data-line="10">        <span class="c1"># Return dict with required keys</span>
 </span><span data-line="11">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="12">            <span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="n">tokens</span><span class="p">,</span>
-</span><span data-line="13">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_labels</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">),</span>
+</span><span data-line="12">            <span class="s2">"tokens"</span><span class="p">:</span> <span class="n">tokens</span><span class="p">,</span>
+</span><span data-line="13">            <span class="s2">"labels"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_create_labels</span><span class="p">(</span><span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">),</span>
 </span><span data-line="14">            <span class="c1"># Add other fields as needed</span>
 </span><span data-line="15">        <span class="p">}</span>
 </span><span data-line="16">    
 </span><span data-line="17">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tokens</span><span class="p">,</span> <span class="n">ner</span><span class="p">,</span> <span class="n">classes_to_id</span><span class="p">):</span>
-</span><span data-line="18"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create label tensor from entity annotations.&quot;&quot;&quot;</span>
+</span><span data-line="18"><span class="w">        </span><span class="sd">"""Create label tensor from entity annotations."""</span>
 </span><span data-line="19">        <span class="c1"># Implement label creation logic</span>
 </span><span data-line="20">        <span class="k">pass</span>
 </span><span data-line="21">    
 </span><span data-line="22">    <span class="k">def</span><span class="w"> </span><span class="nf">create_batch_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">class_to_ids</span><span class="p">,</span> <span class="n">id_to_classes</span><span class="p">):</span>
-</span><span data-line="23"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Collate preprocessed examples into a batch.&quot;&quot;&quot;</span>
+</span><span data-line="23"><span class="w">        </span><span class="sd">"""Collate preprocessed examples into a batch."""</span>
 </span><span data-line="24">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="25">            <span class="s2">&quot;tokens&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">ex</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">],</span>
-</span><span data-line="26">            <span class="s2">&quot;labels&quot;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ex</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span>
-</span><span data-line="27">            <span class="s2">&quot;classes_to_id&quot;</span><span class="p">:</span> <span class="n">class_to_ids</span><span class="p">,</span>
-</span><span data-line="28">            <span class="s2">&quot;id_to_classes&quot;</span><span class="p">:</span> <span class="n">id_to_classes</span><span class="p">,</span>
+</span><span data-line="25">            <span class="s2">"tokens"</span><span class="p">:</span> <span class="p">[</span><span class="n">ex</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">],</span>
+</span><span data-line="26">            <span class="s2">"labels"</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">ex</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">]</span> <span class="k">for</span> <span class="n">ex</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">]),</span>
+</span><span data-line="27">            <span class="s2">"classes_to_id"</span><span class="p">:</span> <span class="n">class_to_ids</span><span class="p">,</span>
+</span><span data-line="28">            <span class="s2">"id_to_classes"</span><span class="p">:</span> <span class="n">id_to_classes</span><span class="p">,</span>
 </span><span data-line="29">        <span class="p">}</span>
 </span><span data-line="30">    
 </span><span data-line="31">    <span class="k">def</span><span class="w"> </span><span class="nf">tokenize_and_prepare_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">prepare_labels</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="32"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Tokenize inputs and prepare labels for the model.&quot;&quot;&quot;</span>
+</span><span data-line="32"><span class="w">        </span><span class="sd">"""Tokenize inputs and prepare labels for the model."""</span>
 </span><span data-line="33">        <span class="c1"># Tokenize</span>
-</span><span data-line="34">        <span class="n">tokenized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenize_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">&quot;classes_to_id&quot;</span><span class="p">])</span>
+</span><span data-line="34">        <span class="n">tokenized</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenize_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">],</span> <span class="n">batch</span><span class="p">[</span><span class="s2">"classes_to_id"</span><span class="p">])</span>
 </span><span data-line="35">        
 </span><span data-line="36">        <span class="c1"># Add labels if needed</span>
 </span><span data-line="37">        <span class="k">if</span> <span class="n">prepare_labels</span><span class="p">:</span>
-</span><span data-line="38">            <span class="n">tokenized</span><span class="p">[</span><span class="s2">&quot;labels&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_labels</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+</span><span data-line="38">            <span class="n">tokenized</span><span class="p">[</span><span class="s2">"labels"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">create_labels</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
 </span><span data-line="39">        
 </span><span data-line="40">        <span class="k">return</span> <span class="n">tokenized</span>
 </span><span data-line="41">    
 </span><span data-line="42">    <span class="k">def</span><span class="w"> </span><span class="nf">create_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">):</span>
-</span><span data-line="43"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create labels tensor from batch.&quot;&quot;&quot;</span>
+</span><span data-line="43"><span class="w">        </span><span class="sd">"""Create labels tensor from batch."""</span>
 </span><span data-line="44">        <span class="c1"># Implement label creation from batch</span>
 </span><span data-line="45">        <span class="k">pass</span>
 </span></pre></div>
@@ -380,7 +380,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.decoding</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseDecoder</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomDecoder</span><span class="p">(</span><span class="n">BaseDecoder</span><span class="p">):</span>
-</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom decoder for model outputs.&quot;&quot;&quot;</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">"""Custom decoder for model outputs."""</span>
 </span><span data-line="5">    
 </span><span data-line="6">    <span class="k">def</span><span class="w"> </span><span class="nf">decode</span><span class="p">(</span>
 </span><span data-line="7">        <span class="bp">self</span><span class="p">,</span>
@@ -390,7 +390,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="11">        <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="12">        <span class="o">**</span><span class="n">kwargs</span>
 </span><span data-line="13">    <span class="p">):</span>
-</span><span data-line="14"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Decode model output into entity predictions.&quot;&quot;&quot;</span>
+</span><span data-line="14"><span class="w">        </span><span class="sd">"""Decode model output into entity predictions."""</span>
 </span><span data-line="15">        <span class="c1"># 1. Apply sigmoid/softmax to logits</span>
 </span><span data-line="16">        <span class="n">probs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">model_output</span><span class="p">)</span>
 </span><span data-line="17">        
@@ -413,7 +413,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseGLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="k">class</span><span class="w"> </span><span class="nc">MyCustomGLiNER</span><span class="p">(</span><span class="n">BaseGLiNER</span><span class="p">):</span>
-</span><span data-line="4"><span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level wrapper for custom GLiNER architecture.&quot;&quot;&quot;</span>
+</span><span data-line="4"><span class="w">    </span><span class="sd">"""High-level wrapper for custom GLiNER architecture."""</span>
 </span><span data-line="5">    
 </span><span data-line="6">    <span class="c1"># Register component classes</span>
 </span><span data-line="7">    <span class="n">config_class</span> <span class="o">=</span> <span class="n">MyCustomConfig</span>
@@ -423,11 +423,11 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="11">    <span class="n">data_collator_class</span> <span class="o">=</span> <span class="n">MyCustomDataCollator</span>  <span class="c1"># If needed</span>
 </span><span data-line="12">    
 </span><span data-line="13">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">backbone_from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="14"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create model instance.&quot;&quot;&quot;</span>
+</span><span data-line="14"><span class="w">        </span><span class="sd">"""Create model instance."""</span>
 </span><span data-line="15">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_class</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">backbone_from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="16">    
 </span><span data-line="17">    <span class="k">def</span><span class="w"> </span><span class="nf">_create_data_processor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">,</span> <span class="n">tokenizer</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="18"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Create data processor instance.&quot;&quot;&quot;</span>
+</span><span data-line="18"><span class="w">        </span><span class="sd">"""Create data processor instance."""</span>
 </span><span data-line="19">        <span class="k">if</span> <span class="n">tokenizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="20">            <span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">AutoTokenizer</span>
 </span><span data-line="21">            <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">AutoTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
@@ -435,17 +435,17 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="23">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">data_processor_class</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">tokenizer</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="24">    
 </span><span data-line="25">    <span class="k">def</span><span class="w"> </span><span class="nf">resize_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-</span><span data-line="26"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Resize token embeddings if needed.&quot;&quot;&quot;</span>
+</span><span data-line="26"><span class="w">        </span><span class="sd">"""Resize token embeddings if needed."""</span>
 </span><span data-line="27">        <span class="c1"># Implement if you add special tokens</span>
 </span><span data-line="28">        <span class="k">pass</span>
 </span><span data-line="29">    
 </span><span data-line="30">    <span class="k">def</span><span class="w"> </span><span class="nf">inference</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="31"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Run inference on texts.&quot;&quot;&quot;</span>
+</span><span data-line="31"><span class="w">        </span><span class="sd">"""Run inference on texts."""</span>
 </span><span data-line="32">        <span class="c1"># Use parent implementation or customize</span>
 </span><span data-line="33">        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="34">    
 </span><span data-line="35">    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">test_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-</span><span data-line="36"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluate on test data.&quot;&quot;&quot;</span>
+</span><span data-line="36"><span class="w">        </span><span class="sd">"""Evaluate on test data."""</span>
 </span><span data-line="37">        <span class="c1"># Use parent implementation or customize</span>
 </span><span data-line="38">        <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">test_data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span></pre></div>

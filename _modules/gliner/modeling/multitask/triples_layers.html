@@ -180,12 +180,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="8">
 </span><span data-line="9">
 </span><span data-line="10"><span class="k">def</span><span class="w"> </span><span class="nf">_split_complex</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-</span><span data-line="11"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Assume last dim = 2k and split into real / imag parts.&quot;&quot;&quot;</span>
+</span><span data-line="11"><span class="w">    </span><span class="sd">"""Assume last dim = 2k and split into real / imag parts."""</span>
 </span><span data-line="12">    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="13">
 </span><span data-line="14">
 </span><span data-line="15"><span class="k">def</span><span class="w"> </span><span class="nf">_split_quaternion</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-</span><span data-line="16"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Assume last dim = 4k and split into (1,i,j,k) parts.&quot;&quot;&quot;</span>
+</span><span data-line="16"><span class="w">    </span><span class="sd">"""Assume last dim = 4k and split into (1,i,j,k) parts."""</span>
 </span><span data-line="17">    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">chunk</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="18">
 </span><span data-line="19">
@@ -207,7 +207,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="31">        <span class="n">use_scorer</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="32">        <span class="n">dropout</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
 </span><span data-line="33">    <span class="p">):</span>
-</span><span data-line="34"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="34"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="35"><span class="sd">        Base class for norm-based KGE interactions.</span>
 </span><span data-line="36">
 </span><span data-line="37"><span class="sd">        Args:</span>
@@ -217,7 +217,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="41"><span class="sd">            clamp_norm: Optional upper bound for numerical stability</span>
 </span><span data-line="42"><span class="sd">            use_scorer: If True, use learned projection instead of norm</span>
 </span><span data-line="43"><span class="sd">            dropout: Dropout rate for scorer (if used)</span>
-</span><span data-line="44"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="44"><span class="sd">        """</span>
 </span><span data-line="45">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="46">        <span class="bp">self</span><span class="o">.</span><span class="n">p</span> <span class="o">=</span> <span class="n">p</span>
 </span><span data-line="47">        <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="n">power</span>
@@ -231,7 +231,7 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="55">
 </span><span data-line="56">    <span class="k">def</span><span class="w"> </span><span class="nf">_score</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-</span><span data-line="57"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="57"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="58"><span class="sd">        Score residual vector.</span>
 </span><span data-line="59">
 </span><span data-line="60"><span class="sd">        Args:</span>
@@ -239,7 +239,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="62">
 </span><span data-line="63"><span class="sd">        Returns:</span>
 </span><span data-line="64"><span class="sd">            scores: (...) scalar scores (higher = better)</span>
-</span><span data-line="65"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="65"><span class="sd">        """</span>
 </span><span data-line="66">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="67">            <span class="c1"># Use learned projection</span>
 </span><span data-line="68">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">scorer</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
@@ -255,7 +255,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="UMInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.UMInteraction">[docs]</a>
 </span><span data-line="77"><span class="k">class</span><span class="w"> </span><span class="nc">UMInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="78"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Unstructured model ‖h - t‖.&quot;&quot;&quot;</span>
+</span><span data-line="78"><span class="w">    </span><span class="sd">"""Unstructured model ‖h - t‖."""</span>
 </span><span data-line="79">
 <div class="viewcode-block" id="UMInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.UMInteraction.__init__">[docs]</a>
@@ -274,11 +274,11 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="SEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.SEInteraction">[docs]</a>
 </span><span data-line="87"><span class="k">class</span><span class="w"> </span><span class="nc">SEInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="88"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Structure Embedding (SE).</span>
+</span><span data-line="88"><span class="w">    </span><span class="sd">"""Structure Embedding (SE).</span>
 </span><span data-line="89">
 </span><span data-line="90"><span class="sd">    Uses head / tail specific diagonal matrices built from relation.</span>
-</span><span data-line="91"><span class="sd">    h&#39; = diag(r) · h    ,    t&#39; = diag(r) · t</span>
-</span><span data-line="92"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="91"><span class="sd">    h' = diag(r) · h    ,    t' = diag(r) · t</span>
+</span><span data-line="92"><span class="sd">    """</span>
 </span><span data-line="93">
 <div class="viewcode-block" id="SEInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.SEInteraction.__init__">[docs]</a>
@@ -300,7 +300,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TransEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransEInteraction">[docs]</a>
 </span><span data-line="104"><span class="k">class</span><span class="w"> </span><span class="nc">TransEInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="105"><span class="w">    </span><span class="sd">&quot;&quot;&quot;TransE ‖h + r − t‖.&quot;&quot;&quot;</span>
+</span><span data-line="105"><span class="w">    </span><span class="sd">"""TransE ‖h + r − t‖."""</span>
 </span><span data-line="106">
 <div class="viewcode-block" id="TransEInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransEInteraction.__init__">[docs]</a>
@@ -319,13 +319,13 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TransHInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransHInteraction">[docs]</a>
 </span><span data-line="114"><span class="k">class</span><span class="w"> </span><span class="nc">TransHInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="115"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="115"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="116"><span class="sd">    TransH – project entities to a relation-specific hyperplane.</span>
 </span><span data-line="117">
 </span><span data-line="118"><span class="sd">    Learn mappings from base relation r to:</span>
 </span><span data-line="119"><span class="sd">        r_tr = W_tr * r + b_tr  (translation)</span>
 </span><span data-line="120"><span class="sd">        w    = W_w  * r + b_w   (hyperplane normal)</span>
-</span><span data-line="121"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="121"><span class="sd">    """</span>
 </span><span data-line="122">
 <div class="viewcode-block" id="TransHInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransHInteraction.__init__">[docs]</a>
@@ -358,7 +358,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TransFInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransFInteraction">[docs]</a>
 </span><span data-line="144"><span class="k">class</span><span class="w"> </span><span class="nc">TransFInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="145"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="145"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="146"><span class="sd">    TransF – element-wise relation-specific scaling before translation.</span>
 </span><span data-line="147">
 </span><span data-line="148"><span class="sd">    Learn mappings from base relation r to:</span>
@@ -367,7 +367,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="151"><span class="sd">        beta  = W_beta * r + b_beta</span>
 </span><span data-line="152">
 </span><span data-line="153"><span class="sd">    Score is ‖(alpha ∘ h) + r_vec − (beta ∘ t)‖_p</span>
-</span><span data-line="154"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="154"><span class="sd">    """</span>
 </span><span data-line="155">
 <div class="viewcode-block" id="TransFInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TransFInteraction.__init__">[docs]</a>
@@ -409,13 +409,13 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="PairREInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.PairREInteraction">[docs]</a>
 </span><span data-line="186"><span class="k">class</span><span class="w"> </span><span class="nc">PairREInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="187"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="187"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="188"><span class="sd">    PairRE – per-relation element-wise scaling of h &amp; t.</span>
 </span><span data-line="189">
 </span><span data-line="190"><span class="sd">    Learn mappings from base relation r to:</span>
 </span><span data-line="191"><span class="sd">        alpha = W_alpha * r + b_alpha</span>
 </span><span data-line="192"><span class="sd">        beta  = W_beta * r + b_beta</span>
-</span><span data-line="193"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="193"><span class="sd">    """</span>
 </span><span data-line="194">
 <div class="viewcode-block" id="PairREInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.PairREInteraction.__init__">[docs]</a>
@@ -438,7 +438,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TripleREInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TripleREInteraction">[docs]</a>
 </span><span data-line="206"><span class="k">class</span><span class="w"> </span><span class="nc">TripleREInteraction</span><span class="p">(</span><span class="n">NormBasedInteraction</span><span class="p">):</span>
-</span><span data-line="207"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="207"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="208"><span class="sd">    TripleRE – LineaRE + scalar γ per relation.</span>
 </span><span data-line="209">
 </span><span data-line="210"><span class="sd">    Learn mappings from base relation r to:</span>
@@ -446,7 +446,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="212"><span class="sd">        beta  = W_beta * r + b_beta</span>
 </span><span data-line="213"><span class="sd">        delta = W_delta * r + b_delta</span>
 </span><span data-line="214"><span class="sd">        gamma = w_gamma^T * r + b_gamma (scalar)</span>
-</span><span data-line="215"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="215"><span class="sd">    """</span>
 </span><span data-line="216">
 <div class="viewcode-block" id="TripleREInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TripleREInteraction.__init__">[docs]</a>
@@ -475,7 +475,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="DistMultInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.DistMultInteraction">[docs]</a>
 </span><span data-line="234"><span class="k">class</span><span class="w"> </span><span class="nc">DistMultInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="235"><span class="w">    </span><span class="sd">&quot;&quot;&quot;DistMult – Σ_d h_d r_d t_d.&quot;&quot;&quot;</span>
+</span><span data-line="235"><span class="w">    </span><span class="sd">"""DistMult – Σ_d h_d r_d t_d."""</span>
 </span><span data-line="236">
 <div class="viewcode-block" id="DistMultInteraction.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.DistMultInteraction.forward">[docs]</a>
@@ -488,18 +488,18 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="SimplEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.SimplEInteraction">[docs]</a>
 </span><span data-line="241"><span class="k">class</span><span class="w"> </span><span class="nc">SimplEInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="242"><span class="w">    </span><span class="sd">&quot;&quot;&quot;SimplE – split every embedding into (forward, backward) halves.</span>
+</span><span data-line="242"><span class="w">    </span><span class="sd">"""SimplE – split every embedding into (forward, backward) halves.</span>
 </span><span data-line="243">
 </span><span data-line="244"><span class="sd">    score = ½( ⟨h_f, r_f, t_b⟩ + ⟨t_f, r_b, h_b⟩ )</span>
 </span><span data-line="245"><span class="sd">    Requires even dimension.</span>
-</span><span data-line="246"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="246"><span class="sd">    """</span>
 </span><span data-line="247">
 <div class="viewcode-block" id="SimplEInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.SimplEInteraction.__init__">[docs]</a>
 </span><span data-line="248">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">768</span><span class="p">):</span>
 </span><span data-line="249">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="250">        <span class="k">if</span> <span class="n">dim</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="251">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SimplE requires even dimension, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</span><span data-line="251">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"SimplE requires even dimension, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 </span><span data-line="252">
 <div class="viewcode-block" id="SimplEInteraction.forward">
@@ -518,9 +518,9 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TuckERInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TuckERInteraction">[docs]</a>
 </span><span data-line="262"><span class="k">class</span><span class="w"> </span><span class="nc">TuckERInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="263"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="263"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="264"><span class="sd">    TuckER – global core tensor W (D_r × D_e × D_e).</span>
-</span><span data-line="265"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="265"><span class="sd">    """</span>
 </span><span data-line="266">
 <div class="viewcode-block" id="TuckERInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TuckERInteraction.__init__">[docs]</a>
@@ -582,7 +582,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="DistMAInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.DistMAInteraction">[docs]</a>
 </span><span data-line="317"><span class="k">class</span><span class="w"> </span><span class="nc">DistMAInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="318"><span class="w">    </span><span class="sd">&quot;&quot;&quot;DistMA – sum of pairwise dot products.&quot;&quot;&quot;</span>
+</span><span data-line="318"><span class="w">    </span><span class="sd">"""DistMA – sum of pairwise dot products."""</span>
 </span><span data-line="319">
 <div class="viewcode-block" id="DistMAInteraction.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.DistMAInteraction.forward">[docs]</a>
@@ -595,17 +595,17 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ComplExInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ComplExInteraction">[docs]</a>
 </span><span data-line="324"><span class="k">class</span><span class="w"> </span><span class="nc">ComplExInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="325"><span class="w">    </span><span class="sd">&quot;&quot;&quot;ComplEx – Re(⟨h, r, conj(t)⟩) with complex embeddings.</span>
+</span><span data-line="325"><span class="w">    </span><span class="sd">"""ComplEx – Re(⟨h, r, conj(t)⟩) with complex embeddings.</span>
 </span><span data-line="326">
 </span><span data-line="327"><span class="sd">    Requires even dimension.</span>
-</span><span data-line="328"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="328"><span class="sd">    """</span>
 </span><span data-line="329">
 <div class="viewcode-block" id="ComplExInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ComplExInteraction.__init__">[docs]</a>
 </span><span data-line="330">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">768</span><span class="p">):</span>
 </span><span data-line="331">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="332">        <span class="k">if</span> <span class="n">dim</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="333">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;ComplEx requires even dimension, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</span><span data-line="333">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"ComplEx requires even dimension, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 </span><span data-line="334">
 <div class="viewcode-block" id="ComplExInteraction.forward">
@@ -622,17 +622,17 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="QuatEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.QuatEInteraction">[docs]</a>
 </span><span data-line="342"><span class="k">class</span><span class="w"> </span><span class="nc">QuatEInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="343"><span class="w">    </span><span class="sd">&quot;&quot;&quot;QuatE – use Hamilton product (a,b,c,d)⨂(e,f,g,h).</span>
+</span><span data-line="343"><span class="w">    </span><span class="sd">"""QuatE – use Hamilton product (a,b,c,d)⨂(e,f,g,h).</span>
 </span><span data-line="344">
 </span><span data-line="345"><span class="sd">    Requires dimension divisible by 4.</span>
-</span><span data-line="346"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="346"><span class="sd">    """</span>
 </span><span data-line="347">
 <div class="viewcode-block" id="QuatEInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.QuatEInteraction.__init__">[docs]</a>
 </span><span data-line="348">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">768</span><span class="p">):</span>
 </span><span data-line="349">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="350">        <span class="k">if</span> <span class="n">dim</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="351">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;QuatE requires dimension divisible by 4, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</span><span data-line="351">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"QuatE requires dimension divisible by 4, got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 </span><span data-line="352">
 <div class="viewcode-block" id="QuatEInteraction.forward">
@@ -654,7 +654,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="HolEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.HolEInteraction">[docs]</a>
 </span><span data-line="365"><span class="k">class</span><span class="w"> </span><span class="nc">HolEInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="366"><span class="w">    </span><span class="sd">&quot;&quot;&quot;HolE – circular correlation ϕ(h, t) · r.&quot;&quot;&quot;</span>
+</span><span data-line="366"><span class="w">    </span><span class="sd">"""HolE – circular correlation ϕ(h, t) · r."""</span>
 </span><span data-line="367">
 <div class="viewcode-block" id="HolEInteraction.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.HolEInteraction.forward">[docs]</a>
@@ -676,7 +676,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ERMLPInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ERMLPInteraction">[docs]</a>
 </span><span data-line="381"><span class="k">class</span><span class="w"> </span><span class="nc">ERMLPInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="382"><span class="w">    </span><span class="sd">&quot;&quot;&quot;ER-MLP: 2-layer perceptron on concatenated [h, r, t].&quot;&quot;&quot;</span>
+</span><span data-line="382"><span class="w">    </span><span class="sd">"""ER-MLP: 2-layer perceptron on concatenated [h, r, t]."""</span>
 </span><span data-line="383">
 <div class="viewcode-block" id="ERMLPInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ERMLPInteraction.__init__">[docs]</a>
@@ -697,7 +697,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ConvKBInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvKBInteraction">[docs]</a>
 </span><span data-line="393"><span class="k">class</span><span class="w"> </span><span class="nc">ConvKBInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="394"><span class="w">    </span><span class="sd">&quot;&quot;&quot;ConvKB: Convolutional Knowledge Base interaction (Conv1d version).&quot;&quot;&quot;</span>
+</span><span data-line="394"><span class="w">    </span><span class="sd">"""ConvKB: Convolutional Knowledge Base interaction (Conv1d version)."""</span>
 </span><span data-line="395">
 <div class="viewcode-block" id="ConvKBInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvKBInteraction.__init__">[docs]</a>
@@ -727,7 +727,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ConvKBInteraction.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvKBInteraction.forward">[docs]</a>
 </span><span data-line="418">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-</span><span data-line="419"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="419"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="420"><span class="sd">        Score triples (h, r, t).</span>
 </span><span data-line="421">
 </span><span data-line="422"><span class="sd">        Args:</span>
@@ -737,7 +737,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="426">
 </span><span data-line="427"><span class="sd">        Returns:</span>
 </span><span data-line="428"><span class="sd">            scores: Triple scores (...)</span>
-</span><span data-line="429"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="429"><span class="sd">        """</span>
 </span><span data-line="430">        <span class="c1"># Store original shape</span>
 </span><span data-line="431">        <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="432">
@@ -774,10 +774,10 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ConvEInteraction">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvEInteraction">[docs]</a>
 </span><span data-line="461"><span class="k">class</span><span class="w"> </span><span class="nc">ConvEInteraction</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="462"><span class="w">    </span><span class="sd">&quot;&quot;&quot;ConvE: Convolutional interaction matching reference implementation.</span>
+</span><span data-line="462"><span class="w">    </span><span class="sd">"""ConvE: Convolutional interaction matching reference implementation.</span>
 </span><span data-line="463">
 </span><span data-line="464"><span class="sd">    Stacks head and relation embeddings vertically and applies 2D convolution.</span>
-</span><span data-line="465"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="465"><span class="sd">    """</span>
 </span><span data-line="466">
 <div class="viewcode-block" id="ConvEInteraction.__init__">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvEInteraction.__init__">[docs]</a>
@@ -799,7 +799,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="482">        <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim2</span> <span class="o">=</span> <span class="n">dim</span> <span class="o">//</span> <span class="n">emb_dim1</span>
 </span><span data-line="483">
 </span><span data-line="484">        <span class="k">if</span> <span class="n">dim</span> <span class="o">%</span> <span class="n">emb_dim1</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="485">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Embedding dim </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2"> must be divisible by emb_dim1 </span><span class="si">{</span><span class="n">emb_dim1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="485">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Embedding dim </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2"> must be divisible by emb_dim1 </span><span class="si">{</span><span class="n">emb_dim1</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="486">
 </span><span data-line="487">        <span class="c1"># Dropout layers</span>
 </span><span data-line="488">        <span class="bp">self</span><span class="o">.</span><span class="n">inp_drop</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Dropout</span><span class="p">(</span><span class="n">input_drop</span><span class="p">)</span>
@@ -820,7 +820,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ConvEInteraction.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.ConvEInteraction.forward">[docs]</a>
 </span><span data-line="502">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-</span><span data-line="503"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="503"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="504"><span class="sd">        Score triples (h, r, t).</span>
 </span><span data-line="505">
 </span><span data-line="506"><span class="sd">        Args:</span>
@@ -830,7 +830,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="510">
 </span><span data-line="511"><span class="sd">        Returns:</span>
 </span><span data-line="512"><span class="sd">            scores: Triple scores (...)</span>
-</span><span data-line="513"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="513"><span class="sd">        """</span>
 </span><span data-line="514">        <span class="c1"># Store original shape for later</span>
 </span><span data-line="515">        <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="516">
@@ -840,7 +840,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="520">        <span class="n">r_flat</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 </span><span data-line="521">        <span class="n">t_flat</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dim</span><span class="p">)</span>
 </span><span data-line="522">
-</span><span data-line="523">        <span class="c1"># Reshape embeddings into 2D &quot;images&quot;</span>
+</span><span data-line="523">        <span class="c1"># Reshape embeddings into 2D "images"</span>
 </span><span data-line="524">        <span class="n">h_img</span> <span class="o">=</span> <span class="n">h_flat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim2</span><span class="p">)</span>
 </span><span data-line="525">        <span class="n">r_img</span> <span class="o">=</span> <span class="n">r_flat</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">batch_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">emb_dim2</span><span class="p">)</span>
 </span><span data-line="526">
@@ -879,7 +879,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TriplesScoreLayer">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer">[docs]</a>
 </span><span data-line="557"><span class="k">class</span><span class="w"> </span><span class="nc">TriplesScoreLayer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="558"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for knowledge graph triple scoring interactions.</span>
+</span><span data-line="558"><span class="w">    </span><span class="sd">"""Wrapper for knowledge graph triple scoring interactions.</span>
 </span><span data-line="559">
 </span><span data-line="560"><span class="sd">    Optimized for relation extraction in entity recognition models.</span>
 </span><span data-line="561">
@@ -897,13 +897,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="573"><span class="sd">            - ConvKB: optional n_filters, dropout, use_bias</span>
 </span><span data-line="574"><span class="sd">            - Norm-based (TransE, TransH, etc.): optional p, power, clamp_norm,</span>
 </span><span data-line="575"><span class="sd">            use_scorer, dropout</span>
-</span><span data-line="576"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="576"><span class="sd">    """</span>
 </span><span data-line="577">
 </span><span data-line="578">    <span class="c1"># Define dimension requirements for each interaction</span>
 </span><span data-line="579">    <span class="n">DIMENSION_REQUIREMENTS</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="580">        <span class="s2">&quot;ComplEx&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="581">        <span class="s2">&quot;SimplE&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="582">        <span class="s2">&quot;QuatE&quot;</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="580">        <span class="s2">"ComplEx"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="581">        <span class="s2">"SimplE"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="582">        <span class="s2">"QuatE"</span><span class="p">:</span> <span class="k">lambda</span> <span class="n">d</span><span class="p">:</span> <span class="n">d</span> <span class="o">%</span> <span class="mi">4</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="583">    <span class="p">}</span>
 </span><span data-line="584">
 <div class="viewcode-block" id="TriplesScoreLayer.__init__">
@@ -917,66 +917,66 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="591">        <span class="bp">self</span><span class="o">.</span><span class="n">validate_dimensions</span><span class="p">(</span><span class="n">dim</span><span class="p">)</span>
 </span><span data-line="592">
 </span><span data-line="593">        <span class="c1"># Create the appropriate interaction</span>
-</span><span data-line="594">        <span class="k">if</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;UM&quot;</span><span class="p">:</span>
+</span><span data-line="594">        <span class="k">if</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"UM"</span><span class="p">:</span>
 </span><span data-line="595">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">UMInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="596">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;SE&quot;</span><span class="p">:</span>
+</span><span data-line="596">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"SE"</span><span class="p">:</span>
 </span><span data-line="597">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">SEInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="598">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;TransE&quot;</span><span class="p">:</span>
+</span><span data-line="598">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"TransE"</span><span class="p">:</span>
 </span><span data-line="599">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">TransEInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="600">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;TransH&quot;</span><span class="p">:</span>
+</span><span data-line="600">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"TransH"</span><span class="p">:</span>
 </span><span data-line="601">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">TransHInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="602">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;TransF&quot;</span><span class="p">:</span>
+</span><span data-line="602">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"TransF"</span><span class="p">:</span>
 </span><span data-line="603">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">TransFInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="604">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;PairRE&quot;</span><span class="p">:</span>
+</span><span data-line="604">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"PairRE"</span><span class="p">:</span>
 </span><span data-line="605">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">PairREInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="606">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;TripleRE&quot;</span><span class="p">:</span>
+</span><span data-line="606">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"TripleRE"</span><span class="p">:</span>
 </span><span data-line="607">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">TripleREInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="608">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;DistMult&quot;</span><span class="p">:</span>
+</span><span data-line="608">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"DistMult"</span><span class="p">:</span>
 </span><span data-line="609">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">DistMultInteraction</span><span class="p">()</span>
-</span><span data-line="610">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;SimplE&quot;</span><span class="p">:</span>
+</span><span data-line="610">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"SimplE"</span><span class="p">:</span>
 </span><span data-line="611">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">SimplEInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
-</span><span data-line="612">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;DistMA&quot;</span><span class="p">:</span>
+</span><span data-line="612">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"DistMA"</span><span class="p">:</span>
 </span><span data-line="613">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">DistMAInteraction</span><span class="p">()</span>
-</span><span data-line="614">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;ComplEx&quot;</span><span class="p">:</span>
+</span><span data-line="614">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"ComplEx"</span><span class="p">:</span>
 </span><span data-line="615">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">ComplExInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
-</span><span data-line="616">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;QuatE&quot;</span><span class="p">:</span>
+</span><span data-line="616">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"QuatE"</span><span class="p">:</span>
 </span><span data-line="617">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">QuatEInteraction</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
-</span><span data-line="618">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;HolE&quot;</span><span class="p">:</span>
+</span><span data-line="618">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"HolE"</span><span class="p">:</span>
 </span><span data-line="619">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">HolEInteraction</span><span class="p">()</span>
-</span><span data-line="620">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;TuckER&quot;</span><span class="p">:</span>
-</span><span data-line="621">            <span class="n">d_e</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;d_e&quot;</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
-</span><span data-line="622">            <span class="n">d_r</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;d_r&quot;</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
-</span><span data-line="623">            <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropout&quot;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+</span><span data-line="620">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"TuckER"</span><span class="p">:</span>
+</span><span data-line="621">            <span class="n">d_e</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"d_e"</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+</span><span data-line="622">            <span class="n">d_r</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"d_r"</span><span class="p">,</span> <span class="n">dim</span><span class="p">)</span>
+</span><span data-line="623">            <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dropout"</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
 </span><span data-line="624">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">TuckERInteraction</span><span class="p">(</span><span class="n">d_e</span><span class="p">,</span> <span class="n">d_r</span><span class="p">,</span> <span class="n">dropout</span><span class="p">)</span>
-</span><span data-line="625">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;ERMLP&quot;</span><span class="p">:</span>
-</span><span data-line="626">            <span class="n">hidden</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hidden&quot;</span><span class="p">,</span> <span class="mi">2048</span><span class="p">)</span>
+</span><span data-line="625">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"ERMLP"</span><span class="p">:</span>
+</span><span data-line="626">            <span class="n">hidden</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hidden"</span><span class="p">,</span> <span class="mi">2048</span><span class="p">)</span>
 </span><span data-line="627">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">ERMLPInteraction</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">hidden</span><span class="p">)</span>
-</span><span data-line="628">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;ConvE&quot;</span><span class="p">:</span>
-</span><span data-line="629">            <span class="n">emb_dim1</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;emb_dim1&quot;</span><span class="p">)</span>
+</span><span data-line="628">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"ConvE"</span><span class="p">:</span>
+</span><span data-line="629">            <span class="n">emb_dim1</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"emb_dim1"</span><span class="p">)</span>
 </span><span data-line="630">            <span class="k">if</span> <span class="n">emb_dim1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="631">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ConvE requires `emb_dim1` argument (height of reshaped embedding).&quot;</span><span class="p">)</span>
-</span><span data-line="632">            <span class="n">n_filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_filters&quot;</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
-</span><span data-line="633">            <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;kernel_size&quot;</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
-</span><span data-line="634">            <span class="n">input_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_drop&quot;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
-</span><span data-line="635">            <span class="n">hidden_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;hidden_drop&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
-</span><span data-line="636">            <span class="n">feat_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;feat_drop&quot;</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
-</span><span data-line="637">            <span class="n">use_bias</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;use_bias&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="631">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ConvE requires `emb_dim1` argument (height of reshaped embedding)."</span><span class="p">)</span>
+</span><span data-line="632">            <span class="n">n_filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_filters"</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+</span><span data-line="633">            <span class="n">kernel_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"kernel_size"</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+</span><span data-line="634">            <span class="n">input_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"input_drop"</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+</span><span data-line="635">            <span class="n">hidden_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"hidden_drop"</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+</span><span data-line="636">            <span class="n">feat_drop</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"feat_drop"</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">)</span>
+</span><span data-line="637">            <span class="n">use_bias</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"use_bias"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </span><span data-line="638">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">ConvEInteraction</span><span class="p">(</span>
 </span><span data-line="639">                <span class="n">dim</span><span class="p">,</span> <span class="n">emb_dim1</span><span class="p">,</span> <span class="n">n_filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">input_drop</span><span class="p">,</span> <span class="n">hidden_drop</span><span class="p">,</span> <span class="n">feat_drop</span><span class="p">,</span> <span class="n">use_bias</span>
 </span><span data-line="640">            <span class="p">)</span>
-</span><span data-line="641">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">&quot;ConvKB&quot;</span><span class="p">:</span>
-</span><span data-line="642">            <span class="n">n_filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;n_filters&quot;</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
-</span><span data-line="643">            <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;dropout&quot;</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
-</span><span data-line="644">            <span class="n">use_bias</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;use_bias&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="641">        <span class="k">elif</span> <span class="n">interaction_mode</span> <span class="o">==</span> <span class="s2">"ConvKB"</span><span class="p">:</span>
+</span><span data-line="642">            <span class="n">n_filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"n_filters"</span><span class="p">,</span> <span class="mi">32</span><span class="p">)</span>
+</span><span data-line="643">            <span class="n">dropout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"dropout"</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">)</span>
+</span><span data-line="644">            <span class="n">use_bias</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"use_bias"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </span><span data-line="645">            <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span> <span class="o">=</span> <span class="n">ConvKBInteraction</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">n_filters</span><span class="p">,</span> <span class="n">dropout</span><span class="p">,</span> <span class="n">use_bias</span><span class="p">)</span>
 </span><span data-line="646">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="647">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown interaction mode &#39;</span><span class="si">{</span><span class="n">interaction_mode</span><span class="si">}</span><span class="s2">&#39;.&quot;</span><span class="p">)</span></div>
+</span><span data-line="647">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown interaction mode '</span><span class="si">{</span><span class="n">interaction_mode</span><span class="si">}</span><span class="s2">'."</span><span class="p">)</span></div>
 
 </span><span data-line="648">
 <div class="viewcode-block" id="TriplesScoreLayer.validate_dimensions">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.validate_dimensions">[docs]</a>
 </span><span data-line="649">    <span class="k">def</span><span class="w"> </span><span class="nf">validate_dimensions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
-</span><span data-line="650"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="650"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="651"><span class="sd">        Validate that the embedding dimension meets requirements for this interaction.</span>
 </span><span data-line="652">
 </span><span data-line="653"><span class="sd">        Args:</span>
@@ -984,23 +984,23 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="655">
 </span><span data-line="656"><span class="sd">        Raises:</span>
 </span><span data-line="657"><span class="sd">            ValueError: If dimension requirements are not met</span>
-</span><span data-line="658"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="658"><span class="sd">        """</span>
 </span><span data-line="659">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">DIMENSION_REQUIREMENTS</span><span class="p">:</span>
 </span><span data-line="660">            <span class="n">check</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">DIMENSION_REQUIREMENTS</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">]</span>
 </span><span data-line="661">            <span class="k">if</span> <span class="ow">not</span> <span class="n">check</span><span class="p">(</span><span class="n">dim</span><span class="p">):</span>
-</span><span data-line="662">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;ComplEx&quot;</span><span class="p">,</span> <span class="s2">&quot;SimplE&quot;</span><span class="p">]:</span>
-</span><span data-line="663">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> requires even embedding dimension. Got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">.&quot;</span>
-</span><span data-line="664">                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">&quot;QuatE&quot;</span><span class="p">:</span>
-</span><span data-line="665">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> requires embedding dimension divisible by 4. Got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span data-line="662">                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"ComplEx"</span><span class="p">,</span> <span class="s2">"SimplE"</span><span class="p">]:</span>
+</span><span data-line="663">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> requires even embedding dimension. Got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">."</span>
+</span><span data-line="664">                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s2">"QuatE"</span><span class="p">:</span>
+</span><span data-line="665">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> requires embedding dimension divisible by 4. Got </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">."</span>
 </span><span data-line="666">                <span class="k">else</span><span class="p">:</span>
-</span><span data-line="667">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> has dimension requirements not satisfied by </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">.&quot;</span>
+</span><span data-line="667">                    <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="si">}</span><span class="s2"> has dimension requirements not satisfied by </span><span class="si">{</span><span class="n">dim</span><span class="si">}</span><span class="s2">."</span>
 </span><span data-line="668">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span></div>
 
 </span><span data-line="669">
 <div class="viewcode-block" id="TriplesScoreLayer.forward">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward">[docs]</a>
 </span><span data-line="670">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
-</span><span data-line="671"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="671"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="672"><span class="sd">        Score triples (h, r, t).</span>
 </span><span data-line="673">
 </span><span data-line="674"><span class="sd">        Args:</span>
@@ -1010,14 +1010,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="678">
 </span><span data-line="679"><span class="sd">        Returns:</span>
 </span><span data-line="680"><span class="sd">            scores: Triple scores (...)</span>
-</span><span data-line="681"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="681"><span class="sd">        """</span>
 </span><span data-line="682">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">interaction</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span></div>
 
 </span><span data-line="683">
 <div class="viewcode-block" id="TriplesScoreLayer.forward_batched_relations">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_batched_relations">[docs]</a>
 </span><span data-line="684">    <span class="k">def</span><span class="w"> </span><span class="nf">forward_batched_relations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">rel_embeddings</span><span class="p">):</span>
-</span><span data-line="685"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="685"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="686"><span class="sd">        Efficiently score entity pairs against all relation types.</span>
 </span><span data-line="687">
 </span><span data-line="688"><span class="sd">        Args:</span>
@@ -1027,7 +1027,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="692">
 </span><span data-line="693"><span class="sd">        Returns:</span>
 </span><span data-line="694"><span class="sd">            scores: (B, N, C) scores for each pair against each relation type</span>
-</span><span data-line="695"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="695"><span class="sd">        """</span>
 </span><span data-line="696">        <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="697">
 </span><span data-line="698">        <span class="c1"># Handle both batched and unbatched relation embeddings</span>
@@ -1059,7 +1059,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="TriplesScoreLayer.forward_single_relation">
 <a class="viewcode-back" href="../../../../api/gliner.modeling.multitask.triples_layers.html#gliner.modeling.multitask.triples_layers.TriplesScoreLayer.forward_single_relation">[docs]</a>
 </span><span data-line="723">    <span class="k">def</span><span class="w"> </span><span class="nf">forward_single_relation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">r</span><span class="p">):</span>
-</span><span data-line="724"><span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="724"><span class="w">        </span><span class="sd">"""</span>
 </span><span data-line="725"><span class="sd">        Score entity pairs with a single relation type.</span>
 </span><span data-line="726">
 </span><span data-line="727"><span class="sd">        Args:</span>
@@ -1069,7 +1069,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="731">
 </span><span data-line="732"><span class="sd">        Returns:</span>
 </span><span data-line="733"><span class="sd">            scores: (B, N) scores for each pair with the given relation</span>
-</span><span data-line="734"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="734"><span class="sd">        """</span>
 </span><span data-line="735">        <span class="n">B</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="736">
 </span><span data-line="737">        <span class="c1"># Expand relation to match batch and pair dimensions</span>

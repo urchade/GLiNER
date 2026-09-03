@@ -185,19 +185,19 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="13"><span class="kn">from</span><span class="w"> </span><span class="nn">..infer_packing</span><span class="w"> </span><span class="kn">import</span> <span class="n">InferencePackingConfig</span><span class="p">,</span> <span class="n">unpack_spans</span><span class="p">,</span> <span class="n">pack_requests</span>
 </span><span data-line="14">
 </span><span data-line="15"><span class="c1"># Check for optional dependencies</span>
-</span><span data-line="16"><span class="n">IS_LLM2VEC</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;llm2vec&quot;</span><span class="p">)</span>
-</span><span data-line="17"><span class="n">IS_PEFT</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;peft&quot;</span><span class="p">)</span>
-</span><span data-line="18"><span class="n">IS_TURBOT5</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;turbot5&quot;</span><span class="p">)</span>
-</span><span data-line="19"><span class="n">IS_FLASHDEBERTA</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;flashdeberta&quot;</span><span class="p">)</span>
+</span><span data-line="16"><span class="n">IS_LLM2VEC</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"llm2vec"</span><span class="p">)</span>
+</span><span data-line="17"><span class="n">IS_PEFT</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"peft"</span><span class="p">)</span>
+</span><span data-line="18"><span class="n">IS_TURBOT5</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"turbot5"</span><span class="p">)</span>
+</span><span data-line="19"><span class="n">IS_FLASHDEBERTA</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"flashdeberta"</span><span class="p">)</span>
 </span><span data-line="20">
 </span><span data-line="21"><span class="k">if</span> <span class="n">IS_LLM2VEC</span><span class="p">:</span>
 </span><span data-line="22">    <span class="kn">from</span><span class="w"> </span><span class="nn">llm2vec.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">GemmaBiModel</span><span class="p">,</span> <span class="n">LlamaBiModel</span><span class="p">,</span> <span class="n">Qwen2BiModel</span><span class="p">,</span> <span class="n">MistralBiModel</span>
 </span><span data-line="23">
 </span><span data-line="24">    <span class="n">DECODER_MODEL_MAPPING</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="25">        <span class="s2">&quot;MistralConfig&quot;</span><span class="p">:</span> <span class="n">MistralBiModel</span><span class="p">,</span>
-</span><span data-line="26">        <span class="s2">&quot;LlamaConfig&quot;</span><span class="p">:</span> <span class="n">LlamaBiModel</span><span class="p">,</span>
-</span><span data-line="27">        <span class="s2">&quot;GemmaConfig&quot;</span><span class="p">:</span> <span class="n">GemmaBiModel</span><span class="p">,</span>
-</span><span data-line="28">        <span class="s2">&quot;Qwen2Config&quot;</span><span class="p">:</span> <span class="n">Qwen2BiModel</span><span class="p">,</span>
+</span><span data-line="25">        <span class="s2">"MistralConfig"</span><span class="p">:</span> <span class="n">MistralBiModel</span><span class="p">,</span>
+</span><span data-line="26">        <span class="s2">"LlamaConfig"</span><span class="p">:</span> <span class="n">LlamaBiModel</span><span class="p">,</span>
+</span><span data-line="27">        <span class="s2">"GemmaConfig"</span><span class="p">:</span> <span class="n">GemmaBiModel</span><span class="p">,</span>
+</span><span data-line="28">        <span class="s2">"Qwen2Config"</span><span class="p">:</span> <span class="n">Qwen2BiModel</span><span class="p">,</span>
 </span><span data-line="29">    <span class="p">}</span>
 </span><span data-line="30"><span class="k">else</span><span class="p">:</span>
 </span><span data-line="31">    <span class="n">DECODER_MODEL_MAPPING</span> <span class="o">=</span> <span class="p">{}</span>
@@ -215,7 +215,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Transformer">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Transformer">[docs]</a>
 </span><span data-line="43"><span class="k">class</span><span class="w"> </span><span class="nc">Transformer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="44"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Flexible transformer wrapper supporting multiple architectures and configurations.</span>
+</span><span data-line="44"><span class="w">    </span><span class="sd">"""Flexible transformer wrapper supporting multiple architectures and configurations.</span>
 </span><span data-line="45">
 </span><span data-line="46"><span class="sd">    This class provides a unified interface for various transformer models including</span>
 </span><span data-line="47"><span class="sd">    encoder-only (BERT, DeBERTa), encoder-decoder (T5), and decoder-only models</span>
@@ -226,7 +226,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="52"><span class="sd">        model: The underlying transformer model instance.</span>
 </span><span data-line="53"><span class="sd">        layers_fuser: Optional layer fusion module when config.fuse_layers is True.</span>
 </span><span data-line="54"><span class="sd">        config: Configuration object containing model hyperparameters.</span>
-</span><span data-line="55"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="55"><span class="sd">    """</span>
 </span><span data-line="56">
 <div class="viewcode-block" id="Transformer.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Transformer.__init__">[docs]</a>
@@ -238,7 +238,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="62">        <span class="n">labels_encoder</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
 </span><span data-line="63">        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="64">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="65"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the transformer wrapper.</span>
+</span><span data-line="65"><span class="w">        </span><span class="sd">"""Initializes the transformer wrapper.</span>
 </span><span data-line="66">
 </span><span data-line="67"><span class="sd">        Args:</span>
 </span><span data-line="68"><span class="sd">            model_name: Name or path of the pretrained model to load.</span>
@@ -254,7 +254,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="78"><span class="sd">        Raises:</span>
 </span><span data-line="79"><span class="sd">            MissedPackageException: If required packages (llm2vec, peft) are not installed</span>
 </span><span data-line="80"><span class="sd">                when needed for specific model types.</span>
-</span><span data-line="81"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="81"><span class="sd">        """</span>
 </span><span data-line="82">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="83">        <span class="k">if</span> <span class="n">labels_encoder</span><span class="p">:</span>
 </span><span data-line="84">            <span class="n">encoder_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">labels_encoder_config</span>
@@ -274,23 +274,23 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="98">        <span class="k">if</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="n">DECODER_MODEL_MAPPING</span><span class="p">:</span>
 </span><span data-line="99">            <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_LLM2VEC</span><span class="p">:</span>
 </span><span data-line="100">                <span class="k">raise</span> <span class="n">MissedPackageException</span><span class="p">(</span>
-</span><span data-line="101">                    <span class="sa">f</span><span class="s2">&quot;The llm2vec package must be installed to use this decoder model: </span><span class="si">{</span><span class="n">config_name</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="101">                    <span class="sa">f</span><span class="s2">"The llm2vec package must be installed to use this decoder model: </span><span class="si">{</span><span class="n">config_name</span><span class="si">}</span><span class="s2">"</span>
 </span><span data-line="102">                <span class="p">)</span>
 </span><span data-line="103">            <span class="k">else</span><span class="p">:</span>
 </span><span data-line="104">                <span class="n">ModelClass</span> <span class="o">=</span> <span class="n">DECODER_MODEL_MAPPING</span><span class="p">[</span><span class="n">config_name</span><span class="p">]</span>
 </span><span data-line="105">            <span class="n">custom</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="106">        <span class="k">elif</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;T5Config&quot;</span><span class="p">,</span> <span class="s2">&quot;MT5Config&quot;</span><span class="p">}:</span>
+</span><span data-line="106">        <span class="k">elif</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"T5Config"</span><span class="p">,</span> <span class="s2">"MT5Config"</span><span class="p">}:</span>
 </span><span data-line="107">            <span class="n">custom</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="108">            <span class="n">turbot5_type</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;TURBOT5_ATTN_TYPE&quot;</span><span class="p">,</span> <span class="s2">&quot;basic&quot;</span><span class="p">)</span>
+</span><span data-line="108">            <span class="n">turbot5_type</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"TURBOT5_ATTN_TYPE"</span><span class="p">,</span> <span class="s2">"basic"</span><span class="p">)</span>
 </span><span data-line="109">            <span class="k">if</span> <span class="n">turbot5_type</span> <span class="ow">and</span> <span class="n">IS_TURBOT5</span><span class="p">:</span>
 </span><span data-line="110">                <span class="n">ModelClass</span> <span class="o">=</span> <span class="n">FlashT5EncoderModel</span>
-</span><span data-line="111">                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;attention_type&quot;</span><span class="p">:</span> <span class="n">turbot5_type</span><span class="p">}</span>
+</span><span data-line="111">                <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"attention_type"</span><span class="p">:</span> <span class="n">turbot5_type</span><span class="p">}</span>
 </span><span data-line="112">                <span class="n">config</span><span class="o">.</span><span class="n">encoder_config</span><span class="o">.</span><span class="n">attention_type</span> <span class="o">=</span> <span class="n">turbot5_type</span>
 </span><span data-line="113">            <span class="k">else</span><span class="p">:</span>
 </span><span data-line="114">                <span class="n">ModelClass</span> <span class="o">=</span> <span class="n">T5EncoderModel</span>
-</span><span data-line="115">        <span class="k">elif</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;DebertaV2Config&quot;</span><span class="p">}:</span>
+</span><span data-line="115">        <span class="k">elif</span> <span class="n">config_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"DebertaV2Config"</span><span class="p">}:</span>
 </span><span data-line="116">            <span class="n">custom</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="117">            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">IS_FLASHDEBERTA</span><span class="p">:</span>
+</span><span data-line="117">            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"USE_FLASHDEBERTA"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span> <span class="ow">and</span> <span class="n">IS_FLASHDEBERTA</span><span class="p">:</span>
 </span><span data-line="118">                <span class="n">ModelClass</span> <span class="o">=</span> <span class="n">FlashDebertaV2Model</span>
 </span><span data-line="119">            <span class="k">else</span><span class="p">:</span>
 </span><span data-line="120">                <span class="n">ModelClass</span> <span class="o">=</span> <span class="n">DebertaV2Model</span>
@@ -306,12 +306,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="130">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="131">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">ModelClass</span><span class="p">(</span><span class="n">encoder_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="132">
-</span><span data-line="133">        <span class="n">adapter_config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;adapter_config.json&quot;</span>
+</span><span data-line="133">        <span class="n">adapter_config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"adapter_config.json"</span>
 </span><span data-line="134">
 </span><span data-line="135">        <span class="k">if</span> <span class="n">adapter_config_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
 </span><span data-line="136">            <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_PEFT</span><span class="p">:</span>
 </span><span data-line="137">                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span data-line="138">                    <span class="s2">&quot;Adapter configs were detected, if you want to apply them you need to install peft package.&quot;</span><span class="p">,</span>
+</span><span data-line="138">                    <span class="s2">"Adapter configs were detected, if you want to apply them you need to install peft package."</span><span class="p">,</span>
 </span><span data-line="139">                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 </span><span data-line="140">                <span class="p">)</span>
 </span><span data-line="141">            <span class="k">else</span><span class="p">:</span>
@@ -332,7 +332,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Transformer.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Transformer.forward">[docs]</a>
 </span><span data-line="155">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="156"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the transformer model.</span>
+</span><span data-line="156"><span class="w">        </span><span class="sd">"""Forward pass through the transformer model.</span>
 </span><span data-line="157">
 </span><span data-line="158"><span class="sd">        Handles different attention mask configurations and model architectures,</span>
 </span><span data-line="159"><span class="sd">        including support for pair attention masks for packed sequences.</span>
@@ -350,63 +350,63 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="171"><span class="sd">            Encoded representations of shape (batch_size, seq_len, hidden_size).</span>
 </span><span data-line="172"><span class="sd">            If config.fuse_layers is True, returns fused layer outputs, otherwise</span>
 </span><span data-line="173"><span class="sd">            returns the last hidden state.</span>
-</span><span data-line="174"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="175">        <span class="n">pair_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="176">        <span class="n">base_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="174"><span class="sd">        """</span>
+</span><span data-line="175">        <span class="n">pair_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"pair_attention_mask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="176">        <span class="n">base_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"attention_mask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="177">        <span class="c1"># Extract input_ids if present</span>
 </span><span data-line="178">        <span class="n">args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
-</span><span data-line="179">        <span class="n">input_ids</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;input_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="179">        <span class="n">input_ids</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"input_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="180">        <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">args</span><span class="p">:</span>
 </span><span data-line="181">            <span class="n">input_ids</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 </span><span data-line="182">            <span class="n">args</span> <span class="o">=</span> <span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 </span><span data-line="183">        <span class="n">args</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">args</span><span class="p">)</span>
 </span><span data-line="184">
 </span><span data-line="185">        <span class="c1"># Set default kwargs</span>
-</span><span data-line="186">        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;output_attentions&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-</span><span data-line="187">        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;return_dict&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="186">        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"output_attentions"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="187">        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"return_dict"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </span><span data-line="188">
 </span><span data-line="189">        <span class="c1"># Handle output_hidden_states based on fuse_layers config</span>
 </span><span data-line="190">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">fuse_layers</span><span class="p">:</span>
-</span><span data-line="191">            <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;output_hidden_states&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+</span><span data-line="191">            <span class="n">kwargs</span><span class="p">[</span><span class="s2">"output_hidden_states"</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
 </span><span data-line="192">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="193">            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;output_hidden_states&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+</span><span data-line="193">            <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"output_hidden_states"</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
 </span><span data-line="194">
 </span><span data-line="195">        <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="196">            <span class="n">mask_info</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_pair_attention_masks</span><span class="p">(</span>
 </span><span data-line="197">                <span class="n">pair_attention_mask</span><span class="p">,</span>
 </span><span data-line="198">                <span class="n">base_attention_mask</span><span class="p">,</span>
 </span><span data-line="199">                <span class="n">input_ids</span><span class="p">,</span>
-</span><span data-line="200">                <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">),</span>
+</span><span data-line="200">                <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"inputs_embeds"</span><span class="p">),</span>
 </span><span data-line="201">            <span class="p">)</span>
 </span><span data-line="202">
 </span><span data-line="203">            <span class="n">model_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="204">            <span class="n">model_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span>
 </span><span data-line="205">
-</span><span data-line="206">            <span class="k">if</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;DebertaV2Model&quot;</span><span class="p">,</span> <span class="s2">&quot;DebertaModel&quot;</span><span class="p">}:</span>
+</span><span data-line="206">            <span class="k">if</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"DebertaV2Model"</span><span class="p">,</span> <span class="s2">"DebertaModel"</span><span class="p">}:</span>
 </span><span data-line="207">                <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_deberta</span><span class="p">(</span>
 </span><span data-line="208">                    <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
 </span><span data-line="209">                    <span class="n">model_kwargs</span><span class="o">=</span><span class="n">model_kwargs</span><span class="p">,</span>
 </span><span data-line="210">                    <span class="n">mask_info</span><span class="o">=</span><span class="n">mask_info</span><span class="p">,</span>
 </span><span data-line="211">                <span class="p">)</span>
-</span><span data-line="212">            <span class="k">elif</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s2">&quot;ModernBertModel&quot;</span><span class="p">:</span>
+</span><span data-line="212">            <span class="k">elif</span> <span class="n">model_name</span> <span class="o">==</span> <span class="s2">"ModernBertModel"</span><span class="p">:</span>
 </span><span data-line="213">                <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_modernbert</span><span class="p">(</span>
 </span><span data-line="214">                    <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
 </span><span data-line="215">                    <span class="n">model_kwargs</span><span class="o">=</span><span class="n">model_kwargs</span><span class="p">,</span>
 </span><span data-line="216">                    <span class="n">mask_info</span><span class="o">=</span><span class="n">mask_info</span><span class="p">,</span>
 </span><span data-line="217">                <span class="p">)</span>
-</span><span data-line="218">            <span class="k">elif</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;T5EncoderModel&quot;</span><span class="p">,</span> <span class="s2">&quot;MT5EncoderModel&quot;</span><span class="p">,</span> <span class="s2">&quot;T5Model&quot;</span><span class="p">}:</span>
+</span><span data-line="218">            <span class="k">elif</span> <span class="n">model_name</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"T5EncoderModel"</span><span class="p">,</span> <span class="s2">"MT5EncoderModel"</span><span class="p">,</span> <span class="s2">"T5Model"</span><span class="p">}:</span>
 </span><span data-line="219">                <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_forward_t5</span><span class="p">(</span>
 </span><span data-line="220">                    <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
 </span><span data-line="221">                    <span class="n">model_kwargs</span><span class="o">=</span><span class="n">model_kwargs</span><span class="p">,</span>
 </span><span data-line="222">                    <span class="n">mask_info</span><span class="o">=</span><span class="n">mask_info</span><span class="p">,</span>
 </span><span data-line="223">                <span class="p">)</span>
 </span><span data-line="224">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="225">                <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="226">                <span class="n">model_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;extended_mask&quot;</span><span class="p">]</span>
+</span><span data-line="225">                <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"packing_config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="226">                <span class="n">model_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">"extended_mask"</span><span class="p">]</span>
 </span><span data-line="227">                <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
 </span><span data-line="228">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="229">            <span class="k">if</span> <span class="n">base_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="230">                <span class="n">kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_attention_mask</span>
+</span><span data-line="230">                <span class="n">kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">base_attention_mask</span>
 </span><span data-line="231">            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="232">
 </span><span data-line="233">        <span class="c1"># Common logic for both paths</span>
@@ -419,11 +419,11 @@ data-aria-dark="Switch to auto color mode">
 
 </span><span data-line="240">
 </span><span data-line="241">    <span class="k">def</span><span class="w"> </span><span class="nf">_get_model_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
-</span><span data-line="242"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the data type of the model parameters.</span>
+</span><span data-line="242"><span class="w">        </span><span class="sd">"""Gets the data type of the model parameters.</span>
 </span><span data-line="243">
 </span><span data-line="244"><span class="sd">        Returns:</span>
-</span><span data-line="245"><span class="sd">            The dtype of the model&#39;s parameters, or torch.float32 if no parameters exist.</span>
-</span><span data-line="246"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="245"><span class="sd">            The dtype of the model's parameters, or torch.float32 if no parameters exist.</span>
+</span><span data-line="246"><span class="sd">        """</span>
 </span><span data-line="247">        <span class="k">try</span><span class="p">:</span>
 </span><span data-line="248">            <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span><span class="o">.</span><span class="n">dtype</span>
 </span><span data-line="249">        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
@@ -436,7 +436,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="256">        <span class="n">input_ids</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 </span><span data-line="257">        <span class="n">inputs_embeds</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 </span><span data-line="258">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="259"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Prepares attention masks for packed sequence processing.</span>
+</span><span data-line="259"><span class="w">        </span><span class="sd">"""Prepares attention masks for packed sequence processing.</span>
 </span><span data-line="260">
 </span><span data-line="261"><span class="sd">        Converts pair attention masks (which specify token-to-token visibility) into</span>
 </span><span data-line="262"><span class="sd">        various mask formats required by different transformer architectures. Ensures</span>
@@ -456,7 +456,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="276"><span class="sd">                - extended_mask: 4D attention mask of shape (batch_size, 1, seq_len, seq_len)</span>
 </span><span data-line="277"><span class="sd">                    with -inf for masked positions.</span>
 </span><span data-line="278"><span class="sd">                - block_mask: Boolean 3D mask of shape (batch_size, seq_len, seq_len).</span>
-</span><span data-line="279"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="279"><span class="sd">        """</span>
 </span><span data-line="280">        <span class="n">device</span> <span class="o">=</span> <span class="n">pair_attention_mask</span><span class="o">.</span><span class="n">device</span>
 </span><span data-line="281">        <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="282">            <span class="n">device</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">device</span>
@@ -499,10 +499,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="319">            <span class="p">)</span>
 </span><span data-line="320">
 </span><span data-line="321">        <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="322">            <span class="s2">&quot;token_mask&quot;</span><span class="p">:</span> <span class="n">token_mask</span><span class="p">,</span>
-</span><span data-line="323">            <span class="s2">&quot;token_mask_bool&quot;</span><span class="p">:</span> <span class="n">token_mask_bool</span><span class="p">,</span>
-</span><span data-line="324">            <span class="s2">&quot;extended_mask&quot;</span><span class="p">:</span> <span class="n">extended_mask</span><span class="p">,</span>
-</span><span data-line="325">            <span class="s2">&quot;block_mask&quot;</span><span class="p">:</span> <span class="n">pair_mask_bool</span><span class="p">,</span>
+</span><span data-line="322">            <span class="s2">"token_mask"</span><span class="p">:</span> <span class="n">token_mask</span><span class="p">,</span>
+</span><span data-line="323">            <span class="s2">"token_mask_bool"</span><span class="p">:</span> <span class="n">token_mask_bool</span><span class="p">,</span>
+</span><span data-line="324">            <span class="s2">"extended_mask"</span><span class="p">:</span> <span class="n">extended_mask</span><span class="p">,</span>
+</span><span data-line="325">            <span class="s2">"block_mask"</span><span class="p">:</span> <span class="n">pair_mask_bool</span><span class="p">,</span>
 </span><span data-line="326">        <span class="p">}</span>
 </span><span data-line="327">
 </span><span data-line="328">    <span class="k">def</span><span class="w"> </span><span class="nf">_forward_deberta</span><span class="p">(</span>
@@ -511,7 +511,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="331">        <span class="n">model_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 </span><span data-line="332">        <span class="n">mask_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 </span><span data-line="333">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseModelOutput</span><span class="p">:</span>
-</span><span data-line="334"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through DeBERTa models with packed attention support.</span>
+</span><span data-line="334"><span class="w">        </span><span class="sd">"""Forward pass through DeBERTa models with packed attention support.</span>
 </span><span data-line="335">
 </span><span data-line="336"><span class="sd">        Handles the specific requirements of DeBERTa architecture including embeddings,</span>
 </span><span data-line="337"><span class="sd">        relative position encodings, and optional enhanced mask tuning (z_steps).</span>
@@ -533,18 +533,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="353">
 </span><span data-line="354"><span class="sd">        Raises:</span>
 </span><span data-line="355"><span class="sd">            ValueError: If neither or both input_ids and inputs_embeds are provided.</span>
-</span><span data-line="356"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="357">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="358">        <span class="n">token_type_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;token_type_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="359">        <span class="n">position_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;position_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="360">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_attentions&quot;</span><span class="p">)</span>
-</span><span data-line="361">        <span class="n">produce_hidden</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_hidden_states&quot;</span><span class="p">)</span>
-</span><span data-line="362">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;return_dict&quot;</span><span class="p">)</span>
+</span><span data-line="356"><span class="sd">        """</span>
+</span><span data-line="357">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"inputs_embeds"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="358">        <span class="n">token_type_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"token_type_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="359">        <span class="n">position_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"position_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="360">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_attentions"</span><span class="p">)</span>
+</span><span data-line="361">        <span class="n">produce_hidden</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_hidden_states"</span><span class="p">)</span>
+</span><span data-line="362">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"return_dict"</span><span class="p">)</span>
 </span><span data-line="363">
 </span><span data-line="364">        <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="365">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either input_ids or inputs_embeds must be provided for packed attention&quot;</span><span class="p">)</span>
+</span><span data-line="365">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Either input_ids or inputs_embeds must be provided for packed attention"</span><span class="p">)</span>
 </span><span data-line="366">        <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="367">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cannot supply both input_ids and inputs_embeds&quot;</span><span class="p">)</span>
+</span><span data-line="367">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot supply both input_ids and inputs_embeds"</span><span class="p">)</span>
 </span><span data-line="368">
 </span><span data-line="369">        <span class="k">if</span> <span class="n">token_type_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="370">            <span class="n">ref</span> <span class="o">=</span> <span class="n">inputs_embeds</span> <span class="k">if</span> <span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_ids</span>
@@ -555,13 +555,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="375">            <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
 </span><span data-line="376">            <span class="n">token_type_ids</span><span class="o">=</span><span class="n">token_type_ids</span><span class="p">,</span>
 </span><span data-line="377">            <span class="n">position_ids</span><span class="o">=</span><span class="n">position_ids</span><span class="p">,</span>
-</span><span data-line="378">            <span class="n">mask</span><span class="o">=</span><span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;token_mask&quot;</span><span class="p">],</span>
+</span><span data-line="378">            <span class="n">mask</span><span class="o">=</span><span class="n">mask_info</span><span class="p">[</span><span class="s2">"token_mask"</span><span class="p">],</span>
 </span><span data-line="379">            <span class="n">inputs_embeds</span><span class="o">=</span><span class="n">inputs_embeds</span><span class="p">,</span>
 </span><span data-line="380">        <span class="p">)</span>
 </span><span data-line="381">
 </span><span data-line="382">        <span class="n">encoder_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span>
 </span><span data-line="383">            <span class="n">embedding_output</span><span class="p">,</span>
-</span><span data-line="384">            <span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;block_mask&quot;</span><span class="p">],</span>
+</span><span data-line="384">            <span class="n">mask_info</span><span class="p">[</span><span class="s2">"block_mask"</span><span class="p">],</span>
 </span><span data-line="385">            <span class="n">output_hidden_states</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="386">            <span class="n">output_attentions</span><span class="o">=</span><span class="n">output_attentions</span><span class="p">,</span>
 </span><span data-line="387">            <span class="n">return_dict</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -569,12 +569,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="389">
 </span><span data-line="390">        <span class="n">encoded_layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">encoder_outputs</span><span class="o">.</span><span class="n">hidden_states</span><span class="p">)</span>
 </span><span data-line="391">
-</span><span data-line="392">        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">&quot;z_steps&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+</span><span data-line="392">        <span class="k">if</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="s2">"z_steps"</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
 </span><span data-line="393">            <span class="n">hidden_states</span> <span class="o">=</span> <span class="n">encoded_layers</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
 </span><span data-line="394">            <span class="n">layers</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">layer</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">z_steps</span><span class="p">)]</span>
 </span><span data-line="395">            <span class="n">query_states</span> <span class="o">=</span> <span class="n">encoded_layers</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="396">            <span class="n">rel_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">get_rel_embedding</span><span class="p">()</span>
-</span><span data-line="397">            <span class="n">attention_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">get_attention_mask</span><span class="p">(</span><span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;block_mask&quot;</span><span class="p">])</span>
+</span><span data-line="397">            <span class="n">attention_mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">get_attention_mask</span><span class="p">(</span><span class="n">mask_info</span><span class="p">[</span><span class="s2">"block_mask"</span><span class="p">])</span>
 </span><span data-line="398">            <span class="n">rel_pos</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span><span class="o">.</span><span class="n">get_rel_pos</span><span class="p">(</span><span class="n">embedding_output</span><span class="p">)</span>
 </span><span data-line="399">            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
 </span><span data-line="400">                <span class="n">query_states</span> <span class="o">=</span> <span class="n">layer</span><span class="p">(</span>
@@ -611,7 +611,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="431">        <span class="n">model_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 </span><span data-line="432">        <span class="n">mask_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 </span><span data-line="433">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseModelOutput</span><span class="p">:</span>
-</span><span data-line="434"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through ModernBERT models with packed attention support.</span>
+</span><span data-line="434"><span class="w">        </span><span class="sd">"""Forward pass through ModernBERT models with packed attention support.</span>
 </span><span data-line="435">
 </span><span data-line="436"><span class="sd">        Handles ModernBERT-specific features including global and sliding window</span>
 </span><span data-line="437"><span class="sd">        attention patterns, and temporarily switches to eager attention mode</span>
@@ -634,21 +634,21 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="454">
 </span><span data-line="455"><span class="sd">        Raises:</span>
 </span><span data-line="456"><span class="sd">            ValueError: If both or neither input_ids and inputs_embeds are provided.</span>
-</span><span data-line="457"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="458">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="459">        <span class="n">position_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;position_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="460">        <span class="n">cu_seqlens</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cu_seqlens&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="461">        <span class="n">max_seqlen</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;max_seqlen&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="462">        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;batch_size&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="463">        <span class="n">seq_len</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;seq_len&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="464">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_attentions&quot;</span><span class="p">)</span>
-</span><span data-line="465">        <span class="n">output_hidden_states</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_hidden_states&quot;</span><span class="p">)</span>
-</span><span data-line="466">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;return_dict&quot;</span><span class="p">)</span>
+</span><span data-line="457"><span class="sd">        """</span>
+</span><span data-line="458">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"inputs_embeds"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="459">        <span class="n">position_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"position_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="460">        <span class="n">cu_seqlens</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"cu_seqlens"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="461">        <span class="n">max_seqlen</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"max_seqlen"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="462">        <span class="n">batch_size</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"batch_size"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="463">        <span class="n">seq_len</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"seq_len"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="464">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_attentions"</span><span class="p">)</span>
+</span><span data-line="465">        <span class="n">output_hidden_states</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_hidden_states"</span><span class="p">)</span>
+</span><span data-line="466">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"return_dict"</span><span class="p">)</span>
 </span><span data-line="467">
 </span><span data-line="468">        <span class="k">if</span> <span class="p">(</span><span class="n">input_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="p">(</span><span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
-</span><span data-line="469">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ModernBERT requires exactly one of input_ids or inputs_embeds&quot;</span><span class="p">)</span>
+</span><span data-line="469">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"ModernBERT requires exactly one of input_ids or inputs_embeds"</span><span class="p">)</span>
 </span><span data-line="470">
-</span><span data-line="471">        <span class="n">token_mask_bool</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;token_mask_bool&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+</span><span data-line="471">        <span class="n">token_mask_bool</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">"token_mask_bool"</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
 </span><span data-line="472">        <span class="k">if</span> <span class="n">batch_size</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">seq_len</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="473">            <span class="n">ref</span> <span class="o">=</span> <span class="n">inputs_embeds</span> <span class="k">if</span> <span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">input_ids</span>
 </span><span data-line="474">            <span class="n">batch_size</span><span class="p">,</span> <span class="n">seq_len</span> <span class="o">=</span> <span class="n">ref</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span>
@@ -660,8 +660,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="480">        <span class="n">base_attention_mask</span> <span class="o">=</span> <span class="n">token_mask_bool</span>
 </span><span data-line="481">
 </span><span data-line="482">        <span class="n">original_impl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_attn_implementation</span>
-</span><span data-line="483">        <span class="k">if</span> <span class="n">original_impl</span> <span class="o">==</span> <span class="s2">&quot;flash_attention_2&quot;</span><span class="p">:</span>
-</span><span data-line="484">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="s2">&quot;eager&quot;</span>
+</span><span data-line="483">        <span class="k">if</span> <span class="n">original_impl</span> <span class="o">==</span> <span class="s2">"flash_attention_2"</span><span class="p">:</span>
+</span><span data-line="484">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="s2">"eager"</span>
 </span><span data-line="485">
 </span><span data-line="486">        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">_maybe_set_compile</span><span class="p">()</span>
 </span><span data-line="487">
@@ -670,7 +670,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="490">            <span class="n">output_attentions</span><span class="o">=</span><span class="n">output_attentions</span><span class="p">,</span>
 </span><span data-line="491">        <span class="p">)</span>
 </span><span data-line="492">
-</span><span data-line="493">        <span class="n">block</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;block_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="493">        <span class="n">block</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">"block_mask"</span><span class="p">]</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="494">        <span class="n">neg_inf</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">global_attention_mask</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>
 </span><span data-line="495">        <span class="n">global_attention_mask</span> <span class="o">=</span> <span class="n">global_attention_mask</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="o">~</span><span class="n">block</span><span class="p">,</span> <span class="n">neg_inf</span><span class="p">)</span>
 </span><span data-line="496">        <span class="n">sliding_window_mask</span> <span class="o">=</span> <span class="n">sliding_window_mask</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="o">~</span><span class="n">block</span><span class="p">,</span> <span class="n">neg_inf</span><span class="p">)</span>
@@ -702,7 +702,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="522">
 </span><span data-line="523">        <span class="n">hidden_states</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">final_norm</span><span class="p">(</span><span class="n">hidden_states</span><span class="p">)</span>
 </span><span data-line="524">
-</span><span data-line="525">        <span class="k">if</span> <span class="n">original_impl</span> <span class="o">==</span> <span class="s2">&quot;flash_attention_2&quot;</span><span class="p">:</span>
+</span><span data-line="525">        <span class="k">if</span> <span class="n">original_impl</span> <span class="o">==</span> <span class="s2">"flash_attention_2"</span><span class="p">:</span>
 </span><span data-line="526">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="n">original_impl</span>
 </span><span data-line="527">
 </span><span data-line="528">        <span class="k">if</span> <span class="ow">not</span> <span class="n">return_dict</span><span class="p">:</span>
@@ -720,7 +720,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="540">        <span class="n">model_kwargs</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span>
 </span><span data-line="541">        <span class="n">mask_info</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">],</span>
 </span><span data-line="542">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BaseModelOutput</span><span class="p">:</span>
-</span><span data-line="543"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through T5 encoder models with packed attention support.</span>
+</span><span data-line="543"><span class="w">        </span><span class="sd">"""Forward pass through T5 encoder models with packed attention support.</span>
 </span><span data-line="544">
 </span><span data-line="545"><span class="sd">        Handles T5/MT5-specific architecture requirements including relative position</span>
 </span><span data-line="546"><span class="sd">        bias and proper attention mask formatting for the encoder stack.</span>
@@ -744,28 +744,28 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="564"><span class="sd">        Raises:</span>
 </span><span data-line="565"><span class="sd">            ValueError: If neither input_ids nor inputs_embeds is provided, or if</span>
 </span><span data-line="566"><span class="sd">                unsupported kwargs are passed.</span>
-</span><span data-line="567"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="567"><span class="sd">        """</span>
 </span><span data-line="568">        <span class="n">stack</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">encoder</span>
 </span><span data-line="569">
-</span><span data-line="570">        <span class="n">kw_input_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;input_ids&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="570">        <span class="n">kw_input_ids</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"input_ids"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="571">        <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">kw_input_ids</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="572">            <span class="n">input_ids</span> <span class="o">=</span> <span class="n">kw_input_ids</span>
 </span><span data-line="573">
-</span><span data-line="574">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;inputs_embeds&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="575">        <span class="n">head_mask</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;head_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="576">        <span class="n">past_key_values</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;past_key_values&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="577">        <span class="n">use_cache</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;use_cache&quot;</span><span class="p">,</span> <span class="n">stack</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_cache</span><span class="p">)</span>
-</span><span data-line="578">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_attentions&quot;</span><span class="p">)</span>
-</span><span data-line="579">        <span class="n">output_hidden_states</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;output_hidden_states&quot;</span><span class="p">)</span>
-</span><span data-line="580">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;return_dict&quot;</span><span class="p">)</span>
-</span><span data-line="581">        <span class="n">cache_position</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;cache_position&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="574">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"inputs_embeds"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="575">        <span class="n">head_mask</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"head_mask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="576">        <span class="n">past_key_values</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"past_key_values"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="577">        <span class="n">use_cache</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"use_cache"</span><span class="p">,</span> <span class="n">stack</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">use_cache</span><span class="p">)</span>
+</span><span data-line="578">        <span class="n">output_attentions</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_attentions"</span><span class="p">)</span>
+</span><span data-line="579">        <span class="n">output_hidden_states</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"output_hidden_states"</span><span class="p">)</span>
+</span><span data-line="580">        <span class="n">return_dict</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"return_dict"</span><span class="p">)</span>
+</span><span data-line="581">        <span class="n">cache_position</span> <span class="o">=</span> <span class="n">model_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"cache_position"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="582">
 </span><span data-line="583">        <span class="k">if</span> <span class="n">model_kwargs</span><span class="p">:</span>
-</span><span data-line="584">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported kwargs for T5 forward: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">model_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="584">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported kwargs for T5 forward: </span><span class="si">{</span><span class="nb">list</span><span class="p">(</span><span class="n">model_kwargs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="585">
 </span><span data-line="586">        <span class="k">if</span> <span class="n">inputs_embeds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="587">            <span class="k">if</span> <span class="n">input_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="588">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Either input_ids or inputs_embeds must be provided&quot;</span><span class="p">)</span>
+</span><span data-line="588">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Either input_ids or inputs_embeds must be provided"</span><span class="p">)</span>
 </span><span data-line="589">            <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">stack</span><span class="o">.</span><span class="n">embed_tokens</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span>
 </span><span data-line="590">            <span class="n">input_shape</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">()</span>
 </span><span data-line="591">        <span class="k">else</span><span class="p">:</span>
@@ -777,7 +777,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="597">        <span class="k">if</span> <span class="n">cache_position</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="598">            <span class="n">cache_position</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">seq_length</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="599">
-</span><span data-line="600">        <span class="n">block_mask</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">&quot;block_mask&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+</span><span data-line="600">        <span class="n">block_mask</span> <span class="o">=</span> <span class="n">mask_info</span><span class="p">[</span><span class="s2">"block_mask"</span><span class="p">]</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
 </span><span data-line="601">
 </span><span data-line="602">        <span class="n">dtype</span> <span class="o">=</span> <span class="n">inputs_embeds</span><span class="o">.</span><span class="n">dtype</span>
 </span><span data-line="603">        <span class="n">neg_inf</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">min</span>
@@ -851,7 +851,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Encoder">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder">[docs]</a>
 </span><span data-line="670"><span class="k">class</span><span class="w"> </span><span class="nc">Encoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="671"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Standard encoder module wrapping a transformer model with optional projection.</span>
+</span><span data-line="671"><span class="w">    </span><span class="sd">"""Standard encoder module wrapping a transformer model with optional projection.</span>
 </span><span data-line="672">
 </span><span data-line="673"><span class="sd">    This class provides a high-level interface for encoding text sequences, including</span>
 </span><span data-line="674"><span class="sd">    support for inference-time packing to improve throughput. It handles embedding</span>
@@ -860,15 +860,15 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="677"><span class="sd">    Attributes:</span>
 </span><span data-line="678"><span class="sd">        bert_layer: The underlying Transformer instance.</span>
 </span><span data-line="679"><span class="sd">        projection: Optional linear projection layer when config.hidden_size differs</span>
-</span><span data-line="680"><span class="sd">            from the model&#39;s native hidden size.</span>
-</span><span data-line="681"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="680"><span class="sd">            from the model's native hidden size.</span>
+</span><span data-line="681"><span class="sd">    """</span>
 </span><span data-line="682">
 <div class="viewcode-block" id="Encoder.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder.__init__">[docs]</a>
 </span><span data-line="683">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="684">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="685">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="686"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the encoder.</span>
+</span><span data-line="686"><span class="w">        </span><span class="sd">"""Initializes the encoder.</span>
 </span><span data-line="687">
 </span><span data-line="688"><span class="sd">        Args:</span>
 </span><span data-line="689"><span class="sd">            config: Configuration object containing model hyperparameters including</span>
@@ -876,7 +876,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="691"><span class="sd">            from_pretrained: If True, loads pretrained weights for the transformer.</span>
 </span><span data-line="692"><span class="sd">                Defaults to False.</span>
 </span><span data-line="693"><span class="sd">            cache_dir: Optional directory for caching downloaded models. Defaults to None.</span>
-</span><span data-line="694"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="694"><span class="sd">        """</span>
 </span><span data-line="695">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="696">
 </span><span data-line="697">        <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">model_name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
@@ -890,7 +890,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Encoder.resize_token_embeddings">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder.resize_token_embeddings">[docs]</a>
 </span><span data-line="704">    <span class="k">def</span><span class="w"> </span><span class="nf">resize_token_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">new_num_tokens</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">pad_to_multiple_of</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">:</span>
-</span><span data-line="705"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Resizes token embeddings to accommodate new vocabulary size.</span>
+</span><span data-line="705"><span class="w">        </span><span class="sd">"""Resizes token embeddings to accommodate new vocabulary size.</span>
 </span><span data-line="706">
 </span><span data-line="707"><span class="sd">        Args:</span>
 </span><span data-line="708"><span class="sd">            new_num_tokens: New vocabulary size.</span>
@@ -899,18 +899,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="711">
 </span><span data-line="712"><span class="sd">        Returns:</span>
 </span><span data-line="713"><span class="sd">            The resized embedding layer.</span>
-</span><span data-line="714"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="714"><span class="sd">        """</span>
 </span><span data-line="715">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">resize_token_embeddings</span><span class="p">(</span><span class="n">new_num_tokens</span><span class="p">,</span> <span class="n">pad_to_multiple_of</span><span class="p">)</span></div>
 
 </span><span data-line="716">
 <div class="viewcode-block" id="Encoder.get_input_embeddings">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder.get_input_embeddings">[docs]</a>
 </span><span data-line="717">    <span class="k">def</span><span class="w"> </span><span class="nf">get_input_embeddings</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">nn</span><span class="o">.</span><span class="n">Embedding</span><span class="p">:</span>
-</span><span data-line="718"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Gets the input embedding layer.</span>
+</span><span data-line="718"><span class="w">        </span><span class="sd">"""Gets the input embedding layer.</span>
 </span><span data-line="719">
 </span><span data-line="720"><span class="sd">        Returns:</span>
-</span><span data-line="721"><span class="sd">            The model&#39;s input embedding layer.</span>
-</span><span data-line="722"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="721"><span class="sd">            The model's input embedding layer.</span>
+</span><span data-line="722"><span class="sd">        """</span>
 </span><span data-line="723">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_embeddings</span><span class="p">()</span></div>
 
 </span><span data-line="724">
@@ -919,7 +919,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="725">    <span class="k">def</span><span class="w"> </span><span class="nf">encode_text</span><span class="p">(</span>
 </span><span data-line="726">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 </span><span data-line="727">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="728"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes input text sequences into contextualized embeddings.</span>
+</span><span data-line="728"><span class="w">        </span><span class="sd">"""Encodes input text sequences into contextualized embeddings.</span>
 </span><span data-line="729">
 </span><span data-line="730"><span class="sd">        Supports inference-time packing to batch multiple variable-length sequences</span>
 </span><span data-line="731"><span class="sd">        efficiently when packing_config is provided and not in training mode.</span>
@@ -935,10 +935,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="741">
 </span><span data-line="742"><span class="sd">        Returns:</span>
 </span><span data-line="743"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="744"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="745">        <span class="n">packing_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InferencePackingConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="746">        <span class="n">pair_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="747">        <span class="n">token_lengths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;token_lengths&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="744"><span class="sd">        """</span>
+</span><span data-line="745">        <span class="n">packing_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">InferencePackingConfig</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"packing_config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="746">        <span class="n">pair_attention_mask</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"pair_attention_mask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="747">        <span class="n">token_lengths</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"token_lengths"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="748">
 </span><span data-line="749">        <span class="k">if</span> <span class="p">(</span>
 </span><span data-line="750">            <span class="n">packing_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
@@ -959,15 +959,15 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="765">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="766">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="767">            <span class="k">if</span> <span class="n">attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="768">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="768">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
 </span><span data-line="769">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="770">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
+</span><span data-line="770">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"pair_attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
 </span><span data-line="771">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
 </span><span data-line="772">                <span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span>
 </span><span data-line="773">                <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">,</span>
 </span><span data-line="774">            <span class="p">)</span>
 </span><span data-line="775">
-</span><span data-line="776">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;projection&quot;</span><span class="p">):</span>
+</span><span data-line="776">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"projection"</span><span class="p">):</span>
 </span><span data-line="777">            <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">projection</span><span class="p">(</span><span class="n">token_embeddings</span><span class="p">)</span>
 </span><span data-line="778">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
 
@@ -982,7 +982,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="787">        <span class="n">token_lengths</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="788">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="789">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="790"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes sequences using inference-time packing for efficiency.</span>
+</span><span data-line="790"><span class="w">        </span><span class="sd">"""Encodes sequences using inference-time packing for efficiency.</span>
 </span><span data-line="791">
 </span><span data-line="792"><span class="sd">        Packs multiple variable-length sequences into fewer, more efficient batches</span>
 </span><span data-line="793"><span class="sd">        to maximize GPU utilization during inference. Short sequences are combined</span>
@@ -1002,7 +1002,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="807"><span class="sd">        Returns:</span>
 </span><span data-line="808"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size) with</span>
 </span><span data-line="809"><span class="sd">            proper unpacking to restore original batch structure.</span>
-</span><span data-line="810"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="810"><span class="sd">        """</span>
 </span><span data-line="811">        <span class="k">if</span> <span class="n">token_lengths</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="812">            <span class="n">lengths</span> <span class="o">=</span> <span class="n">token_lengths</span>
 </span><span data-line="813">        <span class="k">else</span><span class="p">:</span>
@@ -1010,9 +1010,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="815">        <span class="n">seq_len</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">input_ids</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
 </span><span data-line="816">        <span class="k">if</span> <span class="ow">not</span> <span class="n">lengths</span> <span class="ow">or</span> <span class="nb">all</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">ln</span><span class="p">)</span> <span class="o">==</span> <span class="n">seq_len</span> <span class="k">for</span> <span class="n">ln</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">):</span>
 </span><span data-line="817">            <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="818">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="818">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
 </span><span data-line="819">            <span class="k">if</span> <span class="n">pair_attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="820">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
+</span><span data-line="820">                <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"pair_attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">pair_attention_mask</span>
 </span><span data-line="821">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="o">=</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">**</span><span class="n">bert_kwargs</span><span class="p">)</span>
 </span><span data-line="822">
 </span><span data-line="823">        <span class="c1"># One bulk tolist() is cheaper than N per-row tolist() calls.</span>
@@ -1020,9 +1020,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="825">        <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="826">        <span class="k">for</span> <span class="n">ids_row</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_ids</span><span class="p">,</span> <span class="n">lengths</span><span class="p">):</span>
 </span><span data-line="827">            <span class="k">if</span> <span class="n">length</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="828">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="p">[]})</span>
+</span><span data-line="828">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"input_ids"</span><span class="p">:</span> <span class="p">[]})</span>
 </span><span data-line="829">            <span class="k">else</span><span class="p">:</span>
-</span><span data-line="830">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">&quot;input_ids&quot;</span><span class="p">:</span> <span class="n">ids_row</span><span class="p">[:</span><span class="n">length</span><span class="p">]})</span>
+</span><span data-line="830">                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s2">"input_ids"</span><span class="p">:</span> <span class="n">ids_row</span><span class="p">[:</span><span class="n">length</span><span class="p">]})</span>
 </span><span data-line="831">
 </span><span data-line="832">        <span class="n">pad_token_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pad_token_id</span>
 </span><span data-line="833">        <span class="k">if</span> <span class="n">pad_token_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -1039,10 +1039,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="844">        <span class="n">bert_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="845">
 </span><span data-line="846">        <span class="k">if</span> <span class="n">packed_mask</span><span class="o">.</span><span class="n">numel</span><span class="p">():</span>
-</span><span data-line="847">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_fallback</span>
-</span><span data-line="848">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_mask</span>
+</span><span data-line="847">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_fallback</span>
+</span><span data-line="848">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"pair_attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">packed_mask</span>
 </span><span data-line="849">        <span class="k">else</span><span class="p">:</span>
-</span><span data-line="850">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_to_use</span>
+</span><span data-line="850">            <span class="n">bert_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_to_use</span>
 </span><span data-line="851">
 </span><span data-line="852">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bert_layer</span><span class="p">(</span>
 </span><span data-line="853">            <span class="n">input_ids</span><span class="o">=</span><span class="n">packed_ids</span><span class="p">,</span>
@@ -1063,7 +1063,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Encoder.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.Encoder.forward">[docs]</a>
 </span><span data-line="868">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="869"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the encoder.</span>
+</span><span data-line="869"><span class="w">        </span><span class="sd">"""Forward pass through the encoder.</span>
 </span><span data-line="870">
 </span><span data-line="871"><span class="sd">        Args:</span>
 </span><span data-line="872"><span class="sd">            *args: Positional arguments passed to encode_text.</span>
@@ -1071,7 +1071,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="874">
 </span><span data-line="875"><span class="sd">        Returns:</span>
 </span><span data-line="876"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="877"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="877"><span class="sd">        """</span>
 </span><span data-line="878">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="879">        <span class="k">return</span> <span class="n">token_embeddings</span></div>
 </div>
@@ -1081,7 +1081,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BiEncoder">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder">[docs]</a>
 </span><span data-line="882"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoder</span><span class="p">(</span><span class="n">Encoder</span><span class="p">):</span>
-</span><span data-line="883"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Bi-encoder architecture with separate encoders for text and labels.</span>
+</span><span data-line="883"><span class="w">    </span><span class="sd">"""Bi-encoder architecture with separate encoders for text and labels.</span>
 </span><span data-line="884">
 </span><span data-line="885"><span class="sd">    This encoder processes text sequences and label sequences through potentially</span>
 </span><span data-line="886"><span class="sd">    different transformer models, producing aligned representations for both. The</span>
@@ -1093,14 +1093,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="892"><span class="sd">        labels_encoder: Separate Transformer instance for encoding labels.</span>
 </span><span data-line="893"><span class="sd">        labels_projection: Optional projection for label embeddings when label</span>
 </span><span data-line="894"><span class="sd">            encoder hidden size differs from config.hidden_size.</span>
-</span><span data-line="895"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="895"><span class="sd">    """</span>
 </span><span data-line="896">
 <div class="viewcode-block" id="BiEncoder.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.__init__">[docs]</a>
 </span><span data-line="897">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="898">        <span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="899">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="900"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the bi-encoder.</span>
+</span><span data-line="900"><span class="w">        </span><span class="sd">"""Initializes the bi-encoder.</span>
 </span><span data-line="901">
 </span><span data-line="902"><span class="sd">        Args:</span>
 </span><span data-line="903"><span class="sd">            config: Configuration object containing model hyperparameters including</span>
@@ -1108,7 +1108,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="905"><span class="sd">            from_pretrained: If True, loads pretrained weights for both encoders.</span>
 </span><span data-line="906"><span class="sd">                Defaults to False.</span>
 </span><span data-line="907"><span class="sd">            cache_dir: Optional directory for caching downloaded models. Defaults to None.</span>
-</span><span data-line="908"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="908"><span class="sd">        """</span>
 </span><span data-line="909">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">)</span>
 </span><span data-line="910">        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="911">            <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span> <span class="o">=</span> <span class="n">Transformer</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">from_pretrained</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
@@ -1121,7 +1121,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="BiEncoder.mean_pooling">
 <a class="viewcode-back" href="../../../api/gliner.modeling.encoder.html#gliner.modeling.encoder.BiEncoder.mean_pooling">[docs]</a>
 </span><span data-line="917">    <span class="k">def</span><span class="w"> </span><span class="nf">mean_pooling</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">token_embeddings</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="918"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Applies mean pooling over token embeddings using attention mask.</span>
+</span><span data-line="918"><span class="w">        </span><span class="sd">"""Applies mean pooling over token embeddings using attention mask.</span>
 </span><span data-line="919">
 </span><span data-line="920"><span class="sd">        Computes the average of token embeddings weighted by the attention mask,</span>
 </span><span data-line="921"><span class="sd">        ignoring padded positions.</span>
@@ -1133,7 +1133,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="927">
 </span><span data-line="928"><span class="sd">        Returns:</span>
 </span><span data-line="929"><span class="sd">            Pooled embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="930"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="930"><span class="sd">        """</span>
 </span><span data-line="931">        <span class="n">input_mask_expanded</span> <span class="o">=</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span><span class="n">token_embeddings</span><span class="o">.</span><span class="n">size</span><span class="p">())</span><span class="o">.</span><span class="n">float</span><span class="p">()</span>
 </span><span data-line="932">        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">token_embeddings</span> <span class="o">*</span> <span class="n">input_mask_expanded</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">torch</span><span class="o">.</span><span class="n">clamp</span><span class="p">(</span><span class="n">input_mask_expanded</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="nb">min</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span></div>
 
@@ -1143,7 +1143,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="934">    <span class="k">def</span><span class="w"> </span><span class="nf">encode_labels</span><span class="p">(</span>
 </span><span data-line="935">        <span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
 </span><span data-line="936">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="937"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Encodes label sequences into fixed-size embeddings.</span>
+</span><span data-line="937"><span class="w">        </span><span class="sd">"""Encodes label sequences into fixed-size embeddings.</span>
 </span><span data-line="938">
 </span><span data-line="939"><span class="sd">        Processes labels through the dedicated labels encoder and applies mean pooling</span>
 </span><span data-line="940"><span class="sd">        to produce sentence-level representations.</span>
@@ -1153,22 +1153,22 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="944"><span class="sd">            attention_mask: Attention mask of shape (batch_size, seq_len).</span>
 </span><span data-line="945"><span class="sd">            *args: Additional positional arguments.</span>
 </span><span data-line="946"><span class="sd">            **kwargs: Additional keyword arguments (packing_config, pair_attention_mask</span>
-</span><span data-line="947"><span class="sd">                and token_lengths are removed as they&#39;re not supported for labels).</span>
+</span><span data-line="947"><span class="sd">                and token_lengths are removed as they're not supported for labels).</span>
 </span><span data-line="948">
 </span><span data-line="949"><span class="sd">        Returns:</span>
 </span><span data-line="950"><span class="sd">            Pooled label embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="951"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="951"><span class="sd">        """</span>
 </span><span data-line="952">        <span class="n">label_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
-</span><span data-line="953">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;packing_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="954">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;pair_attention_mask&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="953">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"packing_config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="954">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"pair_attention_mask"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="955">        <span class="c1"># token_lengths carries precomputed lengths for the *text* inputs (see</span>
 </span><span data-line="956">        <span class="c1"># collator); forwarding it to the labels encoder crashes plain HF</span>
-</span><span data-line="957">        <span class="c1"># backbones (&quot;BertModel.forward() got an unexpected keyword argument</span>
-</span><span data-line="958">        <span class="c1"># &#39;token_lengths&#39;&quot;, #370).</span>
-</span><span data-line="959">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">&quot;token_lengths&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="960">        <span class="n">label_kwargs</span><span class="p">[</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
+</span><span data-line="957">        <span class="c1"># backbones ("BertModel.forward() got an unexpected keyword argument</span>
+</span><span data-line="958">        <span class="c1"># 'token_lengths'", #370).</span>
+</span><span data-line="959">        <span class="n">label_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s2">"token_lengths"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="960">        <span class="n">label_kwargs</span><span class="p">[</span><span class="s2">"attention_mask"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attention_mask</span>
 </span><span data-line="961">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_encoder</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">label_kwargs</span><span class="p">)</span>
-</span><span data-line="962">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;labels_projection&quot;</span><span class="p">):</span>
+</span><span data-line="962">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"labels_projection"</span><span class="p">):</span>
 </span><span data-line="963">            <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">labels_projection</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">)</span>
 </span><span data-line="964">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mean_pooling</span><span class="p">(</span><span class="n">labels_embeddings</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">)</span>
 </span><span data-line="965">        <span class="k">return</span> <span class="n">labels_embeddings</span></div>
@@ -1185,7 +1185,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="973">        <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="974">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="975">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="976"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the bi-encoder.</span>
+</span><span data-line="976"><span class="w">        </span><span class="sd">"""Forward pass through the bi-encoder.</span>
 </span><span data-line="977">
 </span><span data-line="978"><span class="sd">        Encodes both text sequences (token-level) and label sequences (pooled) to</span>
 </span><span data-line="979"><span class="sd">        produce aligned representations.</span>
@@ -1202,7 +1202,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="990"><span class="sd">            A tuple containing:</span>
 </span><span data-line="991"><span class="sd">                - token_embeddings: Text embeddings of shape (batch_size, seq_len, hidden_size).</span>
 </span><span data-line="992"><span class="sd">                - labels_embeddings: Pooled label embeddings of shape (batch_size, hidden_size).</span>
-</span><span data-line="993"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="993"><span class="sd">        """</span>
 </span><span data-line="994">        <span class="n">token_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_text</span><span class="p">(</span><span class="n">input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="995">
 </span><span data-line="996">        <span class="n">labels_embeddings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">encode_labels</span><span class="p">(</span><span class="n">labels_input_ids</span><span class="p">,</span> <span class="n">labels_attention_mask</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>

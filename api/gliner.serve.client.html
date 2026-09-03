@@ -196,9 +196,9 @@ data-aria-dark="Switch to auto color mode">
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">gliner.serve</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERClient</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">client</span> <span class="o">=</span> <span class="n">GLiNERClient</span><span class="p">()</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">results</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
-</span><span data-line="4"><span class="gp">... </span>    <span class="s2">&quot;John works at Google in Mountain View&quot;</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
+</span><span data-line="4"><span class="gp">... </span>    <span class="s2">"John works at Google in Mountain View"</span><span class="p">,</span> <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"person"</span><span class="p">,</span> <span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"location"</span><span class="p">]</span>
 </span><span data-line="5"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="6"><span class="go">{&#39;entities&#39;: [{&#39;start&#39;: 0, &#39;end&#39;: 4, &#39;text&#39;: &#39;John&#39;, &#39;label&#39;: &#39;person&#39;, ...}, ...]}</span>
+</span><span data-line="6"><span class="go">{'entities': [{'start': 0, 'end': 4, 'text': 'John', 'label': 'person', ...}, ...]}</span>
 </span></pre></div>
 </div>
 <p>Initialize the HTTP client.</p>

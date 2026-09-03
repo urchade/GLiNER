@@ -182,13 +182,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="8">    <span class="n">alpha</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.25</span><span class="p">,</span>
 </span><span data-line="9">    <span class="n">gamma</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">2</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">prob_margin</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
-</span><span data-line="11">    <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;none&quot;</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"none"</span><span class="p">,</span>
 </span><span data-line="12">    <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
 </span><span data-line="13">    <span class="n">normalize_prob</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="14">    <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span>
 </span><span data-line="15">    <span class="n">eps</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">,</span>
 </span><span data-line="16"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="17"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute focal loss for binary classification with logits.</span>
+</span><span data-line="17"><span class="w">    </span><span class="sd">"""Compute focal loss for binary classification with logits.</span>
 </span><span data-line="18">
 </span><span data-line="19"><span class="sd">    Focal loss is designed to address class imbalance by down-weighting</span>
 </span><span data-line="20"><span class="sd">    easy examples and focusing on hard examples. Originally proposed in</span>
@@ -197,7 +197,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="23"><span class="sd">    The focal loss is defined as:</span>
 </span><span data-line="24"><span class="sd">        FL(p_t) = -α_t * (1 - p_t)^γ * log(p_t)</span>
 </span><span data-line="25">
-</span><span data-line="26"><span class="sd">    where p_t is the model&#39;s estimated probability for the correct class.</span>
+</span><span data-line="26"><span class="sd">    where p_t is the model's estimated probability for the correct class.</span>
 </span><span data-line="27">
 </span><span data-line="28"><span class="sd">    Args:</span>
 </span><span data-line="29"><span class="sd">        inputs (torch.Tensor): Predicted logits of arbitrary shape.</span>
@@ -218,10 +218,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="44"><span class="sd">            mining. Defaults to 0.</span>
 </span><span data-line="45"><span class="sd">        reduction (str, optional): Specifies the reduction to apply to the</span>
 </span><span data-line="46"><span class="sd">            output. Options are:</span>
-</span><span data-line="47"><span class="sd">            - &#39;none&#39;: No reduction, return loss for each element</span>
-</span><span data-line="48"><span class="sd">            - &#39;mean&#39;: Return the mean loss (normalized by valid elements)</span>
-</span><span data-line="49"><span class="sd">            - &#39;sum&#39;: Return the sum of all losses</span>
-</span><span data-line="50"><span class="sd">            Defaults to &#39;none&#39;.</span>
+</span><span data-line="47"><span class="sd">            - 'none': No reduction, return loss for each element</span>
+</span><span data-line="48"><span class="sd">            - 'mean': Return the mean loss (normalized by valid elements)</span>
+</span><span data-line="49"><span class="sd">            - 'sum': Return the sum of all losses</span>
+</span><span data-line="50"><span class="sd">            Defaults to 'none'.</span>
 </span><span data-line="51"><span class="sd">        label_smoothing (float, optional): Amount of label smoothing to apply.</span>
 </span><span data-line="52"><span class="sd">            Targets become: target * (1 - label_smoothing) + 0.5 * label_smoothing.</span>
 </span><span data-line="53"><span class="sd">            Value should be in range [0, 1]. Defaults to 0.0 (no smoothing).</span>
@@ -235,8 +235,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="61">
 </span><span data-line="62"><span class="sd">    Returns:</span>
 </span><span data-line="63"><span class="sd">        torch.Tensor: Loss tensor. Shape depends on reduction parameter:</span>
-</span><span data-line="64"><span class="sd">            - If reduction=&#39;none&#39;: same shape as inputs</span>
-</span><span data-line="65"><span class="sd">            - If reduction=&#39;mean&#39; or &#39;sum&#39;: scalar tensor</span>
+</span><span data-line="64"><span class="sd">            - If reduction='none': same shape as inputs</span>
+</span><span data-line="65"><span class="sd">            - If reduction='mean' or 'sum': scalar tensor</span>
 </span><span data-line="66">
 </span><span data-line="67"><span class="sd">    Raises:</span>
 </span><span data-line="68"><span class="sd">        ValueError: If an invalid reduction mode is specified.</span>
@@ -244,8 +244,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="70"><span class="sd">    Example:</span>
 </span><span data-line="71"><span class="sd">        &gt;&gt;&gt; inputs = torch.randn(32, 100)  # logits</span>
 </span><span data-line="72"><span class="sd">        &gt;&gt;&gt; targets = torch.randint(0, 2, (32, 100)).float()</span>
-</span><span data-line="73"><span class="sd">        &gt;&gt;&gt; loss = focal_loss_with_logits(inputs, targets, reduction=&quot;mean&quot;)</span>
-</span><span data-line="74"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="73"><span class="sd">        &gt;&gt;&gt; loss = focal_loss_with_logits(inputs, targets, reduction="mean")</span>
+</span><span data-line="74"><span class="sd">    """</span>
 </span><span data-line="75">    <span class="c1"># Create a mask to ignore specified index</span>
 </span><span data-line="76">    <span class="n">valid_mask</span> <span class="o">=</span> <span class="n">targets</span> <span class="o">!=</span> <span class="n">ignore_index</span>
 </span><span data-line="77">
@@ -281,16 +281,16 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="107">        <span class="n">loss</span> <span class="o">=</span> <span class="n">alpha_t</span> <span class="o">*</span> <span class="n">loss</span>
 </span><span data-line="108">
 </span><span data-line="109">    <span class="c1"># Apply reduction method</span>
-</span><span data-line="110">    <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;none&quot;</span><span class="p">:</span>
+</span><span data-line="110">    <span class="k">if</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">"none"</span><span class="p">:</span>
 </span><span data-line="111">        <span class="k">return</span> <span class="n">loss</span>
-</span><span data-line="112">    <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+</span><span data-line="112">    <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">"mean"</span><span class="p">:</span>
 </span><span data-line="113">        <span class="c1"># Normalize by the number of valid (non-ignored) elements</span>
 </span><span data-line="114">        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">/</span> <span class="n">valid_mask</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
-</span><span data-line="115">    <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">&quot;sum&quot;</span><span class="p">:</span>
+</span><span data-line="115">    <span class="k">elif</span> <span class="n">reduction</span> <span class="o">==</span> <span class="s2">"sum"</span><span class="p">:</span>
 </span><span data-line="116">        <span class="k">return</span> <span class="n">loss</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
 </span><span data-line="117">    <span class="k">else</span><span class="p">:</span>
 </span><span data-line="118">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="119">            <span class="sa">f</span><span class="s2">&quot;Invalid value for argument &#39;reduction&#39;: &#39;</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">&#39;. Supported reduction modes: &#39;none&#39;, &#39;mean&#39;, &#39;sum&#39;&quot;</span>
+</span><span data-line="119">            <span class="sa">f</span><span class="s2">"Invalid value for argument 'reduction': '</span><span class="si">{</span><span class="n">reduction</span><span class="si">}</span><span class="s2">'. Supported reduction modes: 'none', 'mean', 'sum'"</span>
 </span><span data-line="120">        <span class="p">)</span></div>
 
 </span><span data-line="121">
@@ -300,13 +300,13 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="123"><span class="k">def</span><span class="w"> </span><span class="nf">cross_entropy_loss</span><span class="p">(</span>
 </span><span data-line="124">    <span class="n">inputs</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="125">    <span class="n">targets</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="126">    <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="126">    <span class="n">reduction</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"sum"</span><span class="p">,</span>
 </span><span data-line="127">    <span class="n">label_smoothing</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.0</span><span class="p">,</span>
 </span><span data-line="128">    <span class="n">ignore_index</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="o">-</span><span class="mi">100</span><span class="p">,</span>
 </span><span data-line="129"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="130"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Compute cross-entropy loss for multi-class classification.</span>
+</span><span data-line="130"><span class="w">    </span><span class="sd">"""Compute cross-entropy loss for multi-class classification.</span>
 </span><span data-line="131">
-</span><span data-line="132"><span class="sd">    A wrapper around PyTorch&#39;s F.cross_entropy that reshapes inputs and</span>
+</span><span data-line="132"><span class="sd">    A wrapper around PyTorch's F.cross_entropy that reshapes inputs and</span>
 </span><span data-line="133"><span class="sd">    targets for convenient use in GLiNER models. This function flattens</span>
 </span><span data-line="134"><span class="sd">    batch and sequence dimensions before computing the loss.</span>
 </span><span data-line="135">
@@ -320,10 +320,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="143"><span class="sd">            ignore_index. Will be reshaped to [-1] internally.</span>
 </span><span data-line="144"><span class="sd">        reduction (str, optional): Specifies the reduction to apply to the</span>
 </span><span data-line="145"><span class="sd">            output. Options are:</span>
-</span><span data-line="146"><span class="sd">            - &#39;none&#39;: No reduction, return loss for each element</span>
-</span><span data-line="147"><span class="sd">            - &#39;mean&#39;: Return the mean loss</span>
-</span><span data-line="148"><span class="sd">            - &#39;sum&#39;: Return the sum of all losses</span>
-</span><span data-line="149"><span class="sd">            Defaults to &#39;sum&#39;.</span>
+</span><span data-line="146"><span class="sd">            - 'none': No reduction, return loss for each element</span>
+</span><span data-line="147"><span class="sd">            - 'mean': Return the mean loss</span>
+</span><span data-line="148"><span class="sd">            - 'sum': Return the sum of all losses</span>
+</span><span data-line="149"><span class="sd">            Defaults to 'sum'.</span>
 </span><span data-line="150"><span class="sd">        label_smoothing (float, optional): Amount of label smoothing to apply.</span>
 </span><span data-line="151"><span class="sd">            Value should be in range [0, 1]. Defaults to 0.0 (no smoothing).</span>
 </span><span data-line="152"><span class="sd">        ignore_index (int, optional): Specifies a target value that is ignored</span>
@@ -331,14 +331,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="154">
 </span><span data-line="155"><span class="sd">    Returns:</span>
 </span><span data-line="156"><span class="sd">        torch.Tensor: Loss tensor. Shape depends on reduction parameter:</span>
-</span><span data-line="157"><span class="sd">            - If reduction=&#39;none&#39;: shape [batch_size * seq_len] (flattened)</span>
-</span><span data-line="158"><span class="sd">            - If reduction=&#39;mean&#39; or &#39;sum&#39;: scalar tensor</span>
+</span><span data-line="157"><span class="sd">            - If reduction='none': shape [batch_size * seq_len] (flattened)</span>
+</span><span data-line="158"><span class="sd">            - If reduction='mean' or 'sum': scalar tensor</span>
 </span><span data-line="159">
 </span><span data-line="160"><span class="sd">    Example:</span>
 </span><span data-line="161"><span class="sd">        &gt;&gt;&gt; inputs = torch.randn(8, 50, 10)  # batch=8, seq_len=50, classes=10</span>
 </span><span data-line="162"><span class="sd">        &gt;&gt;&gt; targets = torch.randint(0, 10, (8, 50))  # class indices</span>
-</span><span data-line="163"><span class="sd">        &gt;&gt;&gt; loss = cross_entropy_loss(inputs, targets, reduction=&quot;mean&quot;)</span>
-</span><span data-line="164"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="163"><span class="sd">        &gt;&gt;&gt; loss = cross_entropy_loss(inputs, targets, reduction="mean")</span>
+</span><span data-line="164"><span class="sd">    """</span>
 </span><span data-line="165">    <span class="n">cls_size</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="166">    <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cls_size</span><span class="p">)</span>
 </span><span data-line="167">    <span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>

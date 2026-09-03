@@ -181,7 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERBaseOutput">[docs]</a>
 </span><span data-line="8"><span class="nd">@dataclass</span>
 </span><span data-line="9"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERBaseOutput</span><span class="p">(</span><span class="n">ModelOutput</span><span class="p">):</span>
-</span><span data-line="10"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Base output class for GLiNER models.</span>
+</span><span data-line="10"><span class="w">    </span><span class="sd">"""Base output class for GLiNER models.</span>
 </span><span data-line="11">
 </span><span data-line="12"><span class="sd">    This class contains the fundamental outputs produced by GLiNER models,</span>
 </span><span data-line="13"><span class="sd">    including loss, logits, and embeddings for both prompts (entity types)</span>
@@ -201,7 +201,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="27"><span class="sd">            words/tokens. Shape: [batch_size, seq_len, hidden_size].</span>
 </span><span data-line="28"><span class="sd">        mask (Optional[torch.LongTensor]): Attention mask for input tokens.</span>
 </span><span data-line="29"><span class="sd">            Shape: [batch_size, seq_len].</span>
-</span><span data-line="30"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="30"><span class="sd">    """</span>
 </span><span data-line="31">
 </span><span data-line="32">    <span class="n">loss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="33">    <span class="n">logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -219,7 +219,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERRepresentationOutput">[docs]</a>
 </span><span data-line="43"><span class="nd">@dataclass</span>
 </span><span data-line="44"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERRepresentationOutput</span><span class="p">(</span><span class="n">ModelOutput</span><span class="p">):</span>
-</span><span data-line="45"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Intermediate prompt and text representations produced by GLiNER backbones.&quot;&quot;&quot;</span>
+</span><span data-line="45"><span class="w">    </span><span class="sd">"""Intermediate prompt and text representations produced by GLiNER backbones."""</span>
 </span><span data-line="46">
 </span><span data-line="47">    <span class="n">prompts_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="48">    <span class="n">prompts_embedding_mask</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -235,7 +235,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERStreamingSpanOutput">[docs]</a>
 </span><span data-line="56"><span class="nd">@dataclass</span>
 </span><span data-line="57"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERStreamingSpanOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
-</span><span data-line="58"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Span-classification output with reusable decoder and word cache state.&quot;&quot;&quot;</span>
+</span><span data-line="58"><span class="w">    </span><span class="sd">"""Span-classification output with reusable decoder and word cache state."""</span>
 </span><span data-line="59">
 </span><span data-line="60">    <span class="n">past_key_values</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="61">    <span class="n">past_word_embeddings</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -249,7 +249,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERDecoderOutput">[docs]</a>
 </span><span data-line="67"><span class="nd">@dataclass</span>
 </span><span data-line="68"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERDecoderOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
-</span><span data-line="69"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with decoder components.</span>
+</span><span data-line="69"><span class="w">    </span><span class="sd">"""Output class for GLiNER models with decoder components.</span>
 </span><span data-line="70">
 </span><span data-line="71"><span class="sd">    Extends GLiNERBaseOutput with additional decoder-specific outputs,</span>
 </span><span data-line="72"><span class="sd">    including decoder embeddings and span indices. This is typically used</span>
@@ -271,7 +271,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="88"><span class="sd">        decoder_span_idx (Optional[torch.LongTensor]): Indices of spans</span>
 </span><span data-line="89"><span class="sd">            processed by the decoder. Shape: [batch_size, num_spans, 2],</span>
 </span><span data-line="90"><span class="sd">            where the last dimension contains [start_idx, end_idx].</span>
-</span><span data-line="91"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="91"><span class="sd">    """</span>
 </span><span data-line="92">
 </span><span data-line="93">    <span class="n">decoder_loss</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="94">    <span class="n">decoder_embedding</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
@@ -284,7 +284,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.outputs.html#gliner.modeling.outputs.GLiNERRelexOutput">[docs]</a>
 </span><span data-line="99"><span class="nd">@dataclass</span>
 </span><span data-line="100"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERRelexOutput</span><span class="p">(</span><span class="n">GLiNERBaseOutput</span><span class="p">):</span>
-</span><span data-line="101"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Output class for GLiNER models with relation extraction.</span>
+</span><span data-line="101"><span class="w">    </span><span class="sd">"""Output class for GLiNER models with relation extraction.</span>
 </span><span data-line="102">
 </span><span data-line="103"><span class="sd">    Extends GLiNERBaseOutput with relation-specific outputs for models</span>
 </span><span data-line="104"><span class="sd">    that perform both entity recognition and relation extraction (Relex).</span>
@@ -308,7 +308,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="122"><span class="sd">            relation type prompts/labels. Shape: [batch_size, num_relation_types, hidden_size].</span>
 </span><span data-line="123"><span class="sd">        rel_prompts_embedding_mask (Optional[torch.LongTensor]): Attention mask</span>
 </span><span data-line="124"><span class="sd">            for relation prompt embeddings. Shape: [batch_size, num_relation_types].</span>
-</span><span data-line="125"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="125"><span class="sd">    """</span>
 </span><span data-line="126">
 </span><span data-line="127">    <span class="n">rel_idx</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="128">    <span class="n">rel_logits</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>

@@ -241,8 +241,8 @@ number of unique types in batch).</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;ORG&quot;</span><span class="p">)]},</span> <span class="p">{</span><span class="s2">&quot;ner&quot;</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;LOC&quot;</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">)]}]</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">negatives</span> <span class="o">=</span> <span class="n">get_negatives</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">sampled_neg</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;ner&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">batch</span> <span class="o">=</span> <span class="p">[{</span><span class="s2">"ner"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"ORG"</span><span class="p">)]},</span> <span class="p">{</span><span class="s2">"ner"</span><span class="p">:</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"LOC"</span><span class="p">),</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">)]}]</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">negatives</span> <span class="o">=</span> <span class="n">get_negatives</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">sampled_neg</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">"ner"</span><span class="p">)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="nb">len</span><span class="p">(</span><span class="n">negatives</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">2</span>
 </span><span data-line="4"><span class="go">True</span>
 </span></pre></div>
@@ -295,9 +295,9 @@ same length as the corresponding tokenized sequence. Values are:</p>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;Hello&quot;</span><span class="p">,</span> <span class="s2">&quot;world&quot;</span><span class="p">]]</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assuming tokenizer splits &quot;Hello&quot; -&gt; [&quot;Hel&quot;, &quot;##lo&quot;]</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># and &quot;world&quot; -&gt; [&quot;world&quot;]</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">texts</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">"Hello"</span><span class="p">,</span> <span class="s2">"world"</span><span class="p">]]</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Assuming tokenizer splits "Hello" -&gt; ["Hel", "##lo"]</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># and "world" -&gt; ["world"]</span>
 </span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">mask</span> <span class="o">=</span> <span class="n">prepare_word_mask</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">tokenized_inputs</span><span class="p">)</span>
 </span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Result might be: [[0, 1, 0, 2, 0]]</span>
 </span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1">#                   [CLS, Hel, ##lo, world, SEP]</span>
@@ -331,12 +331,12 @@ starting from 1</p></li>
 </dd>
 </dl>
 <p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;PERSON&quot;</span><span class="p">,</span> <span class="s2">&quot;ORG&quot;</span><span class="p">,</span> <span class="s2">&quot;LOC&quot;</span><span class="p">,</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">]</span>  <span class="c1"># &quot;PERSON&quot; duplicated</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">types</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"PERSON"</span><span class="p">,</span> <span class="s2">"ORG"</span><span class="p">,</span> <span class="s2">"LOC"</span><span class="p">,</span> <span class="s2">"PERSON"</span><span class="p">]</span>  <span class="c1"># "PERSON" duplicated</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">fwd</span><span class="p">,</span> <span class="n">rev</span> <span class="o">=</span> <span class="n">make_mapping</span><span class="p">(</span><span class="n">types</span><span class="p">)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">fwd</span>
-</span><span data-line="4"><span class="go">{&#39;PERSON&#39;: 1, &#39;ORG&#39;: 2, &#39;LOC&#39;: 3}</span>
+</span><span data-line="4"><span class="go">{'PERSON': 1, 'ORG': 2, 'LOC': 3}</span>
 </span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">rev</span>
-</span><span data-line="6"><span class="go">{1: &#39;PERSON&#39;, 2: &#39;ORG&#39;, 3: &#39;LOC&#39;}</span>
+</span><span data-line="6"><span class="go">{1: 'PERSON', 2: 'ORG', 3: 'LOC'}</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -378,12 +378,12 @@ contains:</p>
 <p class="rubric">Example</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span> <span class="o">=</span> <span class="n">prepare_span_idx</span><span class="p">(</span><span class="n">num_tokens</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">max_width</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span>  <span class="c1"># tensor([[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]])</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For sequence [&quot;The&quot;, &quot;cat&quot;, &quot;sat&quot;]:</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 0) = &quot;The&quot;</span>
-</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 1) = &quot;The cat&quot;</span>
-</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 1) = &quot;cat&quot;</span>
-</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 2) = &quot;cat sat&quot;</span>
-</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 2) = &quot;sat&quot;</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For sequence ["The", "cat", "sat"]:</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 0) = "The"</span>
+</span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (0, 1) = "The cat"</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 1) = "cat"</span>
+</span><span data-line="7"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (1, 2) = "cat sat"</span>
+</span><span data-line="8"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 2) = "sat"</span>
 </span><span data-line="9"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># (2, 3) would be invalid (beyond sequence length)</span>
 </span></pre></div>
 </div>

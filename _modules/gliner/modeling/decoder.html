@@ -170,12 +170,12 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.modeling.decoder</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Decoder modules for autoregressive text generation with optional constraints.</span>
+<span></span><span data-line="1"><span class="sd">"""Decoder modules for autoregressive text generation with optional constraints.</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="sd">This module provides decoder architectures built on causal language models, supporting</span>
 </span><span data-line="4"><span class="sd">both standard generation and prefix-constrained decoding using trie structures. It</span>
 </span><span data-line="5"><span class="sd">includes custom generation implementations and numerical stability improvements.</span>
-</span><span data-line="6"><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="6"><span class="sd">"""</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
 </span><span data-line="9"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Optional</span>
@@ -189,7 +189,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="17"><span class="kn">from</span><span class="w"> </span><span class="nn">..decoding.trie</span><span class="w"> </span><span class="kn">import</span> <span class="n">LabelsTrie</span>
 </span><span data-line="18">
 </span><span data-line="19"><span class="c1"># Check for optional dependencies</span>
-</span><span data-line="20"><span class="n">IS_PEFT</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">&quot;peft&quot;</span><span class="p">)</span>
+</span><span data-line="20"><span class="n">IS_PEFT</span> <span class="o">=</span> <span class="n">is_module_available</span><span class="p">(</span><span class="s2">"peft"</span><span class="p">)</span>
 </span><span data-line="21">
 </span><span data-line="22"><span class="k">if</span> <span class="n">IS_PEFT</span><span class="p">:</span>
 </span><span data-line="23">    <span class="kn">from</span><span class="w"> </span><span class="nn">peft</span><span class="w"> </span><span class="kn">import</span> <span class="n">LoraConfig</span><span class="p">,</span> <span class="n">get_peft_model</span>
@@ -198,7 +198,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="NumericalStabilityProcessor">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.NumericalStabilityProcessor">[docs]</a>
 </span><span data-line="26"><span class="k">class</span><span class="w"> </span><span class="nc">NumericalStabilityProcessor</span><span class="p">(</span><span class="n">LogitsProcessor</span><span class="p">):</span>
-</span><span data-line="27"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Logits processor that ensures numerical stability during generation.</span>
+</span><span data-line="27"><span class="w">    </span><span class="sd">"""Logits processor that ensures numerical stability during generation.</span>
 </span><span data-line="28">
 </span><span data-line="29"><span class="sd">    This processor handles edge cases in logit values by replacing negative infinity</span>
 </span><span data-line="30"><span class="sd">    values with the minimum representable value for the dtype, clamping extreme values,</span>
@@ -206,21 +206,21 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="32">
 </span><span data-line="33"><span class="sd">    Attributes:</span>
 </span><span data-line="34"><span class="sd">        epsilon: Small constant added to logits for numerical stability.</span>
-</span><span data-line="35"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="35"><span class="sd">    """</span>
 </span><span data-line="36">
 <div class="viewcode-block" id="NumericalStabilityProcessor.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.NumericalStabilityProcessor.__init__">[docs]</a>
 </span><span data-line="37">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epsilon</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="38"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the numerical stability processor.</span>
+</span><span data-line="38"><span class="w">        </span><span class="sd">"""Initializes the numerical stability processor.</span>
 </span><span data-line="39">
 </span><span data-line="40"><span class="sd">        Args:</span>
 </span><span data-line="41"><span class="sd">            epsilon: Small constant to add to logits. Defaults to 1e-6.</span>
-</span><span data-line="42"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="42"><span class="sd">        """</span>
 </span><span data-line="43">        <span class="bp">self</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="n">epsilon</span></div>
 
 </span><span data-line="44">
 </span><span data-line="45">    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">,</span> <span class="n">scores</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">:</span>
-</span><span data-line="46"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Processes logits to ensure numerical stability.</span>
+</span><span data-line="46"><span class="w">        </span><span class="sd">"""Processes logits to ensure numerical stability.</span>
 </span><span data-line="47">
 </span><span data-line="48"><span class="sd">        Replaces negative infinity values, clamps extreme values to prevent</span>
 </span><span data-line="49"><span class="sd">        overflow/underflow, and adds epsilon for stability.</span>
@@ -231,7 +231,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="54">
 </span><span data-line="55"><span class="sd">        Returns:</span>
 </span><span data-line="56"><span class="sd">            Stabilized logit scores of shape (batch_size, vocab_size).</span>
-</span><span data-line="57"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="57"><span class="sd">        """</span>
 </span><span data-line="58">        <span class="n">scores</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
 </span><span data-line="59">            <span class="n">torch</span><span class="o">.</span><span class="n">isneginf</span><span class="p">(</span><span class="n">scores</span><span class="p">),</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">min</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">scores</span><span class="o">.</span><span class="n">device</span><span class="p">),</span> <span class="n">scores</span>
 </span><span data-line="60">        <span class="p">)</span>
@@ -243,7 +243,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="DecoderTransformer">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.DecoderTransformer">[docs]</a>
 </span><span data-line="65"><span class="k">class</span><span class="w"> </span><span class="nc">DecoderTransformer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="66"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for causal language model decoders with adapter support.</span>
+</span><span data-line="66"><span class="w">    </span><span class="sd">"""Wrapper for causal language model decoders with adapter support.</span>
 </span><span data-line="67">
 </span><span data-line="68"><span class="sd">    This class provides a unified interface for autoregressive decoder models,</span>
 </span><span data-line="69"><span class="sd">    supporting loading from pretrained weights or initialization from config.</span>
@@ -252,7 +252,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="72"><span class="sd">    Attributes:</span>
 </span><span data-line="73"><span class="sd">        model: The underlying causal language model instance.</span>
 </span><span data-line="74"><span class="sd">        config: Configuration object containing model hyperparameters.</span>
-</span><span data-line="75"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="75"><span class="sd">    """</span>
 </span><span data-line="76">
 <div class="viewcode-block" id="DecoderTransformer.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.DecoderTransformer.__init__">[docs]</a>
@@ -264,7 +264,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="82">        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="83">        <span class="n">use_causal_lm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="84">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="85"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the decoder transformer.</span>
+</span><span data-line="85"><span class="w">        </span><span class="sd">"""Initializes the decoder transformer.</span>
 </span><span data-line="86">
 </span><span data-line="87"><span class="sd">        Args:</span>
 </span><span data-line="88"><span class="sd">            model_name: Name or path of the pretrained model to load.</span>
@@ -279,22 +279,22 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="97">
 </span><span data-line="98"><span class="sd">        Raises:</span>
 </span><span data-line="99"><span class="sd">            Warning: If adapter config is found but PEFT package is not installed.</span>
-</span><span data-line="100"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="100"><span class="sd">        """</span>
 </span><span data-line="101">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
-</span><span data-line="102">        <span class="n">decoder_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;decoder_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="102">        <span class="n">decoder_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"decoder_config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="103">        <span class="k">if</span> <span class="n">decoder_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="104">            <span class="n">decoder_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;labels_decoder_config&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="104">            <span class="n">decoder_config</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"labels_decoder_config"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="105">        <span class="k">if</span> <span class="n">decoder_config</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="106">            <span class="n">decoder_config</span> <span class="o">=</span> <span class="n">AutoConfig</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="n">cache_dir</span><span class="o">=</span><span class="n">cache_dir</span><span class="p">)</span>
 </span><span data-line="107">
 </span><span data-line="108">        <span class="c1"># Decoder backbones are constructed separately from encoder backbones,</span>
-</span><span data-line="109">        <span class="c1"># so explicitly propagate GLiNER&#39;s top-level attention override.</span>
-</span><span data-line="110">        <span class="n">attn_implementation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;_attn_implementation&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="109">        <span class="c1"># so explicitly propagate GLiNER's top-level attention override.</span>
+</span><span data-line="110">        <span class="n">attn_implementation</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"_attn_implementation"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="111">        <span class="k">if</span> <span class="n">attn_implementation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="112">            <span class="n">decoder_config</span><span class="o">.</span><span class="n">_attn_implementation</span> <span class="o">=</span> <span class="n">attn_implementation</span>
 </span><span data-line="113">
-</span><span data-line="114">        <span class="n">is_streaming_span</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;model_type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;gliner_streaming_span&quot;</span>
-</span><span data-line="115">        <span class="n">saved_vocab_size</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;vocab_size&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span><span data-line="114">        <span class="n">is_streaming_span</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"model_type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="o">==</span> <span class="s2">"gliner_streaming_span"</span>
+</span><span data-line="115">        <span class="n">saved_vocab_size</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"vocab_size"</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 </span><span data-line="116">        <span class="k">if</span> <span class="n">is_streaming_span</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">from_pretrained</span> <span class="ow">and</span> <span class="n">saved_vocab_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
 </span><span data-line="117">            <span class="c1"># StreamingSpan adds &lt;&lt;LABEL&gt;&gt; and &lt;&lt;SEP&gt;&gt; to the backbone tokenizer.</span>
 </span><span data-line="118">            <span class="c1"># The top-level size is saved with the trained embedding matrix and</span>
@@ -305,11 +305,11 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="123">
 </span><span data-line="124">        <span class="k">if</span> <span class="n">from_pretrained</span><span class="p">:</span>
 </span><span data-line="125">            <span class="n">model_kwargs</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="126">                <span class="s2">&quot;cache_dir&quot;</span><span class="p">:</span> <span class="n">cache_dir</span><span class="p">,</span>
-</span><span data-line="127">                <span class="s2">&quot;trust_remote_code&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+</span><span data-line="126">                <span class="s2">"cache_dir"</span><span class="p">:</span> <span class="n">cache_dir</span><span class="p">,</span>
+</span><span data-line="127">                <span class="s2">"trust_remote_code"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="128">            <span class="p">}</span>
 </span><span data-line="129">            <span class="k">if</span> <span class="n">attn_implementation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="130">                <span class="n">model_kwargs</span><span class="p">[</span><span class="s2">&quot;attn_implementation&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_implementation</span>
+</span><span data-line="130">                <span class="n">model_kwargs</span><span class="p">[</span><span class="s2">"attn_implementation"</span><span class="p">]</span> <span class="o">=</span> <span class="n">attn_implementation</span>
 </span><span data-line="131">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_class</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="n">model_name</span><span class="p">,</span> <span class="o">**</span><span class="n">model_kwargs</span><span class="p">)</span>
 </span><span data-line="132">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="133">            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model_class</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">decoder_config</span><span class="p">,</span> <span class="n">trust_remote_code</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -319,12 +319,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="137">            <span class="c1"># token resizing is serialized into gliner_config.json.</span>
 </span><span data-line="138">            <span class="n">config</span><span class="o">.</span><span class="n">decoder_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">config</span>
 </span><span data-line="139">
-</span><span data-line="140">        <span class="n">adapter_config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;adapter_config.json&quot;</span>
+</span><span data-line="140">        <span class="n">adapter_config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">model_name</span><span class="p">)</span> <span class="o">/</span> <span class="s2">"adapter_config.json"</span>
 </span><span data-line="141">
 </span><span data-line="142">        <span class="k">if</span> <span class="n">adapter_config_file</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
 </span><span data-line="143">            <span class="k">if</span> <span class="ow">not</span> <span class="n">IS_PEFT</span><span class="p">:</span>
 </span><span data-line="144">                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
-</span><span data-line="145">                    <span class="s2">&quot;Adapter configs were detected, if you want to apply them you need to install peft package.&quot;</span><span class="p">,</span>
+</span><span data-line="145">                    <span class="s2">"Adapter configs were detected, if you want to apply them you need to install peft package."</span><span class="p">,</span>
 </span><span data-line="146">                    <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 </span><span data-line="147">                <span class="p">)</span>
 </span><span data-line="148">            <span class="k">else</span><span class="p">:</span>
@@ -338,7 +338,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="DecoderTransformer.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.DecoderTransformer.forward">[docs]</a>
 </span><span data-line="155">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
-</span><span data-line="156"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the decoder model.</span>
+</span><span data-line="156"><span class="w">        </span><span class="sd">"""Forward pass through the decoder model.</span>
 </span><span data-line="157">
 </span><span data-line="158"><span class="sd">        Args:</span>
 </span><span data-line="159"><span class="sd">            *args: Variable positional arguments passed to the model.</span>
@@ -348,10 +348,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="163"><span class="sd">            A tuple containing model representations and optional KV cache. The</span>
 </span><span data-line="164"><span class="sd">            representations are vocabulary logits in causal-LM mode and backbone</span>
 </span><span data-line="165"><span class="sd">            hidden states otherwise.</span>
-</span><span data-line="166"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="166"><span class="sd">        """</span>
 </span><span data-line="167">        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="168">        <span class="n">encoder_layer</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="169">        <span class="n">past_key_values</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">past_key_values</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">&quot;past_key_values&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+</span><span data-line="169">        <span class="n">past_key_values</span> <span class="o">=</span> <span class="n">output</span><span class="o">.</span><span class="n">past_key_values</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="s2">"past_key_values"</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
 </span><span data-line="170">        <span class="k">return</span> <span class="n">encoder_layer</span><span class="p">,</span> <span class="n">past_key_values</span></div>
 </div>
 
@@ -360,17 +360,17 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Decoder">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder">[docs]</a>
 </span><span data-line="173"><span class="k">class</span><span class="w"> </span><span class="nc">Decoder</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
-</span><span data-line="174"><span class="w">    </span><span class="sd">&quot;&quot;&quot;High-level decoder interface for autoregressive generation.</span>
+</span><span data-line="174"><span class="w">    </span><span class="sd">"""High-level decoder interface for autoregressive generation.</span>
 </span><span data-line="175">
 </span><span data-line="176"><span class="sd">    This class provides a unified interface for text generation from embeddings,</span>
 </span><span data-line="177"><span class="sd">    supporting both standard generation and constrained decoding using trie structures.</span>
-</span><span data-line="178"><span class="sd">    It includes custom generation implementations and integrates with Hugging Face&#39;s</span>
+</span><span data-line="178"><span class="sd">    It includes custom generation implementations and integrates with Hugging Face's</span>
 </span><span data-line="179"><span class="sd">    generation API.</span>
 </span><span data-line="180">
 </span><span data-line="181"><span class="sd">    Attributes:</span>
 </span><span data-line="182"><span class="sd">        decoder_layer: The underlying DecoderTransformer instance.</span>
 </span><span data-line="183"><span class="sd">        decoder_hidden_size: Hidden dimension size of the decoder model.</span>
-</span><span data-line="184"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="184"><span class="sd">    """</span>
 </span><span data-line="185">
 <div class="viewcode-block" id="Decoder.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder.__init__">[docs]</a>
@@ -381,7 +381,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="190">        <span class="n">cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="191">        <span class="n">use_causal_lm</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="192">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="193"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Initializes the decoder.</span>
+</span><span data-line="193"><span class="w">        </span><span class="sd">"""Initializes the decoder.</span>
 </span><span data-line="194">
 </span><span data-line="195"><span class="sd">        Args:</span>
 </span><span data-line="196"><span class="sd">            config: Configuration object containing model hyperparameters. StreamingSpan</span>
@@ -392,10 +392,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="201"><span class="sd">            cache_dir: Optional directory for caching downloaded models. Defaults to None.</span>
 </span><span data-line="202"><span class="sd">            use_causal_lm: Use a causal language-model head when True, or return</span>
 </span><span data-line="203"><span class="sd">                backbone hidden states through ``AutoModel`` when False.</span>
-</span><span data-line="204"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="204"><span class="sd">        """</span>
 </span><span data-line="205">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
 </span><span data-line="206">
-</span><span data-line="207">        <span class="n">model_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;labels_decoder&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">model_name</span>
+</span><span data-line="207">        <span class="n">model_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">"labels_decoder"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="n">config</span><span class="o">.</span><span class="n">model_name</span>
 </span><span data-line="208">        <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span> <span class="o">=</span> <span class="n">DecoderTransformer</span><span class="p">(</span>
 </span><span data-line="209">            <span class="n">model_name</span><span class="p">,</span>
 </span><span data-line="210">            <span class="n">config</span><span class="p">,</span>
@@ -411,14 +411,14 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Decoder.ids_to_embeds">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder.ids_to_embeds">[docs]</a>
 </span><span data-line="219">    <span class="k">def</span><span class="w"> </span><span class="nf">ids_to_embeds</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">FloatTensor</span><span class="p">:</span>
-</span><span data-line="220"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Converts token IDs to their corresponding embeddings.</span>
+</span><span data-line="220"><span class="w">        </span><span class="sd">"""Converts token IDs to their corresponding embeddings.</span>
 </span><span data-line="221">
 </span><span data-line="222"><span class="sd">        Args:</span>
 </span><span data-line="223"><span class="sd">            input_ids: Token IDs of shape (batch_size, seq_len).</span>
 </span><span data-line="224">
 </span><span data-line="225"><span class="sd">        Returns:</span>
 </span><span data-line="226"><span class="sd">            Token embeddings of shape (batch_size, seq_len, hidden_size).</span>
-</span><span data-line="227"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="227"><span class="sd">        """</span>
 </span><span data-line="228">        <span class="n">input_ids</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="229">        <span class="n">embedding_layer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">get_input_embeddings</span><span class="p">()</span>
 </span><span data-line="230">        <span class="k">return</span> <span class="n">embedding_layer</span><span class="p">(</span><span class="n">input_ids</span><span class="p">)</span></div>
@@ -439,7 +439,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="242">        <span class="n">labels_trie</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LabelsTrie</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="243">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="244">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">:</span>
-</span><span data-line="245"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Custom generation implementation from embeddings with optional trie constraints.</span>
+</span><span data-line="245"><span class="w">        </span><span class="sd">"""Custom generation implementation from embeddings with optional trie constraints.</span>
 </span><span data-line="246">
 </span><span data-line="247"><span class="sd">        This method implements token-by-token generation with KV caching and support for</span>
 </span><span data-line="248"><span class="sd">        trie-based constrained decoding. Unlike the standard generate method, this</span>
@@ -452,9 +452,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="255"><span class="sd">            attention_mask: Optional attention mask of shape (batch_size, prefix_len).</span>
 </span><span data-line="256"><span class="sd">                If None, assumes all prefix tokens are valid. Defaults to None.</span>
 </span><span data-line="257"><span class="sd">            max_new_tokens: Maximum number of new tokens to generate. Defaults to 32.</span>
-</span><span data-line="258"><span class="sd">            eos_token_id: Token ID marking end of sequence. If None, uses model&#39;s</span>
+</span><span data-line="258"><span class="sd">            eos_token_id: Token ID marking end of sequence. If None, uses model's</span>
 </span><span data-line="259"><span class="sd">                default. Defaults to None.</span>
-</span><span data-line="260"><span class="sd">            pad_token_id: Token ID for padding. If None, uses model&#39;s default or</span>
+</span><span data-line="260"><span class="sd">            pad_token_id: Token ID for padding. If None, uses model's default or</span>
 </span><span data-line="261"><span class="sd">                eos_token_id. Defaults to None.</span>
 </span><span data-line="262"><span class="sd">            temperature: Sampling temperature for controlling randomness. Values &lt; 1</span>
 </span><span data-line="263"><span class="sd">                make distribution sharper, &gt; 1 make it more uniform. Defaults to 1.0.</span>
@@ -469,7 +469,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="272"><span class="sd">            Generated token IDs of shape (batch_size, generated_len) where generated_len</span>
 </span><span data-line="273"><span class="sd">            varies per sequence based on when EOS is reached. Sequences are padded to</span>
 </span><span data-line="274"><span class="sd">            the same length with pad_token_id.</span>
-</span><span data-line="275"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="275"><span class="sd">        """</span>
 </span><span data-line="276">        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="o">.</span><span class="n">model</span>
 </span><span data-line="277">        <span class="n">device</span><span class="p">,</span> <span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="n">L0</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="o">=</span> <span class="n">inputs_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">inputs_embeds</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="278">        <span class="n">cfg</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span>
@@ -491,7 +491,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="294">        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">max_new_tokens</span><span class="p">):</span>
 </span><span data-line="295">            <span class="k">if</span> <span class="n">labels_trie</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="296">                <span class="n">V</span> <span class="o">=</span> <span class="n">next_logits</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
-</span><span data-line="297">                <span class="n">mask_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">),</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">&quot;inf&quot;</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+</span><span data-line="297">                <span class="n">mask_tensor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">B</span><span class="p">,</span> <span class="n">V</span><span class="p">),</span> <span class="o">-</span><span class="nb">float</span><span class="p">(</span><span class="s2">"inf"</span><span class="p">),</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="298">                <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">B</span><span class="p">):</span>
 </span><span data-line="299">                    <span class="k">if</span> <span class="n">unfinished</span><span class="p">[</span><span class="n">b</span><span class="p">]:</span>
 </span><span data-line="300">                        <span class="n">current_seq</span> <span class="o">=</span> <span class="n">generated</span><span class="p">[</span><span class="n">b</span><span class="p">]</span>  <span class="c1"># Tokens generated so far</span>
@@ -562,7 +562,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="362">        <span class="n">labels_trie</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">LabelsTrie</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="363">        <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
 </span><span data-line="364">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">:</span>
-</span><span data-line="365"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Generation from embeddings using Hugging Face&#39;s generate API.</span>
+</span><span data-line="365"><span class="w">        </span><span class="sd">"""Generation from embeddings using Hugging Face's generate API.</span>
 </span><span data-line="366">
 </span><span data-line="367"><span class="sd">        This method wraps the Hugging Face generate() function to support generation</span>
 </span><span data-line="368"><span class="sd">        from embeddings with optional trie-based prefix constraints. It provides a</span>
@@ -575,9 +575,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="375"><span class="sd">            attention_mask: Optional attention mask of shape (batch_size, prefix_len).</span>
 </span><span data-line="376"><span class="sd">                If None, creates a mask of all ones. Defaults to None.</span>
 </span><span data-line="377"><span class="sd">            max_new_tokens: Maximum number of new tokens to generate. Defaults to 32.</span>
-</span><span data-line="378"><span class="sd">            eos_token_id: Token ID marking end of sequence. If None, uses model&#39;s</span>
+</span><span data-line="378"><span class="sd">            eos_token_id: Token ID marking end of sequence. If None, uses model's</span>
 </span><span data-line="379"><span class="sd">                default. Defaults to None.</span>
-</span><span data-line="380"><span class="sd">            pad_token_id: Token ID for padding. If None, uses model&#39;s default or</span>
+</span><span data-line="380"><span class="sd">            pad_token_id: Token ID for padding. If None, uses model's default or</span>
 </span><span data-line="381"><span class="sd">                eos_token_id. Defaults to None.</span>
 </span><span data-line="382"><span class="sd">            temperature: Sampling temperature for controlling randomness. Defaults to 1.0.</span>
 </span><span data-line="383"><span class="sd">            do_sample: If True, uses sampling. If False, uses greedy/beam search.</span>
@@ -592,7 +592,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="392"><span class="sd">            Generated token IDs of shape (batch_size * num_return_sequences, total_len)</span>
 </span><span data-line="393"><span class="sd">            where total_len = prefix_len + generated_len. Includes both the input</span>
 </span><span data-line="394"><span class="sd">            prefix and newly generated tokens.</span>
-</span><span data-line="395"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="395"><span class="sd">        """</span>
 </span><span data-line="396">        <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="o">.</span><span class="n">model</span>
 </span><span data-line="397">        <span class="n">inputs_embeds</span> <span class="o">=</span> <span class="n">inputs_embeds</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">model</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
 </span><span data-line="398">        <span class="k">if</span> <span class="n">attention_mask</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -612,7 +612,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="412">        <span class="k">if</span> <span class="n">labels_trie</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="413">
 </span><span data-line="414">            <span class="k">def</span><span class="w"> </span><span class="nf">prefix_allowed_tokens</span><span class="p">(</span><span class="n">batch_idx</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span>  <span class="c1"># noqa: ARG001</span>
-</span><span data-line="415"><span class="w">                </span><span class="sd">&quot;&quot;&quot;Callback function for constrained decoding.</span>
+</span><span data-line="415"><span class="w">                </span><span class="sd">"""Callback function for constrained decoding.</span>
 </span><span data-line="416">
 </span><span data-line="417"><span class="sd">                Args:</span>
 </span><span data-line="418"><span class="sd">                    batch_idx: Index of the sequence in the batch.</span>
@@ -620,7 +620,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="420">
 </span><span data-line="421"><span class="sd">                Returns:</span>
 </span><span data-line="422"><span class="sd">                    List of allowed token IDs for the next position.</span>
-</span><span data-line="423"><span class="sd">                &quot;&quot;&quot;</span>
+</span><span data-line="423"><span class="sd">                """</span>
 </span><span data-line="424">                <span class="n">current_seq</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
 </span><span data-line="425">                <span class="n">allowed_tokens</span> <span class="o">=</span> <span class="n">labels_trie</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">current_seq</span><span class="p">)</span>
 </span><span data-line="426">                <span class="k">if</span> <span class="ow">not</span> <span class="n">allowed_tokens</span><span class="p">:</span>  <span class="c1"># Empty or None</span>
@@ -629,7 +629,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="429">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="430">            <span class="n">prefix_allowed_tokens</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="431">
-</span><span data-line="432">        <span class="c1"># Generate new tokens using transformer&#39;s generate method</span>
+</span><span data-line="432">        <span class="c1"># Generate new tokens using transformer's generate method</span>
 </span><span data-line="433">        <span class="n">generated_ids</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
 </span><span data-line="434">            <span class="n">inputs_embeds</span><span class="o">=</span><span class="n">inputs_embeds</span><span class="p">,</span>
 </span><span data-line="435">            <span class="n">attention_mask</span><span class="o">=</span><span class="n">attention_mask</span><span class="p">,</span>
@@ -657,22 +657,22 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Decoder.generate">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder.generate">[docs]</a>
 </span><span data-line="456">    <span class="k">def</span><span class="w"> </span><span class="nf">generate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">:</span>
-</span><span data-line="457"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Flexible generation method supporting both embeddings and token IDs.</span>
+</span><span data-line="457"><span class="w">        </span><span class="sd">"""Flexible generation method supporting both embeddings and token IDs.</span>
 </span><span data-line="458">
 </span><span data-line="459"><span class="sd">        This method routes to the appropriate generation function based on whether</span>
 </span><span data-line="460"><span class="sd">        inputs_embeds is provided. If inputs_embeds is in kwargs, uses</span>
-</span><span data-line="461"><span class="sd">        generate_from_embeds(). Otherwise, delegates to the model&#39;s native</span>
+</span><span data-line="461"><span class="sd">        generate_from_embeds(). Otherwise, delegates to the model's native</span>
 </span><span data-line="462"><span class="sd">        generate() method.</span>
 </span><span data-line="463">
 </span><span data-line="464"><span class="sd">        Args:</span>
 </span><span data-line="465"><span class="sd">            *args: Variable positional arguments passed to the generation method.</span>
-</span><span data-line="466"><span class="sd">            **kwargs: Variable keyword arguments. If &#39;inputs_embeds&#39; is present,</span>
+</span><span data-line="466"><span class="sd">            **kwargs: Variable keyword arguments. If 'inputs_embeds' is present,</span>
 </span><span data-line="467"><span class="sd">                routes to generate_from_embeds(), otherwise routes to model.generate().</span>
 </span><span data-line="468">
 </span><span data-line="469"><span class="sd">        Returns:</span>
 </span><span data-line="470"><span class="sd">            Generated token IDs. Shape depends on the specific generation method used.</span>
-</span><span data-line="471"><span class="sd">        &quot;&quot;&quot;</span>
-</span><span data-line="472">        <span class="k">if</span> <span class="s2">&quot;inputs_embeds&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+</span><span data-line="471"><span class="sd">        """</span>
+</span><span data-line="472">        <span class="k">if</span> <span class="s2">"inputs_embeds"</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
 </span><span data-line="473">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">generate_from_embeds</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="474">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="475">            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
@@ -681,7 +681,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="Decoder.forward">
 <a class="viewcode-back" href="../../../api/gliner.modeling.decoder.html#gliner.modeling.decoder.Decoder.forward">[docs]</a>
 </span><span data-line="477">    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Any</span><span class="p">]]:</span>
-</span><span data-line="478"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Forward pass through the decoder.</span>
+</span><span data-line="478"><span class="w">        </span><span class="sd">"""Forward pass through the decoder.</span>
 </span><span data-line="479">
 </span><span data-line="480"><span class="sd">        Computes logits for the input sequence without generation.</span>
 </span><span data-line="481">
@@ -693,7 +693,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="487"><span class="sd">            A tuple containing model representations and optional KV cache. The</span>
 </span><span data-line="488"><span class="sd">            representations are vocabulary logits in causal-LM mode and backbone</span>
 </span><span data-line="489"><span class="sd">            hidden states otherwise.</span>
-</span><span data-line="490"><span class="sd">        &quot;&quot;&quot;</span>
+</span><span data-line="490"><span class="sd">        """</span>
 </span><span data-line="491">        <span class="n">decoded_embeddings</span><span class="p">,</span> <span class="n">past_key_values</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder_layer</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="492">        <span class="k">return</span> <span class="n">decoded_embeddings</span><span class="p">,</span> <span class="n">past_key_values</span></div>
 </div>

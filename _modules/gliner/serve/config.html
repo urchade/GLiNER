@@ -170,7 +170,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.serve.config</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Configuration for GLiNER Ray Serve deployment.&quot;&quot;&quot;</span>
+<span></span><span data-line="1"><span class="sd">"""Configuration for GLiNER Ray Serve deployment."""</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
 </span><span data-line="4"><span class="kn">from</span><span class="w"> </span><span class="nn">dataclasses</span><span class="w"> </span><span class="kn">import</span> <span class="n">field</span><span class="p">,</span> <span class="n">dataclass</span>
@@ -180,15 +180,15 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.serve.config.html#gliner.serve.GLiNERServeConfig">[docs]</a>
 </span><span data-line="7"><span class="nd">@dataclass</span>
 </span><span data-line="8"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERServeConfig</span><span class="p">:</span>
-</span><span data-line="9"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Configuration for GLiNER Ray Serve deployment.</span>
+</span><span data-line="9"><span class="w">    </span><span class="sd">"""Configuration for GLiNER Ray Serve deployment.</span>
 </span><span data-line="10">
 </span><span data-line="11"><span class="sd">    This config controls model loading, serving parameters, and dynamic batching behavior.</span>
 </span><span data-line="12"><span class="sd">    Aligned with GLiNEREngineConfig from engine module.</span>
-</span><span data-line="13"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="13"><span class="sd">    """</span>
 </span><span data-line="14">
 </span><span data-line="15">    <span class="n">model</span><span class="p">:</span> <span class="nb">str</span>
-</span><span data-line="16">    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;cuda&quot;</span>
-</span><span data-line="17">    <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;bfloat16&quot;</span>
+</span><span data-line="16">    <span class="n">device</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"cuda"</span>
+</span><span data-line="17">    <span class="n">dtype</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"bfloat16"</span>
 </span><span data-line="18">
 </span><span data-line="19">    <span class="n">quantization</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="20">
@@ -209,7 +209,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="35">    <span class="n">max_ongoing_requests</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">256</span>
 </span><span data-line="36">    <span class="n">queue_capacity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4096</span>
 </span><span data-line="37">
-</span><span data-line="38">    <span class="n">route_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;/gliner&quot;</span>
+</span><span data-line="38">    <span class="n">route_prefix</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"/gliner"</span>
 </span><span data-line="39">
 </span><span data-line="40">    <span class="n">tokenizer_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
 </span><span data-line="41">    <span class="n">decoding_threads</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span>
@@ -239,9 +239,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="65">    <span class="n">polylora_max_cpu_adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="mi">128</span>
 </span><span data-line="66">    <span class="n">polylora_disk_cache_dir</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="67">    <span class="n">polylora_max_disk_adapters</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
-</span><span data-line="68">    <span class="n">polylora_base_adapter_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;__base__&quot;</span>
+</span><span data-line="68">    <span class="n">polylora_base_adapter_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"__base__"</span>
 </span><span data-line="69">    <span class="n">polylora_use_triton_kernels</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
-</span><span data-line="70">    <span class="n">polylora_adapter_id_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">&quot;^[A-Za-z0-9_.-]{1,128}$&quot;</span>
+</span><span data-line="70">    <span class="n">polylora_adapter_id_pattern</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="sa">r</span><span class="s2">"^[A-Za-z0-9_.-]{1,128}$"</span>
 </span><span data-line="71">
 </span><span data-line="72">    <span class="k">def</span><span class="w"> </span><span class="nf">__post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 </span><span data-line="73">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_batch_size</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">precompiled_batch_sizes</span><span class="p">:</span>
@@ -251,12 +251,12 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="GLiNERServeConfig.to_env_vars">
 <a class="viewcode-back" href="../../../api/gliner.serve.config.html#gliner.serve.GLiNERServeConfig.to_env_vars">[docs]</a>
 </span><span data-line="77">    <span class="k">def</span><span class="w"> </span><span class="nf">to_env_vars</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-</span><span data-line="78"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert config to environment variables for model loading.&quot;&quot;&quot;</span>
+</span><span data-line="78"><span class="w">        </span><span class="sd">"""Convert config to environment variables for model loading."""</span>
 </span><span data-line="79">        <span class="n">env</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span data-line="80">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">enable_flashdeberta</span><span class="p">:</span>
-</span><span data-line="81">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;USE_FLASHDEBERTA&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span>
+</span><span data-line="81">            <span class="n">env</span><span class="p">[</span><span class="s2">"USE_FLASHDEBERTA"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"1"</span>
 </span><span data-line="82">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer_threads</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-</span><span data-line="83">            <span class="n">env</span><span class="p">[</span><span class="s2">&quot;TOKENIZERS_PARALLELISM&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;true&quot;</span>
+</span><span data-line="83">            <span class="n">env</span><span class="p">[</span><span class="s2">"TOKENIZERS_PARALLELISM"</span><span class="p">]</span> <span class="o">=</span> <span class="s2">"true"</span>
 </span><span data-line="84">        <span class="k">return</span> <span class="n">env</span></div>
 </div>
 

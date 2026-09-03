@@ -181,7 +181,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="load_config_as_namespace">
 <a class="viewcode-back" href="../../api/gliner.utils.html#gliner.utils.load_config_as_namespace">[docs]</a>
 </span><span data-line="9"><span class="k">def</span><span class="w"> </span><span class="nf">load_config_as_namespace</span><span class="p">(</span><span class="n">config_file</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Path</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">:</span>
-</span><span data-line="10"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="10"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="11"><span class="sd">    Load YAML/JSON config file as nested Namespace.</span>
 </span><span data-line="12">
 </span><span data-line="13"><span class="sd">    Args:</span>
@@ -191,14 +191,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="17"><span class="sd">        Nested argparse.Namespace</span>
 </span><span data-line="18">
 </span><span data-line="19"><span class="sd">    Example:</span>
-</span><span data-line="20"><span class="sd">        &gt;&gt;&gt; config = load_config_as_namespace(&quot;config.yaml&quot;)</span>
+</span><span data-line="20"><span class="sd">        &gt;&gt;&gt; config = load_config_as_namespace("config.yaml")</span>
 </span><span data-line="21"><span class="sd">        &gt;&gt;&gt; print(config.model.model_name)</span>
 </span><span data-line="22"><span class="sd">        &gt;&gt;&gt; print(config.training.lr_encoder)</span>
-</span><span data-line="23"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="23"><span class="sd">    """</span>
 </span><span data-line="24">    <span class="n">config_file</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span>
 </span><span data-line="25">
 </span><span data-line="26">    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">config_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-</span><span data-line="27">        <span class="k">if</span> <span class="n">config_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;.yml&quot;</span><span class="p">,</span> <span class="s2">&quot;.yaml&quot;</span><span class="p">}:</span>
+</span><span data-line="27">        <span class="k">if</span> <span class="n">config_file</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">".yml"</span><span class="p">,</span> <span class="s2">".yaml"</span><span class="p">}:</span>
 </span><span data-line="28">            <span class="n">config_dict</span> <span class="o">=</span> <span class="n">yaml</span><span class="o">.</span><span class="n">safe_load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
 </span><span data-line="29">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="30">            <span class="n">config_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
@@ -210,7 +210,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="dict_to_namespace">
 <a class="viewcode-back" href="../../api/gliner.utils.html#gliner.utils.dict_to_namespace">[docs]</a>
 </span><span data-line="35"><span class="k">def</span><span class="w"> </span><span class="nf">dict_to_namespace</span><span class="p">(</span><span class="n">d</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">:</span>
-</span><span data-line="36"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Recursively convert dict to Namespace.&quot;&quot;&quot;</span>
+</span><span data-line="36"><span class="w">    </span><span class="sd">"""Recursively convert dict to Namespace."""</span>
 </span><span data-line="37">    <span class="n">namespace</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">()</span>
 </span><span data-line="38">    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">d</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span data-line="39">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
@@ -226,7 +226,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="namespace_to_dict">
 <a class="viewcode-back" href="../../api/gliner.utils.html#gliner.utils.namespace_to_dict">[docs]</a>
 </span><span data-line="48"><span class="k">def</span><span class="w"> </span><span class="nf">namespace_to_dict</span><span class="p">(</span><span class="n">namespace</span><span class="p">:</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
-</span><span data-line="49"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert Namespace back to dict.&quot;&quot;&quot;</span>
+</span><span data-line="49"><span class="w">    </span><span class="sd">"""Convert Namespace back to dict."""</span>
 </span><span data-line="50">    <span class="n">result</span> <span class="o">=</span> <span class="p">{}</span>
 </span><span data-line="51">    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">(</span><span class="n">namespace</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
 </span><span data-line="52">        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">argparse</span><span class="o">.</span><span class="n">Namespace</span><span class="p">):</span>
@@ -242,7 +242,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="is_module_available">
 <a class="viewcode-back" href="../../api/gliner.utils.html#gliner.utils.is_module_available">[docs]</a>
 </span><span data-line="61"><span class="k">def</span><span class="w"> </span><span class="nf">is_module_available</span><span class="p">(</span><span class="n">module_name</span><span class="p">):</span>
-</span><span data-line="62"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="62"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="63"><span class="sd">    Checks whether the specified Python module is available.</span>
 </span><span data-line="64">
 </span><span data-line="65"><span class="sd">    Args:</span>
@@ -250,7 +250,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="67">
 </span><span data-line="68"><span class="sd">    Returns:</span>
 </span><span data-line="69"><span class="sd">        bool: True if the module is available, False otherwise.</span>
-</span><span data-line="70"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="70"><span class="sd">    """</span>
 </span><span data-line="71">    <span class="k">try</span><span class="p">:</span>
 </span><span data-line="72">        <span class="nb">__import__</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
 </span><span data-line="73">        <span class="k">return</span> <span class="kc">True</span>
@@ -262,7 +262,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="MissedPackageException">
 <a class="viewcode-back" href="../../api/gliner.utils.html#gliner.utils.MissedPackageException">[docs]</a>
 </span><span data-line="78"><span class="k">class</span><span class="w"> </span><span class="nc">MissedPackageException</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
-</span><span data-line="79"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Raised when the requested decoder model is not supported.&quot;&quot;&quot;</span>
+</span><span data-line="79"><span class="w">    </span><span class="sd">"""Raised when the requested decoder model is not supported."""</span>
 </span><span data-line="80">
 </span><span data-line="81">    <span class="k">pass</span></div>
 

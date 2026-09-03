@@ -170,7 +170,7 @@ data-aria-dark="Switch to auto color mode">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
           <h1>Source code for gliner.modeling.cache</h1><div class="highlight"><pre>
-<span></span><span data-line="1"><span class="sd">&quot;&quot;&quot;Session cache support for decoder-backed span inference.&quot;&quot;&quot;</span>
+<span></span><span data-line="1"><span class="sd">"""Session cache support for decoder-backed span inference."""</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 </span><span data-line="4">
@@ -206,7 +206,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ReusableDynamicLayer">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.ReusableDynamicLayer">[docs]</a>
 </span><span data-line="34">    <span class="k">class</span><span class="w"> </span><span class="nc">ReusableDynamicLayer</span><span class="p">(</span><span class="n">DynamicLayer</span><span class="p">):</span>
-</span><span data-line="35"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Append-only KV storage that grows geometrically instead of every turn.&quot;&quot;&quot;</span>
+</span><span data-line="35"><span class="w">        </span><span class="sd">"""Append-only KV storage that grows geometrically instead of every turn."""</span>
 </span><span data-line="36">
 <div class="viewcode-block" id="ReusableDynamicLayer.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.ReusableDynamicLayer.__init__">[docs]</a>
@@ -225,8 +225,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="48">        <span class="k">def</span><span class="w"> </span><span class="nf">_next_capacity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">required</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 </span><span data-line="49">            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximum_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">required</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maximum_length</span><span class="p">:</span>
 </span><span data-line="50">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="51">                    <span class="sa">f</span><span class="s2">&quot;KV cache requires </span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s2"> positions, exceeding its &quot;</span>
-</span><span data-line="52">                    <span class="sa">f</span><span class="s2">&quot;maximum length of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maximum_length</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="51">                    <span class="sa">f</span><span class="s2">"KV cache requires </span><span class="si">{</span><span class="n">required</span><span class="si">}</span><span class="s2"> positions, exceeding its "</span>
+</span><span data-line="52">                    <span class="sa">f</span><span class="s2">"maximum length of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">maximum_length</span><span class="si">}</span><span class="s2">"</span>
 </span><span data-line="53">                <span class="p">)</span>
 </span><span data-line="54">            <span class="n">capacity</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_capacity</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">capacity</span><span class="p">)</span>
 </span><span data-line="55">            <span class="k">while</span> <span class="n">capacity</span> <span class="o">&lt;</span> <span class="n">required</span><span class="p">:</span>
@@ -363,7 +363,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ReusableDynamicCache">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.ReusableDynamicCache">[docs]</a>
 </span><span data-line="158"><span class="k">class</span><span class="w"> </span><span class="nc">ReusableDynamicCache</span><span class="p">(</span><span class="n">DynamicCache</span><span class="p">):</span>
-</span><span data-line="159"><span class="w">    </span><span class="sd">&quot;&quot;&quot;DynamicCache with stable, capacity-backed tensors when supported.&quot;&quot;&quot;</span>
+</span><span data-line="159"><span class="w">    </span><span class="sd">"""DynamicCache with stable, capacity-backed tensors when supported."""</span>
 </span><span data-line="160">
 <div class="viewcode-block" id="ReusableDynamicCache.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.ReusableDynamicCache.__init__">[docs]</a>
@@ -374,7 +374,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="165">        <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="166">    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="167">        <span class="k">if</span> <span class="n">initial_capacity</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
-</span><span data-line="168">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;initial_capacity must be positive&quot;</span><span class="p">)</span>
+</span><span data-line="168">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"initial_capacity must be positive"</span><span class="p">)</span>
 </span><span data-line="169">        <span class="bp">self</span><span class="o">.</span><span class="n">initial_capacity</span> <span class="o">=</span> <span class="n">initial_capacity</span>
 </span><span data-line="170">        <span class="bp">self</span><span class="o">.</span><span class="n">maximum_length</span> <span class="o">=</span> <span class="n">max_cache_length</span>
 </span><span data-line="171">
@@ -402,14 +402,14 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="ReusableDynamicCache.move_to">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.ReusableDynamicCache.move_to">[docs]</a>
 </span><span data-line="192">    <span class="k">def</span><span class="w"> </span><span class="nf">move_to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">):</span>
-</span><span data-line="193">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">):</span>
+</span><span data-line="193">        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s2">"layers"</span><span class="p">):</span>
 </span><span data-line="194">            <span class="k">for</span> <span class="n">layer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">:</span>
 </span><span data-line="195">                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">ReusableDynamicLayer</span><span class="p">):</span>
 </span><span data-line="196">                    <span class="n">layer</span><span class="o">.</span><span class="n">move_to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="197">                <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;is_initialized&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+</span><span data-line="197">                <span class="k">elif</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"is_initialized"</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
 </span><span data-line="198">                    <span class="n">layer</span><span class="o">.</span><span class="n">keys</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="199">                    <span class="n">layer</span><span class="o">.</span><span class="n">values</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-</span><span data-line="200">                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;device&quot;</span><span class="p">):</span>
+</span><span data-line="200">                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">):</span>
 </span><span data-line="201">                        <span class="n">layer</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">layer</span><span class="o">.</span><span class="n">keys</span><span class="o">.</span><span class="n">device</span>
 </span><span data-line="202">        <span class="k">else</span><span class="p">:</span>
 </span><span data-line="203">            <span class="bp">self</span><span class="o">.</span><span class="n">key_cache</span> <span class="o">=</span> <span class="p">[</span><span class="n">tensor</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">key_cache</span><span class="p">]</span>
@@ -427,7 +427,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="211">    <span class="n">initial_capacity</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">DEFAULT_CACHE_INITIAL_CAPACITY</span><span class="p">,</span>
 </span><span data-line="212">    <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="213"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReusableDynamicCache</span><span class="p">:</span>
-</span><span data-line="214"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a session KV cache whose storage is reused between appends.&quot;&quot;&quot;</span>
+</span><span data-line="214"><span class="w">    </span><span class="sd">"""Create a session KV cache whose storage is reused between appends."""</span>
 </span><span data-line="215">    <span class="k">if</span> <span class="n">max_cache_length</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="216">        <span class="n">initial_capacity</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">initial_capacity</span><span class="p">,</span> <span class="n">max_cache_length</span><span class="p">)</span>
 </span><span data-line="217">    <span class="k">return</span> <span class="n">ReusableDynamicCache</span><span class="p">(</span>
@@ -442,7 +442,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.CacheState">[docs]</a>
 </span><span data-line="224"><span class="nd">@dataclass</span>
 </span><span data-line="225"><span class="k">class</span><span class="w"> </span><span class="nc">CacheState</span><span class="p">:</span>
-</span><span data-line="226"><span class="w">    </span><span class="sd">&quot;&quot;&quot;All reusable state belonging to one streaming-span session.&quot;&quot;&quot;</span>
+</span><span data-line="226"><span class="w">    </span><span class="sd">"""All reusable state belonging to one streaming-span session."""</span>
 </span><span data-line="227">
 </span><span data-line="228">    <span class="n">past_key_values</span><span class="p">:</span> <span class="n">Any</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="229">    <span class="n">input_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="n">_empty_long</span><span class="p">)</span>
@@ -456,7 +456,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="237">    <span class="n">next_position_id</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="238">    <span class="n">session_id</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
 </span><span data-line="239">    <span class="n">labels</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="p">()</span>
-</span><span data-line="240">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+</span><span data-line="240">    <span class="n">text</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">""</span>
 </span><span data-line="241">    <span class="n">tokens</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 </span><span data-line="242">    <span class="n">char_starts</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
 </span><span data-line="243">    <span class="n">char_ends</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">field</span><span class="p">(</span><span class="n">default_factory</span><span class="o">=</span><span class="nb">list</span><span class="p">)</span>
@@ -465,18 +465,18 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="246">
 </span><span data-line="247">    <span class="nd">@property</span>
 </span><span data-line="248">    <span class="k">def</span><span class="w"> </span><span class="nf">next_position</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="249"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the absolute decoder position for the next token.&quot;&quot;&quot;</span>
+</span><span data-line="249"><span class="w">        </span><span class="sd">"""Return the absolute decoder position for the next token."""</span>
 </span><span data-line="250">        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">cached_length</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_position_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">next_position_id</span>
 </span><span data-line="251">
 </span><span data-line="252">    <span class="nd">@property</span>
 </span><span data-line="253">    <span class="k">def</span><span class="w"> </span><span class="nf">word_length</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-</span><span data-line="254"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the authoritative cached word count without a device sync.&quot;&quot;&quot;</span>
+</span><span data-line="254"><span class="w">        </span><span class="sd">"""Return the authoritative cached word count without a device sync."""</span>
 </span><span data-line="255">        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tokens</span><span class="p">)</span>
 </span><span data-line="256">
 <div class="viewcode-block" id="CacheState.to">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.CacheState.to">[docs]</a>
 </span><span data-line="257">    <span class="k">def</span><span class="w"> </span><span class="nf">to</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span> <span class="o">|</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CacheState</span><span class="p">:</span>
-</span><span data-line="258"><span class="w">        </span><span class="sd">&quot;&quot;&quot;Move reusable model tensors only when the target device changes.&quot;&quot;&quot;</span>
+</span><span data-line="258"><span class="w">        </span><span class="sd">"""Move reusable model tensors only when the target device changes."""</span>
 </span><span data-line="259">        <span class="n">requested</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="260">        <span class="n">model_tensors</span> <span class="o">=</span> <span class="p">(</span>
 </span><span data-line="261">            <span class="bp">self</span><span class="o">.</span><span class="n">input_ids</span><span class="p">,</span>
@@ -523,7 +523,7 @@ data-aria-dark="Switch to auto color mode">
 <div class="viewcode-block" id="SessionCacheManager">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.SessionCacheManager">[docs]</a>
 </span><span data-line="300"><span class="k">class</span><span class="w"> </span><span class="nc">SessionCacheManager</span><span class="p">:</span>
-</span><span data-line="301"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Thread-safe ownership and lifecycle management for session states.&quot;&quot;&quot;</span>
+</span><span data-line="301"><span class="w">    </span><span class="sd">"""Thread-safe ownership and lifecycle management for session states."""</span>
 </span><span data-line="302">
 <div class="viewcode-block" id="SessionCacheManager.__init__">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.SessionCacheManager.__init__">[docs]</a>
@@ -543,7 +543,7 @@ data-aria-dark="Switch to auto color mode">
 <a class="viewcode-back" href="../../../api/gliner.modeling.cache.html#gliner.modeling.cache.SessionCacheManager.put">[docs]</a>
 </span><span data-line="311">    <span class="k">def</span><span class="w"> </span><span class="nf">put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state</span><span class="p">:</span> <span class="n">CacheState</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="312">        <span class="k">if</span> <span class="n">state</span><span class="o">.</span><span class="n">session_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-</span><span data-line="313">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A cached state must have a session_id&quot;</span><span class="p">)</span>
+</span><span data-line="313">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"A cached state must have a session_id"</span><span class="p">)</span>
 </span><span data-line="314">        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lock</span><span class="p">:</span>
 </span><span data-line="315">            <span class="bp">self</span><span class="o">.</span><span class="n">_states</span><span class="p">[</span><span class="n">state</span><span class="o">.</span><span class="n">session_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">state</span></div>
 
@@ -568,15 +568,15 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="330">
 </span><span data-line="331">
 </span><span data-line="332"><span class="k">def</span><span class="w"> </span><span class="nf">_cache_layers</span><span class="p">(</span><span class="n">past_kv</span><span class="p">):</span>
-</span><span data-line="333"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Yield ``(layer_index, keys, values)`` across cache API generations.&quot;&quot;&quot;</span>
-</span><span data-line="334">    <span class="n">layers</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="333"><span class="w">    </span><span class="sd">"""Yield ``(layer_index, keys, values)`` across cache API generations."""</span>
+</span><span data-line="334">    <span class="n">layers</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"layers"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="335">    <span class="k">if</span> <span class="n">layers</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="336">        <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">layer</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layers</span><span class="p">):</span>
-</span><span data-line="337">            <span class="n">initialized</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;is_initialized&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+</span><span data-line="337">            <span class="n">initialized</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"is_initialized"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
 </span><span data-line="338">            <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">initialized</span><span class="p">):</span>
 </span><span data-line="339">                <span class="n">initialized</span> <span class="o">=</span> <span class="n">initialized</span><span class="p">()</span>
-</span><span data-line="340">            <span class="n">keys</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;keys&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="341">            <span class="n">values</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">&quot;values&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="340">            <span class="n">keys</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"keys"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="341">            <span class="n">values</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="342">            <span class="k">if</span> <span class="n">initialized</span> <span class="ow">and</span> <span class="n">keys</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">values</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="343">                <span class="k">if</span> <span class="n">ReusableDynamicLayer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span>
 </span><span data-line="344">                    <span class="n">layer</span><span class="p">,</span> <span class="n">ReusableDynamicLayer</span>
@@ -588,9 +588,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="350">        <span class="k">return</span>
 </span><span data-line="351">
 </span><span data-line="352">    <span class="c1"># transformers 4.x DynamicCache stores tensors in parallel lists.  Keep</span>
-</span><span data-line="353">    <span class="c1"># support for it because GLiNER&#39;s dependency range spans both cache APIs.</span>
-</span><span data-line="354">    <span class="n">key_cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;key_cache&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
-</span><span data-line="355">    <span class="n">value_cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;value_cache&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="353">    <span class="c1"># support for it because GLiNER's dependency range spans both cache APIs.</span>
+</span><span data-line="354">    <span class="n">key_cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"key_cache"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+</span><span data-line="355">    <span class="n">value_cache</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"value_cache"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 </span><span data-line="356">    <span class="k">if</span> <span class="n">key_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">value_cache</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="357">        <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">key_cache</span><span class="p">,</span> <span class="n">value_cache</span><span class="p">)):</span>
 </span><span data-line="358">            <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span> <span class="ow">and</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">values</span><span class="p">):</span>
@@ -605,8 +605,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="367">
 </span><span data-line="368">
 </span><span data-line="369"><span class="k">def</span><span class="w"> </span><span class="nf">_is_dynamic_cache_like</span><span class="p">(</span><span class="n">past_kv</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
-</span><span data-line="370">    <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;layers&quot;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
-</span><span data-line="371">        <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;key_cache&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;value_cache&quot;</span><span class="p">)</span>
+</span><span data-line="370">    <span class="k">return</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"layers"</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+</span><span data-line="371">        <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"key_cache"</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"value_cache"</span><span class="p">)</span>
 </span><span data-line="372">    <span class="p">)</span>
 </span><span data-line="373">
 </span><span data-line="374">
@@ -636,7 +636,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="398">            <span class="p">(</span><span class="n">layer_idx</span><span class="p">,</span> <span class="n">keys</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">),</span> <span class="n">values</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">))</span>
 </span><span data-line="399">            <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">cache_layers</span>
 </span><span data-line="400">        <span class="p">)</span>
-</span><span data-line="401">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">&quot;to&quot;</span><span class="p">):</span>
+</span><span data-line="401">    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">past_kv</span><span class="p">,</span> <span class="s2">"to"</span><span class="p">):</span>
 </span><span data-line="402">        <span class="k">return</span> <span class="n">past_kv</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </span><span data-line="403">    <span class="k">return</span> <span class="n">past_kv</span>
 </span><span data-line="404">
@@ -647,7 +647,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="409">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 </span><span data-line="410">    <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="411"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReusableDynamicCache</span><span class="p">:</span>
-</span><span data-line="412"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a reusable cache from complete per-layer key/value tensors.&quot;&quot;&quot;</span>
+</span><span data-line="412"><span class="w">    </span><span class="sd">"""Build a reusable cache from complete per-layer key/value tensors."""</span>
 </span><span data-line="413">    <span class="n">cache</span> <span class="o">=</span> <span class="n">create_reusable_cache</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">max_cache_length</span><span class="o">=</span><span class="n">max_cache_length</span><span class="p">)</span>
 </span><span data-line="414">    <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">layer_values</span><span class="p">:</span>
 </span><span data-line="415">        <span class="n">cache</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">values</span><span class="p">,</span> <span class="n">layer_idx</span><span class="p">)</span>
@@ -662,12 +662,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="422">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 </span><span data-line="423">    <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="424"><span class="p">):</span>
-</span><span data-line="425"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Return an independent copy of a transformers-style KV cache.</span>
+</span><span data-line="425"><span class="w">    </span><span class="sd">"""Return an independent copy of a transformers-style KV cache.</span>
 </span><span data-line="426">
 </span><span data-line="427"><span class="sd">    Streaming cache layers append in place.  Tests, transactional helpers, and</span>
 </span><span data-line="428"><span class="sd">    dynamic batching therefore need an explicit copy operation rather than a</span>
 </span><span data-line="429"><span class="sd">    shallow ``copy.copy`` of the cache container.</span>
-</span><span data-line="430"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="430"><span class="sd">    """</span>
 </span><span data-line="431">    <span class="k">if</span> <span class="n">past_kv</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 </span><span data-line="432">        <span class="k">return</span> <span class="kc">None</span>
 </span><span data-line="433">    <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">is_tensor</span><span class="p">(</span><span class="n">past_kv</span><span class="p">):</span>
@@ -696,7 +696,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="456">            <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
 </span><span data-line="457">            <span class="n">max_cache_length</span><span class="o">=</span><span class="n">max_cache_length</span><span class="p">,</span>
 </span><span data-line="458">        <span class="p">)</span>
-</span><span data-line="459">    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported past_key_values type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">past_kv</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+</span><span data-line="459">    <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported past_key_values type: </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">past_kv</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
 
 </span><span data-line="460">
 </span><span data-line="461">
@@ -708,17 +708,17 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="465">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 </span><span data-line="466">    <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="467"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ReusableDynamicCache</span><span class="p">:</span>
-</span><span data-line="468"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Stack equal-length, batch-size-one caches along their batch dimension.&quot;&quot;&quot;</span>
+</span><span data-line="468"><span class="w">    </span><span class="sd">"""Stack equal-length, batch-size-one caches along their batch dimension."""</span>
 </span><span data-line="469">    <span class="k">if</span> <span class="ow">not</span> <span class="n">caches</span><span class="p">:</span>
-</span><span data-line="470">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;At least one cache is required&quot;</span><span class="p">)</span>
+</span><span data-line="470">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"At least one cache is required"</span><span class="p">)</span>
 </span><span data-line="471">
 </span><span data-line="472">    <span class="n">cache_layers</span> <span class="o">=</span> <span class="p">[</span><span class="nb">list</span><span class="p">(</span><span class="n">_cache_layers</span><span class="p">(</span><span class="n">cache</span><span class="p">))</span> <span class="k">for</span> <span class="n">cache</span> <span class="ow">in</span> <span class="n">caches</span><span class="p">]</span>
 </span><span data-line="473">    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="ow">not</span> <span class="n">layers</span> <span class="k">for</span> <span class="n">layers</span> <span class="ow">in</span> <span class="n">cache_layers</span><span class="p">):</span>
-</span><span data-line="474">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Every cache must expose initialized key/value layers&quot;</span><span class="p">)</span>
+</span><span data-line="474">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Every cache must expose initialized key/value layers"</span><span class="p">)</span>
 </span><span data-line="475">
 </span><span data-line="476">    <span class="n">layer_indices</span> <span class="o">=</span> <span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">layer_idx</span> <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">)</span> <span class="k">for</span> <span class="n">layers</span> <span class="ow">in</span> <span class="n">cache_layers</span><span class="p">]</span>
 </span><span data-line="477">    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">indices</span> <span class="o">!=</span> <span class="n">layer_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">indices</span> <span class="ow">in</span> <span class="n">layer_indices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-</span><span data-line="478">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Caches must contain the same initialized layers&quot;</span><span class="p">)</span>
+</span><span data-line="478">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Caches must contain the same initialized layers"</span><span class="p">)</span>
 </span><span data-line="479">
 </span><span data-line="480">    <span class="n">stacked_layers</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="481">    <span class="k">for</span> <span class="n">layer_offset</span><span class="p">,</span> <span class="n">layer_idx</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">layer_indices</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
@@ -727,9 +727,9 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="484">        <span class="n">reference_key_shape</span> <span class="o">=</span> <span class="n">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 </span><span data-line="485">        <span class="n">reference_value_shape</span> <span class="o">=</span> <span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
 </span><span data-line="486">        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">key</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">key</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">reference_key_shape</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">):</span>
-</span><span data-line="487">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only compatible batch-size-one caches can be stacked&quot;</span><span class="p">)</span>
+</span><span data-line="487">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Only compatible batch-size-one caches can be stacked"</span><span class="p">)</span>
 </span><span data-line="488">        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span> <span class="ow">or</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span> <span class="o">!=</span> <span class="n">reference_value_shape</span> <span class="k">for</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">values</span><span class="p">):</span>
-</span><span data-line="489">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only compatible batch-size-one caches can be stacked&quot;</span><span class="p">)</span>
+</span><span data-line="489">            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Only compatible batch-size-one caches can be stacked"</span><span class="p">)</span>
 </span><span data-line="490">        <span class="n">stacked_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
 </span><span data-line="491">            <span class="p">(</span>
 </span><span data-line="492">                <span class="n">layer_idx</span><span class="p">,</span>
@@ -755,28 +755,28 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="509">    <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
 </span><span data-line="510">    <span class="n">max_cache_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="511"><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">ReusableDynamicCache</span><span class="p">]:</span>
-</span><span data-line="512"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Split a batched cache into compact batch-size-one session caches.&quot;&quot;&quot;</span>
+</span><span data-line="512"><span class="w">    </span><span class="sd">"""Split a batched cache into compact batch-size-one session caches."""</span>
 </span><span data-line="513">    <span class="n">normalized_lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="p">)</span> <span class="k">for</span> <span class="n">length</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">]</span>
 </span><span data-line="514">    <span class="k">if</span> <span class="ow">not</span> <span class="n">normalized_lengths</span><span class="p">:</span>
 </span><span data-line="515">        <span class="k">return</span> <span class="p">[]</span>
 </span><span data-line="516">    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">length</span> <span class="o">&lt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">length</span> <span class="ow">in</span> <span class="n">normalized_lengths</span><span class="p">):</span>
-</span><span data-line="517">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Cache lengths must be non-negative&quot;</span><span class="p">)</span>
+</span><span data-line="517">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cache lengths must be non-negative"</span><span class="p">)</span>
 </span><span data-line="518">
 </span><span data-line="519">    <span class="n">layers</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">_cache_layers</span><span class="p">(</span><span class="n">past_kv</span><span class="p">))</span>
 </span><span data-line="520">    <span class="k">if</span> <span class="ow">not</span> <span class="n">layers</span><span class="p">:</span>
-</span><span data-line="521">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;past_key_values must expose initialized key/value layers&quot;</span><span class="p">)</span>
+</span><span data-line="521">        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"past_key_values must expose initialized key/value layers"</span><span class="p">)</span>
 </span><span data-line="522">    <span class="n">batch_size</span> <span class="o">=</span> <span class="n">layers</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </span><span data-line="523">    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">normalized_lengths</span><span class="p">)</span> <span class="o">!=</span> <span class="n">batch_size</span><span class="p">:</span>
-</span><span data-line="524">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;One cache length is required per batch row&quot;</span><span class="p">)</span>
+</span><span data-line="524">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"One cache length is required per batch row"</span><span class="p">)</span>
 </span><span data-line="525">
 </span><span data-line="526">    <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="527">    <span class="k">for</span> <span class="n">row</span><span class="p">,</span> <span class="n">length</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">normalized_lengths</span><span class="p">):</span>
 </span><span data-line="528">        <span class="n">row_layers</span> <span class="o">=</span> <span class="p">[]</span>
 </span><span data-line="529">        <span class="k">for</span> <span class="n">layer_idx</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">values</span> <span class="ow">in</span> <span class="n">layers</span><span class="p">:</span>
 </span><span data-line="530">            <span class="k">if</span> <span class="n">keys</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">batch_size</span> <span class="ow">or</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span> <span class="o">!=</span> <span class="n">batch_size</span><span class="p">:</span>
-</span><span data-line="531">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;All cache layers must have the same batch size&quot;</span><span class="p">)</span>
+</span><span data-line="531">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"All cache layers must have the same batch size"</span><span class="p">)</span>
 </span><span data-line="532">            <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="n">keys</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="ow">or</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="n">values</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
-</span><span data-line="533">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Requested cache length exceeds the available cache&quot;</span><span class="p">)</span>
+</span><span data-line="533">                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Requested cache length exceeds the available cache"</span><span class="p">)</span>
 </span><span data-line="534">            <span class="n">row_layers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
 </span><span data-line="535">                <span class="p">(</span>
 </span><span data-line="536">                    <span class="n">layer_idx</span><span class="p">,</span>

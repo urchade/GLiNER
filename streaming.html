@@ -196,7 +196,7 @@ reads <code class="docutils literal notranslate"><span class="pre">model_type=&q
 <code class="docutils literal notranslate"><span class="pre">StreamingSpanGLiNER</span></code> automatically.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
-</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-stream-pii-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-stream-pii-v1.0"</span><span class="p">)</span>
 </span><span data-line="4"><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 </span></pre></div>
 </div>
@@ -204,12 +204,12 @@ reads <code class="docutils literal notranslate"><span class="pre">model_type=&q
 <h2>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h2>
 <p>Pass one chunk at a time with a stable session ID. The chunks are concatenated
 exactly as supplied, so retain spaces and punctuation at chunk boundaries.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;email address&quot;</span><span class="p">,</span> <span class="s2">&quot;phone number&quot;</span><span class="p">]</span>
-</span><span data-line="2"><span class="n">session_id</span> <span class="o">=</span> <span class="s2">&quot;support-call-42&quot;</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"person"</span><span class="p">,</span> <span class="s2">"email address"</span><span class="p">,</span> <span class="s2">"phone number"</span><span class="p">]</span>
+</span><span data-line="2"><span class="n">session_id</span> <span class="o">=</span> <span class="s2">"support-call-42"</span>
 </span><span data-line="3"><span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="4">    <span class="s2">&quot;Customer Alice Johnson &quot;</span><span class="p">,</span>
-</span><span data-line="5">    <span class="s2">&quot;can be reached at alice@example.com &quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="s2">&quot;or +1 202-555-0147.&quot;</span><span class="p">,</span>
+</span><span data-line="4">    <span class="s2">"Customer Alice Johnson "</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"can be reached at alice@example.com "</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s2">"or +1 202-555-0147."</span><span class="p">,</span>
 </span><span data-line="7"><span class="p">]</span>
 </span><span data-line="8">
 </span><span data-line="9"><span class="k">try</span><span class="p">:</span>
@@ -229,11 +229,11 @@ exactly as supplied, so retain spaces and punctuation at chunk boundaries.</p>
 accumulated session text. It is not a list of only the entities detected in the
 latest chunk. An entity has the same shape as an ordinary GLiNER prediction:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
-</span><span data-line="2">    <span class="s2">&quot;start&quot;</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>           <span class="c1"># document-relative, inclusive character offset</span>
-</span><span data-line="3">    <span class="s2">&quot;end&quot;</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>            <span class="c1"># document-relative, exclusive character offset</span>
-</span><span data-line="4">    <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="s2">&quot;Alice Johnson&quot;</span><span class="p">,</span>
-</span><span data-line="5">    <span class="s2">&quot;label&quot;</span><span class="p">:</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.93</span><span class="p">,</span>
+</span><span data-line="2">    <span class="s2">"start"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>           <span class="c1"># document-relative, inclusive character offset</span>
+</span><span data-line="3">    <span class="s2">"end"</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>            <span class="c1"># document-relative, exclusive character offset</span>
+</span><span data-line="4">    <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"Alice Johnson"</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"person"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.93</span><span class="p">,</span>
 </span><span data-line="7"><span class="p">}</span>
 </span></pre></div>
 </div>
@@ -313,13 +313,13 @@ semantics but differ in who owns the cache and how work is batched.</p>
 <p>The architecture can process complete texts without retaining state. Omitting
 <code class="docutils literal notranslate"><span class="pre">session_id</span></code> delegates to the ordinary GLiNER inference pipeline.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
-</span><span data-line="2">    <span class="s2">&quot;Alice Johnson&#39;s email is alice@example.com.&quot;</span><span class="p">,</span>
+</span><span data-line="2">    <span class="s2">"Alice Johnson's email is alice@example.com."</span><span class="p">,</span>
 </span><span data-line="3">    <span class="n">labels</span><span class="p">,</span>
 </span><span data-line="4">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="5"><span class="p">)</span>
 </span><span data-line="6">
 </span><span data-line="7"><span class="n">batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
-</span><span data-line="8">    <span class="p">[</span><span class="s2">&quot;Alice called.&quot;</span><span class="p">,</span> <span class="s2">&quot;Bob emailed.&quot;</span><span class="p">],</span>
+</span><span data-line="8">    <span class="p">[</span><span class="s2">"Alice called."</span><span class="p">,</span> <span class="s2">"Bob emailed."</span><span class="p">],</span>
 </span><span data-line="9">    <span class="n">labels</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
 </span><span data-line="11"><span class="p">)</span>
@@ -332,16 +332,16 @@ session lifecycle and cache-memory concerns.</p>
 <h3>Flexible synchronous sessions<a class="headerlink" href="#flexible-synchronous-sessions" title="Link to this heading">¶</a></h3>
 <p>Supplying <code class="docutils literal notranslate"><span class="pre">session_id</span></code> turns each input into an append operation. Use one
 stable, non-empty session ID per text; IDs must be unique within one call.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">session_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;call-a&quot;</span><span class="p">,</span> <span class="s2">&quot;call-b&quot;</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">session_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"call-a"</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">]</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">first</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
-</span><span data-line="4">    <span class="p">[</span><span class="s2">&quot;Alice Johnson &quot;</span><span class="p">,</span> <span class="s2">&quot;Bob Smith &quot;</span><span class="p">],</span>
+</span><span data-line="4">    <span class="p">[</span><span class="s2">"Alice Johnson "</span><span class="p">,</span> <span class="s2">"Bob Smith "</span><span class="p">],</span>
 </span><span data-line="5">    <span class="n">labels</span><span class="p">,</span>
 </span><span data-line="6">    <span class="n">session_id</span><span class="o">=</span><span class="n">session_ids</span><span class="p">,</span>
 </span><span data-line="7">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
 </span><span data-line="8"><span class="p">)</span>
 </span><span data-line="9"><span class="n">second</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
-</span><span data-line="10">    <span class="p">[</span><span class="s2">&quot;shared her email.&quot;</span><span class="p">,</span> <span class="s2">&quot;shared his number.&quot;</span><span class="p">],</span>
+</span><span data-line="10">    <span class="p">[</span><span class="s2">"shared her email."</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">],</span>
 </span><span data-line="11">    <span class="n">labels</span><span class="p">,</span>
 </span><span data-line="12">    <span class="n">session_id</span><span class="o">=</span><span class="n">session_ids</span><span class="p">,</span>
 </span><span data-line="13">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
@@ -364,14 +364,14 @@ clear the session or append non-empty text with <code class="docutils literal no
 stacking and splitting their historical KV caches. The session-to-row mapping
 and labels are immutable for the handle’s lifetime.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">with</span> <span class="n">model</span><span class="o">.</span><span class="n">create_streaming_batch</span><span class="p">(</span>
-</span><span data-line="2">    <span class="n">session_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;call-a&quot;</span><span class="p">,</span> <span class="s2">&quot;call-b&quot;</span><span class="p">],</span>
+</span><span data-line="2">    <span class="n">session_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">"call-a"</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">],</span>
 </span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
 </span><span data-line="4"><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
-</span><span data-line="5">    <span class="n">first</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;Alice Johnson &quot;</span><span class="p">,</span> <span class="s2">&quot;Bob Smith &quot;</span><span class="p">])</span>
-</span><span data-line="6">    <span class="n">second</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;shared her email.&quot;</span><span class="p">,</span> <span class="s2">&quot;shared his number.&quot;</span><span class="p">])</span>
+</span><span data-line="5">    <span class="n">first</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"Alice Johnson "</span><span class="p">,</span> <span class="s2">"Bob Smith "</span><span class="p">])</span>
+</span><span data-line="6">    <span class="n">second</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"shared her email."</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">])</span>
 </span><span data-line="7">
 </span><span data-line="8">    <span class="c1"># Keep call-a unchanged while call-b advances.</span>
-</span><span data-line="9">    <span class="n">third</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="s2">&quot; It is +1 202-555-0147.&quot;</span><span class="p">])</span>
+</span><span data-line="9">    <span class="n">third</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">""</span><span class="p">,</span> <span class="s2">" It is +1 202-555-0147."</span><span class="p">])</span>
 </span></pre></div>
 </div>
 <p><code class="docutils literal notranslate"><span class="pre">append</span></code> returns one complete snapshot per row. An empty row retains its
@@ -409,11 +409,11 @@ concurrently.</p>
 </span><span data-line="15">        <span class="n">queue_capacity</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
 </span><span data-line="16">    <span class="p">)</span> <span class="k">as</span> <span class="n">engine</span><span class="p">:</span>
 </span><span data-line="17">        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
-</span><span data-line="18">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">&quot;call-a&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Alice &quot;</span><span class="p">,</span> <span class="s2">&quot;shared her email.&quot;</span><span class="p">]),</span>
-</span><span data-line="19">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">&quot;call-b&quot;</span><span class="p">,</span> <span class="p">[</span><span class="s2">&quot;Bob &quot;</span><span class="p">,</span> <span class="s2">&quot;shared his number.&quot;</span><span class="p">]),</span>
+</span><span data-line="18">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">"call-a"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Alice "</span><span class="p">,</span> <span class="s2">"shared her email."</span><span class="p">]),</span>
+</span><span data-line="19">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Bob "</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">]),</span>
 </span><span data-line="20">        <span class="p">)</span>
-</span><span data-line="21">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">&quot;call-a&quot;</span><span class="p">)</span>
-</span><span data-line="22">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">&quot;call-b&quot;</span><span class="p">)</span>
+</span><span data-line="21">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-a"</span><span class="p">)</span>
+</span><span data-line="22">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-b"</span><span class="p">)</span>
 </span><span data-line="23">        <span class="k">return</span> <span class="n">results</span>
 </span><span data-line="24">
 </span><span data-line="25">
@@ -465,8 +465,8 @@ are kept on CPU so the prediction history does not consume progressively more
 accelerator memory.</p>
 <p>For sessions created through <code class="docutils literal notranslate"><span class="pre">inference(...,</span> <span class="pre">session_id=...)</span></code> or the async
 engine, use:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">&quot;call-a&quot;</span><span class="p">)</span>             <span class="c1"># one session</span>
-</span><span data-line="2"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">([</span><span class="s2">&quot;call-b&quot;</span><span class="p">,</span> <span class="s2">&quot;call-c&quot;</span><span class="p">])</span>  <span class="c1"># several sessions</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-a"</span><span class="p">)</span>             <span class="c1"># one session</span>
+</span><span data-line="2"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">([</span><span class="s2">"call-b"</span><span class="p">,</span> <span class="s2">"call-c"</span><span class="p">])</span>  <span class="c1"># several sessions</span>
 </span><span data-line="3"><span class="n">model</span><span class="o">.</span><span class="n">clear_sessions</span><span class="p">()</span>                    <span class="c1"># every model-owned session</span>
 </span><span data-line="4"><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">session_count</span><span class="p">)</span>
 </span></pre></div>

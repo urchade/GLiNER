@@ -186,7 +186,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="12">    <span class="n">max_text_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="13">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="14"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="15"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Select the first marked subtoken representation for each word.&quot;&quot;&quot;</span>
+</span><span data-line="15"><span class="w">    </span><span class="sd">"""Select the first marked subtoken representation for each word."""</span>
 </span><span data-line="16">    <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">))</span>
 </span><span data-line="17">    <span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">words_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 </span><span data-line="18">    <span class="n">target_word_indices</span> <span class="o">=</span> <span class="n">words_mask</span><span class="p">[</span><span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
@@ -204,7 +204,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="27">    <span class="n">max_text_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="28">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="29"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="30"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Select the last marked subtoken representation for each word.&quot;&quot;&quot;</span>
+</span><span data-line="30"><span class="w">    </span><span class="sd">"""Select the last marked subtoken representation for each word."""</span>
 </span><span data-line="31">    <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">))</span>
 </span><span data-line="32">    <span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">words_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
 </span><span data-line="33">    <span class="n">target_word_indices</span> <span class="o">=</span> <span class="n">words_mask</span><span class="p">[</span><span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
@@ -223,7 +223,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="43">    <span class="n">max_text_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="44">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="45"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="46"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean-pool all attended subtoken representations for each word.&quot;&quot;&quot;</span>
+</span><span data-line="46"><span class="w">    </span><span class="sd">"""Mean-pool all attended subtoken representations for each word."""</span>
 </span><span data-line="47">    <span class="n">valid_subtokens</span> <span class="o">=</span> <span class="p">(</span><span class="n">words_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">words_mask</span> <span class="o">&lt;=</span> <span class="n">max_text_length</span><span class="p">)</span>
 </span><span data-line="48">    <span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid_subtokens</span><span class="p">)</span>
 </span><span data-line="49">    <span class="n">flat_word_indices</span> <span class="o">=</span> <span class="n">batch_indices</span> <span class="o">*</span> <span class="n">max_text_length</span> <span class="o">+</span> <span class="n">words_mask</span><span class="p">[</span><span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
@@ -239,7 +239,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="59">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="60">            <span class="n">expanded_indices</span><span class="p">,</span>
 </span><span data-line="61">            <span class="n">selected_embeddings</span><span class="p">,</span>
-</span><span data-line="62">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="62">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">,</span>
 </span><span data-line="63">            <span class="n">include_self</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="64">        <span class="p">)</span>
 </span><span data-line="65">        <span class="n">word_counts</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">flat_output_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -247,7 +247,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="67">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="68">            <span class="n">flat_word_indices</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
 </span><span data-line="69">            <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_ones</span><span class="p">((</span><span class="n">flat_word_indices</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
-</span><span data-line="70">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="70">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">,</span>
 </span><span data-line="71">            <span class="n">include_self</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="72">        <span class="p">)</span>
 </span><span data-line="73">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">words_embedding</span> <span class="o">/</span> <span class="n">word_counts</span><span class="o">.</span><span class="n">clamp_min</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -256,7 +256,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="76">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="77">            <span class="n">expanded_indices</span><span class="p">,</span>
 </span><span data-line="78">            <span class="n">selected_embeddings</span><span class="p">,</span>
-</span><span data-line="79">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;mean&quot;</span><span class="p">,</span>
+</span><span data-line="79">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"mean"</span><span class="p">,</span>
 </span><span data-line="80">            <span class="n">include_self</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 </span><span data-line="81">        <span class="p">)</span>
 </span><span data-line="82">
@@ -274,7 +274,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="91">    <span class="n">max_text_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="92">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="93"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">:</span>
-</span><span data-line="94"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Element-wise max-pool all attended subtoken representations for each word.&quot;&quot;&quot;</span>
+</span><span data-line="94"><span class="w">    </span><span class="sd">"""Element-wise max-pool all attended subtoken representations for each word."""</span>
 </span><span data-line="95">    <span class="n">valid_subtokens</span> <span class="o">=</span> <span class="p">(</span><span class="n">words_mask</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">bool</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">words_mask</span> <span class="o">&lt;=</span> <span class="n">max_text_length</span><span class="p">)</span>
 </span><span data-line="96">    <span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid_subtokens</span><span class="p">)</span>
 </span><span data-line="97">    <span class="n">flat_word_indices</span> <span class="o">=</span> <span class="n">batch_indices</span> <span class="o">*</span> <span class="n">max_text_length</span> <span class="o">+</span> <span class="n">words_mask</span><span class="p">[</span><span class="n">batch_indices</span><span class="p">,</span> <span class="n">token_indices</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span>
@@ -290,7 +290,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="107">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="108">            <span class="n">expanded_indices</span><span class="p">,</span>
 </span><span data-line="109">            <span class="n">selected_embeddings</span><span class="p">,</span>
-</span><span data-line="110">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;amax&quot;</span><span class="p">,</span>
+</span><span data-line="110">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"amax"</span><span class="p">,</span>
 </span><span data-line="111">            <span class="n">include_self</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="112">        <span class="p">)</span>
 </span><span data-line="113">        <span class="n">word_counts</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_zeros</span><span class="p">((</span><span class="n">flat_output_size</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
@@ -298,7 +298,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="115">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="116">            <span class="n">flat_word_indices</span><span class="o">.</span><span class="n">unsqueeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span>
 </span><span data-line="117">            <span class="n">token_embeds</span><span class="o">.</span><span class="n">new_ones</span><span class="p">((</span><span class="n">flat_word_indices</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span> <span class="mi">1</span><span class="p">)),</span>
-</span><span data-line="118">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;sum&quot;</span><span class="p">,</span>
+</span><span data-line="118">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"sum"</span><span class="p">,</span>
 </span><span data-line="119">            <span class="n">include_self</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 </span><span data-line="120">        <span class="p">)</span>
 </span><span data-line="121">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">words_embedding</span><span class="o">.</span><span class="n">masked_fill</span><span class="p">(</span><span class="n">word_counts</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
@@ -308,7 +308,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="125">            <span class="mi">0</span><span class="p">,</span>
 </span><span data-line="126">            <span class="n">expanded_indices</span><span class="p">,</span>
 </span><span data-line="127">            <span class="n">selected_embeddings</span><span class="p">,</span>
-</span><span data-line="128">            <span class="n">reduce</span><span class="o">=</span><span class="s2">&quot;amax&quot;</span><span class="p">,</span>
+</span><span data-line="128">            <span class="n">reduce</span><span class="o">=</span><span class="s2">"amax"</span><span class="p">,</span>
 </span><span data-line="129">            <span class="n">include_self</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
 </span><span data-line="130">        <span class="p">)</span>
 </span><span data-line="131">
@@ -326,30 +326,30 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="140">    <span class="n">max_text_length</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="141">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="142">    <span class="n">text_lengths</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
-</span><span data-line="143">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;first&quot;</span><span class="p">,</span>
+</span><span data-line="143">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"first"</span><span class="p">,</span>
 </span><span data-line="144"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="145"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Dispatch to the configured subtoken pooling implementation.</span>
+</span><span data-line="145"><span class="w">    </span><span class="sd">"""Dispatch to the configured subtoken pooling implementation.</span>
 </span><span data-line="146">
 </span><span data-line="147"><span class="sd">    ``first`` and ``last`` expect one marked subtoken per word. ``mean`` and</span>
 </span><span data-line="148"><span class="sd">    ``max`` expect every subtoken to carry its 1-based word index.</span>
-</span><span data-line="149"><span class="sd">    &quot;&quot;&quot;</span>
-</span><span data-line="150">    <span class="k">if</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;first&quot;</span><span class="p">:</span>
+</span><span data-line="149"><span class="sd">    """</span>
+</span><span data-line="150">    <span class="k">if</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"first"</span><span class="p">:</span>
 </span><span data-line="151">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">extract_first_word_embeddings</span><span class="p">(</span>
 </span><span data-line="152">            <span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span>
 </span><span data-line="153">        <span class="p">)</span>
-</span><span data-line="154">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;last&quot;</span><span class="p">:</span>
+</span><span data-line="154">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"last"</span><span class="p">:</span>
 </span><span data-line="155">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">extract_last_word_embeddings</span><span class="p">(</span><span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span><span class="p">)</span>
-</span><span data-line="156">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;mean&quot;</span><span class="p">:</span>
+</span><span data-line="156">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"mean"</span><span class="p">:</span>
 </span><span data-line="157">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">extract_mean_word_embeddings</span><span class="p">(</span>
 </span><span data-line="158">            <span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span>
 </span><span data-line="159">        <span class="p">)</span>
-</span><span data-line="160">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span>
+</span><span data-line="160">    <span class="k">elif</span> <span class="n">subtoken_pooling</span> <span class="o">==</span> <span class="s2">"max"</span><span class="p">:</span>
 </span><span data-line="161">        <span class="n">words_embedding</span> <span class="o">=</span> <span class="n">extract_max_word_embeddings</span><span class="p">(</span>
 </span><span data-line="162">            <span class="n">token_embeds</span><span class="p">,</span> <span class="n">words_mask</span><span class="p">,</span> <span class="n">attention_mask</span><span class="p">,</span> <span class="n">batch_size</span><span class="p">,</span> <span class="n">max_text_length</span><span class="p">,</span> <span class="n">embed_dim</span>
 </span><span data-line="163">        <span class="p">)</span>
 </span><span data-line="164">    <span class="k">else</span><span class="p">:</span>
-</span><span data-line="165">        <span class="n">supported</span> <span class="o">=</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SUBTOKEN_POOLING_MODES</span><span class="p">)</span>
-</span><span data-line="166">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unknown subtoken pooling strategy </span><span class="si">{</span><span class="n">subtoken_pooling</span><span class="si">!r}</span><span class="s2">. Expected one of: </span><span class="si">{</span><span class="n">supported</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="165">        <span class="n">supported</span> <span class="o">=</span> <span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">SUBTOKEN_POOLING_MODES</span><span class="p">)</span>
+</span><span data-line="166">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unknown subtoken pooling strategy </span><span class="si">{</span><span class="n">subtoken_pooling</span><span class="si">!r}</span><span class="s2">. Expected one of: </span><span class="si">{</span><span class="n">supported</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span><span data-line="167">
 </span><span data-line="168">    <span class="n">aranged_word_idx</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">max_text_length</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">attention_mask</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">token_embeds</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">expand</span><span class="p">(</span>
 </span><span data-line="169">        <span class="n">batch_size</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span>
@@ -370,7 +370,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="181">    <span class="n">embed_dim</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 </span><span data-line="182">    <span class="n">embed_ent_token</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
 </span><span data-line="183"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="184"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract prompt/entity type embeddings from special class tokens.</span>
+</span><span data-line="184"><span class="w">    </span><span class="sd">"""Extract prompt/entity type embeddings from special class tokens.</span>
 </span><span data-line="185">
 </span><span data-line="186"><span class="sd">    Extracts embeddings for entity types or other prompt elements that are marked</span>
 </span><span data-line="187"><span class="sd">    with special class tokens (e.g., [ENT] tokens). These embeddings represent</span>
@@ -406,7 +406,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="217"><span class="sd">            - prompts_embedding_mask: Mask indicating valid prompt positions</span>
 </span><span data-line="218"><span class="sd">              (True) vs padding (False).</span>
 </span><span data-line="219"><span class="sd">              Shape: (batch_size, max_num_types)</span>
-</span><span data-line="220"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="220"><span class="sd">    """</span>
 </span><span data-line="221">    <span class="c1"># Find all positions with the class token</span>
 </span><span data-line="222">    <span class="n">class_token_mask</span> <span class="o">=</span> <span class="n">input_ids</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">class_token_index</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">attention_mask</span><span class="o">.</span><span class="n">gt</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </span><span data-line="223">    <span class="n">num_class_tokens</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">class_token_mask</span><span class="p">,</span> <span class="n">dim</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -450,10 +450,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="258">    <span class="n">text_lengths</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="259">    <span class="n">words_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="260">    <span class="n">embed_ent_token</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
-</span><span data-line="261">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;first&quot;</span><span class="p">,</span>
+</span><span data-line="261">    <span class="n">subtoken_pooling</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"first"</span><span class="p">,</span>
 </span><span data-line="262">    <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
 </span><span data-line="263"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="264"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract both prompt embeddings and word embeddings in one call.</span>
+</span><span data-line="264"><span class="w">    </span><span class="sd">"""Extract both prompt embeddings and word embeddings in one call.</span>
 </span><span data-line="265">
 </span><span data-line="266"><span class="sd">    Convenience function that combines extract_prompt_features and</span>
 </span><span data-line="267"><span class="sd">    extract_word_embeddings to get both prompt/entity type embeddings</span>
@@ -491,7 +491,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="299"><span class="sd">              Shape: (batch_size, max_text_length, embed_dim)</span>
 </span><span data-line="300"><span class="sd">            - mask: Mask for valid word positions.</span>
 </span><span data-line="301"><span class="sd">              Shape: (batch_size, max_text_length)</span>
-</span><span data-line="302"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="302"><span class="sd">    """</span>
 </span><span data-line="303">    <span class="n">batch_size</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">embed_dim</span> <span class="o">=</span> <span class="n">token_embeds</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="304">    <span class="n">max_text_length</span> <span class="o">=</span> <span class="n">text_lengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
 </span><span data-line="305">
@@ -523,7 +523,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="328">    <span class="n">span_rep</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="329">    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="330"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="331"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build entity pairs for relation extraction based on adjacency scores.</span>
+</span><span data-line="331"><span class="w">    </span><span class="sd">"""Build entity pairs for relation extraction based on adjacency scores.</span>
 </span><span data-line="332">
 </span><span data-line="333"><span class="sd">    Extracts entity pairs (head, tail) where the adjacency score exceeds a</span>
 </span><span data-line="334"><span class="sd">    threshold, and retrieves their corresponding embeddings. This is used in</span>
@@ -531,8 +531,8 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="336"><span class="sd">    relation types.</span>
 </span><span data-line="337">
 </span><span data-line="338"><span class="sd">    The function considers ALL directed pairs (i,j) where i≠j, not just the</span>
-</span><span data-line="339"><span class="sd">    upper triangle, since relation direction matters (e.g., &quot;founded&quot; vs</span>
-</span><span data-line="340"><span class="sd">    &quot;founded_by&quot; have opposite directions).</span>
+</span><span data-line="339"><span class="sd">    upper triangle, since relation direction matters (e.g., "founded" vs</span>
+</span><span data-line="340"><span class="sd">    "founded_by" have opposite directions).</span>
 </span><span data-line="341">
 </span><span data-line="342"><span class="sd">    Args:</span>
 </span><span data-line="343"><span class="sd">        adj: Adjacency matrix with scores or probabilities for entity pairs.</span>
@@ -555,14 +555,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="360"><span class="sd">              Shape: (batch_size, max_pairs, embed_dim)</span>
 </span><span data-line="361"><span class="sd">            - tail_rep: Embeddings of tail entities for each pair.</span>
 </span><span data-line="362"><span class="sd">              Shape: (batch_size, max_pairs, embed_dim)</span>
-</span><span data-line="363"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="363"><span class="sd">    """</span>
 </span><span data-line="364">    <span class="n">B</span><span class="p">,</span> <span class="n">E</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">adj</span><span class="o">.</span><span class="n">shape</span>
 </span><span data-line="365">    <span class="n">device</span> <span class="o">=</span> <span class="n">adj</span><span class="o">.</span><span class="n">device</span>
 </span><span data-line="366">    <span class="n">D</span> <span class="o">=</span> <span class="n">span_rep</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 </span><span data-line="367">
 </span><span data-line="368">    <span class="c1"># Generate all possible (i, j) pairs where i != j using meshgrid</span>
 </span><span data-line="369">    <span class="n">arange</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">long</span><span class="p">)</span>
-</span><span data-line="370">    <span class="n">grid_i</span><span class="p">,</span> <span class="n">grid_j</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">arange</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">&quot;ij&quot;</span><span class="p">)</span>
+</span><span data-line="370">    <span class="n">grid_i</span><span class="p">,</span> <span class="n">grid_j</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">arange</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">indexing</span><span class="o">=</span><span class="s2">"ij"</span><span class="p">)</span>
 </span><span data-line="371">    <span class="n">off_diag</span> <span class="o">=</span> <span class="n">grid_i</span> <span class="o">!=</span> <span class="n">grid_j</span>
 </span><span data-line="372">    <span class="n">rows</span> <span class="o">=</span> <span class="n">grid_i</span><span class="p">[</span><span class="n">off_diag</span><span class="p">]</span>
 </span><span data-line="373">    <span class="n">cols</span> <span class="o">=</span> <span class="n">grid_j</span><span class="p">[</span><span class="n">off_diag</span><span class="p">]</span>
@@ -610,7 +610,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="412">    <span class="n">span_rep</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="413">    <span class="n">span_mask</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span>
 </span><span data-line="414"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="415"><span class="w">    </span><span class="sd">&quot;&quot;&quot;Build all possible entity pairs for single-step relation extraction.</span>
+</span><span data-line="415"><span class="w">    </span><span class="sd">"""Build all possible entity pairs for single-step relation extraction.</span>
 </span><span data-line="416">
 </span><span data-line="417"><span class="sd">    Generates all directed pairs (i, j) where i != j for valid entities</span>
 </span><span data-line="418"><span class="sd">    (those with span_mask == 1), without any adjacency filtering.</span>
@@ -625,7 +625,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="427"><span class="sd">            - pair_mask: Boolean mask for valid pairs. Shape: (B, max_pairs)</span>
 </span><span data-line="428"><span class="sd">            - head_rep: Head entity embeddings. Shape: (B, max_pairs, embed_dim)</span>
 </span><span data-line="429"><span class="sd">            - tail_rep: Tail entity embeddings. Shape: (B, max_pairs, embed_dim)</span>
-</span><span data-line="430"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="430"><span class="sd">    """</span>
 </span><span data-line="431">    <span class="n">B</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">span_rep</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># (B, num_entities, embed_dim)</span>
 </span><span data-line="432">    <span class="n">device</span> <span class="o">=</span> <span class="n">span_rep</span><span class="o">.</span><span class="n">device</span>
 </span><span data-line="433">
@@ -676,7 +676,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="475">    <span class="n">labels</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 </span><span data-line="476">    <span class="n">threshold</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="477"><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">]:</span>
-</span><span data-line="478"><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+</span><span data-line="478"><span class="w">    </span><span class="sd">"""</span>
 </span><span data-line="479"><span class="sd">    Extract entity spans from BIO-style token predictions.</span>
 </span><span data-line="480">
 </span><span data-line="481"><span class="sd">    Args:</span>
@@ -687,7 +687,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="486"><span class="sd">    Returns:</span>
 </span><span data-line="487"><span class="sd">        span_idx: (B, N, 2) - [start, end] indices, padded</span>
 </span><span data-line="488"><span class="sd">        span_mask: (B, N) - validity mask</span>
-</span><span data-line="489"><span class="sd">    &quot;&quot;&quot;</span>
+</span><span data-line="489"><span class="sd">    """</span>
 </span><span data-line="490">    <span class="n">B</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </span><span data-line="491">    <span class="n">device</span> <span class="o">=</span> <span class="n">scores</span><span class="o">.</span><span class="n">device</span>
 </span><span data-line="492">

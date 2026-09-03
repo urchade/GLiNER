@@ -338,16 +338,16 @@ the complete behavior and production preflight guidance.</p>
 <p><img alt="alt text" src="_images/image-4.png" /></p>
 <p><img alt="alt text" src="_images/image-5.png" /></p>
 <p>Similarly, the input sequence tokens are combined to form spans for instance (assuming no word is split into subword tokens):</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">input_sequence</span> <span class="o">=</span> <span class="s2">&quot;my name is john&quot;</span>
-</span><span data-line="2"><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">]</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">input_sequence</span> <span class="o">=</span> <span class="s2">"my name is john"</span>
+</span><span data-line="2"><span class="n">tokens</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"my"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">,</span> <span class="s2">"is"</span><span class="p">,</span> <span class="s2">"john"</span><span class="p">]</span>
 </span><span data-line="3"><span class="n">spans</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="4">    <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">],</span>
-</span><span data-line="5">    <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">],</span>
-</span><span data-line="6">    <span class="p">[</span><span class="s2">&quot;is&quot;</span><span class="p">],</span>
-</span><span data-line="7">    <span class="p">[</span><span class="s2">&quot;john&quot;</span><span class="p">],</span>
-</span><span data-line="8">    <span class="p">[</span><span class="s2">&quot;my&quot;</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">],</span>
-</span><span data-line="9">    <span class="p">[</span><span class="s2">&quot;name is&quot;</span><span class="p">],</span>
-</span><span data-line="10">    <span class="p">[</span><span class="s2">&quot;is&quot;</span><span class="p">,</span> <span class="s2">&quot;john&quot;</span><span class="p">],</span>
+</span><span data-line="4">    <span class="p">[</span><span class="s2">"my"</span><span class="p">],</span>
+</span><span data-line="5">    <span class="p">[</span><span class="s2">"name"</span><span class="p">],</span>
+</span><span data-line="6">    <span class="p">[</span><span class="s2">"is"</span><span class="p">],</span>
+</span><span data-line="7">    <span class="p">[</span><span class="s2">"john"</span><span class="p">],</span>
+</span><span data-line="8">    <span class="p">[</span><span class="s2">"my"</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">],</span>
+</span><span data-line="9">    <span class="p">[</span><span class="s2">"name is"</span><span class="p">],</span>
+</span><span data-line="10">    <span class="p">[</span><span class="s2">"is"</span><span class="p">,</span> <span class="s2">"john"</span><span class="p">],</span>
 </span><span data-line="11">    <span class="o">...</span>
 </span><span data-line="12"><span class="p">]</span>
 </span></pre></div>
@@ -513,23 +513,23 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load a model with generative decoder</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-decoder-small-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-decoder-small-v1.0"</span><span class="p">)</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Apple Inc. was founded by Steve Jobs in Cupertino, California.&quot;</span>
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">"Apple Inc. was founded by Steve Jobs in Cupertino, California."</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="c1"># The model can generate entity labels based on context</span>
 </span><span data-line="9"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
 </span><span data-line="10">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
-</span><span data-line="11">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">],</span>  <span class="c1"># Generic prompt</span>
-</span><span data-line="12">    <span class="n">gen_constraints</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;company&quot;</span><span class="p">,</span> <span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">],</span>  <span class="c1"># Optional: constrain generation</span>
+</span><span data-line="11">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"entity"</span><span class="p">],</span>  <span class="c1"># Generic prompt</span>
+</span><span data-line="12">    <span class="n">gen_constraints</span><span class="o">=</span><span class="p">[</span><span class="s2">"company"</span><span class="p">,</span> <span class="s2">"person"</span><span class="p">,</span> <span class="s2">"location"</span><span class="p">],</span>  <span class="c1"># Optional: constrain generation</span>
 </span><span data-line="13">    <span class="n">num_gen_sequences</span><span class="o">=</span><span class="mi">1</span>
 </span><span data-line="14"><span class="p">)</span>
 </span><span data-line="15">
 </span><span data-line="16"><span class="c1"># Each entity will have both predicted type and generated label</span>
 </span><span data-line="17"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="19">    <span class="k">if</span> <span class="s1">&#39;generated_labels&#39;</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
-</span><span data-line="20">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Generated: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;generated_labels&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="18">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2"> =&gt; </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="19">    <span class="k">if</span> <span class="s1">'generated_labels'</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="20">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Generated: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'generated_labels'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -607,10 +607,10 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
-</span><span data-line="4">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">,</span>
-</span><span data-line="5">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;token_level&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="n">labels_decoder</span><span class="o">=</span><span class="s2">&quot;gpt2&quot;</span><span class="p">,</span>  <span class="c1"># Enables decoder</span>
-</span><span data-line="7">    <span class="n">decoder_mode</span><span class="o">=</span><span class="s2">&quot;span&quot;</span><span class="p">,</span>    <span class="c1"># or &quot;prompt&quot;</span>
+</span><span data-line="4">    <span class="n">model_name</span><span class="o">=</span><span class="s2">"microsoft/deberta-v3-small"</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">"token_level"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">labels_decoder</span><span class="o">=</span><span class="s2">"gpt2"</span><span class="p">,</span>  <span class="c1"># Enables decoder</span>
+</span><span data-line="7">    <span class="n">decoder_mode</span><span class="o">=</span><span class="s2">"span"</span><span class="p">,</span>    <span class="c1"># or "prompt"</span>
 </span><span data-line="8">    <span class="n">token_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 </span><span data-line="9">    <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">decoder_loss_coef</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
@@ -633,25 +633,25 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load a token-level decoder model</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-token-decoder-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-token-decoder-v1.0"</span><span class="p">)</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;The Paris Agreement, adopted in December 2015 at the 21st Conference </span>
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">"""The Paris Agreement, adopted in December 2015 at the 21st Conference </span>
 </span><span data-line="7"><span class="s2">of the Parties to the United Nations Framework Convention on Climate Change, </span>
-</span><span data-line="8"><span class="s2">represents a landmark international accord on climate action.&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="s2">represents a landmark international accord on climate action."""</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="c1"># Extract long entities with generated labels</span>
 </span><span data-line="11"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
 </span><span data-line="12">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
-</span><span data-line="13">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;entity&quot;</span><span class="p">],</span>
-</span><span data-line="14">    <span class="n">gen_constraints</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;agreement&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;event&quot;</span><span class="p">,</span> <span class="s2">&quot;topic&quot;</span><span class="p">],</span>
+</span><span data-line="13">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span><span class="s2">"entity"</span><span class="p">],</span>
+</span><span data-line="14">    <span class="n">gen_constraints</span><span class="o">=</span><span class="p">[</span><span class="s2">"agreement"</span><span class="p">,</span> <span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"event"</span><span class="p">,</span> <span class="s2">"topic"</span><span class="p">],</span>
 </span><span data-line="15">    <span class="n">num_gen_sequences</span><span class="o">=</span><span class="mi">1</span>
 </span><span data-line="16"><span class="p">)</span>
 </span><span data-line="17">
 </span><span data-line="18"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="19">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Entity: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span><span class="si">}</span><span class="s2">...&quot;</span><span class="p">)</span>
-</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Label: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-</span><span data-line="21">    <span class="k">if</span> <span class="s1">&#39;generated_labels&#39;</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
-</span><span data-line="22">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Generated: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;generated_labels&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="19">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Entity: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'text'</span><span class="p">][:</span><span class="mi">50</span><span class="p">]</span><span class="si">}</span><span class="s2">..."</span><span class="p">)</span>
+</span><span data-line="20">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Label: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</span><span data-line="21">    <span class="k">if</span> <span class="s1">'generated_labels'</span> <span class="ow">in</span> <span class="n">entity</span><span class="p">:</span>
+</span><span data-line="22">        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Generated: </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'generated_labels'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -713,13 +713,13 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load a relation extraction model</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-relex-large-v0.5&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-relex-large-v0.5"</span><span class="p">)</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;John Smith works at Microsoft in Seattle.&quot;</span>
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">"John Smith works at Microsoft in Seattle."</span>
 </span><span data-line="7">
 </span><span data-line="8"><span class="c1"># Define both entity types and relation types</span>
-</span><span data-line="9"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;person&quot;</span><span class="p">,</span> <span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;location&quot;</span><span class="p">]</span>
-</span><span data-line="10"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;works_at&quot;</span><span class="p">,</span> <span class="s2">&quot;located_in&quot;</span><span class="p">]</span>
+</span><span data-line="9"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"person"</span><span class="p">,</span> <span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"location"</span><span class="p">]</span>
+</span><span data-line="10"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"works_at"</span><span class="p">,</span> <span class="s2">"located_in"</span><span class="p">]</span>
 </span><span data-line="11">
 </span><span data-line="12"><span class="c1"># Extract entities and relations</span>
 </span><span data-line="13"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
@@ -731,16 +731,16 @@ the complete behavior and production preflight guidance.</p>
 </span><span data-line="19"><span class="p">)</span>
 </span><span data-line="20">
 </span><span data-line="21"><span class="c1"># Display entities</span>
-</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="22"><span class="nb">print</span><span class="p">(</span><span class="s2">"Entities:"</span><span class="p">)</span>
 </span><span data-line="23"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="24">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="24">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
 </span><span data-line="25">
 </span><span data-line="26"><span class="c1"># Display relations</span>
-</span><span data-line="27"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations:&quot;</span><span class="p">)</span>
+</span><span data-line="27"><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Relations:"</span><span class="p">)</span>
 </span><span data-line="28"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="29">    <span class="n">head</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
-</span><span data-line="30">    <span class="n">tail</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">][</span><span class="s1">&#39;entity_idx&#39;</span><span class="p">]]</span>
-</span><span data-line="31">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="29">    <span class="n">head</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">'head'</span><span class="p">][</span><span class="s1">'entity_idx'</span><span class="p">]]</span>
+</span><span data-line="30">    <span class="n">tail</span> <span class="o">=</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="n">relation</span><span class="p">[</span><span class="s1">'tail'</span><span class="p">][</span><span class="s1">'entity_idx'</span><span class="p">]]</span>
+</span><span data-line="31">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">head</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">'relation'</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">tail</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>
@@ -748,32 +748,32 @@ the complete behavior and production preflight guidance.</p>
 <h3>Output Format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h3>
 <p><strong>Entities</strong>: Standard GLiNER entity format</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
-</span><span data-line="2">    <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="3">    <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-</span><span data-line="4">    <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;John Smith&#39;</span><span class="p">,</span>
-</span><span data-line="5">    <span class="s1">&#39;label&#39;</span><span class="p">:</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.95</span>
+</span><span data-line="2">    <span class="s1">'start'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="3">    <span class="s1">'end'</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span data-line="4">    <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'John Smith'</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s1">'label'</span><span class="p">:</span> <span class="s1">'person'</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s1">'score'</span><span class="p">:</span> <span class="mf">0.95</span>
 </span><span data-line="7"><span class="p">}</span>
 </span></pre></div>
 </div>
 <p><strong>Relations</strong>: Relation triplets with entity references</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
-</span><span data-line="2">    <span class="s1">&#39;head&#39;</span><span class="p">:</span> <span class="p">{</span>
-</span><span data-line="3">        <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-</span><span data-line="4">        <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-</span><span data-line="5">        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;John Smith&#39;</span><span class="p">,</span>
-</span><span data-line="6">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;person&#39;</span><span class="p">,</span>
-</span><span data-line="7">        <span class="s1">&#39;entity_idx&#39;</span><span class="p">:</span> <span class="mi">0</span>
+</span><span data-line="2">    <span class="s1">'head'</span><span class="p">:</span> <span class="p">{</span>
+</span><span data-line="3">        <span class="s1">'start'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+</span><span data-line="4">        <span class="s1">'end'</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
+</span><span data-line="5">        <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'John Smith'</span><span class="p">,</span>
+</span><span data-line="6">        <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'person'</span><span class="p">,</span>
+</span><span data-line="7">        <span class="s1">'entity_idx'</span><span class="p">:</span> <span class="mi">0</span>
 </span><span data-line="8">    <span class="p">},</span>
-</span><span data-line="9">    <span class="s1">&#39;tail&#39;</span><span class="p">:</span> <span class="p">{</span>
-</span><span data-line="10">        <span class="s1">&#39;start&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
-</span><span data-line="11">        <span class="s1">&#39;end&#39;</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
-</span><span data-line="12">        <span class="s1">&#39;text&#39;</span><span class="p">:</span> <span class="s1">&#39;Microsoft&#39;</span><span class="p">,</span>
-</span><span data-line="13">        <span class="s1">&#39;type&#39;</span><span class="p">:</span> <span class="s1">&#39;organization&#39;</span><span class="p">,</span>
-</span><span data-line="14">        <span class="s1">&#39;entity_idx&#39;</span><span class="p">:</span> <span class="mi">1</span>
+</span><span data-line="9">    <span class="s1">'tail'</span><span class="p">:</span> <span class="p">{</span>
+</span><span data-line="10">        <span class="s1">'start'</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span>
+</span><span data-line="11">        <span class="s1">'end'</span><span class="p">:</span> <span class="mi">29</span><span class="p">,</span>
+</span><span data-line="12">        <span class="s1">'text'</span><span class="p">:</span> <span class="s1">'Microsoft'</span><span class="p">,</span>
+</span><span data-line="13">        <span class="s1">'type'</span><span class="p">:</span> <span class="s1">'organization'</span><span class="p">,</span>
+</span><span data-line="14">        <span class="s1">'entity_idx'</span><span class="p">:</span> <span class="mi">1</span>
 </span><span data-line="15">    <span class="p">},</span>
-</span><span data-line="16">    <span class="s1">&#39;relation&#39;</span><span class="p">:</span> <span class="s1">&#39;works_at&#39;</span><span class="p">,</span>
-</span><span data-line="17">    <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.87</span>
+</span><span data-line="16">    <span class="s1">'relation'</span><span class="p">:</span> <span class="s1">'works_at'</span><span class="p">,</span>
+</span><span data-line="17">    <span class="s1">'score'</span><span class="p">:</span> <span class="mf">0.87</span>
 </span><span data-line="18"><span class="p">}</span>
 </span></pre></div>
 </div>
@@ -853,10 +853,10 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNERConfig</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span>
-</span><span data-line="4">    <span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">,</span>
-</span><span data-line="5">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">&quot;token_level&quot;</span><span class="p">,</span>
-</span><span data-line="6">    <span class="n">relations_layer</span><span class="o">=</span><span class="s2">&quot;biaffine&quot;</span><span class="p">,</span>  <span class="c1"># or &quot;concat&quot;</span>
-</span><span data-line="7">    <span class="n">triples_layer</span><span class="o">=</span><span class="s2">&quot;TransE&quot;</span><span class="p">,</span>      <span class="c1"># Optional: for triple scoring</span>
+</span><span data-line="4">    <span class="n">model_name</span><span class="o">=</span><span class="s2">"microsoft/deberta-v3-small"</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">span_mode</span><span class="o">=</span><span class="s2">"token_level"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">relations_layer</span><span class="o">=</span><span class="s2">"biaffine"</span><span class="p">,</span>  <span class="c1"># or "concat"</span>
+</span><span data-line="7">    <span class="n">triples_layer</span><span class="o">=</span><span class="s2">"TransE"</span><span class="p">,</span>      <span class="c1"># Optional: for triple scoring</span>
 </span><span data-line="8">    <span class="n">span_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 </span><span data-line="9">    <span class="n">adjacency_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
 </span><span data-line="10">    <span class="n">relation_loss_coef</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
@@ -878,15 +878,15 @@ the complete behavior and production preflight guidance.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="c1"># Load a token-level relation extraction model</span>
-</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-token-relex-v1.0&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-token-relex-v1.0"</span><span class="p">)</span>
 </span><span data-line="5">
-</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;The Phase III clinical trial conducted by Pfizer and BioNTech </span>
+</span><span data-line="6"><span class="n">text</span> <span class="o">=</span> <span class="s2">"""The Phase III clinical trial conducted by Pfizer and BioNTech </span>
 </span><span data-line="7"><span class="s2">demonstrated that the BNT162b2 vaccine achieved 95</span><span class="si">% e</span><span class="s2">fficacy against </span>
-</span><span data-line="8"><span class="s2">COVID-19 in participants without prior infection.&quot;&quot;&quot;</span>
+</span><span data-line="8"><span class="s2">COVID-19 in participants without prior infection."""</span>
 </span><span data-line="9">
 </span><span data-line="10"><span class="c1"># Define entity and relation types</span>
-</span><span data-line="11"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;organization&quot;</span><span class="p">,</span> <span class="s2">&quot;vaccine&quot;</span><span class="p">,</span> <span class="s2">&quot;disease&quot;</span><span class="p">,</span> <span class="s2">&quot;metric&quot;</span><span class="p">]</span>
-</span><span data-line="12"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;developed_by&quot;</span><span class="p">,</span> <span class="s2">&quot;effective_against&quot;</span><span class="p">,</span> <span class="s2">&quot;measured_as&quot;</span><span class="p">]</span>
+</span><span data-line="11"><span class="n">entity_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"organization"</span><span class="p">,</span> <span class="s2">"vaccine"</span><span class="p">,</span> <span class="s2">"disease"</span><span class="p">,</span> <span class="s2">"metric"</span><span class="p">]</span>
+</span><span data-line="12"><span class="n">relation_labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"developed_by"</span><span class="p">,</span> <span class="s2">"effective_against"</span><span class="p">,</span> <span class="s2">"measured_as"</span><span class="p">]</span>
 </span><span data-line="13">
 </span><span data-line="14"><span class="c1"># Extract entities and relations</span>
 </span><span data-line="15"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
@@ -898,13 +898,13 @@ the complete behavior and production preflight guidance.</p>
 </span><span data-line="21"><span class="p">)</span>
 </span><span data-line="22">
 </span><span data-line="23"><span class="c1"># Display results</span>
-</span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Entities:&quot;</span><span class="p">)</span>
+</span><span data-line="24"><span class="nb">print</span><span class="p">(</span><span class="s2">"Entities:"</span><span class="p">)</span>
 </span><span data-line="25"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="26">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">&#39;label&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+</span><span data-line="26">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2"> (</span><span class="si">{</span><span class="n">entity</span><span class="p">[</span><span class="s1">'label'</span><span class="p">]</span><span class="si">}</span><span class="s2">)"</span><span class="p">)</span>
 </span><span data-line="27">
-</span><span data-line="28"><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Relations:&quot;</span><span class="p">)</span>
+</span><span data-line="28"><span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">Relations:"</span><span class="p">)</span>
 </span><span data-line="29"><span class="k">for</span> <span class="n">relation</span> <span class="ow">in</span> <span class="n">relations</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
-</span><span data-line="30">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;relation&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">&#39;tail&#39;</span><span class="p">][</span><span class="s1">&#39;text&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</span><span data-line="30">    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  </span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">'head'</span><span class="p">][</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2"> --[</span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">'relation'</span><span class="p">]</span><span class="si">}</span><span class="s2">]--&gt; </span><span class="si">{</span><span class="n">relation</span><span class="p">[</span><span class="s1">'tail'</span><span class="p">][</span><span class="s1">'text'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </section>

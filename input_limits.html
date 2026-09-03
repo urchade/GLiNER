@@ -263,20 +263,20 @@ stateless inference will receive. This avoids depending on
 <code class="docutils literal notranslate"><span class="pre">model.data_processor.words_splitter</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">def</span><span class="w"> </span><span class="nf">truncation_info</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
 </span><span data-line="2">    <span class="n">prepared</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</span><span data-line="3">    <span class="n">num_tokens</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+</span><span data-line="3">    <span class="n">num_tokens</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
 </span><span data-line="4">    <span class="n">max_len</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_len</span>
 </span><span data-line="5">    <span class="k">return</span> <span class="p">{</span>
-</span><span data-line="6">        <span class="s2">&quot;truncated&quot;</span><span class="p">:</span> <span class="n">num_tokens</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">,</span>
-</span><span data-line="7">        <span class="s2">&quot;num_tokens&quot;</span><span class="p">:</span> <span class="n">num_tokens</span><span class="p">,</span>
-</span><span data-line="8">        <span class="s2">&quot;max_len&quot;</span><span class="p">:</span> <span class="n">max_len</span><span class="p">,</span>
+</span><span data-line="6">        <span class="s2">"truncated"</span><span class="p">:</span> <span class="n">num_tokens</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">,</span>
+</span><span data-line="7">        <span class="s2">"num_tokens"</span><span class="p">:</span> <span class="n">num_tokens</span><span class="p">,</span>
+</span><span data-line="8">        <span class="s2">"max_len"</span><span class="p">:</span> <span class="n">max_len</span><span class="p">,</span>
 </span><span data-line="9">    <span class="p">}</span>
 </span><span data-line="10">
 </span><span data-line="11">
 </span><span data-line="12"><span class="n">info</span> <span class="o">=</span> <span class="n">truncation_info</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</span><span data-line="13"><span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;truncated&quot;</span><span class="p">]:</span>
+</span><span data-line="13"><span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">"truncated"</span><span class="p">]:</span>
 </span><span data-line="14">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-</span><span data-line="15">        <span class="sa">f</span><span class="s2">&quot;GLiNER input has </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;num_tokens&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2"> tokens; &quot;</span>
-</span><span data-line="16">        <span class="sa">f</span><span class="s2">&quot;the model limit is </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">&#39;max_len&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span data-line="15">        <span class="sa">f</span><span class="s2">"GLiNER input has </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'num_tokens'</span><span class="p">]</span><span class="si">}</span><span class="s2"> tokens; "</span>
+</span><span data-line="16">        <span class="sa">f</span><span class="s2">"the model limit is </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'max_len'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
 </span><span data-line="17">    <span class="p">)</span>
 </span><span data-line="18">
 </span><span data-line="19"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
@@ -299,16 +299,16 @@ public preparation result includes the exact token-to-character maps needed to
 make splitter-aligned windows:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">def</span><span class="w"> </span><span class="nf">iter_gliner_windows</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">overlap</span><span class="p">):</span>
 </span><span data-line="2">    <span class="n">prepared</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
-</span><span data-line="3">    <span class="k">if</span> <span class="ow">not</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">]:</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="ow">not</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]:</span>
 </span><span data-line="4">        <span class="k">return</span>
 </span><span data-line="5">
-</span><span data-line="6">    <span class="n">tokens</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;tokens&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="7">    <span class="n">starts</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;start_token_map&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="8">    <span class="n">ends</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">&quot;end_token_map&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="6">    <span class="n">tokens</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="7">    <span class="n">starts</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"start_token_map"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="8">    <span class="n">ends</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"end_token_map"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 </span><span data-line="9">    <span class="n">window_size</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_len</span>
 </span><span data-line="10">
 </span><span data-line="11">    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="n">window_size</span><span class="p">:</span>
-</span><span data-line="12">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;overlap must be in [0, model.config.max_len)&quot;</span><span class="p">)</span>
+</span><span data-line="12">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"overlap must be in [0, model.config.max_len)"</span><span class="p">)</span>
 </span><span data-line="13">
 </span><span data-line="14">    <span class="n">step</span> <span class="o">=</span> <span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span>
 </span><span data-line="15">    <span class="k">for</span> <span class="n">first</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">),</span> <span class="n">step</span><span class="p">):</span>
@@ -335,7 +335,7 @@ window beginning at <code class="docutils literal notranslate"><span class="pre"
 <h2>Changing <code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#changing-max-len" title="Link to this heading">¶</a></h2>
 <p>The loader’s <code class="docutils literal notranslate"><span class="pre">max_length</span></code> argument overrides the saved <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
-</span><span data-line="2">    <span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span>
+</span><span data-line="2">    <span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">,</span>
 </span><span data-line="3">    <span class="n">max_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
 </span><span data-line="4"><span class="p">)</span>
 </span></pre></div>

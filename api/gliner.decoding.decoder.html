@@ -737,9 +737,9 @@ and tail_idx are indices into the corresponding sample’s spans list.</p></li>
 </dl>
 <p class="rubric">Examples</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">decoder</span> <span class="o">=</span> <span class="n">TokenRelexDecoder</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;John&quot;</span><span class="p">,</span> <span class="s2">&quot;works&quot;</span><span class="p">,</span> <span class="s2">&quot;at&quot;</span><span class="p">,</span> <span class="s2">&quot;Microsoft&quot;</span><span class="p">]]</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;PERSON&quot;</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;ORG&quot;</span><span class="p">}</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">rel_id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;works_at&quot;</span><span class="p">}</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">tokens</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">"John"</span><span class="p">,</span> <span class="s2">"works"</span><span class="p">,</span> <span class="s2">"at"</span><span class="p">,</span> <span class="s2">"Microsoft"</span><span class="p">]]</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"PERSON"</span><span class="p">,</span> <span class="mi">2</span><span class="p">:</span> <span class="s2">"ORG"</span><span class="p">}</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">rel_id_to_classes</span> <span class="o">=</span> <span class="p">{</span><span class="mi">1</span><span class="p">:</span> <span class="s2">"works_at"</span><span class="p">}</span>
 </span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">spans</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
 </span><span data-line="6"><span class="gp">... </span>    <span class="n">tokens</span><span class="o">=</span><span class="n">tokens</span><span class="p">,</span>
 </span><span data-line="7"><span class="gp">... </span>    <span class="n">id_to_classes</span><span class="o">=</span><span class="n">id_to_classes</span><span class="p">,</span>
@@ -747,8 +747,8 @@ and tail_idx are indices into the corresponding sample’s spans list.</p></li>
 </span><span data-line="9"><span class="gp">... </span>    <span class="n">rel_id_to_classes</span><span class="o">=</span><span class="n">rel_id_to_classes</span><span class="p">,</span>
 </span><span data-line="10"><span class="gp">... </span>    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
 </span><span data-line="11"><span class="gp">... </span><span class="p">)</span>
-</span><span data-line="12"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># spans[0] might be: [(0, 0, &quot;PERSON&quot;, 0.9), (3, 3, &quot;ORG&quot;, 0.85)]</span>
-</span><span data-line="13"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># relations[0] might be: [(0, &quot;works_at&quot;, 1, 0.8)]</span>
+</span><span data-line="12"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># spans[0] might be: [(0, 0, "PERSON", 0.9), (3, 3, "ORG", 0.85)]</span>
+</span><span data-line="13"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># relations[0] might be: [(0, "works_at", 1, 0.8)]</span>
 </span></pre></div>
 </div>
 </dd></dl>

@@ -509,10 +509,10 @@ with models fine-tuned with quantization-aware training (QAT).</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">&quot;cuda&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>  <span class="c1"># int8 (torchao on GPU, FBGEMM on CPU)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="s2">"cuda"</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">quantize</span><span class="p">(</span><span class="s2">"int8"</span><span class="p">)</span>  <span class="c1"># int8 (torchao on GPU, FBGEMM on CPU)</span>
 </span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># For precision-only changes, prefer:</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"bf16"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -610,9 +610,9 @@ on GPU, FBGEMM on CPU). For precision-only changes (fp16/bf16), use
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">"microsoft/deberta-v3-small"</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">load_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">load_from_config</span><span class="p">(</span><span class="s2">&quot;path/to/gliner_config.json&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">load_from_config</span><span class="p">(</span><span class="s2">"path/to/gliner_config.json"</span><span class="p">)</span>
 </span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load with pretrained backbone but random GLiNER layers</span>
 </span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">load_from_config</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="n">backbone_from_pretrained</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 </span></pre></div>
@@ -2261,7 +2261,8 @@ with ‘start’ and ‘end’ character positions.</p></li>
 <li><p><strong>relation_threshold</strong> (<em>float</em><em> | </em><em>None</em>) – The threshold for relation predictions. Defaults to threshold.</p></li>
 <li><p><strong>batch_size</strong> (<em>int</em>) – The batch size for evaluation. Defaults to 12.</p></li>
 <li><p><strong>entity_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of entity types to evaluate. If None, extracts from test data. Defaults to None.</p></li>
-<li><p><strong>relation_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of relation types to evaluate. If None, extracts from test data. Defaults to None.</p></li>
+<li><p><strong>relation_types</strong> (<em>List</em><em>[</em><em>str</em><em>] </em><em>| </em><em>None</em>) – Optional list of relation types to evaluate. If None, extracts from test
+data. Defaults to None.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -2404,9 +2405,9 @@ and replaces itself with an instance of that variant.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;bert-base-cased&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">"bert-base-cased"</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="s2">&quot;path/to/gliner_config.json&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="s2">"path/to/gliner_config.json"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 <dl class="py method">
@@ -2424,9 +2425,9 @@ and replaces itself with an instance of that variant.</p>
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;bert-base-cased&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">"bert-base-cased"</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="s2">&quot;path/to/gliner_config.json&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="p">(</span><span class="s2">"path/to/gliner_config.json"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -2486,12 +2487,12 @@ falls back to fp32 + cast on read. See the base-class
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;knowledgator/gliner-bi-small-v1.0&quot;</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;path/to/local/model&quot;</span><span class="p">,</span> <span class="n">quantize</span><span class="o">=</span><span class="s2">&quot;int8&quot;</span><span class="p">)</span>
-</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;urchade/gliner_small-v2.1&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">)</span>
+</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-bi-small-v1.0"</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"path/to/local/model"</span><span class="p">,</span> <span class="n">quantize</span><span class="o">=</span><span class="s2">"int8"</span><span class="p">)</span>
+</span><span data-line="4"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"bf16"</span><span class="p">)</span>
 </span><span data-line="5"><span class="gp">&gt;&gt;&gt; </span><span class="c1"># If the repo publishes model.bf16.safetensors, download only that:</span>
-</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;org/gliner_bf16-v1&quot;</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">&quot;bf16&quot;</span><span class="p">)</span>
+</span><span data-line="6"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"org/gliner_bf16-v1"</span><span class="p">,</span> <span class="n">variant</span><span class="o">=</span><span class="s2">"bf16"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </dd></dl>
@@ -2525,9 +2526,9 @@ on GPU, FBGEMM on CPU). For precision-only changes (fp16/bf16), use
 </dd>
 </dl>
 <p class="rubric">Examples</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">&quot;microsoft/deberta-v3-small&quot;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">GLiNERConfig</span><span class="p">(</span><span class="n">model_name</span><span class="o">=</span><span class="s2">"microsoft/deberta-v3-small"</span><span class="p">)</span>
 </span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">&quot;path/to/gliner_config.json&quot;</span><span class="p">)</span>
+</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="s2">"path/to/gliner_config.json"</span><span class="p">)</span>
 </span></pre></div>
 </div>
 </dd></dl>
