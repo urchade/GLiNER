@@ -137,6 +137,7 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
+<li><a class="reference internal" href="#gliner.modeling.loss_functions.span_dice_loss"><code class="docutils literal notranslate"><span class="pre">span_dice_loss()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.loss_functions.focal_loss_with_logits"><code class="docutils literal notranslate"><span class="pre">focal_loss_with_logits()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.modeling.loss_functions.cross_entropy_loss"><code class="docutils literal notranslate"><span class="pre">cross_entropy_loss()</span></code></a></li>
 </ul>
@@ -175,6 +176,45 @@ data-aria-dark="Switch to auto color mode">
         <article class="yue" role="main">
           <section id="module-gliner.modeling.loss_functions">
 <span id="gliner-modeling-loss-functions-module"></span><h1>gliner.modeling.loss_functions module<a class="headerlink" href="#module-gliner.modeling.loss_functions" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="gliner.modeling.loss_functions.span_dice_loss">
+<span class="sig-prename descclassname"><span class="pre">gliner.modeling.loss_functions.</span></span><span class="sig-name descname"><span class="pre">span_dice_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/loss_functions.html#span_dice_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.loss_functions.span_dice_loss" title="Link to this definition">¶</a></dt>
+<dd><p>Per-element self-adjusting Dice loss for span-level NER.</p>
+<p>Adapted from Li et al. (ACL 2020) “Dice Loss for Data-imbalanced NLP Tasks”
+to operate element-wise over the (B, L*K, C) span-prediction tensor.</p>
+<p>Unlike BCE, Dice is directly optimizing a surrogate of the F1 coefficient
+and is immune to O-label domination because false negatives and false positives
+are balanced in the denominator regardless of class prevalence.</p>
+<p>The self-adjusting modulator (1-p)^gamma down-weights easy-to-classify
+negative spans (high confidence, low p), focusing gradient on hard positives.</p>
+<dl class="simple">
+<dt>Loss per element:</dt><dd><p>adjusted_p = (1 - sigmoid(input))^gamma * sigmoid(input)
+DSC_adj    = (2 * adjusted_p * y + eps) / (adjusted_p + y + eps)
+loss       = 1 - DSC_adj</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>Tensor</em>) – Predicted logits of arbitrary shape.</p></li>
+<li><p><strong>targets</strong> (<em>Tensor</em>) – Ground truth binary labels, same shape as inputs.
+Values in {0, 1} or ignore_index.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – Self-adjustment exponent. Higher values focus more on hard negatives.
+Defaults to 1.0. Set to 0.0 to recover standard soft Dice.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – ‘none’, ‘mean’, or ‘sum’. Defaults to ‘none’.</p></li>
+<li><p><strong>ignore_index</strong> (<em>int</em>) – Target values to mask out from the loss. Defaults to -100.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – Numerical stability epsilon. Defaults to 1e-6.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Loss tensor. Shape depends on reduction.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Tensor</em></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="gliner.modeling.loss_functions.focal_loss_with_logits">
 <span class="sig-prename descclassname"><span class="pre">gliner.modeling.loss_functions.</span></span><span class="sig-name descname"><span class="pre">focal_loss_with_logits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prob_margin</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'none'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_smoothing</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_prob</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">-100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/modeling/loss_functions.html#focal_loss_with_logits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.modeling.loss_functions.focal_loss_with_logits" title="Link to this definition">¶</a></dt>

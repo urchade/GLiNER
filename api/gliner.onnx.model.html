@@ -241,7 +241,7 @@ should inherit from this class.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -263,7 +263,7 @@ should inherit from this class.</p>
 that are not expected by the ONNX model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>Tensor</em><em>]</em>) – Dictionary of input names and PyTorch tensors.</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>torch.Tensor</em><em>]</em>) – Dictionary of input names and PyTorch tensors.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary of input names and numpy arrays ready for ONNX inference.</p>
@@ -272,7 +272,7 @@ that are not expected by the ONNX model.</p>
 <dd class="field-odd"><p><strong>ValueError</strong> – If inputs is not a dictionary.</p>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p><em>Dict</em>[str, <em>ndarray</em>]</p>
+<dd class="field-even"><p>Dict[str, np.ndarray]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -283,13 +283,13 @@ that are not expected by the ONNX model.</p>
 <dd><p>Run the ONNX model inference.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>ndarray</em><em>]</em>) – Prepared inputs for the model as numpy arrays.</p>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>Dict</em><em>[</em><em>str</em><em>, </em><em>np.ndarray</em><em>]</em>) – Prepared inputs for the model as numpy arrays.</p>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>Dictionary mapping output names to their corresponding numpy arrays.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>ndarray</em>]</p>
+<dd class="field-odd"><p>Dict[str, np.ndarray]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -329,7 +329,7 @@ performing span-level entity recognition.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -339,14 +339,14 @@ performing span-level entity recognition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
-<li><p><strong>span_idx</strong> (<em>Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
-<li><p><strong>span_mask</strong> (<em>Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
+<li><p><strong>span_idx</strong> (<em>torch.Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
+<li><p><strong>span_mask</strong> (<em>torch.Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
 </dd>
@@ -354,7 +354,7 @@ of each text sequence.</p></li>
 <dd class="field-even"><p>GLiNERBaseOutput containing logits for span classification.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -371,7 +371,7 @@ span-level entity recognition with bi-encoder architecture.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -381,19 +381,19 @@ span-level entity recognition with bi-encoder architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
-<li><p><strong>span_idx</strong> (<em>Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
-<li><p><strong>span_mask</strong> (<em>Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
-<li><p><strong>labels_embeds</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional pre-computed embeddings for entity labels.
+<li><p><strong>span_idx</strong> (<em>torch.Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
+<li><p><strong>span_mask</strong> (<em>torch.Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
+<li><p><strong>labels_embeds</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Optional pre-computed embeddings for entity labels.
 If provided, labels_input_ids and labels_attention_mask are ignored.</p></li>
-<li><p><strong>labels_input_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Optional tensor containing token IDs for entity labels.
+<li><p><strong>labels_input_ids</strong> (<em>Optional</em><em>[</em><em>torch.FloatTensor</em><em>]</em>) – Optional tensor containing token IDs for entity labels.
 Used when labels_embeds is not provided.</p></li>
-<li><p><strong>labels_attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Optional attention mask for entity label tokens.
+<li><p><strong>labels_attention_mask</strong> (<em>Optional</em><em>[</em><em>torch.LongTensor</em><em>]</em>) – Optional attention mask for entity label tokens.
 Used when labels_embeds is not provided.</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
@@ -402,7 +402,7 @@ Used when labels_embeds is not provided.</p></li>
 <dd class="field-even"><p>GLiNERBaseOutput containing logits for span classification.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -419,7 +419,7 @@ performing token-level entity recognition.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -429,11 +429,11 @@ performing token-level entity recognition.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
@@ -442,7 +442,7 @@ of each text sequence.</p></li>
 <dd class="field-even"><p>GLiNERBaseOutput containing logits for token classification.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -459,7 +459,7 @@ token-level entity recognition with bi-encoder architecture.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -469,17 +469,17 @@ token-level entity recognition with bi-encoder architecture.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
-<li><p><strong>labels_embeds</strong> (<em>Tensor</em><em> | </em><em>None</em>) – Optional pre-computed embeddings for entity labels.
+<li><p><strong>labels_embeds</strong> (<em>Optional</em><em>[</em><em>torch.Tensor</em><em>]</em>) – Optional pre-computed embeddings for entity labels.
 If provided, labels_input_ids and labels_attention_mask are ignored.</p></li>
-<li><p><strong>labels_input_ids</strong> (<em>FloatTensor</em><em> | </em><em>None</em>) – Optional tensor containing token IDs for entity labels.
+<li><p><strong>labels_input_ids</strong> (<em>Optional</em><em>[</em><em>torch.FloatTensor</em><em>]</em>) – Optional tensor containing token IDs for entity labels.
 Used when labels_embeds is not provided.</p></li>
-<li><p><strong>labels_attention_mask</strong> (<em>LongTensor</em><em> | </em><em>None</em>) – Optional attention mask for entity label tokens.
+<li><p><strong>labels_attention_mask</strong> (<em>Optional</em><em>[</em><em>torch.LongTensor</em><em>]</em>) – Optional attention mask for entity label tokens.
 Used when labels_embeds is not provided.</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
@@ -488,7 +488,7 @@ Used when labels_embeds is not provided.</p></li>
 <dd class="field-even"><p>GLiNERBaseOutput containing logits for token classification.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -505,7 +505,7 @@ and relation extraction at the span level.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -515,14 +515,14 @@ and relation extraction at the span level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
-<li><p><strong>span_idx</strong> (<em>Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
-<li><p><strong>span_mask</strong> (<em>Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
+<li><p><strong>span_idx</strong> (<em>torch.Tensor</em>) – Tensor containing indices of spans to classify.</p></li>
+<li><p><strong>span_mask</strong> (<em>torch.Tensor</em>) – Tensor indicating which spans are valid (not padding).</p></li>
 <li><p><strong>**kwargs</strong> – Additional arguments (ignored).</p></li>
 </ul>
 </dd>
@@ -531,7 +531,7 @@ of each text sequence.</p></li>
 indices, relation logits, and relation mask.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -548,7 +548,7 @@ and relation extraction at the token level.</p>
 <p>Initialize the ONNX Runtime model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>session</strong> (<em>InferenceSession</em>) – ONNX Runtime inference session.</p>
+<dd class="field-odd"><p><strong>session</strong> (<em>ort.InferenceSession</em>) – ONNX Runtime inference session.</p>
 </dd>
 </dl>
 <dl class="py method">
@@ -558,11 +558,11 @@ and relation extraction at the token level.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>input_ids</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
-<li><p><strong>attention_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
+<li><p><strong>input_ids</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) containing input token IDs.</p></li>
+<li><p><strong>attention_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) with 1s for real
 tokens and 0s for padding.</p></li>
-<li><p><strong>words_mask</strong> (<em>Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
-<li><p><strong>text_lengths</strong> (<em>Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
+<li><p><strong>words_mask</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size, seq_len) indicating word boundaries.</p></li>
+<li><p><strong>text_lengths</strong> (<em>torch.Tensor</em>) – Tensor of shape (batch_size,) containing the actual length
 of each text sequence.</p></li>
 <li><p><strong>span_idx</strong> – Tensor containing indices of spans to classify.</p></li>
 <li><p><strong>span_mask</strong> – Tensor indicating which spans are valid (not padding).</p></li>
@@ -574,7 +574,7 @@ of each text sequence.</p></li>
 indices, relation logits, and relation mask.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Dict</em>[str, <em>Any</em>]</p>
+<dd class="field-odd"><p>Dict[str, Any]</p>
 </dd>
 </dl>
 </dd></dl>
