@@ -473,6 +473,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         span_idx: Optional[torch.LongTensor] = None,
         span_mask: Optional[torch.LongTensor] = None,
         labels: Optional[torch.FloatTensor] = None,
+        return_embeddings: bool = False,
         **kwargs: Any,
     ) -> GLiNERBaseOutput:
         """Forward pass through the span-based model.
@@ -489,6 +490,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             span_idx: Span indices of shape (B, L*K, 2).
             span_mask: Mask for valid spans of shape (B, L, K).
             labels: Ground truth labels of shape (B, L, K, C).
+            return_embeddings: Whether to include span representations in the output.
             **kwargs: Additional arguments.
 
         Returns:
@@ -537,6 +539,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             prompts_embedding_mask=prompts_embedding_mask,
             words_embedding=words_embedding,
             mask=mask,
+            span_embeddings=span_rep if return_embeddings else None,
         )
         return output
 
@@ -959,6 +962,7 @@ class StreamingSpanModel(UniEncoderSpanModel):
         span_idx: Optional[torch.LongTensor] = None,
         span_mask: Optional[torch.LongTensor] = None,
         labels: Optional[torch.FloatTensor] = None,
+        return_embeddings: bool = False,
         **kwargs: Any,
     ) -> GLiNERStreamingSpanOutput:
         """Forward pass through the span-based model.
@@ -981,6 +985,7 @@ class StreamingSpanModel(UniEncoderSpanModel):
             span_idx: Span indices of shape (B, L*K, 2).
             span_mask: Mask for valid spans of shape (B, L, K).
             labels: Ground truth labels of shape (B, L, K, C).
+            return_embeddings: Whether to include span representations in the output.
             **kwargs: Additional arguments.
 
         Returns:
@@ -1072,6 +1077,7 @@ class StreamingSpanModel(UniEncoderSpanModel):
             mask=mask,
             span_idx=flat_span_idx,
             span_mask=flat_span_mask,
+            span_embeddings=span_rep if return_embeddings else None,
             past_key_values=representations.past_key_values,
             past_word_embeddings=representations.past_word_embeddings,
             past_word_mask=representations.past_word_mask,
@@ -1498,6 +1504,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         span_mask: Optional[torch.LongTensor] = None,
         labels: Optional[torch.FloatTensor] = None,
         labels_gather_indices: Optional[torch.LongTensor] = None,
+        return_embeddings: bool = False,
         **kwargs: Any,
     ) -> GLiNERBaseOutput:
         """Forward pass through the bi-encoder span model.
@@ -1518,6 +1525,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             span_mask: Mask for valid spans of shape (B, L, K).
             labels: Ground truth labels of shape (B, L, K, C).
             labels_gather_indices: Per-row indices into the shared label embeddings.
+            return_embeddings: Whether to include span representations in the output.
             **kwargs: Additional arguments.
 
         Returns:
@@ -1576,6 +1584,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             prompts_embedding_mask=prompts_embedding_mask,
             words_embedding=words_embedding,
             mask=mask,
+            span_embeddings=span_rep if return_embeddings else None,
         )
         return output
 
@@ -2116,6 +2125,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         labels: Optional[torch.FloatTensor] = None,
         decoder_labels: Optional[torch.FloatTensor] = None,
         threshold: Optional[float] = 0.5,
+        return_embeddings: bool = False,
         **kwargs: Any,
     ) -> GLiNERDecoderOutput:
         """Forward pass through the span-decoder model.
@@ -2139,6 +2149,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             labels: Ground truth span labels of shape (B, L, K, C).
             decoder_labels: Ground truth decoder labels of shape (M, L).
             threshold: Confidence threshold for span selection.
+            return_embeddings: Whether to include span representations in the output.
             **kwargs: Additional arguments.
 
         Returns:
@@ -2218,6 +2229,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             decoder_span_idx=decoder_span_idx,
             words_embedding=words_embedding,
             mask=mask,
+            span_embeddings=span_rep if return_embeddings else None,
         )
         return output
 
@@ -2382,7 +2394,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
         else:
             # During inference: use predicted scores
             span_scores = torch.sigmoid(span_logits).max(-1).values  # (B, S)
-            keep = (span_scores > 0.5) & span_mask.bool
+            keep = (span_scores > 0.5) & span_mask.bool()
 
         if top_k:
             sel_scores = span_scores.masked_fill(~keep, -1.0)
@@ -2826,6 +2838,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         span_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
         threshold: float = 0.5,
+        return_embeddings: bool = False,
     ):
         span_idx = span_idx * span_mask.unsqueeze(-1).long()
         span_rep = self.span_rep_layer(words_embeddings, span_idx)
@@ -2842,7 +2855,10 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             )
         else:
             target_span_rep, target_span_mask, entity_spans = None, None, None
-        return scores, target_span_rep, target_span_mask, entity_spans
+        output = (scores, target_span_rep, target_span_mask, entity_spans)
+        if return_embeddings:
+            return (*output, span_rep)
+        return output
 
     def forward(
         self,
@@ -2861,6 +2877,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         rel_matrix: Optional[torch.FloatTensor] = None,
         threshold: Optional[float] = 0.5,
         adjacency_threshold: Optional[float] = 0.5,
+        return_embeddings: bool = False,
         **kwargs: Any,
     ) -> GLiNERRelexOutput:
         """Forward pass through the relation extraction model.
@@ -2881,6 +2898,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             rel_matrix: Ground truth relation labels of shape (B, N, C_rel).
             threshold: Confidence threshold for entity selection.
             adjacency_threshold: Threshold for relation adjacency.
+            return_embeddings: Whether to include entity and relation representations in the output.
             **kwargs: Additional arguments.
 
         Returns:
@@ -2947,12 +2965,25 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         prompts_embedding = self.prompt_rep_layer(prompts_embedding)
         batch_size, _, embed_dim = prompts_embedding.shape
 
-        scores, target_span_rep, target_span_mask, entity_spans = self.represent_spans(
-            words_embedding, mask, prompts_embedding, span_idx, span_mask, labels, threshold
+        span_outputs = self.represent_spans(
+            words_embedding,
+            mask,
+            prompts_embedding,
+            span_idx,
+            span_mask,
+            labels,
+            threshold,
+            return_embeddings=return_embeddings,
         )
+        if return_embeddings:
+            scores, target_span_rep, target_span_mask, entity_spans, span_embeddings = span_outputs
+        else:
+            scores, target_span_rep, target_span_mask, entity_spans = span_outputs
+            span_embeddings = None
 
         pair_idx, pair_mask, pair_scores = None, None, None
         rel_prompts_embedding, rel_prompts_embedding_mask = None, None
+        relation_embeddings = relation_head_embeddings = relation_tail_embeddings = None
         pred_adj_matrix = None
 
         has_relex = (
@@ -2999,6 +3030,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
                 pair_rep = torch.cat((head_rep_selected, tail_rep_selected), dim=-1)
                 pair_rep = self.pair_rep_layer(pair_rep)
                 pair_scores = torch.einsum("BND,BCD->BNC", pair_rep, rel_prompts_embedding)
+                if return_embeddings:
+                    relation_embeddings = pair_rep
 
             elif hasattr(self, "triples_score_layer"):
                 h = head_rep_selected.unsqueeze(2).expand(B, N, C_rel, D)
@@ -3011,6 +3044,9 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
 
                 triple_scores_flat = self.triples_score_layer(h_flat, r_flat, t_flat)
                 pair_scores = triple_scores_flat.view(B, N, C_rel)
+                if return_embeddings:
+                    relation_head_embeddings = head_rep_selected
+                    relation_tail_embeddings = tail_rep_selected
 
         loss = None
         if labels is not None:
@@ -3083,6 +3119,10 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             rel_prompts_embedding=rel_prompts_embedding,
             rel_prompts_embedding_mask=rel_prompts_embedding_mask,
             entity_spans=None if is_training else entity_spans,
+            span_embeddings=span_embeddings,
+            relation_embeddings=None if is_training else relation_embeddings,
+            relation_head_embeddings=None if is_training else relation_head_embeddings,
+            relation_tail_embeddings=None if is_training else relation_tail_embeddings,
         )
         return output
 
@@ -3298,6 +3338,7 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
         span_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.Tensor] = None,
         threshold: float = 0.5,
+        return_embeddings: bool = False,
     ):
         scores = self.scorer(words_embeddings, prompts_embeddings)
 
@@ -3306,5 +3347,9 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
             span_idx = span_idx * span_mask.unsqueeze(-1).long()
         target_span_rep = self.span_rep_layer(words_embeddings, span_idx)
 
-        # span_idx directly corresponds to target_span_rep positions
-        return scores, target_span_rep, span_mask, span_idx
+        # span_idx directly corresponds to target_span_rep positions. Token-level
+        # public span embeddings are pooled from words_embeddings by the caller.
+        output = (scores, target_span_rep, span_mask, span_idx)
+        if return_embeddings:
+            return (*output, None)
+        return output

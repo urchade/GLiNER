@@ -1,5 +1,5 @@
 from typing import Any, Optional
-from dataclasses import dataclass
+from dataclasses import field, dataclass
 
 import torch
 from transformers.utils import ModelOutput
@@ -27,6 +27,9 @@ class GLiNERBaseOutput(ModelOutput):
             words/tokens. Shape: [batch_size, seq_len, hidden_size].
         mask (Optional[torch.LongTensor]): Attention mask for input tokens.
             Shape: [batch_size, seq_len].
+        span_embeddings (Optional[torch.FloatTensor]): Native span representations
+            used by span-based scorers. Shape: [batch_size, seq_len, max_width, hidden_size]
+            or [batch_size, num_spans, hidden_size].
     """
 
     loss: Optional[torch.FloatTensor] = None
@@ -38,6 +41,7 @@ class GLiNERBaseOutput(ModelOutput):
     span_idx: Optional[torch.LongTensor] = None
     span_mask: Optional[torch.Tensor] = None
     span_logits: Optional[torch.FloatTensor] = None
+    span_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
 
 
 @dataclass
@@ -122,6 +126,15 @@ class GLiNERRelexOutput(GLiNERBaseOutput):
             relation type prompts/labels. Shape: [batch_size, num_relation_types, hidden_size].
         rel_prompts_embedding_mask (Optional[torch.LongTensor]): Attention mask
             for relation prompt embeddings. Shape: [batch_size, num_relation_types].
+        relation_embeddings (Optional[torch.FloatTensor]): Projected entity-pair
+            representations used by pair-based relation scorers. Shape:
+            [batch_size, num_relations, hidden_size].
+        relation_head_embeddings (Optional[torch.FloatTensor]): Selected head
+            representations used by triple-based relation scorers. Shape:
+            [batch_size, num_relations, hidden_size].
+        relation_tail_embeddings (Optional[torch.FloatTensor]): Selected tail
+            representations used by triple-based relation scorers. Shape:
+            [batch_size, num_relations, hidden_size].
     """
 
     rel_idx: Optional[torch.LongTensor] = None
@@ -130,3 +143,6 @@ class GLiNERRelexOutput(GLiNERBaseOutput):
     entity_spans: Optional[torch.LongTensor] = None
     rel_prompts_embedding: Optional[torch.FloatTensor] = None
     rel_prompts_embedding_mask: Optional[torch.LongTensor] = None
+    relation_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
+    relation_head_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
+    relation_tail_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
