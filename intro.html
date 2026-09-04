@@ -66,7 +66,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="add_custom_architecture.html">Creating Custom GLiNER Architectures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="convert_to_onnx.html">Runtime export and inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
@@ -110,8 +110,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="api/gliner.onnx.html">gliner.onnx package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="api/gliner.onnx.model.html">gliner.onnx.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api/gliner.runtime.html">gliner.runtime package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.runtime.base.html">gliner.runtime.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.runtime.onnx.html">gliner.runtime.onnx module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.runtime.openvino.html">gliner.runtime.openvino module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/gliner.decoding.html">gliner.decoding package</a><ul>
@@ -312,10 +314,19 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner
 </span></pre></div>
 </div>
-<p>If you intend to use the GPU-backed ONNX runtime, install GLiNER with the GPU feature. This also installs the <code class="docutils literal notranslate"><span class="pre">onnxruntime-gpu</span></code> dependency.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>gpu<span class="o">]</span>
+<p>CPU ONNX Runtime support is included in the default installation. Install
+<code class="docutils literal notranslate"><span class="pre">onnx</span></code> when exporting models, or install GLiNER with the GPU feature for CUDA
+execution providers:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>onnx
+</span><span data-line="2">!pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[gpu]"</span>
 </span></pre></div>
 </div>
+<p>Install OpenVINO support to export models directly to OpenVINO IR or run them
+with the OpenVINO runtime:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[openvino]"</span>
+</span></pre></div>
+</div>
+<p>For conversion and runtime examples, see <a class="reference internal" href="convert_to_onnx.html"><span class="std std-doc">ONNX Runtime and OpenVINO</span></a>.</p>
 <p>If you need to use a multi-lingual model, like this <a class="reference external" href="https://huggingface.co/collections/knowledgator/gliner-x-684320a3f1220315c651d2f5">one</a>, please install additional dependencies for running tokenisers for different languages.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="o">[</span>tokenizers<span class="o">]</span>
 </span></pre></div>

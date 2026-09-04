@@ -66,7 +66,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../add_custom_architecture.html">Creating Custom GLiNER Architectures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">Runtime export and inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
@@ -110,8 +110,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.runtime.html">gliner.runtime package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.base.html">gliner.runtime.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.onnx.html">gliner.runtime.onnx module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.openvino.html">gliner.runtime.openvino module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
@@ -140,7 +142,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER"><code class="docutils literal notranslate"><span class="pre">BaseGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.BaseGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -150,6 +151,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.evaluate"><code class="docutils literal notranslate">evaluate()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.device"><code class="docutils literal notranslate">device</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseGLiNER.is_runtime_model"><code class="docutils literal notranslate">is_runtime_model</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.configure_inference_packing"><code class="docutils literal notranslate">configure_inference_packing()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.compile"><code class="docutils literal notranslate">compile()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.quantize"><code class="docutils literal notranslate">quantize()</span></code></a></li>
@@ -159,6 +161,7 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.load_from_config"><code class="docutils literal notranslate">load_from_config()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.from_pretrained"><code class="docutils literal notranslate">from_pretrained()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.export_to_onnx"><code class="docutils literal notranslate">export_to_onnx()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.model.BaseGLiNER.export_to_openvino"><code class="docutils literal notranslate">export_to_openvino()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.freeze_component"><code class="docutils literal notranslate">freeze_component()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.unfreeze_component"><code class="docutils literal notranslate">unfreeze_component()</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BaseGLiNER.create_training_args"><code class="docutils literal notranslate">create_training_args()</span></code></a></li>
@@ -193,7 +196,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -202,7 +204,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER"><code class="docutils literal notranslate"><span class="pre">StreamingSpanGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.StreamingSpanGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -220,7 +221,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -229,7 +229,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER"><code class="docutils literal notranslate"><span class="pre">BiEncoderSpanGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderSpanGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -238,7 +237,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER"><code class="docutils literal notranslate"><span class="pre">BiEncoderTokenGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.BiEncoderTokenGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -247,7 +245,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanDecoderGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -264,7 +261,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenDecoderGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -273,7 +269,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderSpanRelexGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -294,7 +289,6 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER"><code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexGLiNER</span></code></a><ul>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.config_class"><code class="docutils literal notranslate">config_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.model_class"><code class="docutils literal notranslate">model_class</span></code></a></li>
-<li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class"><code class="docutils literal notranslate">ort_model_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class"><code class="docutils literal notranslate">data_processor_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_collator_class"><code class="docutils literal notranslate">data_collator_class</span></code></a></li>
 <li><a class="reference internal" href="#gliner.model.UniEncoderTokenRelexGLiNER.decoder_class"><code class="docutils literal notranslate">decoder_class</span></code></a></li>
@@ -353,7 +347,7 @@ data-aria-dark="Switch to auto color mode">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> (<a class="reference internal" href="gliner.config.html#gliner.config.BaseGLiNERConfig" title="gliner.config.BaseGLiNERConfig"><em>BaseGLiNERConfig</em></a>) – Model configuration object.</p></li>
-<li><p><strong>model</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><em>None</em>) – Pre-initialized model instance. If None, creates a new model.</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><em>BaseRuntimeModel</em></a><em> | </em><em>None</em>) – Pre-initialized model instance. If None, creates a new model.</p></li>
 <li><p><strong>tokenizer</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><em>None</em>) – Pre-initialized tokenizer. If None, creates a new tokenizer.</p></li>
 <li><p><strong>data_processor</strong> (<a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.BaseProcessor" title="gliner.data_processing.processor.BaseProcessor"><em>BaseProcessor</em></a><em> | </em><em>None</em>) – Pre-initialized data processor. If None, creates a new processor.</p></li>
 <li><p><strong>backbone_from_pretrained</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether to load the backbone from pretrained weights.</p></li>
@@ -370,11 +364,6 @@ data-aria-dark="Switch to auto color mode">
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.BaseGLiNER.model_class">
 <span class="sig-name descname"><span class="pre">model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.BaseGLiNER.model_class" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.BaseGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.BaseGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -400,7 +389,7 @@ data-aria-dark="Switch to auto color mode">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>config</strong> (<a class="reference internal" href="gliner.config.html#gliner.config.BaseGLiNERConfig" title="gliner.config.BaseGLiNERConfig"><em>BaseGLiNERConfig</em></a>) – Model configuration object.</p></li>
-<li><p><strong>model</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><em>None</em>) – Pre-initialized model instance. If None, creates a new model.</p></li>
+<li><p><strong>model</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><em>BaseRuntimeModel</em></a><em> | </em><em>None</em>) – Pre-initialized model instance. If None, creates a new model.</p></li>
 <li><p><strong>tokenizer</strong> (<a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BaseModel" title="gliner.modeling.base.BaseModel"><em>BaseModel</em></a><em> | </em><em>None</em>) – Pre-initialized tokenizer. If None, creates a new tokenizer.</p></li>
 <li><p><strong>data_processor</strong> (<a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.BaseProcessor" title="gliner.data_processing.processor.BaseProcessor"><em>BaseProcessor</em></a><em> | </em><em>None</em>) – Pre-initialized data processor. If None, creates a new processor.</p></li>
 <li><p><strong>backbone_from_pretrained</strong> (<em>bool</em><em> | </em><em>None</em>) – Whether to load the backbone from pretrained weights.</p></li>
@@ -452,6 +441,14 @@ data-aria-dark="Switch to auto color mode">
 <dd class="field-odd"><p>Torch device object (CPU or CUDA).</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.model.BaseGLiNER.is_runtime_model">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">is_runtime_model</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#gliner.model.BaseGLiNER.is_runtime_model" title="Link to this definition">¶</a></dt>
+<dd><p>Whether inference is delegated to ONNX Runtime or OpenVINO.</p>
+<p>The legacy fallback keeps lightweight subclasses and integrations that
+set only <code class="docutils literal notranslate"><span class="pre">onnx_model</span></code> working during the namespace migration.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -621,7 +618,7 @@ on GPU, FBGEMM on CPU). For precision-only changes (fp16/bf16), use
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.model.BaseGLiNER.from_pretrained">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">revision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_files_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_token_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_torch_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_cpu_mem_usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_onnx_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.onnx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseGLiNER.from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseGLiNER.from_pretrained" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">revision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_files_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_token_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_torch_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_cpu_mem_usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_onnx_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.onnx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseGLiNER.from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseGLiNER.from_pretrained" title="Link to this definition">¶</a></dt>
 <dd><p>Load pretrained model from HuggingFace Hub or local directory.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -676,6 +673,16 @@ when not set; passing both with mismatched precisions raises.
 <li><p><strong>max_width</strong> (<em>int</em><em> | </em><em>None</em>) – Override max_width in config.</p></li>
 <li><p><strong>post_fusion_schema</strong> (<em>str</em><em> | </em><em>None</em>) – Override post_fusion_schema in config.</p></li>
 <li><p><strong>_attn_implementation</strong> (<em>str</em><em> | </em><em>None</em>) – Override attention implementation.</p></li>
+<li><p><strong>runtime</strong> (<em>str</em><em> | </em><em>None</em>) – Inference runtime: <code class="docutils literal notranslate"><span class="pre">&quot;torch&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;onnxruntime&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;openvino&quot;</span></code>. <code class="docutils literal notranslate"><span class="pre">None</span></code> preserves the legacy
+<code class="docutils literal notranslate"><span class="pre">load_onnx_model</span></code> behavior.</p></li>
+<li><p><strong>runtime_model_file</strong> (<em>str</em><em> | </em><em>None</em>) – Runtime artifact relative to the model directory.
+Both ONNX Runtime and OpenVINO can load <code class="docutils literal notranslate"><span class="pre">model.onnx</span></code>;
+OpenVINO also accepts an IR <code class="docutils literal notranslate"><span class="pre">.xml</span></code> file with its matching <code class="docutils literal notranslate"><span class="pre">.bin</span></code>.</p></li>
+<li><p><strong>runtime_options</strong> (<em>dict</em><em> | </em><em>None</em>) – Backend-specific construction options. ONNX Runtime
+accepts <code class="docutils literal notranslate"><span class="pre">session</span></code>, <code class="docutils literal notranslate"><span class="pre">session_options</span></code>, and <code class="docutils literal notranslate"><span class="pre">providers</span></code>;
+OpenVINO accepts <code class="docutils literal notranslate"><span class="pre">compiled_model</span></code>, <code class="docutils literal notranslate"><span class="pre">device_name</span></code>, <code class="docutils literal notranslate"><span class="pre">config</span></code>,
+and <code class="docutils literal notranslate"><span class="pre">core</span></code>.</p></li>
 <li><p><strong>**model_kwargs</strong> – Additional model initialization arguments.</p></li>
 </ul>
 </dd>
@@ -709,6 +716,29 @@ when not set; passing both with mismatched precisions raises.
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Dictionary with paths to exported models</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.model.BaseGLiNER.export_to_openvino">
+<span class="sig-name descname"><span class="pre">export_to_openvino</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">save_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">openvino_filename</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.xml'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compress_to_fp16</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">export_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#BaseGLiNER.export_to_openvino"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.BaseGLiNER.export_to_openvino" title="Link to this definition">¶</a></dt>
+<dd><p>Convert the PyTorch model directly to OpenVINO IR.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>save_dir</strong> (<em>str</em><em> | </em><em>Path</em>) – Directory in which to save the model and tokenizer files.</p></li>
+<li><p><strong>openvino_filename</strong> (<em>str</em>) – Name of the OpenVINO IR <code class="docutils literal notranslate"><span class="pre">.xml</span></code> file.</p></li>
+<li><p><strong>compress_to_fp16</strong> (<em>bool</em>) – Whether OpenVINO should compress floating-point weights to FP16.</p></li>
+<li><p><strong>**export_kwargs</strong> – Additional model-specific export arguments.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Paths to the OpenVINO graph and weights under <code class="docutils literal notranslate"><span class="pre">openvino_path</span></code> and
+<code class="docutils literal notranslate"><span class="pre">weights_path</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, str]</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1311,12 +1341,6 @@ with ‘start’ and ‘end’ character positions.</p></li>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderSpanGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.UniEncoderSpanORTModel" title="gliner.onnx.model.UniEncoderSpanORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanORTModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanGLiNER.data_processor_class">
 <span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderSpanGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderSpanProcessor" title="gliner.data_processing.processor.UniEncoderSpanProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanProcessor</span></code></a></p>
@@ -1366,11 +1390,6 @@ with ‘start’ and ‘end’ character positions.</p></li>
 <span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.StreamingSpanGLiNER.model_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.StreamingSpanModel" title="gliner.modeling.base.StreamingSpanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">StreamingSpanModel</span></code></a></p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.StreamingSpanGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.StreamingSpanGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.StreamingSpanGLiNER.data_processor_class">
@@ -1510,12 +1529,6 @@ revisions or removals caused by the newly appended context.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.UniEncoderTokenORTModel" title="gliner.onnx.model.UniEncoderTokenORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenORTModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderTokenGLiNER.data_processor_class">
 <span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderTokenProcessor" title="gliner.data_processing.processor.UniEncoderTokenProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenProcessor</span></code></a></p>
@@ -1563,12 +1576,6 @@ revisions or removals caused by the newly appended context.</p>
 <dt class="sig sig-object py" id="gliner.model.BiEncoderSpanGLiNER.model_class">
 <span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.BiEncoderSpanGLiNER.model_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.BiEncoderSpanModel" title="gliner.modeling.base.BiEncoderSpanModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderSpanModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.BiEncoderSpanGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.BiEncoderSpanGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.BiEncoderSpanORTModel" title="gliner.onnx.model.BiEncoderSpanORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderSpanORTModel</span></code></a></p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1622,12 +1629,6 @@ revisions or removals caused by the newly appended context.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.BiEncoderTokenGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.BiEncoderTokenGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.BiEncoderTokenORTModel" title="gliner.onnx.model.BiEncoderTokenORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderTokenORTModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.BiEncoderTokenGLiNER.data_processor_class">
 <span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.BiEncoderTokenGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.BiEncoderTokenProcessor" title="gliner.data_processing.processor.BiEncoderTokenProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">BiEncoderTokenProcessor</span></code></a></p>
@@ -1678,11 +1679,6 @@ revisions or removals caused by the newly appended context.</p>
 <span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.model_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanDecoderModel" title="gliner.modeling.base.UniEncoderSpanDecoderModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanDecoderModel</span></code></a></p>
 </dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.UniEncoderSpanDecoderGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanDecoderGLiNER.data_processor_class">
@@ -1915,11 +1911,6 @@ labels autoregressively.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">type</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class">
 <span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenDecoderGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.UniEncoderTokenDecoderProcessor" title="gliner.data_processing.processor.UniEncoderTokenDecoderProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenDecoderProcessor</span></code></a></p>
@@ -1970,12 +1961,6 @@ detect entities and the relationships between them in a single forward pass.</p>
 <dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.model_class">
 <span class="sig-name descname"><span class="pre">model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.model_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.modeling.base.html#gliner.modeling.base.UniEncoderSpanRelexModel" title="gliner.modeling.base.UniEncoderSpanRelexModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanRelexModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderSpanRelexGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderSpanRelexGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.UniEncoderSpanRelexORTModel" title="gliner.onnx.model.UniEncoderSpanRelexORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderSpanRelexORTModel</span></code></a></p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -2316,12 +2301,6 @@ detect entities and the relationships between them in a single forward pass.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class">
-<span class="sig-name descname"><span class="pre">ort_model_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.ort_model_class" title="Link to this definition">¶</a></dt>
-<dd><p>alias of <a class="reference internal" href="gliner.onnx.model.html#gliner.onnx.model.UniEncoderTokenRelexORTModel" title="gliner.onnx.model.UniEncoderTokenRelexORTModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">UniEncoderTokenRelexORTModel</span></code></a></p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class">
 <span class="sig-name descname"><span class="pre">data_processor_class</span></span><a class="headerlink" href="#gliner.model.UniEncoderTokenRelexGLiNER.data_processor_class" title="Link to this definition">¶</a></dt>
 <dd><p>alias of <a class="reference internal" href="gliner.data_processing.processor.html#gliner.data_processing.processor.RelationExtractionTokenProcessor" title="gliner.data_processing.processor.RelationExtractionTokenProcessor"><code class="xref py py-class docutils literal notranslate"><span class="pre">RelationExtractionTokenProcessor</span></code></a></p>
@@ -2434,7 +2413,7 @@ and replaces itself with an instance of that variant.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.model.GLiNER.from_pretrained">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">revision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_files_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_token_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_torch_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_cpu_mem_usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_onnx_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.onnx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#GLiNER.from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.GLiNER.from_pretrained" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_pretrained</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">revision</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">proxies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resume_download</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_files_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">token</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'cpu'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_tokenizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resize_token_embeddings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compile_torch_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quantize</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">low_cpu_mem_usage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">variant</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">load_onnx_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onnx_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'model.onnx'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">post_fusion_schema</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_attn_implementation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">runtime_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">model_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/model.html#GLiNER.from_pretrained"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.model.GLiNER.from_pretrained" title="Link to this definition">¶</a></dt>
 <dd><p>Load a pretrained GLiNER model with automatic type detection.</p>
 <p>This method loads the configuration, determines the appropriate GLiNER variant,
 and delegates to that variant’s from_pretrained method.</p>
@@ -2479,6 +2458,10 @@ falls back to fp32 + cast on read. See the base-class
 <li><p><strong>max_width</strong> (<em>int</em><em> | </em><em>None</em>) – Override max_width in config.</p></li>
 <li><p><strong>post_fusion_schema</strong> (<em>str</em><em> | </em><em>None</em>) – Override post_fusion_schema in config.</p></li>
 <li><p><strong>_attn_implementation</strong> (<em>str</em><em> | </em><em>None</em>) – Override attention implementation.</p></li>
+<li><p><strong>runtime</strong> (<em>str</em><em> | </em><em>None</em>) – Inference runtime: <code class="docutils literal notranslate"><span class="pre">&quot;torch&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;onnxruntime&quot;</span></code>, or
+<code class="docutils literal notranslate"><span class="pre">&quot;openvino&quot;</span></code>.</p></li>
+<li><p><strong>runtime_model_file</strong> (<em>str</em><em> | </em><em>None</em>) – Runtime artifact relative to the model directory.</p></li>
+<li><p><strong>runtime_options</strong> (<em>dict</em><em> | </em><em>None</em>) – Backend-specific session or compilation options.</p></li>
 <li><p><strong>**model_kwargs</strong> – Additional model initialization arguments.</p></li>
 </ul>
 </dd>

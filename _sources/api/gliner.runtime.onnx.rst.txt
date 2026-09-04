@@ -1,0 +1,7 @@
+gliner.runtime.onnx module
+==========================
+
+.. automodule:: gliner.runtime.onnx
+   :members:
+   :undoc-members:
+   :show-inheritance:

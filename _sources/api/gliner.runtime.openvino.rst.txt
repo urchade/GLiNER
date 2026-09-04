@@ -1,0 +1,7 @@
+gliner.runtime.openvino module
+==============================
+
+.. automodule:: gliner.runtime.openvino
+   :members:
+   :undoc-members:
+   :show-inheritance:

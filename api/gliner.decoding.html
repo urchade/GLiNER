@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="violet" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.decoding package - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.decoding.trie package" href="gliner.decoding.trie.html" /><link rel="prev" title="gliner.onnx.model module" href="gliner.onnx.model.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.decoding package - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.decoding.trie package" href="gliner.decoding.trie.html" /><link rel="prev" title="gliner.runtime.openvino module" href="gliner.runtime.openvino.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
@@ -66,7 +66,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../add_custom_architecture.html">Creating Custom GLiNER Architectures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">Runtime export and inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
@@ -110,8 +110,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.html">gliner.onnx package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gliner.runtime.html">gliner.runtime package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.base.html">gliner.runtime.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.onnx.html">gliner.runtime.onnx module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.openvino.html">gliner.runtime.openvino module</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">gliner.decoding package</a><ul>
@@ -200,10 +202,10 @@ data-aria-dark="Switch to auto color mode">
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="gliner.onnx.model.html">
+    <a href="gliner.runtime.openvino.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">gliner.onnx.model module</div></div>
+        <span>Previous</span><div class="title">gliner.runtime.openvino module</div></div>
     </a>
   </div><div class="navigation-next">
     <a href="gliner.decoding.trie.html">

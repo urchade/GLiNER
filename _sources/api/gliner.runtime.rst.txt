@@ -1,0 +1,17 @@
+gliner.runtime package
+======================
+
+.. automodule:: gliner.runtime
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.runtime.base
+   gliner.runtime.onnx
+   gliner.runtime.openvino

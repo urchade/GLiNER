@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="violet" data-content_root="../">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.onnx package - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.onnx.model module" href="gliner.onnx.model.html" /><link rel="prev" title="gliner.evaluation.utils module" href="gliner.evaluation.utils.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>gliner.runtime.openvino module - Home 0.2.24 documentation</title><link rel="index" title="Index" href="../genindex.html" /><link rel="search" title="Search" href="../search.html" /><link rel="next" title="gliner.decoding package" href="gliner.decoding.html" /><link rel="prev" title="gliner.runtime.onnx module" href="gliner.runtime.onnx.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=e1a1ceaf" />
@@ -17,7 +17,7 @@
   --sy-f-heading: "Inter", var(--sy-f-sys), var(--sy-f-cjk), sans-serif;
 }
 </style>
-    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.onnx package"/>
+    <meta property="og:type" content="website"/><meta property="og:title" content="gliner.runtime.openvino module"/>
 <meta name="twitter:card" content="summary"/>
   </head>
 <body><div class="sy-head">
@@ -66,7 +66,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="../training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../architectures.html">Architectures</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../add_custom_architecture.html">Creating Custom GLiNER Architectures</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">ONNX Export &amp; Deployment</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../convert_to_onnx.html">Runtime export and inference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../serving.html">Serving</a></li>
 </ul>
 <p class="caption" role="heading" aria-level="3"><span class="caption-text">API Reference</span></p>
@@ -110,8 +110,10 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l2"><a class="reference internal" href="gliner.evaluation.utils.html">gliner.evaluation.utils module</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">gliner.onnx package</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="gliner.runtime.html">gliner.runtime package</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.base.html">gliner.runtime.base module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="gliner.runtime.onnx.html">gliner.runtime.onnx module</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">gliner.runtime.openvino module</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="gliner.decoding.html">gliner.decoding package</a><ul>
@@ -137,7 +139,12 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#submodules">Submodules</a></li>
+<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel"><code class="docutils literal notranslate"><span class="pre">OpenVINOModel</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
+<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
@@ -155,8 +162,12 @@ data-aria-dark="Switch to auto color mode">
         <span>/</span>
         <meta itemprop="position" content="1" />
       </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
-        <strong itemprop="name">gliner.onnx package</strong>
+        <a itemprop="item" href="gliner.runtime.html"><span itemprop="name">gliner.runtime package</span></a>
+        <span>/</span>
         <meta itemprop="position" content="2" />
+      </li><li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+        <strong itemprop="name">gliner.runtime.openvino module</strong>
+        <meta itemprop="position" content="3" />
       </li></ol>
     <div class="xl:hidden ml-1">
       <button class="js-menu" aria-label="Show table of contents" type="button" aria-controls="rside"
@@ -168,16 +179,38 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.onnx">
-<span id="gliner-onnx-package"></span><h1>gliner.onnx package<a class="headerlink" href="#module-gliner.onnx" title="Link to this heading">¶</a></h1>
-<section id="submodules">
-<h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
-<div class="toctree-wrapper compound">
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="gliner.onnx.model.html">gliner.onnx.model module</a></li>
-</ul>
-</div>
-</section>
+          <section id="module-gliner.runtime.openvino">
+<span id="gliner-runtime-openvino-module"></span><h1>gliner.runtime.openvino module<a class="headerlink" href="#module-gliner.runtime.openvino" title="Link to this heading">¶</a></h1>
+<p>OpenVINO adapter for exported GLiNER models.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.openvino.</span></span><span class="sig-name descname"><span class="pre">OpenVINOModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a></p>
+<p>Run any supported exported GLiNER ONNX or IR graph with OpenVINO.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.runtime_name">
+<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'openvino'</span></em><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.runtime_name" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.__init__" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.run_inference">
+<span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.run_inference" title="Link to this definition">¶</a></dt>
+<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
+<dl class="field-list simple">
+</dl>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 
         </article><button class="back-to-top" type="button">
@@ -186,16 +219,16 @@ data-aria-dark="Switch to auto color mode">
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="gliner.evaluation.utils.html">
+    <a href="gliner.runtime.onnx.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">gliner.evaluation.utils module</div></div>
+        <span>Previous</span><div class="title">gliner.runtime.onnx module</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="gliner.onnx.model.html">
+    <a href="gliner.decoding.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">gliner.onnx.model module</div>
+        <div class="title">gliner.decoding package</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>
