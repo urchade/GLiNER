@@ -1,465 +1,370 @@
-# ONNX Export & Deployment
+# ONNX Runtime and OpenVINO
 
-## Overview
+GLiNER can export supported PyTorch checkpoints to ONNX or OpenVINO IR and run
+them through the same high-level `predict_entities` and `inference` APIs used by
+PyTorch models.
 
-GLiNER models can be exported to ONNX format for optimized inference across different platforms and frameworks. ONNX (Open Neural Network Exchange) provides:
+| Runtime | Model artifact | Typical use |
+|---|---|---|
+| PyTorch | `model.safetensors` or `pytorch_model.bin` | Training and standard inference |
+| ONNX Runtime | `.onnx` | Portable CPU or CUDA inference |
+| OpenVINO | `.xml` + `.bin`, or `.onnx` | CPU, GPU, NPU, or `AUTO` inference through OpenVINO |
 
-- **Cross-platform compatibility**: Deploy on web, mobile, embedded systems
-- **Optimized inference**: Hardware-specific optimizations and acceleration
-- **Production deployment**: Integrate with existing ML infrastructure
-- **Reduced dependencies**: Lighter runtime without full PyTorch stack
+File-backed runtime models still use `gliner_config.json` and the tokenizer
+files from the export directory. Both export methods write these files
+automatically; keep an OpenVINO `.xml` file beside its matching `.bin` file.
 
-## Converting Models to ONNX
+## Installation
 
-### Installation
-
-First, ensure you have GLiNER installed with ONNX support:
-
-```bash
-pip install gliner[onnx]
-```
-
-### Conversion Script
-
-Save the following script as `convert_to_onnx.py`:
-
-```python
-import os
-import argparse
-from gliner import GLiNER
-
-def main(args):
-    # Load the GLiNER model
-    gliner_model = GLiNER.from_pretrained(args.model_path)
-    
-    # Export to ONNX format
-    gliner_model.export_to_onnx(
-        save_dir=args.save_path, 
-        onnx_filename=args.file_name, 
-        quantized_filename=args.quantized_file_name,
-        quantize=args.quantize,
-        opset=args.opset,
-    )
-    
-    print(f"Model exported successfully to {args.save_path}")
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Convert GLiNER model to ONNX format')
-    parser.add_argument('--model_path', type=str, required=True,
-                        help='Path or HuggingFace model ID (e.g., urchade/gliner_small-v2.1)')
-    parser.add_argument('--save_path', type=str, default='./onnx_models',
-                        help='Directory to save ONNX model')
-    parser.add_argument('--file_name', type=str, default='model.onnx',
-                        help='Name of the ONNX model file')
-    parser.add_argument('--quantized_file_name', type=str, default='model_quantized.onnx',
-                        help='Name of the quantized ONNX model file')
-    parser.add_argument('--opset', type=int, default=19,
-                        help='ONNX opset version (default: 19)')
-    parser.add_argument('--quantize', action='store_true',
-                        help='Also create a quantized INT8 version')
-    
-    args = parser.parse_args()
-    
-    # Create output directory if it doesn't exist
-    if not os.path.exists(args.save_path):
-        os.makedirs(args.save_path)
-    
-    main(args)
-    print("Done!")
-```
-
-### Usage Examples
-
-#### Basic Conversion
-
-Convert a model from HuggingFace Hub:
+ONNX Runtime CPU support is included in the default installation:
 
 ```bash
-python convert_to_onnx.py \
-    --model_path urchade/gliner_small-v2.1 \
-    --save_path ./onnx_models
+pip install gliner
 ```
 
-#### Convert with Quantization
-
-Create both standard and quantized versions:
+Install the Python `onnx` package when exporting a PyTorch checkpoint to ONNX:
 
 ```bash
-python convert_to_onnx.py \
-    --model_path urchade/gliner_small-v2.1 \
-    --save_path ./onnx_models \
-    --quantize
+pip install gliner onnx
 ```
 
-#### Convert Local Model
-
-Convert a locally trained or fine-tuned model:
+For ONNX Runtime with CUDA execution providers, install the GPU extra:
 
 ```bash
-python convert_to_onnx.py \
-    --model_path ./my_finetuned_model \
-    --save_path ./onnx_models \
-    --file_name my_model.onnx
+pip install "gliner[gpu]"
 ```
 
-#### Custom Configuration
+Add `onnx` to the same command if this environment will also export models.
 
-Specify all parameters:
+For direct OpenVINO export and inference, install the OpenVINO extra. Direct
+OpenVINO conversion does not create an intermediate ONNX model:
 
 ```bash
-python convert_to_onnx.py \
-    --model_path knowledgator/gliner-multitask-large-v0.5 \
-    --save_path ./production_models \
-    --file_name gliner_large.onnx \
-    --quantized_file_name gliner_large_int8.onnx \
-    --opset 19 \
-    --quantize
+pip install "gliner[openvino]"
 ```
 
-### Parameters Reference
+## Convert a model
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `--model_path` | `str` | **Required** | Path to local model or HuggingFace model ID |
-| `--save_path` | `str` | `./onnx_models` | Output directory for ONNX files |
-| `--file_name` | `str` | `model.onnx` | Name for the ONNX model file |
-| `--quantized_file_name` | `str` | `model_quantized.onnx` | Name for quantized model file |
-| `--opset` | `int` | `19` | ONNX opset version (14-19 supported) |
-| `--quantize` | `bool` | `False` | Create INT8 quantized version |
-
-### Quantization Benefits
-
-Quantized models (INT8) offer:
-
-- **50-75% smaller file size**: Faster downloads and reduced storage
-- **2-4x faster inference on CPU**: Especially on AVX512-capable processors
-- **Lower memory usage**: Important for edge deployment
-- **Minimal accuracy loss**: Typically < 1% F1 score difference
-
-:::{tip} When to Use Quantization
-
-Use quantized models for:
-- CPU-based production deployments
-- Mobile and edge devices
-- Bandwidth-constrained environments
-- High-throughput scenarios
-
-Use standard models for:
-- GPU inference (GPUs are optimized for FP16/FP32)
-- Maximum accuracy requirements
-- Research and experimentation
-
-:::
-
-### Output Structure
-
-After conversion, your directory will contain:
-
-```
-onnx_models/
-├── model.onnx              # Standard ONNX model (FP32)
-├── model_quantized.onnx    # Quantized model (INT8, if --quantize used)
-```
-
-## Running ONNX Models
-
-### Python (Native GLiNER Support)
-
-GLiNER provides native support for loading and running ONNX models:
-
-```python
-from gliner import GLiNER
-
-# Load ONNX model
-model = GLiNER.from_pretrained(
-    "path/to/model",
-    load_onnx_model=True,
-    onnx_model_file="model.onnx"
-)
-
-# Use exactly like PyTorch models
-entities = model.predict_entities(
-    "Apple Inc. was founded by Steve Jobs.",
-    ["organization", "person"]
-)
-```
-
-#### ONNX Runtime Configuration
-
-Configure ONNX Runtime for optimal performance:
-
-```python
-import onnxruntime as ort
-
-# CPU with optimizations
-session_options = ort.SessionOptions()
-session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-session_options.intra_op_num_threads = 4
-
-model = GLiNER.from_pretrained(
-    "path/to/model",
-    load_onnx_model=True,
-    onnx_model_file="model.onnx",
-    session_options=session_options
-)
-
-# GPU (CUDA) inference
-model = GLiNER.from_pretrained(
-    "path/to/model",
-    load_onnx_model=True,
-    onnx_model_file="model.onnx",
-    map_location="cuda"
-)
-```
-
-### Cross-Platform Frameworks
-
-GLiNER ONNX models are compatible with multiple frameworks and languages:
-
-#### 🦀 Rust: gline-rs
-
-High-performance inference engine for production systems.
-
-```rust
-use gline_rs::{GLiNER, Parameters, RuntimeParameters};
-
-let model = GLiNER::<SpanMode>::new(
-    Parameters::default(),
-    RuntimeParameters::default(),
-    "tokenizer.json",
-    "model.onnx",
-)?;
-
-let input = TextInput::from_str(
-    &["Apple Inc. was founded by Steve Jobs."],
-    &["organization", "person"],
-)?;
-
-let output = model.inference(input)?;
-```
-
-**Key Features:**
-- 4x faster than Python on CPU
-- Memory-safe and thread-safe
-- GPU/NPU support via execution providers
-- Zero-copy operations
-- Production-grade error handling
-
-**Resources:**
-- Repository: [github.com/fbilhaut/gline-rs](https://github.com/fbilhaut/gline-rs)
-- Crates.io: [crates.io/crates/gline-rs](https://crates.io/crates/gline-rs)
-- Documentation: Available in repository
-
----
-
-#### 🌐 JavaScript/TypeScript: GLiNER.js
-
-Browser and Node.js inference engine.
-
-```javascript
-import { Gliner } from 'gliner';
-
-const gliner = new Gliner({
-  tokenizerPath: "path/to/tokenizer",
-  onnxSettings: {
-    modelPath: "model.onnx",
-    executionProvider: "webgpu", // or "cpu", "wasm", "webgl"
-  },
-});
-
-await gliner.initialize();
-
-const results = await gliner.inference({
-  texts: ["Apple Inc. was founded by Steve Jobs."],
-  entities: ["organization", "person"],
-  threshold: 0.5,
-});
-```
-
-**Key Features:**
-- WebGPU/WebGL acceleration in browsers
-- Web Workers support for non-blocking inference
-- TypeScript definitions included
-- WASM multi-threading on compatible browsers
-- Node.js support
-
-**Resources:**
-- Repository: [github.com/Ingvarstep/GLiNER.js](https://github.com/Ingvarstep/GLiNER.js)
-- NPM: [npmjs.com/package/gliner](https://www.npmjs.com/package/gliner)
-- Examples: Available in repository
-
----
-
-#### ⚡ C++: GLiNER.cpp
-
-Lightweight inference for embedded and high-performance systems.
-
-```cpp
-#include "GLiNER/model.hpp"
-
-gliner::Config config{12, 512};  // max_width, max_length
-gliner::Model model(
-    "model.onnx",
-    "tokenizer.json",
-    config
-);
-
-std::vector<std::string> texts = {
-    "Apple Inc. was founded by Steve Jobs."
-};
-std::vector<std::string> entities = {"organization", "person"};
-
-auto output = model.inference(texts, entities);
-```
-
-**Key Features:**
-- Minimal dependencies (no Python runtime)
-- CUDA GPU acceleration
-- OpenMP multi-threading
-- Low memory footprint
-- Direct ONNX Runtime integration
-
-**Resources:**
-- Repository: [github.com/Knowledgator/GLiNER.cpp](https://github.com/Knowledgator/GLiNER.cpp)
-- Build instructions: See repository README
-
----
-
-### Framework Comparison
-
-| Framework | Language | Performance (vs Python) | GPU Support | Target Use Case |
-|-----------|----------|-------------------------|-------------|-----------------|
-| **GLiNER (Python)** | Python | 1x (baseline) | ✅ CUDA | Research, prototyping |
-| **gline-rs** | Rust | ~4x faster (CPU) | ✅ CUDA, TensorRT, DirectML | Production servers, microservices |
-| **GLiNER.js** | JavaScript | ~2x faster | ✅ WebGPU, WebGL | Web apps, browser extensions |
-| **GLiNER.cpp** | C++ | ~3-5x faster (CPU) | ✅ CUDA | Embedded, mobile, native apps |
-
-*Performance estimates based on community benchmarks with different hardware configurations*
-
-## Supported Model Architectures
-
-Not all GLiNER architectures support ONNX export:
-
-| Architecture | ONNX Support | Notes |
-|-------------|--------------|-------|
-| **UniEncoderSpan** | ✅ Full | Standard span-based models |
-| **UniEncoderToken** | ✅ Full | Token-based models |
-| **BiEncoderSpan** | ✅ Full | Separate text/label encoders |
-| **BiEncoderToken** | ✅ Full | Bi-encoder with token prediction |
-| **UniEncoderSpanDecoder** | ❌ Not supported | Generative decoder incompatible with static graphs |
-| **UniEncoderSpanRelex** | ✅ Full | Entity + relation extraction |
-
-:::{warning} Decoder Models
-
-Models with generative decoders (`UniEncoderSpanDecoder`) cannot be exported to ONNX because the decoder requires iterative generation, which is not suitable for static computation graphs. Consider using the encoder-only variants or PyTorch for these models.
-
-:::
-
-## Advanced ONNX Features
-
-### Bi-Encoder Export Options
-
-For bi-encoder models, you can export with pre-computed label embeddings:
-
-```python
-gliner_model.export_to_onnx(
-    save_dir="./onnx_models",
-    from_labels_embeddings=True  # Use pre-computed embeddings mode
-)
-```
-
-This creates two export variants:
-1. **Standard**: Includes both text and label encoders
-2. **With embeddings**: Optimized for pre-computed label embeddings
-
-### Custom Opset Versions
-
-Different ONNX runtimes support different opset versions:
-
-```python
-# For older ONNX Runtime versions
-gliner_model.export_to_onnx(save_dir="./onnx_models", opset=14)
-
-# For latest features (default)
-gliner_model.export_to_onnx(save_dir="./onnx_models", opset=19)
-```
-
-### Programmatic Export
-
-Export from Python code:
+Load the source checkpoint with the default PyTorch runtime before exporting:
 
 ```python
 from gliner import GLiNER
 
 model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
+```
 
-# Export with all options
+Runtime-backed models cannot be exported again. Keep the original PyTorch
+checkpoint if you expect to produce multiple deployment formats.
+
+### Export to ONNX
+
+```python
 paths = model.export_to_onnx(
-    save_dir="./models",
-    onnx_filename="gliner.onnx",
-    quantized_filename="gliner_int8.onnx",
-    quantize=True,
-    opset=19
+    save_dir="exports/onnx",
+    onnx_filename="model.onnx",
+    opset=19,
+    quantize=False,
 )
 
-print(f"Standard model: {paths['onnx_path']}")
-print(f"Quantized model: {paths['quantized_path']}")
+print(paths["onnx_path"])
 ```
 
-## Troubleshooting
+`export_to_onnx` returns:
 
-### Common Issues
+```python
+{
+    "onnx_path": "exports/onnx/model.onnx",
+    "quantized_path": None,
+}
+```
 
-**Issue: "No module named 'onnxruntime'"**
+To create an additional dynamically quantized model:
+
+```python
+paths = model.export_to_onnx(
+    save_dir="exports/onnx",
+    onnx_filename="model.onnx",
+    quantized_filename="model_int8.onnx",
+    quantize=True,
+    opset=19,
+)
+
+print(paths["quantized_path"])
+```
+
+Quantization is best-effort. If ONNX Runtime quantization is unavailable or
+conversion fails, GLiNER emits a warning and returns `None` for
+`quantized_path`; the regular ONNX model is still retained.
+
+### Export directly to OpenVINO
+
+```python
+paths = model.export_to_openvino(
+    save_dir="exports/openvino",
+    openvino_filename="model.xml",
+    compress_to_fp16=False,
+)
+
+print(paths["openvino_path"])
+print(paths["weights_path"])
+```
+
+`export_to_openvino` converts the wrapped PyTorch graph directly and returns:
+
+```python
+{
+    "openvino_path": "exports/openvino/model.xml",
+    "weights_path": "exports/openvino/model.bin",
+}
+```
+
+Set `compress_to_fp16=True` to let OpenVINO compress floating-point weights to
+FP16 while saving. OpenVINO conversion does not use an ONNX opset argument.
+
+### Conversion scripts
+
+The repository also includes command-line conversion scripts:
+
 ```bash
-pip install onnxruntime  # CPU
-# or
-pip install onnxruntime-gpu  # GPU
+# ONNX plus dynamically quantized ONNX
+python scripts/convert_to_onnx.py \
+    --model_path urchade/gliner_small-v2.1 \
+    --save_path exports/onnx \
+    --file_name model.onnx \
+    --quantized_file_name model_int8.onnx
+
+# OpenVINO IR
+python scripts/convert_to_openvino.py \
+    --model_path urchade/gliner_small-v2.1 \
+    --save_path exports/openvino \
+    --file_name model.xml
 ```
 
-**Issue: "Quantization failed"**
-- Ensure `onnxruntime` includes quantization tools
-- Try without `--quantize` flag first
-- Check ONNX Runtime version (≥1.10 recommended)
+The ONNX script creates the regular and quantized files. Use the Python methods
+when application code needs explicit control over quantization or other export
+settings.
 
-**Issue: "Opset version not supported"**
-- Use `--opset 14` for older runtimes
-- Update ONNX Runtime: `pip install -U onnxruntime`
+### Exported files
 
-### Validation
+A typical export produces one of these layouts:
 
-Test your ONNX model after conversion:
+```text
+exports/onnx/
+├── gliner_config.json
+├── model.onnx
+├── model_int8.onnx       # only when quantization succeeds
+├── tokenizer.json
+└── tokenizer_config.json # exact tokenizer files depend on the checkpoint
+
+exports/openvino/
+├── gliner_config.json
+├── model.xml
+├── model.bin
+├── tokenizer.json
+└── tokenizer_config.json # exact tokenizer files depend on the checkpoint
+```
+
+## Run an exported model
+
+Select the backend with `runtime` and select its artifact with
+`runtime_model_file`. The artifact filename is resolved relative to the model
+directory passed to `from_pretrained`.
+
+### ONNX Runtime on CPU
 
 ```python
 from gliner import GLiNER
 
-# Load ONNX model
-onnx_model = GLiNER.from_pretrained(
-    "./onnx_models",
-    load_onnx_model=True,
-    onnx_model_file="model.onnx"
+model = GLiNER.from_pretrained(
+    "exports/onnx",
+    runtime="onnxruntime",
+    runtime_model_file="model.onnx",
+    local_files_only=True,
 )
 
-# Compare with PyTorch model
-pytorch_model = GLiNER.from_pretrained("urchade/gliner_small-v2.1")
-
-text = "Apple Inc. was founded by Steve Jobs."
-labels = ["organization", "person"]
-
-# Should produce identical results
-onnx_results = onnx_model.predict_entities(text, labels)
-pytorch_results = pytorch_model.predict_entities(text, labels)
-
-print("ONNX:", onnx_results)
-print("PyTorch:", pytorch_results)
+entities = model.predict_entities(
+    "Apple was founded by Steve Jobs in California.",
+    ["organization", "person", "location"],
+)
 ```
 
-## Best Practices
+CPU execution is the default. You may provide the execution provider
+explicitly:
 
-1. **Always validate after conversion**: Test inference on representative samples
-2. **Use quantization for CPU deployments**: Significant speedup with minimal accuracy loss
-3. **Keep tokenizer files**: ONNX models need the original `tokenizer.json`
-4. **Version your exports**: Include model version and opset in filenames
-5. **Test target runtime**: Ensure compatibility with your deployment environment
-6. **Profile performance**: Measure inference time on actual hardware
-7. **Document export settings**: Keep track of quantization and opset versions
+```python
+model = GLiNER.from_pretrained(
+    "exports/onnx",
+    runtime="onnxruntime",
+    runtime_model_file="model.onnx",
+    runtime_options={"providers": ["CPUExecutionProvider"]},
+)
+```
+
+### ONNX Runtime with custom session settings
+
+```python
+import onnxruntime as ort
+
+from gliner import GLiNER
+
+session_options = ort.SessionOptions()
+session_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+session_options.intra_op_num_threads = 4
+
+model = GLiNER.from_pretrained(
+    "exports/onnx",
+    runtime="onnxruntime",
+    runtime_model_file="model.onnx",
+    runtime_options={
+        "session_options": session_options,
+        "providers": ["CPUExecutionProvider"],
+    },
+)
+```
+
+For CUDA, install `gliner[gpu]` and request the CUDA provider. Including the CPU
+provider gives ONNX Runtime a fallback for unsupported operators:
+
+```python
+model = GLiNER.from_pretrained(
+    "exports/onnx",
+    runtime="onnxruntime",
+    runtime_model_file="model.onnx",
+    runtime_options={
+        "providers": ["CUDAExecutionProvider", "CPUExecutionProvider"],
+    },
+)
+```
+
+### OpenVINO IR
+
+```python
+from gliner import GLiNER
+
+model = GLiNER.from_pretrained(
+    "exports/openvino",
+    runtime="openvino",
+    runtime_model_file="model.xml",
+    local_files_only=True,
+    runtime_options={
+        "device_name": "CPU",
+        "config": {},
+    },
+)
+
+entities = model.predict_entities(
+    "Apple was founded by Steve Jobs in California.",
+    ["organization", "person", "location"],
+)
+```
+
+Set `device_name` to a device supported by the local OpenVINO installation,
+such as `CPU`, `GPU`, `NPU`, or `AUTO`. OpenVINO compile properties belong in
+`runtime_options["config"]`; `map_location` does not select an OpenVINO device.
+
+### Use an ONNX model with OpenVINO
+
+OpenVINO can also compile the ONNX artifact directly, so an IR conversion is
+optional:
+
+```python
+model = GLiNER.from_pretrained(
+    "exports/onnx",
+    runtime="openvino",
+    runtime_model_file="model.onnx",
+    runtime_options={"device_name": "AUTO"},
+)
+```
+
+### Runtime options reference
+
+| Runtime | Option | Description |
+|---|---|---|
+| ONNX Runtime | `providers` | Ordered ONNX Runtime execution providers |
+| ONNX Runtime | `session_options` | An `onnxruntime.SessionOptions` instance |
+| ONNX Runtime | `session` | An already-created `onnxruntime.InferenceSession` |
+| OpenVINO | `device_name` | Compilation device; defaults to `CPU` |
+| OpenVINO | `config` | OpenVINO compilation properties |
+| OpenVINO | `core` | An already-created `openvino.Core` |
+| OpenVINO | `compiled_model` | An already-compiled OpenVINO model |
+
+When supplying `session` or `compiled_model`, pass it through `runtime_options`.
+These advanced forms are useful when the application owns runtime lifecycle or
+caching.
+
+Runtime aliases `onnx` and `ort` map to `onnxruntime`; `ov` maps to `openvino`.
+The canonical names used in documentation are `onnxruntime` and `openvino`.
+
+## Supported architectures
+
+ONNX and OpenVINO export use the same architecture-specific graph wrappers:
+
+| Architecture | ONNX | OpenVINO | Notes |
+|---|---:|---:|---|
+| Uni-encoder span | Yes | Yes | Standard span prediction |
+| Uni-encoder token | Yes | Yes | Token-level prediction |
+| Bi-encoder span | Yes | Yes | Text and label encoders |
+| Bi-encoder token | Yes | Yes | Token-level bi-encoder |
+| Relation extraction span | Yes | Yes | Named entity and relation outputs |
+| Relation extraction token | Yes | Yes | Token-level entity and relation outputs |
+| Generative decoder | No | No | Requires iterative generation |
+| Streaming span | No | No | Requires runtime state and cache updates |
+
+Use the PyTorch runtime for unsupported architectures.
+
+## Validate an export
+
+Run the repository smoke test against either backend:
+
+```bash
+python test_onnx.py exports/onnx/model.onnx
+python test_onnx.py exports/onnx/model.onnx --runtime openvino
+python test_onnx.py exports/openvino/model.xml --runtime openvino
+```
+
+For application validation, compare entity text, offsets, and labels on a
+representative dataset. Floating-point scores may differ slightly between
+backends, so compare them with a tolerance rather than exact equality.
+
+## Troubleshooting
+
+### The runtime artifact cannot be found
+
+`runtime_model_file` must name the artifact inside the directory passed as the
+first argument:
+
+```python
+GLiNER.from_pretrained(
+    "exports/openvino",
+    runtime="openvino",
+    runtime_model_file="model.xml",
+)
+```
+
+For OpenVINO IR, keep `model.xml` and `model.bin` together with the same stem.
+
+### OpenVINO is not installed
+
+```bash
+pip install "gliner[openvino]"
+```
+
+### ONNX export reports that `onnx` is missing
+
+```bash
+pip install onnx
+```
+
+### An architecture cannot be exported or loaded
+
+Generative-decoder and streaming models currently require the PyTorch runtime.
+Use a supported uni-encoder, bi-encoder, or relation-extraction checkpoint for
+ONNX Runtime or OpenVINO.
+
+### PyTorch-only options are rejected
+
+`variant`, `dtype`, `from_pretrained(..., quantize=...)`,
+`compile_torch_model`, and
+`low_cpu_mem_usage` configure PyTorch loading and cannot be applied while
+loading an exported runtime graph. Choose precision during export or with the
+target runtime instead.
