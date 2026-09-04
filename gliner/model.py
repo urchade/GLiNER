@@ -1734,23 +1734,18 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         return instance
 
-    def _check_onnx_export_preconditions(self):
+    def _check_export_preconditions(self):
         if self.is_runtime_model:
             raise RuntimeError(
                 "This instance already wraps an external runtime model. Export is intended for PyTorch-based models."
             )
-        # No ONNX_AVAILABLE check here: exporting only needs torch.onnx.export (always
-        # available). A graph runtime is only required to later *load*/*run* the
-        # exported model, not to export it;
-        # quantize=True degrades gracefully on its own if onnxruntime.quantization is
-        # missing (see _maybe_quantize_onnx).
         if not hasattr(self, "data_processor") or not hasattr(self, "data_collator_class"):
             raise RuntimeError("Model is not fully initialized (missing data_processor or data_collator).")
 
     def _build_dummy_batch(
         self,
         labels: Optional[list[str]] = None,
-        text: str = "ONNX export dummy input.",
+        text: str = "Model export dummy input.",
     ) -> dict[str, torch.Tensor]:
         """
         Build a single CPU batch using the model's own preprocessing stack.
@@ -1904,6 +1899,15 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         all_inputs = tuple(batch[name] for name in spec["input_names"])
         return all_inputs, spec
 
+    def _prepare_export_graph(self, **export_kwargs) -> tuple[nn.Module, tuple, dict[str, Any]]:
+        """Build the wrapped PyTorch graph and example inputs shared by model exporters."""
+        batch_kwargs = {**self._get_onnx_export_kwargs(), **export_kwargs}
+        batch = self._build_dummy_batch(**batch_kwargs)
+        core = self.model.to("cpu").eval()
+        all_inputs, spec = self._prepare_onnx_batch(batch, **export_kwargs)
+        wrapper = self._create_onnx_wrapper(core).eval()
+        return wrapper, all_inputs, spec
+
     def export_to_onnx(
         self,
         save_dir: Union[str, Path],
@@ -1928,23 +1932,12 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                 - onnx_path: Path to standard ONNX model
                 - quantized_path: Path to quantized model (if quantize=True)
         """
-        self._check_onnx_export_preconditions()
-
+        self._check_export_preconditions()
         save_dir = Path(save_dir)
         save_dir.mkdir(parents=True, exist_ok=True)
         onnx_path = save_dir / onnx_filename
 
-        # Merge export kwargs with model-specific kwargs
-        batch_kwargs = {**self._get_onnx_export_kwargs(), **export_kwargs}
-        batch = self._build_dummy_batch(**batch_kwargs)
-
-        core = self.model.to("cpu").eval()
-
-        # Prepare inputs and get spec (allows for dynamic modification)
-        all_inputs, spec = self._prepare_onnx_batch(batch, **export_kwargs)
-
-        # Create wrapper
-        wrapper = self._create_onnx_wrapper(core)
+        wrapper, all_inputs, spec = self._prepare_export_graph(**export_kwargs)
 
         # Export
         self._run_torch_onnx_export(
@@ -1968,6 +1961,62 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         return {
             "onnx_path": str(onnx_path),
             "quantized_path": str(q_path) if q_path is not None else None,
+        }
+
+    def export_to_openvino(
+        self,
+        save_dir: Union[str, Path],
+        openvino_filename: str = "model.xml",
+        *,
+        compress_to_fp16: bool = False,
+        **export_kwargs,
+    ) -> dict[str, str]:
+        """Convert the PyTorch model directly to OpenVINO IR.
+
+        Args:
+            save_dir: Directory in which to save the model and tokenizer files.
+            openvino_filename: Name of the OpenVINO IR ``.xml`` file.
+            compress_to_fp16: Whether OpenVINO should compress floating-point weights to FP16.
+            **export_kwargs: Additional model-specific export arguments.
+
+        Returns:
+            Paths to the OpenVINO graph and weights under ``openvino_path`` and
+            ``weights_path``.
+        """
+        save_dir = Path(save_dir)
+        openvino_path = save_dir / openvino_filename
+        if openvino_path.suffix.lower() != ".xml":
+            raise ValueError(f"OpenVINO IR file must use the .xml extension: {openvino_path}")
+        self._check_export_preconditions()
+
+        from .runtime.openvino import _require_openvino  # noqa: PLC0415
+
+        ov = _require_openvino()
+        wrapper, example_inputs, spec = self._prepare_export_graph(**export_kwargs)
+
+        input_shapes = []
+        for name, value in zip(spec["input_names"], example_inputs, strict=True):
+            dynamic_axes = spec["dynamic_axes"].get(name, {})
+            shape = ov.PartialShape(
+                [-1 if axis in dynamic_axes else int(size) for axis, size in enumerate(value.shape)]
+            )
+            input_shapes.append(shape)
+
+        openvino_model = ov.convert_model(wrapper, example_input=example_inputs, input=input_shapes)
+        for port, name in zip(openvino_model.inputs, spec["input_names"], strict=True):
+            port.get_tensor().set_names({name})
+        for port, name in zip(openvino_model.outputs, spec["output_names"], strict=True):
+            port.get_tensor().set_names({name})
+
+        save_dir.mkdir(parents=True, exist_ok=True)
+        openvino_path.parent.mkdir(parents=True, exist_ok=True)
+        ov.save_model(openvino_model, openvino_path, compress_to_fp16=compress_to_fp16)
+        self.config.to_json_file(save_dir / "gliner_config.json")
+        self.data_processor.transformer_tokenizer.save_pretrained(save_dir)
+
+        return {
+            "openvino_path": str(openvino_path),
+            "weights_path": str(openvino_path.with_suffix(".bin")),
         }
 
     def _create_data_collator(self, **kwargs):

@@ -19,7 +19,8 @@ def _require_openvino() -> Any:
         return importlib.import_module("openvino")
     except ImportError as error:
         raise ImportError(
-            "OpenVINO is required for runtime='openvino'. Install it with `pip install openvino`."
+            "OpenVINO is required for OpenVINO export and runtime. "
+            "Install it with `pip install gliner[openvino]`."
         ) from error
 
 
