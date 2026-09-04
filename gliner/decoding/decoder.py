@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 from functools import partial
-from dataclasses import dataclass
+from dataclasses import field, dataclass
 
 import torch
 
@@ -65,11 +65,15 @@ class Span:
 
     Attributes:
         start: Token-level start position (inclusive)
-        end: Token-level end position (exclusive)
+        end: Token-level end position (inclusive)
         entity_type: The entity type/label
         score: Confidence score for this prediction
         class_probs: Optional dict of top-k class probabilities
         generated_labels: Optional list of generated labels (for generative decoders)
+        class_index: Internal zero-based class index in the model output
+        span_index: Internal flattened/explicit span index in the model output
+        vector: Optional contextual span vector attached after decoding
+        label_vector: Optional matched label vector attached after decoding
     """
 
     start: int
@@ -78,6 +82,81 @@ class Span:
     score: float
     class_probs: Optional[Dict[str, float]] = None
     generated_labels: Optional[List[str]] = None
+    class_index: Optional[int] = field(default=None, compare=False, repr=False)
+    span_index: Optional[int] = field(default=None, compare=False, repr=False)
+    vector: Optional[Any] = field(default=None, compare=False, repr=False)
+    label_vector: Optional[Any] = field(default=None, compare=False, repr=False)
+
+
+class DecodedRelation(tuple):
+    """A decoded relation with internal model indices and optional vectors.
+
+    The tuple payload intentionally remains ``(head_idx, label, tail_idx, score)``
+    so existing indexing, iteration, unpacking, equality checks, JSON handling,
+    and ``len(relation) == 4`` continue to work.  The additional attributes are
+    decoder metadata used to gather the exact model representations after the
+    final relation candidates have been selected.
+    """
+
+    pair_index: Optional[int]
+    class_index: Optional[int]
+    vector: Optional[Any]
+    label_vector: Optional[Any]
+    head_relation_vector: Optional[Any]
+    tail_relation_vector: Optional[Any]
+
+    def __new__(
+        cls,
+        head_idx: int,
+        label: str,
+        tail_idx: int,
+        score: float,
+        *,
+        pair_index: Optional[int] = None,
+        class_index: Optional[int] = None,
+        vector: Optional[Any] = None,
+        label_vector: Optional[Any] = None,
+        head_relation_vector: Optional[Any] = None,
+        tail_relation_vector: Optional[Any] = None,
+    ) -> "DecodedRelation":
+        instance = super().__new__(cls, (head_idx, label, tail_idx, score))
+        instance.pair_index = pair_index
+        instance.class_index = class_index
+        instance.vector = vector
+        instance.label_vector = label_vector
+        instance.head_relation_vector = head_relation_vector
+        instance.tail_relation_vector = tail_relation_vector
+        return instance
+
+    def __getnewargs_ex__(self):
+        """Preserve tuple payload and metadata when copying or pickling."""
+        return (
+            (self.head_idx, self.label, self.tail_idx, self.score),
+            {
+                "pair_index": self.pair_index,
+                "class_index": self.class_index,
+                "vector": self.vector,
+                "label_vector": self.label_vector,
+                "head_relation_vector": self.head_relation_vector,
+                "tail_relation_vector": self.tail_relation_vector,
+            },
+        )
+
+    @property
+    def head_idx(self) -> int:
+        return self[0]
+
+    @property
+    def label(self) -> str:
+        return self[1]
+
+    @property
+    def tail_idx(self) -> int:
+        return self[2]
+
+    @property
+    def score(self) -> float:
+        return self[3]
 
 
 class BaseDecoder(ABC):
@@ -626,7 +705,15 @@ class SpanDecoder(BaseSpanDecoder):
             Span: Span object with entity properties.
         """
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
-        return Span(start=start, end=start + width, entity_type=ent_type, score=score, class_probs=class_probs)
+        return Span(
+            start=start,
+            end=start + width,
+            entity_type=ent_type,
+            score=score,
+            class_probs=class_probs,
+            class_index=class_idx,
+            span_index=flat_idx,
+        )
 
     def _decode_explicit_spans(
         self,
@@ -696,7 +783,7 @@ class SpanDecoder(BaseSpanDecoder):
         candidate_boundaries = span_idx[batch_indices, span_positions]
         candidate_scores = probabilities[batch_indices, span_positions, class_indices]
         index_rows = (
-            torch.column_stack((batch_indices, candidate_boundaries, class_indices))
+            torch.column_stack((batch_indices, candidate_boundaries, class_indices, span_positions))
             .detach()
             .cpu()
             .tolist()
@@ -723,7 +810,7 @@ class SpanDecoder(BaseSpanDecoder):
             top_index_rows = top_indices.detach().cpu().tolist()
 
         candidates_by_batch = [[] for _ in range(batch_size)]
-        for row_index, ((batch_idx, start, end, class_idx), score) in enumerate(
+        for row_index, ((batch_idx, start, end, class_idx, span_position), score) in enumerate(
             zip(index_rows, score_rows)
         ):
             id_to_class = id_to_class_per_item[batch_idx]
@@ -744,6 +831,8 @@ class SpanDecoder(BaseSpanDecoder):
                     entity_type=id_to_class[class_idx + 1],
                     score=score,
                     class_probs=class_probs,
+                    class_index=class_idx,
+                    span_index=span_position,
                 )
             )
 
@@ -922,6 +1011,8 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             score=score,
             class_probs=class_probs,
             generated_labels=gen_ent_type,
+            class_index=class_idx,
+            span_index=flat_idx,
         )
 
     def decode_generative(
@@ -1132,6 +1223,7 @@ def _decode_relations_batch(
     head_list = head[b_idx, r_idx].tolist()
     tail_list = tail[b_idx, r_idx].tolist()
     b_list = b_idx.tolist()
+    r_list = r_idx.tolist()
     c_list = c_idx.tolist()
 
     # 6. Pure-Python grouping — no more GPU access
@@ -1141,7 +1233,16 @@ def _decode_relations_batch(
         mapping = rel_id_to_class_per_item[b]
         if c1 not in mapping:
             continue
-        relations[b].append((int(head_list[k]), mapping[c1], int(tail_list[k]), scores[k]))
+        relations[b].append(
+            DecodedRelation(
+                int(head_list[k]),
+                mapping[c1],
+                int(tail_list[k]),
+                scores[k],
+                pair_index=int(r_list[k]),
+                class_index=int(c_list[k]),
+            )
+        )
 
     return relations
 
@@ -1196,7 +1297,15 @@ class SpanRelexDecoder(BaseSpanDecoder):
             Span: Span object with entity properties.
         """
         ent_type = id_to_class[class_idx + 1]  # +1 because 0 is <pad>
-        return Span(start=start, end=start + width, entity_type=ent_type, score=score, class_probs=class_probs)
+        return Span(
+            start=start,
+            end=start + width,
+            entity_type=ent_type,
+            score=score,
+            class_probs=class_probs,
+            class_index=class_idx,
+            span_index=flat_idx,
+        )
 
     def _build_entity_span_to_decoded_idx(
         self,
@@ -1360,8 +1469,18 @@ class SpanRelexDecoder(BaseSpanDecoder):
 
                     rel_label = rel_id_to_class_i[c + 1]
 
-                    # Append relation: (head_idx, relation_label, tail_idx, score)
-                    relations[i].append((head_idx, rel_label, tail_idx, prob))
+                    # The tuple payload stays backwards-compatible while the
+                    # model-space indices remain available for vector gathering.
+                    relations[i].append(
+                        DecodedRelation(
+                            head_idx,
+                            rel_label,
+                            tail_idx,
+                            prob,
+                            pair_index=j,
+                            class_index=c,
+                        )
+                    )
 
         return relations
 
@@ -1513,7 +1632,17 @@ class TokenDecoder(BaseDecoder):
                     end_score = end_cpu[ed][cls_ed]
                     # The span score is the minimum value among all scores
                     spn_score = min(*ins, start_score, end_score)
-                    span_i.append(Span(start=st, end=ed, entity_type=id_to_classes[cls_st + 1], score=spn_score))
+                    span_i.append(
+                        Span(
+                            start=st,
+                            end=ed,
+                            entity_type=id_to_classes[cls_st + 1],
+                            score=spn_score,
+                            class_index=cls_st,
+                            # BIO decoding has no corresponding model span slot.
+                            span_index=None,
+                        )
+                    )
         return span_i
 
     def _decode_from_spans(
@@ -1594,7 +1723,16 @@ class TokenDecoder(BaseDecoder):
                     class_id = class_idx + 1  # Convert to 1-indexed
                     if class_id in id_to_class_i:
                         entity_type = id_to_class_i[class_id]
-                        span_scores.append(Span(start=span_start, end=span_end, entity_type=entity_type, score=prob))
+                        span_scores.append(
+                            Span(
+                                start=span_start,
+                                end=span_end,
+                                entity_type=entity_type,
+                                score=prob,
+                                class_index=class_idx,
+                                span_index=span_pos,
+                            )
+                        )
 
             # Apply greedy search to handle overlapping spans if needed
             span_i = self.greedy_search(span_scores, flat_ner_values[i], multi_label_values[i])
@@ -1880,7 +2018,16 @@ class TokenRelexDecoder(TokenDecoder):
                         continue
 
                     rel_label = rel_id_to_class_i[c + 1]
-                    relations[i].append((head_idx, rel_label, tail_idx, prob))
+                    relations[i].append(
+                        DecodedRelation(
+                            head_idx,
+                            rel_label,
+                            tail_idx,
+                            prob,
+                            pair_index=j,
+                            class_index=c,
+                        )
+                    )
 
         return relations
 
@@ -2102,7 +2249,17 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
                     if class_id in id_to_class_i:
                         entity_type = id_to_class_i[class_id]
                         gen_label = span_label_map_i.get(span_pos)
-                        span_scores.append((span_start, span_end, entity_type, gen_label, prob))
+                        span_scores.append(
+                            Span(
+                                start=span_start,
+                                end=span_end,
+                                entity_type=entity_type,
+                                score=prob,
+                                generated_labels=gen_label,
+                                class_index=class_idx,
+                                span_index=span_pos,
+                            )
+                        )
 
             span_i = self.greedy_search(span_scores, flat_ner_values[i], multi_label_values[i])
             spans.append(span_i)

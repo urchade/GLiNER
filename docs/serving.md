@@ -67,6 +67,21 @@ outputs = client.predict(
 )  # → list[dict], one per input text
 ```
 
+Label descriptions and per-text label sets use the same API as local inference:
+
+```python
+outputs = client.predict(
+    ["John works at Google", "Paris is in France"],
+    labels=[
+        {"person": "A human individual", "organization": "A company or institution"},
+        {"location": "A geographical place"},
+    ],
+)
+```
+
+Each dictionary key is returned as the entity label; its value is the prompt encoded
+for that text. A single dictionary is shared across every input text.
+
 Network or server errors surface as `gliner.serve.client.GLiNERClientError`.
 
 :::{warning}

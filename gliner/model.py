@@ -3,7 +3,7 @@ import json
 import logging
 import warnings
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, Optional
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Union, Mapping, Optional
 from pathlib import Path
 from threading import RLock
 
@@ -104,6 +104,60 @@ from .data_processing.collator import (
 )
 from .data_processing.tokenizer import WordsSplitter
 
+EntityLabels = Union[
+    str,
+    List[str],
+    Mapping[str, str],
+    List[List[str]],
+    List[Mapping[str, str]],
+]
+
+
+def _normalize_label_set(labels):
+    """Return model-facing prompts and the corresponding public label names."""
+    if isinstance(labels, Mapping):
+        prompts = []
+        names = []
+        for name, prompt in labels.items():
+            if not isinstance(name, str) or not isinstance(prompt, str):
+                raise TypeError("Label description mappings must contain only string keys and values")
+            names.append(name)
+            prompts.append(prompt)
+        if len(set(prompts)) != len(prompts):
+            raise ValueError("Label descriptions must be unique within each label set")
+        return prompts, names
+
+    if isinstance(labels, str):
+        labels = [labels]
+
+    normalized = list(dict.fromkeys(labels))
+    return normalized, normalized
+
+
+def _normalize_labels(labels, num_texts, valid_to_orig_idx):
+    """Normalize shared or per-text labels while preserving empty-text alignment."""
+    is_per_text = isinstance(labels, list) and bool(labels) and any(
+        isinstance(label_set, (list, Mapping)) for label_set in labels
+    )
+    if not is_per_text:
+        return _normalize_label_set(labels)
+
+    if len(labels) != num_texts:
+        raise ValueError(f"Per-text labels must have length {num_texts}, got {len(labels)}")
+    if not all(isinstance(label_set, (list, Mapping)) for label_set in labels):
+        raise TypeError("Per-text labels must contain only lists or label description mappings")
+
+    normalized = [_normalize_label_set(label_set) for label_set in labels]
+    prompts = [normalized[index][0] for index in valid_to_orig_idx]
+    names = [normalized[index][1] for index in valid_to_orig_idx]
+    return prompts, names
+
+
+def _has_label_descriptions(labels):
+    return isinstance(labels, Mapping) or (
+        isinstance(labels, list) and any(isinstance(label_set, Mapping) for label_set in labels)
+    )
+
 
 def _entity_types_for_chunk(entity_types, indices):
     """Select the label sets belonging to the rows in one DataLoader chunk.
@@ -115,6 +169,201 @@ def _entity_types_for_chunk(entity_types, indices):
     if entity_types and isinstance(entity_types[0], list):
         return [entity_types[i] for i in indices]
     return entity_types
+
+
+def _remap_id_to_classes(batch, entity_types, label_names):
+    """Replace prompt text in decoder mappings with public label names."""
+    id_to_classes = batch.get("id_to_classes")
+    if id_to_classes is None or label_names is None:
+        return
+
+    mappings = id_to_classes if isinstance(id_to_classes, list) else [id_to_classes]
+    per_text = bool(entity_types) and isinstance(entity_types[0], list)
+    prompt_sets = entity_types if per_text else [entity_types] * len(mappings)
+    name_sets = label_names if per_text else [label_names] * len(mappings)
+
+    remapped = []
+    for mapping, prompts, names in zip(mappings, prompt_sets, name_sets):
+        prompt_to_name = dict(zip(prompts, names))
+        remapped.append({class_id: prompt_to_name.get(prompt, prompt) for class_id, prompt in mapping.items()})
+
+    batch["id_to_classes"] = remapped if isinstance(id_to_classes, list) else remapped[0]
+
+
+def _model_output_tensor(model_output, name: str) -> Optional[torch.Tensor]:
+    """Return an optional model-output value as a torch tensor."""
+    value = getattr(model_output, name, None)
+    if value is None:
+        return None
+    if isinstance(value, torch.Tensor):
+        return value
+    return torch.as_tensor(value)
+
+
+def _assign_vector_rows(requests, attribute: str) -> None:
+    """Bulk-copy selected embedding rows to decoded objects as float32 NumPy views."""
+    if not requests:
+        return
+    objects, tensors = zip(*requests)
+    values = torch.stack(tensors).detach().to(device="cpu", dtype=torch.float32).numpy()
+    for obj, value in zip(objects, values):
+        setattr(obj, attribute, value)
+
+
+def _assign_vector_tensor(objects, values: torch.Tensor, attribute: str) -> None:
+    """Bulk-copy an already stacked embedding tensor to decoded objects."""
+    if not objects:
+        return
+    numpy_values = values.detach().to(device="cpu", dtype=torch.float32).numpy()
+    for obj, value in zip(objects, numpy_values):
+        setattr(obj, attribute, value)
+
+
+def _attach_entity_vectors(
+    decoded: List[List[Any]],
+    model_output: Any,
+    config: Any,
+    return_vectors: bool,
+    return_label_vectors: bool,
+) -> None:
+    """Attach requested entity and label representations to final decoded spans."""
+    if not return_vectors and not return_label_vectors:
+        return
+    if not any(decoded):
+        return
+
+    words_embedding = _model_output_tensor(model_output, "words_embedding")
+    prompts_embedding = _model_output_tensor(model_output, "prompts_embedding")
+    span_embeddings = _model_output_tensor(model_output, "span_embeddings")
+    is_token_level = getattr(config, "span_mode", None) == "token_level"
+
+    if return_vectors and is_token_level and words_embedding is None:
+        raise RuntimeError("Token-level span vectors require words_embedding in the model output")
+    if return_vectors and not is_token_level and span_embeddings is None:
+        raise RuntimeError("Span vectors require span_embeddings in the model output")
+    if return_label_vectors and prompts_embedding is None:
+        raise RuntimeError("Label vectors require prompts_embedding in the model output")
+
+    flattened_span_embeddings = None
+    if return_vectors and not is_token_level:
+        if span_embeddings.ndim == 4:
+            flattened_span_embeddings = span_embeddings.flatten(1, 2)
+        elif span_embeddings.ndim == 3:
+            flattened_span_embeddings = span_embeddings
+        else:
+            raise RuntimeError(
+                "span_embeddings must have shape [batch, spans, hidden] or [batch, words, widths, hidden]"
+            )
+
+    vector_objects = []
+    vector_batch_indices = []
+    vector_span_indices = []
+    vector_starts = []
+    vector_ends = []
+    label_objects = []
+    label_batch_indices = []
+    label_class_indices = []
+    for batch_index, spans in enumerate(decoded):
+        for span in spans:
+            if return_vectors:
+                if is_token_level:
+                    if span.start < 0 or span.end < span.start or span.end >= words_embedding.size(1):
+                        raise RuntimeError(f"Decoded span [{span.start}, {span.end}] is outside the word embeddings")
+                    vector_starts.append(span.start)
+                    vector_ends.append(span.end)
+                else:
+                    span_index = getattr(span, "span_index", None)
+                    if span_index is None:
+                        raise RuntimeError("Decoded span is missing its model span index")
+                    vector_span_indices.append(span_index)
+                vector_objects.append(span)
+                vector_batch_indices.append(batch_index)
+
+            if return_label_vectors:
+                class_index = getattr(span, "class_index", None)
+                if class_index is None:
+                    raise RuntimeError("Decoded span is missing its model class index")
+                label_objects.append(span)
+                label_batch_indices.append(batch_index)
+                label_class_indices.append(class_index)
+
+    if vector_objects:
+        vector_batches = torch.tensor(
+            vector_batch_indices,
+            dtype=torch.long,
+            device=words_embedding.device if is_token_level else span_embeddings.device,
+        )
+        if is_token_level:
+            starts = torch.tensor(vector_starts, dtype=torch.long, device=words_embedding.device)
+            ends = torch.tensor(vector_ends, dtype=torch.long, device=words_embedding.device)
+            prefix = words_embedding.cumsum(dim=1, dtype=torch.float32)
+            prefix = torch.cat((torch.zeros_like(prefix[:, :1]), prefix), dim=1)
+            vector_values = prefix[vector_batches, ends + 1] - prefix[vector_batches, starts]
+            vector_values = vector_values / (ends - starts + 1).unsqueeze(-1)
+        else:
+            span_indices = torch.tensor(vector_span_indices, dtype=torch.long, device=span_embeddings.device)
+            vector_values = flattened_span_embeddings[vector_batches, span_indices]
+        _assign_vector_tensor(vector_objects, vector_values, "vector")
+
+    if label_objects:
+        label_batches = torch.tensor(label_batch_indices, dtype=torch.long, device=prompts_embedding.device)
+        label_indices = torch.tensor(label_class_indices, dtype=torch.long, device=prompts_embedding.device)
+        _assign_vector_tensor(label_objects, prompts_embedding[label_batches, label_indices], "label_vector")
+
+
+def _attach_relation_vectors(
+    decoded_relations: List[List[Any]],
+    model_output: Any,
+    return_vectors: bool,
+    return_label_vectors: bool,
+) -> None:
+    """Attach scorer-side representations to final decoded relations."""
+    if not return_vectors and not return_label_vectors:
+        return
+    if not any(decoded_relations):
+        return
+
+    relation_embeddings = _model_output_tensor(model_output, "relation_embeddings")
+    relation_head_embeddings = _model_output_tensor(model_output, "relation_head_embeddings")
+    relation_tail_embeddings = _model_output_tensor(model_output, "relation_tail_embeddings")
+    relation_prompts = _model_output_tensor(model_output, "rel_prompts_embedding")
+
+    if (
+        return_vectors
+        and relation_embeddings is None
+        and (relation_head_embeddings is None or relation_tail_embeddings is None)
+    ):
+        raise RuntimeError("Relation vectors require relation representations in the model output")
+    if return_label_vectors and relation_prompts is None:
+        raise RuntimeError("Relation label vectors require rel_prompts_embedding in the model output")
+
+    vector_requests = []
+    head_requests = []
+    tail_requests = []
+    label_requests = []
+    for batch_index, relations in enumerate(decoded_relations):
+        for relation in relations:
+            pair_index = getattr(relation, "pair_index", None)
+            class_index = getattr(relation, "class_index", None)
+            if return_vectors and pair_index is None:
+                raise RuntimeError("Decoded relation is missing its model pair index")
+
+            if return_vectors:
+                if relation_embeddings is not None:
+                    vector_requests.append((relation, relation_embeddings[batch_index, pair_index]))
+                else:
+                    head_requests.append((relation, relation_head_embeddings[batch_index, pair_index]))
+                    tail_requests.append((relation, relation_tail_embeddings[batch_index, pair_index]))
+
+            if return_label_vectors:
+                if class_index is None:
+                    raise RuntimeError("Decoded relation is missing its model class index")
+                label_requests.append((relation, relation_prompts[batch_index, class_index]))
+
+    _assign_vector_rows(vector_requests, "vector")
+    _assign_vector_rows(head_requests, "head_relation_vector")
+    _assign_vector_rows(tail_requests, "tail_relation_vector")
+    _assign_vector_rows(label_requests, "label_vector")
 
 
 def _get_trainer_classes():
@@ -2432,6 +2681,12 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 if span.class_probs is not None:
                     entity["class_probs"] = span.class_probs
 
+                if getattr(span, "vector", None) is not None:
+                    entity["vector"] = span.vector
+
+                if getattr(span, "label_vector", None) is not None:
+                    entity["label_vector"] = span.label_vector
+
                 entities.append(entity)
 
             all_entities[orig_i] = entities
@@ -2447,6 +2702,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
         packing_config=None,
         return_class_probs=False,
         word_input_spans=None,
+        return_vectors=False,
+        return_label_vectors=False,
         **external_inputs,
     ):
         """Shared batch processing logic using modular run_batch and decode_batch."""
@@ -2454,13 +2711,15 @@ class BaseEncoderGLiNER(BaseGLiNER):
         batch_offset = 0
 
         for batch in data_loader:
-            model_output = self.run_batch(
-                batch,
-                threshold=threshold,
-                packing_config=packing_config,
-                move_to_device=True,
+            run_kwargs = {
+                "threshold": threshold,
+                "packing_config": packing_config,
+                "move_to_device": True,
                 **external_inputs,
-            )
+            }
+            if return_vectors:
+                run_kwargs["return_vectors"] = True
+            model_output = self.run_batch(batch, **run_kwargs)
 
             batch_input_spans = None
             if word_input_spans is not None:
@@ -2468,15 +2727,18 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 batch_input_spans = word_input_spans[batch_offset : batch_offset + current_batch_size]
                 batch_offset += current_batch_size
 
-            decoded = self.decode_batch(
-                model_output,
-                batch,
-                threshold=threshold,
-                flat_ner=flat_ner,
-                multi_label=multi_label,
-                return_class_probs=return_class_probs,
-                input_spans=batch_input_spans,
-            )
+            decode_kwargs = {
+                "threshold": threshold,
+                "flat_ner": flat_ner,
+                "multi_label": multi_label,
+                "return_class_probs": return_class_probs,
+                "input_spans": batch_input_spans,
+            }
+            if return_vectors:
+                decode_kwargs["return_vectors"] = True
+            if return_label_vectors:
+                decode_kwargs["return_label_vectors"] = True
+            decoded = self.decode_batch(model_output, batch, **decode_kwargs)
             outputs.extend(decoded)
 
         return outputs
@@ -2484,7 +2746,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
     def prepare_batch(
         self,
         texts: Union[str, List[str]],
-        labels: Union[str, List[str], List[List[str]]],
+        labels: EntityLabels,
         input_spans: Optional[List[List[Dict]]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
@@ -2495,7 +2757,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
         Args:
             texts: Single text string or list of texts.
-            labels: Entity labels - string, list of strings, or per-text label lists.
+            labels: Entity labels as strings, a label-to-description mapping, or per-text label sets.
             input_spans: Optional pre-defined spans to classify (character positions).
             **kwargs: Additional keyword arguments passed to the data processor.
 
@@ -2506,7 +2768,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 - start_token_map: Per-text mapping from token idx to char start
                 - end_token_map: Per-text mapping from token idx to char end
                 - word_input_spans: Spans converted to word indices (or None)
-                - entity_types: Normalized entity types
+                - entity_types: Model-facing entity prompts
+                - label_names: Public entity label names
                 - valid_texts: Non-empty texts that will be processed
                 - valid_to_orig_idx: Mapping from valid indices to original indices
                 - num_original: Total number of original texts
@@ -2514,8 +2777,15 @@ class BaseEncoderGLiNER(BaseGLiNER):
         if isinstance(texts, str):
             texts = [texts]
 
+        if (
+            getattr(getattr(self, "config", None), "precomputed_prompts_mode", False)
+            and _has_label_descriptions(labels)
+        ):
+            raise ValueError("Label descriptions are not supported with precomputed prompt embeddings")
+
         num_original = len(texts)
         valid_texts, valid_to_orig_idx = self._filter_valid_texts(texts)
+        entity_types, label_names = _normalize_labels(labels, num_original, valid_to_orig_idx)
 
         if not valid_texts:
             return {
@@ -2525,20 +2795,11 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 "end_token_map": [],
                 "word_input_spans": None,
                 "entity_types": [],
+                "label_names": [],
                 "valid_texts": [],
                 "valid_to_orig_idx": [],
                 "num_original": num_original,
             }
-
-        if isinstance(labels, str):
-            entity_types = list(dict.fromkeys([labels]))
-        elif labels and isinstance(labels[0], list):
-            if len(labels) != num_original:
-                raise ValueError(f"Per-text labels must have length {num_original}, got {len(labels)}")
-            all_entity_types = [list(dict.fromkeys(lbls)) for lbls in labels]
-            entity_types = [all_entity_types[i] for i in valid_to_orig_idx]
-        else:
-            entity_types = list(dict.fromkeys(labels))
 
         tokens, start_token_map, end_token_map = self.prepare_inputs(valid_texts)
 
@@ -2556,6 +2817,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             "end_token_map": end_token_map,
             "word_input_spans": word_input_spans,
             "entity_types": entity_types,
+            "label_names": label_names,
             "valid_texts": valid_texts,
             "valid_to_orig_idx": valid_to_orig_idx,
             "num_original": num_original,
@@ -2566,6 +2828,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         input_x: List[Dict[str, Any]],
         entity_types: Union[List[str], List[List[str]]],
         collator: Optional[Any] = None,
+        label_names: Optional[Union[List[str], List[List[str]]]] = None,
     ) -> Dict[str, Any]:
         """Collate prepared inputs into a tensor batch.
 
@@ -2573,6 +2836,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             input_x: List of input dicts from prepare_batch.
             entity_types: Entity type labels.
             collator: Optional pre-created collator instance. If None, creates one.
+            label_names: Optional public names corresponding to model-facing entity prompts.
 
         Returns:
             Collated batch dictionary with tensors ready for the model.
@@ -2588,6 +2852,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             )
 
         batch = collator(input_x, entity_types=entity_types)
+        _remap_id_to_classes(batch, entity_types, label_names)
         return batch
 
     @torch.inference_mode()
@@ -2597,6 +2862,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
         threshold: float = 0.5,
         packing_config: Optional[InferencePackingConfig] = None,
         move_to_device: bool = True,
+        return_vectors: bool = False,
         **external_inputs,
     ) -> Any:
         """Run model forward pass on a collated batch.
@@ -2606,6 +2872,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
             threshold: Confidence threshold for predictions.
             packing_config: Optional inference packing configuration.
             move_to_device: Whether to move tensors to model device.
+            return_vectors: Whether to retain span representations for decoding.
             **external_inputs: Additional inputs to pass to the model.
 
         Returns:
@@ -2632,6 +2899,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
         else:
             model_inputs = batch
 
+        if return_vectors:
+            model_inputs = {**model_inputs, "return_embeddings": True}
         model_output = self.model(**model_inputs, threshold=threshold)
         return model_output
 
@@ -2644,6 +2913,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
         multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
     ) -> List[List[Any]]:
         """Decode model output into entity predictions.
 
@@ -2655,6 +2926,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             multi_label: Whether to allow multiple labels per span.
             return_class_probs: Whether to include class probabilities.
             input_spans: Optional word-level input spans to classify.
+            return_vectors: Whether to attach a contextual vector to every returned span.
+            return_label_vectors: Whether to attach the matched scoring-time label vector.
 
         Returns:
             List of entity lists (one per text in batch).
@@ -2675,6 +2948,13 @@ class BaseEncoderGLiNER(BaseGLiNER):
             multi_label=multi_label,
             return_class_probs=return_class_probs,
             input_spans=input_spans,
+        )
+        _attach_entity_vectors(
+            decoded,
+            model_output,
+            self.config,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
         )
         return decoded
 
@@ -2730,7 +3010,7 @@ class BaseEncoderGLiNER(BaseGLiNER):
     def inference(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
@@ -2738,13 +3018,16 @@ class BaseEncoderGLiNER(BaseGLiNER):
         packing_config: Optional[InferencePackingConfig] = None,
         input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **external_inputs,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts.
 
         Args:
             texts: A list of input texts to predict entities for or a single text string.
-            labels: A list of labels to predict.
+            labels: Shared or per-text entity labels, optionally mapped to descriptions.
             flat_ner: Whether to use flat NER. Defaults to True.
             threshold: Confidence threshold for predictions. Defaults to 0.5.
             multi_label: Whether to allow multiple labels per token. Defaults to False.
@@ -2753,6 +3036,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
                 the instance-level configuration set via configure_inference_packing is used.
             input_spans: Input entity spans that should be classified by the model.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **external_inputs: Additional inputs to pass to the model.
 
         Returns:
@@ -2766,6 +3051,11 @@ class BaseEncoderGLiNER(BaseGLiNER):
         """
         self.eval()
 
+        if (return_vectors or return_label_vectors) and self.is_runtime_model:
+            raise NotImplementedError(
+                "Entity and label vectors are not available from the current ONNX/OpenVINO exports"
+            )
+
         prepared = self.prepare_batch(texts, labels, input_spans)
 
         if not prepared["valid_texts"]:
@@ -2774,11 +3064,16 @@ class BaseEncoderGLiNER(BaseGLiNER):
         collator = self.create_collator()
 
         def collate_fn(indices):
-            return self.collate_batch(
+            entity_types = _entity_types_for_chunk(prepared["entity_types"], indices)
+            label_names = prepared.get("label_names")
+            label_names = entity_types if label_names is None else _entity_types_for_chunk(label_names, indices)
+            batch = self.collate_batch(
                 [prepared["input_x"][i] for i in indices],
-                _entity_types_for_chunk(prepared["entity_types"], indices),
+                entity_types,
                 collator,
             )
+            _remap_id_to_classes(batch, entity_types, label_names)
+            return batch
 
         loader_batch_size = batch_size
         entity_types = prepared["entity_types"]
@@ -2812,6 +3107,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             packing_config=active_packing,
             return_class_probs=return_class_probs,
             word_input_spans=prepared["word_input_spans"],
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **external_inputs,
         )
 
@@ -2829,11 +3126,14 @@ class BaseEncoderGLiNER(BaseGLiNER):
     def predict_entities(
         self,
         text: str,
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **kwargs,
     ) -> List[Dict[str, Any]]:
         """Predict entities for a single text input.
@@ -2845,6 +3145,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             threshold: Confidence threshold for predictions. Defaults to 0.5.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **kwargs: Additional arguments passed to inference.
 
         Returns:
@@ -2857,16 +3159,21 @@ class BaseEncoderGLiNER(BaseGLiNER):
             threshold=threshold,
             multi_label=multi_label,
             return_class_probs=return_class_probs,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **kwargs,
         )[0]
 
     def batch_predict_entities(
         self,
         texts: List[str],
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **kwargs,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for multiple texts.
@@ -2882,6 +3189,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             flat_ner: Use flat NER. Defaults to True.
             threshold: Confidence threshold. Defaults to 0.5.
             multi_label: Allow multiple labels per token/entity. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **kwargs: Extra arguments forwarded to inference (e.g., batch_size).
 
         Returns:
@@ -2899,6 +3208,8 @@ class BaseEncoderGLiNER(BaseGLiNER):
             flat_ner=flat_ner,
             threshold=threshold,
             multi_label=multi_label,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **kwargs,
         )
 
@@ -3217,6 +3528,9 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         packing_config: Optional[InferencePackingConfig] = None,
         input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities for a batch of texts using pre-computed label embeddings.
 
@@ -3233,10 +3547,17 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             input_spans: Input entity spans to limit predictions to. Each span is a dict
                 with 'start' and 'end' character positions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
 
         Returns:
             List of lists with predicted entities.
         """
+        embedding_input = (
+            {"labels_embeddings": labels_embeddings}
+            if self.is_runtime_model
+            else {"labels_embeds": labels_embeddings}
+        )
         all_entities = self.inference(
             texts,
             labels,
@@ -3247,7 +3568,9 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             packing_config=packing_config,
             input_spans=input_spans,
             return_class_probs=return_class_probs,
-            labels_embeddings=labels_embeddings,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
+            **embedding_input,
         )
 
         return all_entities
@@ -3261,6 +3584,9 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
         threshold=0.5,
         multi_label=False,
         return_class_probs=False,
+        *,
+        return_vectors=False,
+        return_label_vectors=False,
         **kwargs,
     ):
         """Predict entities for a single text input using pre-computed label embeddings.
@@ -3273,6 +3599,8 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             threshold: Confidence threshold for predictions. Defaults to 0.5.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **kwargs: Additional arguments passed to batch_predict_with_embeds.
 
         Returns:
@@ -3286,6 +3614,8 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
             threshold=threshold,
             multi_label=multi_label,
             return_class_probs=return_class_probs,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **kwargs,
         )[0]
 
@@ -4674,6 +5004,9 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         return_class_probs: bool = False,
         session_id: Optional[List[str]] = None,
         recompute: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **external_inputs,
     ):
         """Run stateless inference or append to cached streaming-span sessions.
@@ -4695,7 +5028,14 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
                 packing_config=packing_config,
                 input_spans=input_spans,
                 return_class_probs=return_class_probs,
+                return_vectors=return_vectors,
+                return_label_vectors=return_label_vectors,
                 **external_inputs,
+            )
+        if return_vectors or return_label_vectors:
+            raise NotImplementedError(
+                "Entity and label vectors are not yet available for stateful streaming inference; "
+                "use stateless inference or recompute outside a session"
             )
         if external_inputs:
             raise ValueError("external model inputs are not supported with session inference")
@@ -4987,6 +5327,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         move_to_device: bool = True,
         gen_constraints: Optional[List[str]] = None,
         num_gen_sequences: int = 1,
+        return_vectors: bool = False,
         **gen_kwargs,
     ) -> Any:
         """Run model forward pass on a collated batch with label generation.
@@ -4998,6 +5339,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             move_to_device: Whether to move tensors to model device.
             gen_constraints: Labels to constrain generation.
             num_gen_sequences: Number of label sequences to generate per span.
+            return_vectors: Whether to retain span representations for decoding.
             **gen_kwargs: Additional generation parameters.
 
         Returns:
@@ -5007,6 +5349,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             batch = {k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in batch.items()}
 
         model_inputs = batch.copy() if packing_config is None else {**batch, "packing_config": packing_config}
+        if return_vectors:
+            model_inputs["return_embeddings"] = True
         model_output = self.model(**model_inputs, threshold=threshold)
 
         # Generate labels if decoder is available
@@ -5033,6 +5377,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
     ) -> List[List[Any]]:
         """Decode model output into entity predictions with generated labels.
 
@@ -5044,6 +5390,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             multi_label: Whether to allow multiple labels per span.
             return_class_probs: Whether to include class probabilities.
             input_spans: Optional word-level input spans to classify.
+            return_vectors: Whether to attach a contextual vector to every returned span.
+            return_label_vectors: Whether to attach the matched scoring-time label vector.
 
         Returns:
             List of entity lists (one per text in batch).
@@ -5062,8 +5410,18 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             gen_labels=model_output.gen_labels,
             sel_idx=model_output.decoder_span_idx,
             num_gen_sequences=model_output.num_gen_sequences,
+            span_logits=model_output.span_logits,
+            span_idx=model_output.span_idx,
+            span_mask=model_output.span_mask,
             return_class_probs=return_class_probs,
             input_spans=input_spans,
+        )
+        _attach_entity_vectors(
+            decoded,
+            model_output,
+            self.config,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
         )
         return decoded
 
@@ -5078,6 +5436,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         word_input_spans=None,
         gen_constraints=None,
         num_gen_sequences=1,
+        return_vectors=False,
+        return_label_vectors=False,
         **gen_kwargs,
     ):
         """Batch processing logic with label generation support."""
@@ -5092,6 +5452,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 move_to_device=True,
                 gen_constraints=gen_constraints,
                 num_gen_sequences=num_gen_sequences,
+                return_vectors=return_vectors,
                 **gen_kwargs,
             )
 
@@ -5109,6 +5470,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
                 input_spans=batch_input_spans,
+                return_vectors=return_vectors,
+                return_label_vectors=return_label_vectors,
             )
             outputs.extend(decoded)
 
@@ -5162,6 +5525,12 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
                 if span.class_probs is not None:
                     entity["class_probs"] = span.class_probs
 
+                if getattr(span, "vector", None) is not None:
+                    entity["vector"] = span.vector
+
+                if getattr(span, "label_vector", None) is not None:
+                    entity["label_vector"] = span.label_vector
+
                 entities.append(entity)
 
             all_entities[orig_i] = entities
@@ -5172,7 +5541,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
     def inference(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
@@ -5182,6 +5551,9 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         packing_config: Optional[InferencePackingConfig] = None,
         input_spans: Optional[List[List[Dict]]] = None,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **gen_kwargs,
     ) -> List[List[Dict[str, Any]]]:
         """Predict entities with optional label generation.
@@ -5199,12 +5571,17 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             input_spans: Input entity spans to limit predictions to. Each span is a dict
                 with 'start' and 'end' character positions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **gen_kwargs: Additional generation parameters.
 
         Returns:
             List of entity predictions with optional generated labels.
         """
         self.eval()
+
+        if (return_vectors or return_label_vectors) and self.is_runtime_model:
+            raise NotImplementedError("Entity and label vectors are not available from the current runtime exports")
 
         prepared = self.prepare_batch(texts, labels, input_spans)
 
@@ -5214,11 +5591,16 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         collator = self.create_collator()
 
         def collate_fn(indices):
-            return self.collate_batch(
+            entity_types = _entity_types_for_chunk(prepared["entity_types"], indices)
+            label_names = prepared.get("label_names")
+            label_names = entity_types if label_names is None else _entity_types_for_chunk(label_names, indices)
+            batch = self.collate_batch(
                 [prepared["input_x"][i] for i in indices],
-                _entity_types_for_chunk(prepared["entity_types"], indices),
+                entity_types,
                 collator,
             )
+            _remap_id_to_classes(batch, entity_types, label_names)
+            return batch
 
         data_loader = torch.utils.data.DataLoader(
             list(range(len(prepared["input_x"]))),
@@ -5239,6 +5621,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             word_input_spans=prepared["word_input_spans"],
             gen_constraints=gen_constraints,
             num_gen_sequences=num_gen_sequences,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **gen_kwargs,
         )
 
@@ -5256,13 +5640,16 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
     def predict_entities(
         self,
         text: str,
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
         gen_constraints: Optional[List[str]] = None,
         num_gen_sequences: int = 1,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **gen_kwargs,
     ) -> List[Dict[str, Any]]:
         """Predict entities for a single text input with optional label generation.
@@ -5276,6 +5663,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             gen_constraints: Labels to constrain generation.
             num_gen_sequences: Number of label sequences to generate per span.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **gen_kwargs: Additional generation parameters.
 
         Returns:
@@ -5290,6 +5679,8 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
             gen_constraints=gen_constraints,
             num_gen_sequences=num_gen_sequences,
             return_class_probs=return_class_probs,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **gen_kwargs,
         )[0]
 
@@ -5377,7 +5768,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     def prepare_batch(
         self,
         texts: Union[str, List[str]],
-        labels: Union[str, List[str], List[List[str]]],
+        labels: EntityLabels,
         input_spans: Optional[List[List[Dict]]] = None,
         relations: Optional[Union[str, List[str], List[List[str]]]] = None,
         **kwargs,
@@ -5386,7 +5777,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
         Args:
             texts: Single text string or list of texts.
-            labels: Entity labels - string, list of strings, or per-text label lists.
+            labels: Shared or per-text entity labels, optionally mapped to descriptions.
             input_spans: Optional pre-defined spans to classify (character positions).
             relations: Relation type labels - string, list of strings, or per-text label lists.
             **kwargs: Additional keyword arguments passed to the parent prepare_batch.
@@ -5420,6 +5811,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         entity_types: Union[List[str], List[List[str]]],
         collator: Optional[Any] = None,
         relation_types: Optional[Union[List[str], List[List[str]]]] = None,
+        label_names: Optional[Union[List[str], List[List[str]]]] = None,
     ) -> Dict[str, Any]:
         """Collate prepared inputs into a tensor batch with relation types.
 
@@ -5428,6 +5820,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             entity_types: Entity type labels.
             collator: Optional pre-created collator instance.
             relation_types: Relation type labels (list or per-text lists).
+            label_names: Optional public names corresponding to model-facing entity prompts.
 
         Returns:
             Collated batch dictionary with tensors ready for the model.
@@ -5439,6 +5832,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             relation_types = []
 
         batch = collator(input_x, entity_types=entity_types, relation_types=relation_types)
+        _remap_id_to_classes(batch, entity_types, label_names)
         return batch
 
     def create_collator(self) -> Any:
@@ -5465,6 +5859,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         adjacency_threshold: Optional[float] = None,
         packing_config: Optional[InferencePackingConfig] = None,
         move_to_device: bool = True,
+        return_vectors: bool = False,
         **external_inputs,
     ) -> Any:
         """Run model forward pass on a collated batch.
@@ -5475,6 +5870,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold: Threshold for adjacency matrix reconstruction.
             packing_config: Optional inference packing configuration.
             move_to_device: Whether to move tensors to model device.
+            return_vectors: Whether to retain entity and relation representations for decoding.
             **external_inputs: Additional inputs to pass to the model.
 
         Returns:
@@ -5493,6 +5889,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         else:
             model_inputs = batch
 
+        if return_vectors:
+            model_inputs = {**model_inputs, "return_embeddings": True}
         model_output = self.model(**model_inputs, threshold=threshold, adjacency_threshold=adjacency_threshold)
         return model_output
 
@@ -5506,6 +5904,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         multi_label: Union[bool, List[bool]] = False,
         return_class_probs: bool = False,
         input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
     ) -> Tuple[List[List[Any]], List[List[Any]]]:
         """Decode model output into entity and relation predictions.
 
@@ -5518,6 +5918,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             multi_label: Whether to allow multiple labels per span.
             return_class_probs: Whether to include class probabilities.
             input_spans: Optional word-level input spans to classify.
+            return_vectors: Whether to attach entity and relation representations.
+            return_label_vectors: Whether to attach matched entity and relation label vectors.
 
         Returns:
             Tuple of (entity_outputs, relation_outputs) where each is a list per text.
@@ -5558,6 +5960,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             multi_label=multi_label,
             rel_id_to_classes=batch["rel_id_to_classes"],
             entity_spans=entity_spans,
+            return_class_probs=return_class_probs,
+            input_spans=input_spans,
         )
 
         if len(decoded_results) == 2:
@@ -5565,6 +5969,20 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         else:
             decoded_entities = decoded_results
             decoded_relations = [[] for _ in range(len(batch["tokens"]))]
+
+        _attach_entity_vectors(
+            decoded_entities,
+            model_output,
+            self.config,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
+        )
+        _attach_relation_vectors(
+            decoded_relations,
+            model_output,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
+        )
 
         return decoded_entities, decoded_relations
 
@@ -5580,6 +5998,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         adjacency_threshold=None,
         relation_threshold=None,
         return_relations=True,
+        return_vectors=False,
+        return_label_vectors=False,
         **external_inputs,
     ):
         """Batch processing logic for entity and relation extraction."""
@@ -5594,6 +6014,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 adjacency_threshold=adjacency_threshold,
                 packing_config=packing_config,
                 move_to_device=True,
+                return_vectors=return_vectors,
                 **external_inputs,
             )
 
@@ -5612,6 +6033,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 multi_label=multi_label,
                 return_class_probs=return_class_probs,
                 input_spans=batch_input_spans,
+                return_vectors=return_vectors,
+                return_label_vectors=return_label_vectors,
             )
 
             all_entity_outputs.extend(decoded_entities)
@@ -5668,6 +6091,12 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 if span.class_probs is not None:
                     entity["class_probs"] = span.class_probs
 
+                if getattr(span, "vector", None) is not None:
+                    entity["vector"] = span.vector
+
+                if getattr(span, "label_vector", None) is not None:
+                    entity["label_vector"] = span.label_vector
+
                 entities.append(entity)
 
             all_entities[orig_i] = entities
@@ -5712,7 +6141,7 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     def inference(
         self,
         texts: Union[str, List[str]],
-        labels: Union[str, List[str], List[List[str]]],
+        labels: EntityLabels,
         relations: Union[str, List[str], List[List[str]]] = [],
         flat_ner: bool = True,
         threshold: float = 0.5,
@@ -5724,12 +6153,15 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         input_spans: Optional[List[List[Dict]]] = None,
         return_relations: bool = True,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
     ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
         """Predict entities and relations.
 
         Args:
             texts: Input texts (str or List[str]).
-            labels: Entity type labels - string, list of strings, or per-text label lists.
+            labels: Shared or per-text entity labels, optionally mapped to descriptions.
             relations: Relation type labels - string, list of strings, or per-text label lists.
             flat_ner: Whether to use flat NER (no nested entities).
             threshold: Confidence threshold for entities.
@@ -5742,11 +6174,18 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 with 'start' and 'end' character positions.
             return_relations: Whether to return relation predictions.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include contextual entity and relation representations.
+            return_label_vectors: Whether to include matched entity and relation label vectors.
 
         Returns:
             Tuple of (entities, relations) if return_relations=True, else just entities.
         """
         self.eval()
+
+        if (return_vectors or return_label_vectors) and self.is_runtime_model:
+            raise NotImplementedError(
+                "Entity, label, and relation vectors are not available from the current ONNX/OpenVINO exports"
+            )
 
         prepared = self.prepare_batch(texts, labels, input_spans, relations)
 
@@ -5764,12 +6203,17 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
         collator = self.create_collator()
 
         def collate_fn(indices):
-            return self.collate_batch(
+            entity_types = _entity_types_for_chunk(prepared["entity_types"], indices)
+            label_names = prepared.get("label_names")
+            label_names = entity_types if label_names is None else _entity_types_for_chunk(label_names, indices)
+            batch = self.collate_batch(
                 [prepared["input_x"][i] for i in indices],
-                _entity_types_for_chunk(prepared["entity_types"], indices),
+                entity_types,
                 collator,
                 _entity_types_for_chunk(prepared["relation_types"], indices),
             )
+            _remap_id_to_classes(batch, entity_types, label_names)
+            return batch
 
         data_loader = torch.utils.data.DataLoader(
             list(range(len(prepared["input_x"]))),
@@ -5791,6 +6235,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold=adjacency_threshold,
             relation_threshold=relation_threshold,
             return_relations=return_relations,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
         )
 
         all_entities = self.map_entities_to_text(
@@ -5819,13 +6265,16 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     def predict_entities(
         self,
         text: str,
-        labels: List[str],
+        labels: EntityLabels,
         relations: List[str] = [],
         flat_ner: bool = True,
         threshold: float = 0.5,
         adjacency_threshold: Optional[float] = None,
         multi_label: bool = False,
         return_class_probs: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **kwargs,
     ) -> List[Dict[str, Any]]:
         """Predict entities for a single text input.
@@ -5839,6 +6288,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
             return_class_probs: Whether to include class probabilities in output. Defaults to False.
+            return_vectors: Whether to include a contextual vector for each returned entity.
+            return_label_vectors: Whether to include the matched label vector for each entity.
             **kwargs: Additional arguments passed to inference.
 
         Returns:
@@ -5854,19 +6305,24 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             multi_label=multi_label,
             return_relations=False,
             return_class_probs=return_class_probs,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **kwargs,
         )[0]
 
     def predict_relations(
         self,
         text: str,
-        labels: List[str],
+        labels: EntityLabels,
         relations: List[str],
         flat_ner: bool = True,
         threshold: float = 0.5,
         adjacency_threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
         multi_label: bool = False,
+        *,
+        return_vectors: bool = False,
+        return_label_vectors: bool = False,
         **kwargs,
     ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
         """Predict entities and relations for a single text input.
@@ -5880,6 +6336,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             adjacency_threshold: Threshold for adjacency matrix reconstruction. Defaults to threshold.
             relation_threshold: Confidence threshold for relations. Defaults to threshold.
             multi_label: Whether to allow multiple labels per entity. Defaults to False.
+            return_vectors: Whether to include contextual entity and relation representations.
+            return_label_vectors: Whether to include matched entity and relation label vectors.
             **kwargs: Additional arguments passed to inference.
 
         Returns:
@@ -5895,6 +6353,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             relation_threshold=relation_threshold,
             multi_label=multi_label,
             return_relations=True,
+            return_vectors=return_vectors,
+            return_label_vectors=return_label_vectors,
             **kwargs,
         )
         return entities[0], rels[0]
@@ -5945,7 +6405,8 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
             end_token_idx_to_text_idx = all_end_token_idx_to_text_idx[valid_i]
 
             # Process each relation tuple from decoder
-            for head_idx, relation_label, tail_idx, score in rel_tuples:
+            for relation_output in rel_tuples:
+                head_idx, relation_label, tail_idx, score = relation_output
                 # Validate entity indices
                 if head_idx >= len(entities_list) or tail_idx >= len(entities_list):
                     continue
@@ -5960,26 +6421,35 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
                 tail_start_text = start_token_idx_to_text_idx[tail_span.start]
                 tail_end_text = end_token_idx_to_text_idx[tail_span.end]
 
-                relations.append(
-                    {
-                        "head": {
-                            "start": head_start_text,
-                            "end": head_end_text,
-                            "text": valid_texts[valid_i][head_start_text:head_end_text],
-                            "type": head_span.entity_type,
-                            "entity_idx": head_idx,
-                        },
-                        "tail": {
-                            "start": tail_start_text,
-                            "end": tail_end_text,
-                            "text": valid_texts[valid_i][tail_start_text:tail_end_text],
-                            "type": tail_span.entity_type,
-                            "entity_idx": tail_idx,
-                        },
-                        "relation": relation_label,
-                        "score": score,
-                    }
-                )
+                relation = {
+                    "head": {
+                        "start": head_start_text,
+                        "end": head_end_text,
+                        "text": valid_texts[valid_i][head_start_text:head_end_text],
+                        "type": head_span.entity_type,
+                        "entity_idx": head_idx,
+                    },
+                    "tail": {
+                        "start": tail_start_text,
+                        "end": tail_end_text,
+                        "text": valid_texts[valid_i][tail_start_text:tail_end_text],
+                        "type": tail_span.entity_type,
+                        "entity_idx": tail_idx,
+                    },
+                    "relation": relation_label,
+                    "score": score,
+                }
+
+                if getattr(relation_output, "vector", None) is not None:
+                    relation["vector"] = relation_output.vector
+                if getattr(relation_output, "label_vector", None) is not None:
+                    relation["label_vector"] = relation_output.label_vector
+                if getattr(relation_output, "head_relation_vector", None) is not None:
+                    relation["head_relation_vector"] = relation_output.head_relation_vector
+                if getattr(relation_output, "tail_relation_vector", None) is not None:
+                    relation["tail_relation_vector"] = relation_output.tail_relation_vector
+
+                relations.append(relation)
 
             all_relations[orig_i] = relations
 

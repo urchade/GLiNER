@@ -15,6 +15,9 @@ from .memory import GLiNERMemoryEstimator
 
 logger = logging.getLogger(__name__)
 
+LabelSet = Union[List[str], Dict[str, str]]
+Labels = Union[LabelSet, List[LabelSet]]
+
 
 def _min_batch_value(value):
     if isinstance(value, list):
@@ -29,6 +32,20 @@ def _normalize_relation_lists(relations):
         normalized = [item or [] for item in relations]
         return None if all(not item for item in normalized) else normalized
     return relations
+
+
+def _labels_for_texts(labels: Labels, num_texts: int) -> List[LabelSet]:
+    """Return one label set per text while preserving shared label sets."""
+    if isinstance(labels, list) and labels and isinstance(labels[0], (list, dict)):
+        if len(labels) != num_texts:
+            raise ValueError(f"Per-text labels must have length {num_texts}, got {len(labels)}")
+        return labels
+    return [labels] * num_texts
+
+
+def _label_word_count(labels: LabelSet) -> int:
+    prompts = labels.values() if isinstance(labels, dict) else labels
+    return sum(len(label.split()) for label in prompts)
 
 
 class GLiNERServer:
@@ -313,7 +330,7 @@ class GLiNERServer:
     def observed_seq_len(
         self,
         texts: List[str],
-        labels: Optional[List[str] | List[List[str]]] = None,
+        labels: Optional[Labels] = None,
         relations: Optional[List[str] | List[List[str] | None]] = None,
     ) -> int:
         """Total input word count: longest text + all label/relation words.
@@ -325,10 +342,10 @@ class GLiNERServer:
         max_text_words = max((len(t.split()) for t in texts if t.strip()), default=0)
         prompt_words = 0
         if labels:
-            if isinstance(labels[0], list):
-                prompt_words += max(sum(len(label.split()) for label in label_set) for label_set in labels)
+            if isinstance(labels, list) and labels and isinstance(labels[0], (list, dict)):
+                prompt_words += max(_label_word_count(label_set) for label_set in labels)
             else:
-                prompt_words += sum(len(label.split()) for label in labels)
+                prompt_words += _label_word_count(labels)
         if relations:
             normalized_relations = _normalize_relation_lists(relations)
             if normalized_relations:
@@ -342,12 +359,14 @@ class GLiNERServer:
         total = max_text_words + prompt_words
         return min(max(total, self.config.calibration_min_seq_len), self.config.max_model_len)
 
-    def _filter_labels(self, labels: List[str] | List[List[str]]) -> List[str] | List[List[str]]:
+    def _filter_labels(self, labels: Labels) -> Labels:
         """Filter labels based on max_labels config."""
-        if labels and isinstance(labels[0], list):
+        if isinstance(labels, list) and labels and isinstance(labels[0], (list, dict)):
             return [self._filter_labels(label_set) for label_set in labels]
         if self.config.max_labels > 0 and len(labels) > self.config.max_labels:
             logger.warning("Truncating labels from %d to %d", len(labels), self.config.max_labels)
+            if isinstance(labels, dict):
+                return dict(list(labels.items())[: self.config.max_labels])
             return labels[: self.config.max_labels]
         return labels
 
@@ -355,7 +374,7 @@ class GLiNERServer:
     def _run_batch_internal(
         self,
         texts: List[str],
-        labels: List[str] | List[List[str]],
+        labels: Labels,
         relations: Optional[List[str] | List[List[str] | None]] = None,
         threshold: float | List[float] = 0.5,
         relation_threshold: float | List[float] = 0.5,
@@ -383,6 +402,38 @@ class GLiNERServer:
             For NER models: List of entity lists.
             For relex models: Tuple of (entities, relations) lists.
         """
+        per_text_labels = isinstance(labels, list) and bool(labels) and isinstance(labels[0], (list, dict))
+        if getattr(self.model, "is_runtime_model", False) and len(texts) > 1 and per_text_labels:
+            if len(labels) != len(texts):
+                raise ValueError(f"Per-text labels must have length {len(texts)}, got {len(labels)}")
+
+            entity_results = []
+            relation_results = []
+            per_text_relations = bool(relations) and isinstance(relations[0], (list, type(None)))
+            for index, text in enumerate(texts):
+                result = self._run_batch_internal(
+                    [text],
+                    labels[index],
+                    relations=relations[index] if per_text_relations else relations,
+                    threshold=threshold[index] if isinstance(threshold, list) else threshold,
+                    relation_threshold=(
+                        relation_threshold[index] if isinstance(relation_threshold, list) else relation_threshold
+                    ),
+                    flat_ner=flat_ner[index] if isinstance(flat_ner, list) else flat_ner,
+                    multi_label=multi_label[index] if isinstance(multi_label, list) else multi_label,
+                    adapter_ids=adapter_ids[index] if isinstance(adapter_ids, list) else adapter_ids,
+                )
+                if self._supports_relations:
+                    entities, found_relations = result
+                    entity_results.extend(entities)
+                    relation_results.extend(found_relations)
+                else:
+                    entity_results.extend(result)
+
+            if self._supports_relations:
+                return entity_results, relation_results
+            return entity_results
+
         if self._supports_relations:
             return self._run_batch_relex(
                 texts,
@@ -400,7 +451,7 @@ class GLiNERServer:
     def _run_batch_ner(
         self,
         texts: List[str],
-        labels: List[str] | List[List[str]],
+        labels: Labels,
         threshold: float | List[float],
         flat_ner: bool | List[bool],
         multi_label: bool | List[bool],
@@ -418,6 +469,7 @@ class GLiNERServer:
             prepared["input_x"],
             prepared["entity_types"],
             self.collator,
+            label_names=prepared["label_names"],
         )
 
         run_kwargs: Dict[str, Any] = {}
@@ -454,7 +506,7 @@ class GLiNERServer:
     def _run_batch_relex(
         self,
         texts: List[str],
-        labels: List[str] | List[List[str]],
+        labels: Labels,
         relations: Optional[List[str] | List[List[str] | None]],
         threshold: float | List[float],
         relation_threshold: float | List[float],
@@ -477,6 +529,7 @@ class GLiNERServer:
             prepared["entity_types"],
             self.collator,
             relation_types=prepared.get("relation_types", []),
+            label_names=prepared["label_names"],
         )
 
         run_kwargs: Dict[str, Any] = {}
@@ -525,7 +578,7 @@ class GLiNERServer:
     def predict(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
+        labels: Labels,
         relations: Optional[List[str]] = None,
         threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
@@ -537,7 +590,7 @@ class GLiNERServer:
 
         Args:
             texts: Input text(s) to process.
-            labels: Entity type labels to extract.
+            labels: Entity labels shared by all texts, or one label set per text.
             relations: Relation type labels (only for relex models).
             threshold: Confidence threshold for entities.
             relation_threshold: Confidence threshold for relations.
@@ -623,7 +676,7 @@ def _build_deployment(config: GLiNERServeConfig):
         async def _infer_batch(
             self,
             texts: List[str],
-            labels_list: List[List[str]],
+            labels_list: List[LabelSet],
             relations_list: List[Optional[List[str]]],
             thresholds: List[float],
             relation_thresholds: List[float],
@@ -679,7 +732,7 @@ def _build_deployment(config: GLiNERServeConfig):
         async def predict(
             self,
             text: str,
-            labels: List[str],
+            labels: LabelSet,
             relations: Optional[List[str]] = None,
             threshold: Optional[float] = None,
             relation_threshold: Optional[float] = None,
@@ -731,7 +784,7 @@ def _build_deployment(config: GLiNERServeConfig):
                 )
             except KeyError as exc:
                 return JSONResponse({"error": str(exc)}, status_code=404)
-            except ValueError as exc:
+            except (TypeError, ValueError) as exc:
                 return JSONResponse({"error": str(exc)}, status_code=400)
 
     return GLiNERDeployment.bind(config)
@@ -859,7 +912,7 @@ class GLiNERFactory:
     def predict(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
+        labels: Labels,
         relations: Optional[List[str]] = None,
         threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
@@ -870,11 +923,12 @@ class GLiNERFactory:
         """Blocking prediction. Returns a dict for ``str`` input, list for list input."""
         single = isinstance(texts, str)
         items = [texts] if single else list(texts)
+        labels_list = _labels_for_texts(labels, len(items))
 
         refs = [
             self._handle.predict.remote(
                 t,
-                labels,
+                label_set,
                 relations,
                 threshold,
                 relation_threshold,
@@ -882,7 +936,7 @@ class GLiNERFactory:
                 multi_label,
                 adapter_id,
             )
-            for t in items
+            for t, label_set in zip(items, labels_list)
         ]
         results = [ref.result() for ref in refs]
         return results[0] if single else results
@@ -890,7 +944,7 @@ class GLiNERFactory:
     async def predict_async(
         self,
         texts: Union[str, List[str]],
-        labels: List[str],
+        labels: Labels,
         relations: Optional[List[str]] = None,
         threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
@@ -903,11 +957,12 @@ class GLiNERFactory:
 
         single = isinstance(texts, str)
         items = [texts] if single else list(texts)
+        labels_list = _labels_for_texts(labels, len(items))
 
         refs = [
             self._handle.predict.remote(
                 t,
-                labels,
+                label_set,
                 relations,
                 threshold,
                 relation_threshold,
@@ -915,7 +970,7 @@ class GLiNERFactory:
                 multi_label,
                 adapter_id,
             )
-            for t in items
+            for t, label_set in zip(items, labels_list)
         ]
         results = list(await asyncio.gather(*refs))
         return results[0] if single else results
