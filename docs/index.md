@@ -17,7 +17,7 @@ configs
 training
 architectures
 add_custom_architecture
-convert_to_onnx
+Runtime export and inference <convert_to_onnx>
 serving
 ```
 
@@ -32,7 +32,7 @@ api/gliner.training
 api/gliner.modeling
 api/gliner.data_processing
 api/gliner.evaluation
-api/gliner.onnx
+api/gliner.runtime
 api/gliner.decoding
 api/gliner.utils
 ```
