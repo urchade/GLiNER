@@ -141,9 +141,6 @@ logger = logging.getLogger(__name__)
 class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     config_class: type = None
     model_class: type = None
-    # ``None`` is also the compatibility marker for architectures whose
-    # exported graph cannot be run by the external runtimes yet.
-    ort_model_class: type = None
     data_processor_class: type = None
     data_collator_class: type = None
     decoder_class: type = None
@@ -398,6 +395,22 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if incompatible:
             joined = ", ".join(incompatible)
             raise ValueError(f"{joined} only apply to the PyTorch runtime; selected runtime={runtime!r}.")
+
+    @staticmethod
+    def _validate_runtime_architecture(config: BaseGLiNERConfig, runtime: str) -> None:
+        """Reject architectures that cannot be represented by one exported graph."""
+        if runtime == "torch":
+            return
+
+        is_streaming = isinstance(config, StreamingSpanConfig) or getattr(config, "model_type", None) == (
+            "gliner_streaming_span"
+        )
+        has_generative_decoder = getattr(config, "labels_decoder", None) is not None
+        if is_streaming or has_generative_decoder:
+            architecture = "streaming" if is_streaming else "generative-decoder"
+            raise NotImplementedError(
+                f"The {runtime!r} runtime does not support {architecture} GLiNER architectures."
+            )
 
     @classmethod
     def _normalize_variant(cls, variant) -> Optional[str]:
@@ -1511,6 +1524,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             post_fusion_schema=post_fusion_schema,
             _attn_implementation=_attn_implementation,
         )
+        cls._validate_runtime_architecture(config, runtime)
 
         # Load tokenizer
         if load_tokenizer is None:
@@ -1645,9 +1659,6 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
             instance.eval()
         else:
-            if cls.ort_model_class is None:
-                raise NotImplementedError(f"{cls.__name__} does not support the {runtime!r} runtime.")
-
             if runtime_options is None:
                 options = {}
             elif isinstance(runtime_options, dict):
@@ -1686,19 +1697,11 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     raise ValueError(f"Unknown ONNX Runtime options: {sorted(options)}")
                 if injected_session is None and not model_file.exists():
                     raise FileNotFoundError(f"The ONNX model can't be loaded from {model_file}.")
-                onnx_model = ONNXRuntimeModel(
+                model = ONNXRuntimeModel(
                     session=injected_session,
                     model_path=None if injected_session is not None else model_file,
                     session_options=effective_session_options,
                     providers=providers,
-                )
-                # Preserve the long-standing customization hook for downstream
-                # architectures with a specialized ONNX wrapper. Built-in
-                # architectures use the graph-driven adapter directly.
-                model = (
-                    onnx_model
-                    if cls.ort_model_class is ONNXRuntimeModel
-                    else cls.ort_model_class(onnx_model.session)
                 )
             else:
                 if session_options is not None:
@@ -3377,7 +3380,6 @@ class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
 class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderSpanConfig
     model_class = UniEncoderSpanModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = UniEncoderSpanProcessor
     data_collator_class = UniEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -3445,7 +3447,6 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
 
     config_class = StreamingSpanConfig
     model_class = StreamingSpanModel
-    ort_model_class = None
     data_processor_class = StreamingSpanProcessor
     data_collator_class = StreamingSpanDataCollator
     decoder_class = SpanDecoder
@@ -4704,7 +4705,6 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
 class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
     config_class = UniEncoderTokenConfig
     model_class = UniEncoderTokenModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = UniEncoderTokenProcessor
     data_collator_class = UniEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -4762,7 +4762,6 @@ class UniEncoderTokenGLiNER(BaseEncoderGLiNER):
 class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderSpanConfig
     model_class = BiEncoderSpanModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = BiEncoderSpanProcessor
     data_collator_class = BiEncoderSpanDataCollator
     decoder_class = SpanDecoder
@@ -4804,7 +4803,6 @@ class BiEncoderSpanGLiNER(BaseBiEncoderGLiNER):
 class BiEncoderTokenGLiNER(BaseBiEncoderGLiNER):
     config_class = BiEncoderTokenConfig
     model_class = BiEncoderTokenModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = BiEncoderTokenProcessor
     data_collator_class = BiEncoderTokenDataCollator
     decoder_class = TokenDecoder
@@ -4847,7 +4845,6 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
 
     config_class = UniEncoderSpanDecoderConfig  # Uses base config with labels_decoder settings
     model_class = UniEncoderSpanDecoderModel
-    ort_model_class: type = None
     data_processor_class = UniEncoderSpanDecoderProcessor
     data_collator_class = UniEncoderSpanDecoderDataCollator
     decoder_class = SpanGenerativeDecoder
@@ -5281,7 +5278,6 @@ class UniEncoderTokenDecoderGLiNER(UniEncoderSpanDecoderGLiNER):
 
     config_class = UniEncoderTokenDecoderConfig
     model_class = UniEncoderTokenDecoderModel
-    ort_model_class = None
     data_processor_class = UniEncoderTokenDecoderProcessor
     data_collator_class = UniEncoderTokenDecoderDataCollator
     decoder_class = TokenGenerativeDecoder
@@ -5296,7 +5292,6 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
 
     config_class = UniEncoderSpanRelexConfig
     model_class = UniEncoderSpanRelexModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = RelationExtractionSpanProcessor
     data_collator_class = RelationExtractionSpanDataCollator
     decoder_class = SpanRelexDecoder
@@ -6166,7 +6161,6 @@ class UniEncoderTokenRelexGLiNER(UniEncoderSpanRelexGLiNER):
 
     config_class = UniEncoderTokenRelexConfig
     model_class = UniEncoderTokenRelexModel
-    ort_model_class: type = ONNXRuntimeModel
     data_processor_class = RelationExtractionTokenProcessor
     data_collator_class = RelationExtractionTokenDataCollator
     decoder_class = TokenRelexDecoder

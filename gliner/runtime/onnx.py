@@ -38,26 +38,30 @@ class ONNXRuntimeModel(BaseRuntimeModel):
         session_options: ort.SessionOptions | None = None,
         providers: list[str] | None = None,
     ) -> None:
-        if session is None:
-            if model_path is None:
-                raise ValueError("Either 'session' or 'model_path' must be provided.")
-            runtime = _require_onnxruntime()
-            if session_options is None:
-                session_options = runtime.SessionOptions()
-                session_options.graph_optimization_level = runtime.GraphOptimizationLevel.ORT_ENABLE_ALL
-            session = runtime.InferenceSession(
-                str(model_path),
-                sess_options=session_options,
-                providers=providers,
-            )
-
         self.model_path = model_path
         self.session_options = session_options
         self.providers = providers
+
+        if session is None:
+            if model_path is None:
+                raise ValueError("Either session or model_path must be provided.")
+            session = self._load_session(model_path)
+
         super().__init__(
             session,
             (input_info.name for input_info in session.get_inputs()),
             (output_info.name for output_info in session.get_outputs()),
+        )
+
+    def _load_session(self, model_path: str | PathLike[str]) -> ort.InferenceSession:
+        runtime = _require_onnxruntime()
+        if self.session_options is None:
+            self.session_options = runtime.SessionOptions()
+            self.session_options.graph_optimization_level = runtime.GraphOptimizationLevel.ORT_ENABLE_ALL
+        return runtime.InferenceSession(
+            str(model_path),
+            sess_options=self.session_options,
+            providers=self.providers,
         )
 
     @property

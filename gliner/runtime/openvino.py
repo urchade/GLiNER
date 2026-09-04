@@ -46,23 +46,17 @@ class OpenVINOModel(BaseRuntimeModel):
         config: dict[str, Any] | None = None,
         core: ov.Core | None = None,
     ) -> None:
-        if compiled_model is None:
-            if model_path is None:
-                raise ValueError("Either 'compiled_model' or 'model_path' must be provided.")
-            if core is None:
-                runtime = _require_openvino()
-                core = runtime.Core()
-            compiled_model = core.compile_model(
-                str(model_path),
-                device_name,
-                {} if config is None else config,
-            )
-
-        self.compiled_model = compiled_model
         self.model_path = model_path
         self.device_name = device_name
         self.compile_config = {} if config is None else dict(config)
         self.core = core
+
+        if compiled_model is None:
+            if model_path is None:
+                raise ValueError("Either 'compiled_model' or 'model_path' must be provided.")
+            compiled_model = self._load_compiled_model(model_path)
+
+        self.compiled_model = compiled_model
         self._input_ports = list(compiled_model.inputs)
         self._output_ports = list(compiled_model.outputs)
         super().__init__(
@@ -70,6 +64,13 @@ class OpenVINOModel(BaseRuntimeModel):
             (_port_name(port, kind="input", index=index) for index, port in enumerate(self._input_ports)),
             (_port_name(port, kind="output", index=index) for index, port in enumerate(self._output_ports)),
         )
+
+    def _load_compiled_model(self, model_path: str | PathLike[str]) -> ov.CompiledModel:
+        if self.core is None:
+            runtime = _require_openvino()
+            self.core = runtime.Core()
+        model = self.core.read_model(str(model_path))
+        return self.core.compile_model(model, device_name=self.device_name, config=self.compile_config)
 
     def run_inference(self, inputs: dict[str, np.ndarray]) -> dict[str, np.ndarray]:
         # The callable interface accepts named NumPy inputs and returns an
