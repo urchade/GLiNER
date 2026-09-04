@@ -69,6 +69,69 @@ for entity in entities:
     print("---")
 ```
 
+### Returning contextual vectors
+
+Native PyTorch models can return the contextual representation of every
+accepted entity together with the representation of its matched label. The two
+options are independent and are disabled by default:
+
+```python
+entities = model.predict_entities(
+    text,
+    labels,
+    return_vectors=True,
+    return_label_vectors=True,
+)
+
+for entity in entities:
+    span_vector = entity["vector"]
+    label_vector = entity["label_vector"]
+```
+
+`inference` supports the same options for batched input:
+
+```python
+all_entities = model.inference(
+    texts,
+    labels,
+    batch_size=8,
+    return_vectors=True,
+    return_label_vectors=True,
+)
+```
+
+The optional values are detached CPU NumPy arrays with `float32` dtype. Their
+meaning depends on the model architecture:
+
+- For a span-level model, `vector` is the native contextual span
+  representation used by the span scorer.
+- For a token-level model, `vector` is the mean of the contextual word
+  representations covered by the detected span.
+- `label_vector` is the matched model prompt representation. When labels are
+  supplied as a label-to-description mapping, this is the representation of
+  the description prompt while `entity["label"]` remains the mapping key.
+  For a generative model in prompt mode, it still represents the original
+  scoring prompt; generated label text is not encoded a second time.
+
+The mean-pooled token-level `vector` is not guaranteed to reproduce the entity
+score when combined with `label_vector`; in particular, standard token-level
+decoding uses the nonlinear start/end/inside scorer. Both arrays are intended
+as contextual features for a downstream model.
+Only entities that survive thresholding and overlap filtering receive vectors.
+When the flags are `False`, the corresponding keys are absent, preserving the
+standard result format and inference cost.
+
+NumPy arrays are not directly JSON serializable. Convert them with `.tolist()`
+when a JSON-compatible response is required.
+
+:::{note}
+Vector returns currently require native PyTorch inference. Existing ONNX and
+OpenVINO exports do not expose these intermediate representations and raise
+`NotImplementedError` when either option is requested. Stateless inference with
+a streaming-span model is supported, but stateful streaming sessions do not
+currently return vectors.
+:::
+
 :::{warning}
 Stateless GLiNER calls do not automatically window long documents. If the text
 contains more splitter tokens than the checkpoint's `model.config.max_len`,
@@ -112,6 +175,32 @@ for i, entities in enumerate(all_entities):
 - **Faster**: Process multiple texts in parallel
 - **Efficient**: Better GPU utilization
 - **Scalable**: Handle large document collections
+
+### Label descriptions
+
+Models trained to use descriptive labels can receive a dictionary. Dictionary keys are
+returned in predictions, while values are encoded as the label prompts:
+
+```python
+labels = {
+    "person": "A human individual, including fictional characters",
+    "organization": "A company, institution, agency, or other group of people",
+}
+entities = model.predict_entities(text, labels)
+```
+
+For batched inference, provide one dictionary or list of labels per text:
+
+```python
+label_sets = [
+    {"person": "A human individual"},
+    {"location": "A geographical place"},
+]
+entities = model.inference(["Alice arrived", "Paris is sunny"], label_sets)
+```
+
+Descriptions must be unique within each label set. They are not supported with
+precomputed prompt embeddings.
 
 ## Using Different Model Architectures
 
@@ -251,6 +340,49 @@ Relations:
   Microsoft --[headquartered_in]--> Redmond
 ```
 </details>
+
+### Returning relation vectors
+
+Relation extraction returns entity and relation representations through the
+same options. They are available from both batched `inference` and the
+single-text `predict_relations` convenience method:
+
+```python
+all_entities, all_relations = model.inference(
+    [text],
+    labels=entity_labels,
+    relations=relation_labels,
+    return_vectors=True,
+    return_label_vectors=True,
+)
+
+entities, relations = model.predict_relations(
+    text,
+    labels=entity_labels,
+    relations=relation_labels,
+    return_vectors=True,
+    return_label_vectors=True,
+)
+```
+
+The returned entity dictionaries use `vector` and `label_vector` as described
+above. A relation dictionary always keeps its normal `head`, `tail`,
+`relation`, and `score` fields, and adds the requested arrays according to its
+relation scorer:
+
+| Relation scorer | Fields added by `return_vectors=True` |
+| --- | --- |
+| Pair projection | `vector`, the projected directed head-tail pair representation |
+| Triple scorer | `head_relation_vector` and `tail_relation_vector`, the two entity-side scorer inputs |
+
+With `return_label_vectors=True`, both scorer types also add `label_vector`,
+the matched relation-prompt representation. All relation vectors are detached
+CPU `float32` NumPy arrays. For a pair projection, `vector` is the
+representation directly compared with `label_vector`; a triple scorer has no
+single pair vector, which is why its two exact entity-side inputs are returned
+instead. The `head` and `tail` sub-dictionaries are unchanged; use their
+`entity_idx` values to locate the corresponding entity dictionaries and entity
+vectors.
 
 ## Advanced Configuration
 

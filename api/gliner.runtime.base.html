@@ -138,18 +138,7 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel"><code class="docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.device"><code class="docutils literal notranslate">device</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.prepare_inputs"><code class="docutils literal notranslate">prepare_inputs()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6">
@@ -182,64 +171,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.runtime.base">
-<span id="gliner-runtime-base-module"></span><h1>gliner.runtime.base module<a class="headerlink" href="#module-gliner.runtime.base" title="Link to this heading">¶</a></h1>
-<p>Shared interface for graph-based GLiNER inference runtimes.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.base.</span></span><span class="sig-name descname"><span class="pre">BaseRuntimeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Backend-independent adapter for exported GLiNER models.</p>
-<p>Concrete adapters only need to create and introspect their backend session,
-then implement <a class="reference internal" href="#gliner.runtime.base.BaseRuntimeModel.run_inference" title="gliner.runtime.base.BaseRuntimeModel.run_inference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_inference()</span></code></a>. Input binding and GLiNER output
-construction are shared because those semantics are encoded in the graph’s
-input and output names.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.runtime_name">
-<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'runtime'</span></em><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.runtime_name" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.device">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.device" title="Link to this definition">¶</a></dt>
-<dd><p>Return the host device used to stage runtime inputs.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.prepare_inputs">
-<span class="sig-name descname"><span class="pre">prepare_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.prepare_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.prepare_inputs" title="Link to this definition">¶</a></dt>
-<dd><p>Convert values to NumPy, filter extras, and validate graph inputs.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.forward" title="Link to this definition">¶</a></dt>
-<dd><p>Bind graph inputs, execute the backend, and return a GLiNER output.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.base.BaseRuntimeModel.run_inference">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.base.BaseRuntimeModel.run_inference" title="Link to this definition">¶</a></dt>
-<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="gliner-runtime-base-module">
+<h1>gliner.runtime.base module<a class="headerlink" href="#gliner-runtime-base-module" title="Link to this heading">¶</a></h1>
 </section>
 
         </article><button class="back-to-top" type="button">

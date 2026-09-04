@@ -138,27 +138,7 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine"><code class="docutils literal notranslate"><span class="pre">AsyncStreamingEngine</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.start"><code class="docutils literal notranslate">start()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.append"><code class="docutils literal notranslate">append()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.stream"><code class="docutils literal notranslate">stream()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.clear_session"><code class="docutils literal notranslate">clear_session()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.AsyncStreamingEngine.close"><code class="docutils literal notranslate">close()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch"><code class="docutils literal notranslate"><span class="pre">StreamingBatch</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.closed"><code class="docutils literal notranslate">closed</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.initialized"><code class="docutils literal notranslate">initialized</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.append"><code class="docutils literal notranslate">append()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.reset"><code class="docutils literal notranslate">reset()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.streaming.StreamingBatch.close"><code class="docutils literal notranslate">close()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6">
@@ -187,117 +167,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.streaming">
-<span id="gliner-streaming-module"></span><h1>gliner.streaming module<a class="headerlink" href="#module-gliner.streaming" title="Link to this heading">¶</a></h1>
-<p>Synchronous fixed-batch and asynchronous streaming inference surfaces.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.streaming.</span></span><span class="sig-name descname"><span class="pre">AsyncStreamingEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Dynamically microbatch independently arriving streaming sessions.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">batch_wait_timeout_ms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">queue_capacity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4096</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.start">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.start"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.start" title="Link to this definition">¶</a></dt>
-<dd><p>Start the scheduler lazily on the current event loop.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.append">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recompute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.append" title="Link to this definition">¶</a></dt>
-<dd><p>Queue one append; concurrent callers are dynamically microbatched.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.stream">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunks</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.stream" title="Link to this definition">¶</a></dt>
-<dd><p>Yield a session snapshot for every chunk from sync or async input.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.clear_session">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">clear_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.clear_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.clear_session" title="Link to this definition">¶</a></dt>
-<dd><p>Wait for prior work on a session, then discard its cache.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.AsyncStreamingEngine.close">
-<em class="property"><span class="pre">async</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#AsyncStreamingEngine.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.AsyncStreamingEngine.close" title="Link to this definition">¶</a></dt>
-<dd><p>Drain queued work and stop the scheduler. Idempotent.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.streaming.</span></span><span class="sig-name descname"><span class="pre">StreamingBatch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#StreamingBatch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.StreamingBatch" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Persistent fixed-order batch for synchronous streaming inference.</p>
-<p>The session-to-row mapping is immutable, allowing the decoder KV cache to
-remain batched between calls without stacking or splitting historical keys.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">labels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#StreamingBatch.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.StreamingBatch.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.closed">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">closed</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#gliner.streaming.StreamingBatch.closed" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.initialized">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">initialized</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">bool</span></em><a class="headerlink" href="#gliner.streaming.StreamingBatch.initialized" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.append">
-<span class="sig-name descname"><span class="pre">append</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">texts</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flat_ner</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">multi_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recompute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#StreamingBatch.append"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.StreamingBatch.append" title="Link to this definition">¶</a></dt>
-<dd><p>Append one text chunk per fixed session row and return snapshots.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.reset">
-<span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#StreamingBatch.reset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.StreamingBatch.reset" title="Link to this definition">¶</a></dt>
-<dd><p>Discard the entire persistent cache while retaining row ownership.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.streaming.StreamingBatch.close">
-<span class="sig-name descname"><span class="pre">close</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/streaming.html#StreamingBatch.close"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.streaming.StreamingBatch.close" title="Link to this definition">¶</a></dt>
-<dd><p>Release the persistent batch cache. Idempotent.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="gliner-streaming-module">
+<h1>gliner.streaming module<a class="headerlink" href="#gliner-streaming-module" title="Link to this heading">¶</a></h1>
 </section>
 
         </article><button class="back-to-top" type="button">

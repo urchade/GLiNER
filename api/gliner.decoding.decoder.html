@@ -146,13 +146,34 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#gliner.decoding.decoder.Span.score"><code class="docutils literal notranslate">score</span></code></a></li>
 <li><a class="reference internal" href="#gliner.decoding.decoder.Span.class_probs"><code class="docutils literal notranslate">class_probs</span></code></a></li>
 <li><a class="reference internal" href="#gliner.decoding.decoder.Span.generated_labels"><code class="docutils literal notranslate">generated_labels</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.Span.class_index"><code class="docutils literal notranslate">class_index</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.Span.span_index"><code class="docutils literal notranslate">span_index</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.Span.vector"><code class="docutils literal notranslate">vector</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.Span.label_vector"><code class="docutils literal notranslate">label_vector</span></code></a></li>
 <li><a class="reference internal" href="#id0"><code class="docutils literal notranslate">start</span></code></a></li>
 <li><a class="reference internal" href="#id1"><code class="docutils literal notranslate">end</span></code></a></li>
 <li><a class="reference internal" href="#id2"><code class="docutils literal notranslate">entity_type</span></code></a></li>
 <li><a class="reference internal" href="#id3"><code class="docutils literal notranslate">score</span></code></a></li>
 <li><a class="reference internal" href="#id4"><code class="docutils literal notranslate">class_probs</span></code></a></li>
 <li><a class="reference internal" href="#id5"><code class="docutils literal notranslate">generated_labels</span></code></a></li>
+<li><a class="reference internal" href="#id6"><code class="docutils literal notranslate">class_index</span></code></a></li>
+<li><a class="reference internal" href="#id7"><code class="docutils literal notranslate">span_index</span></code></a></li>
+<li><a class="reference internal" href="#id8"><code class="docutils literal notranslate">vector</span></code></a></li>
+<li><a class="reference internal" href="#id9"><code class="docutils literal notranslate">label_vector</span></code></a></li>
 <li><a class="reference internal" href="#gliner.decoding.decoder.Span.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation"><code class="docutils literal notranslate"><span class="pre">DecodedRelation</span></code></a><ul>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.pair_index"><code class="docutils literal notranslate">pair_index</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.class_index"><code class="docutils literal notranslate">class_index</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.vector"><code class="docutils literal notranslate">vector</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.label_vector"><code class="docutils literal notranslate">label_vector</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.head_relation_vector"><code class="docutils literal notranslate">head_relation_vector</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.tail_relation_vector"><code class="docutils literal notranslate">tail_relation_vector</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.head_idx"><code class="docutils literal notranslate">head_idx</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.label"><code class="docutils literal notranslate">label</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.tail_idx"><code class="docutils literal notranslate">tail_idx</span></code></a></li>
+<li><a class="reference internal" href="#gliner.decoding.decoder.DecodedRelation.score"><code class="docutils literal notranslate">score</span></code></a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#gliner.decoding.decoder.BaseDecoder"><code class="docutils literal notranslate"><span class="pre">BaseDecoder</span></code></a><ul>
@@ -229,7 +250,7 @@ data-aria-dark="Switch to auto color mode">
 <span id="gliner-decoding-decoder-module"></span><h1>gliner.decoding.decoder module<a class="headerlink" href="#module-gliner.decoding.decoder" title="Link to this heading">¶</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="gliner.decoding.decoder.Span">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.decoding.decoder.</span></span><span class="sig-name descname"><span class="pre">Span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#Span"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.Span" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.decoding.decoder.</span></span><span class="sig-name descname"><span class="pre">Span</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#Span"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.Span" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Represents a detected entity span with its properties.</p>
 <dl class="field-list simple">
@@ -248,7 +269,7 @@ data-aria-dark="Switch to auto color mode">
 <dl class="py attribute">
 <dt class="sig sig-object py" id="gliner.decoding.decoder.Span.end">
 <span class="sig-name descname"><span class="pre">end</span></span><a class="headerlink" href="#gliner.decoding.decoder.Span.end" title="Link to this definition">¶</a></dt>
-<dd><p>Token-level end position (exclusive)</p>
+<dd><p>Token-level end position (inclusive)</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>int</p>
@@ -301,6 +322,50 @@ data-aria-dark="Switch to auto color mode">
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.Span.class_index">
+<span class="sig-name descname"><span class="pre">class_index</span></span><a class="headerlink" href="#gliner.decoding.decoder.Span.class_index" title="Link to this definition">¶</a></dt>
+<dd><p>Internal zero-based class index in the model output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.Span.span_index">
+<span class="sig-name descname"><span class="pre">span_index</span></span><a class="headerlink" href="#gliner.decoding.decoder.Span.span_index" title="Link to this definition">¶</a></dt>
+<dd><p>Internal flattened/explicit span index in the model output</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.Span.vector">
+<span class="sig-name descname"><span class="pre">vector</span></span><a class="headerlink" href="#gliner.decoding.decoder.Span.vector" title="Link to this definition">¶</a></dt>
+<dd><p>Optional contextual span vector attached after decoding</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.Span.label_vector">
+<span class="sig-name descname"><span class="pre">label_vector</span></span><a class="headerlink" href="#gliner.decoding.decoder.Span.label_vector" title="Link to this definition">¶</a></dt>
+<dd><p>Optional matched label vector attached after decoding</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any | None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="id0">
 <span class="sig-name descname"><span class="pre">start</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#id0" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -330,12 +395,96 @@ data-aria-dark="Switch to auto color mode">
 <span class="sig-name descname"><span class="pre">generated_labels</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id5" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id6">
+<span class="sig-name descname"><span class="pre">class_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id6" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id7">
+<span class="sig-name descname"><span class="pre">span_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id7" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id8">
+<span class="sig-name descname"><span class="pre">vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id8" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="id9">
+<span class="sig-name descname"><span class="pre">label_vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#id9" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 <dl class="py method">
 <dt class="sig sig-object py" id="gliner.decoding.decoder.Span.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.decoding.decoder.Span.__init__" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">entity_type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_probs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generated_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">span_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#gliner.decoding.decoder.Span.__init__" title="Link to this definition">¶</a></dt>
 <dd><dl class="field-list simple">
 </dl>
 </dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.decoding.decoder.</span></span><span class="sig-name descname"><span class="pre">DecodedRelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_idx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">score</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pair_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">head_relation_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tail_relation_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/decoding/decoder.html#DecodedRelation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>A decoded relation with internal model indices and optional vectors.</p>
+<p>The tuple payload intentionally remains <code class="docutils literal notranslate"><span class="pre">(head_idx,</span> <span class="pre">label,</span> <span class="pre">tail_idx,</span> <span class="pre">score)</span></code>
+so existing indexing, iteration, unpacking, equality checks, JSON handling,
+and <code class="docutils literal notranslate"><span class="pre">len(relation)</span> <span class="pre">==</span> <span class="pre">4</span></code> continue to work.  The additional attributes are
+decoder metadata used to gather the exact model representations after the
+final relation candidates have been selected.</p>
+<dl class="field-list simple">
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.pair_index">
+<span class="sig-name descname"><span class="pre">pair_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.pair_index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.class_index">
+<span class="sig-name descname"><span class="pre">class_index</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.class_index" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.vector">
+<span class="sig-name descname"><span class="pre">vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.vector" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.label_vector">
+<span class="sig-name descname"><span class="pre">label_vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.label_vector" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.head_relation_vector">
+<span class="sig-name descname"><span class="pre">head_relation_vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.head_relation_vector" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.tail_relation_vector">
+<span class="sig-name descname"><span class="pre">tail_relation_vector</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Any</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.tail_relation_vector" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.head_idx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">head_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.head_idx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.label">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">label</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">str</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.label" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.tail_idx">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tail_idx</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.tail_idx" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="gliner.decoding.decoder.DecodedRelation.score">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">score</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">float</span></em><a class="headerlink" href="#gliner.decoding.decoder.DecodedRelation.score" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

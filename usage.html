@@ -141,14 +141,19 @@ data-aria-dark="Switch to auto color mode">
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
 <li><a class="reference internal" href="#basic-use-case">&#128640; Basic Use Case</a><ul>
 <li><a class="reference internal" href="#understanding-the-output">Understanding the Output</a></li>
+<li><a class="reference internal" href="#returning-contextual-vectors">Returning contextual vectors</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#batch-processing">Batch Processing</a></li>
+<li><a class="reference internal" href="#batch-processing">Batch Processing</a><ul>
+<li><a class="reference internal" href="#label-descriptions">Label descriptions</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#using-different-model-architectures">Using Different Model Architectures</a><ul>
 <li><a class="reference internal" href="#uniencoder-models-standard">UniEncoder Models (Standard)</a></li>
 <li><a class="reference internal" href="#biencoder-models-scalable">BiEncoder Models (Scalable)</a></li>
 <li><a class="reference internal" href="#token-level-models">Token-Level Models</a></li>
 <li><a class="reference internal" href="#relation-extraction-models">Relation Extraction Models</a></li>
+<li><a class="reference internal" href="#returning-relation-vectors">Returning relation vectors</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced-configuration">Advanced Configuration</a><ul>
@@ -310,6 +315,64 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="6">    <span class="nb">print</span><span class="p">(</span><span class="s2">"---"</span><span class="p">)</span>
 </span></pre></div>
 </div>
+</section>
+<section id="returning-contextual-vectors">
+<h3>Returning contextual vectors<a class="headerlink" href="#returning-contextual-vectors" title="Link to this heading">¶</a></h3>
+<p>Native PyTorch models can return the contextual representation of every
+accepted entity together with the representation of its matched label. The two
+options are independent and are disabled by default:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">text</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">return_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">return_label_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="6"><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="9">    <span class="n">span_vector</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s2">"vector"</span><span class="p">]</span>
+</span><span data-line="10">    <span class="n">label_vector</span> <span class="o">=</span> <span class="n">entity</span><span class="p">[</span><span class="s2">"label_vector"</span><span class="p">]</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">inference</span></code> supports the same options for batched input:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">all_entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">texts</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">return_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">return_label_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="7"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>The optional values are detached CPU NumPy arrays with <code class="docutils literal notranslate"><span class="pre">float32</span></code> dtype. Their
+meaning depends on the model architecture:</p>
+<ul class="simple">
+<li><p>For a span-level model, <code class="docutils literal notranslate"><span class="pre">vector</span></code> is the native contextual span
+representation used by the span scorer.</p></li>
+<li><p>For a token-level model, <code class="docutils literal notranslate"><span class="pre">vector</span></code> is the mean of the contextual word
+representations covered by the detected span.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label_vector</span></code> is the matched model prompt representation. When labels are
+supplied as a label-to-description mapping, this is the representation of
+the description prompt while <code class="docutils literal notranslate"><span class="pre">entity[&quot;label&quot;]</span></code> remains the mapping key.
+For a generative model in prompt mode, it still represents the original
+scoring prompt; generated label text is not encoded a second time.</p></li>
+</ul>
+<p>The mean-pooled token-level <code class="docutils literal notranslate"><span class="pre">vector</span></code> is not guaranteed to reproduce the entity
+score when combined with <code class="docutils literal notranslate"><span class="pre">label_vector</span></code>; in particular, standard token-level
+decoding uses the nonlinear start/end/inside scorer. Both arrays are intended
+as contextual features for a downstream model.
+Only entities that survive thresholding and overlap filtering receive vectors.
+When the flags are <code class="docutils literal notranslate"><span class="pre">False</span></code>, the corresponding keys are absent, preserving the
+standard result format and inference cost.</p>
+<p>NumPy arrays are not directly JSON serializable. Convert them with <code class="docutils literal notranslate"><span class="pre">.tolist()</span></code>
+when a JSON-compatible response is required.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Vector returns currently require native PyTorch inference. Existing ONNX and
+OpenVINO exports do not expose these intermediate representations and raise
+<code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> when either option is requested. Stateless inference with
+a streaming-span model is supported, but stateful streaming sessions do not
+currently return vectors.</p>
+</div>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Stateless GLiNER calls do not automatically window long documents. If the text
@@ -355,6 +418,28 @@ example, prompt-budget details, and architecture-specific behavior.</p>
 <li><p><strong>Efficient</strong>: Better GPU utilization</p></li>
 <li><p><strong>Scalable</strong>: Handle large document collections</p></li>
 </ul>
+<section id="label-descriptions">
+<h3>Label descriptions<a class="headerlink" href="#label-descriptions" title="Link to this heading">¶</a></h3>
+<p>Models trained to use descriptive labels can receive a dictionary. Dictionary keys are
+returned in predictions, while values are encoded as the label prompts:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="2">    <span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual, including fictional characters"</span><span class="p">,</span>
+</span><span data-line="3">    <span class="s2">"organization"</span><span class="p">:</span> <span class="s2">"A company, institution, agency, or other group of people"</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">}</span>
+</span><span data-line="5"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For batched inference, provide one dictionary or list of labels per text:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">label_sets</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="2">    <span class="p">{</span><span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual"</span><span class="p">},</span>
+</span><span data-line="3">    <span class="p">{</span><span class="s2">"location"</span><span class="p">:</span> <span class="s2">"A geographical place"</span><span class="p">},</span>
+</span><span data-line="4"><span class="p">]</span>
+</span><span data-line="5"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">([</span><span class="s2">"Alice arrived"</span><span class="p">,</span> <span class="s2">"Paris is sunny"</span><span class="p">],</span> <span class="n">label_sets</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Descriptions must be unique within each label set. They are not supported with
+precomputed prompt embeddings.</p>
+</section>
 </section>
 <section id="using-different-model-architectures">
 <h2>Using Different Model Architectures<a class="headerlink" href="#using-different-model-architectures" title="Link to this heading">¶</a></h2>
@@ -488,6 +573,58 @@ example, prompt-budget details, and architecture-specific behavior.</p>
 </span></pre></div>
 </div>
 </details>
+</section>
+<section id="returning-relation-vectors">
+<h3>Returning relation vectors<a class="headerlink" href="#returning-relation-vectors" title="Link to this heading">¶</a></h3>
+<p>Relation extraction returns entity and relation representations through the
+same options. They are available from both batched <code class="docutils literal notranslate"><span class="pre">inference</span></code> and the
+single-text <code class="docutils literal notranslate"><span class="pre">predict_relations</span></code> convenience method:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">all_entities</span><span class="p">,</span> <span class="n">all_relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="2">    <span class="p">[</span><span class="n">text</span><span class="p">],</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="n">entity_labels</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">relations</span><span class="o">=</span><span class="n">relation_labels</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">return_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">return_label_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="7"><span class="p">)</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="n">entities</span><span class="p">,</span> <span class="n">relations</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_relations</span><span class="p">(</span>
+</span><span data-line="10">    <span class="n">text</span><span class="p">,</span>
+</span><span data-line="11">    <span class="n">labels</span><span class="o">=</span><span class="n">entity_labels</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">relations</span><span class="o">=</span><span class="n">relation_labels</span><span class="p">,</span>
+</span><span data-line="13">    <span class="n">return_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="14">    <span class="n">return_label_vectors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span data-line="15"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>The returned entity dictionaries use <code class="docutils literal notranslate"><span class="pre">vector</span></code> and <code class="docutils literal notranslate"><span class="pre">label_vector</span></code> as described
+above. A relation dictionary always keeps its normal <code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">tail</span></code>,
+<code class="docutils literal notranslate"><span class="pre">relation</span></code>, and <code class="docutils literal notranslate"><span class="pre">score</span></code> fields, and adds the requested arrays according to its
+relation scorer:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Relation scorer</p></th>
+<th class="head"><p>Fields added by <code class="docutils literal notranslate"><span class="pre">return_vectors=True</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Pair projection</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">vector</span></code>, the projected directed head-tail pair representation</p></td>
+</tr>
+<tr class="row-odd"><td><p>Triple scorer</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">head_relation_vector</span></code> and <code class="docutils literal notranslate"><span class="pre">tail_relation_vector</span></code>, the two entity-side scorer inputs</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>With <code class="docutils literal notranslate"><span class="pre">return_label_vectors=True</span></code>, both scorer types also add <code class="docutils literal notranslate"><span class="pre">label_vector</span></code>,
+the matched relation-prompt representation. All relation vectors are detached
+CPU <code class="docutils literal notranslate"><span class="pre">float32</span></code> NumPy arrays. For a pair projection, <code class="docutils literal notranslate"><span class="pre">vector</span></code> is the
+representation directly compared with <code class="docutils literal notranslate"><span class="pre">label_vector</span></code>; a triple scorer has no
+single pair vector, which is why its two exact entity-side inputs are returned
+instead. The <code class="docutils literal notranslate"><span class="pre">head</span></code> and <code class="docutils literal notranslate"><span class="pre">tail</span></code> sub-dictionaries are unchanged; use their
+<code class="docutils literal notranslate"><span class="pre">entity_idx</span></code> values to locate the corresponding entity dictionaries and entity
+vectors.</p>
 </section>
 </section>
 <section id="advanced-configuration">

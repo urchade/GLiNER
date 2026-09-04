@@ -138,15 +138,7 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel"><code class="docutils literal notranslate"><span class="pre">OpenVINOModel</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.openvino.OpenVINOModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6">
@@ -179,38 +171,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.runtime.openvino">
-<span id="gliner-runtime-openvino-module"></span><h1>gliner.runtime.openvino module<a class="headerlink" href="#module-gliner.runtime.openvino" title="Link to this heading">¶</a></h1>
-<p>OpenVINO adapter for exported GLiNER models.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.openvino.</span></span><span class="sig-name descname"><span class="pre">OpenVINOModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a></p>
-<p>Run any supported exported GLiNER ONNX or IR graph with OpenVINO.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.runtime_name">
-<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'openvino'</span></em><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.runtime_name" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.openvino.OpenVINOModel.run_inference">
-<span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.openvino.OpenVINOModel.run_inference" title="Link to this definition">¶</a></dt>
-<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="gliner-runtime-openvino-module">
+<h1>gliner.runtime.openvino module<a class="headerlink" href="#gliner-runtime-openvino-module" title="Link to this heading">¶</a></h1>
 </section>
 
         </article><button class="back-to-top" type="button">

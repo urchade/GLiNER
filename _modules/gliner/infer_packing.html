@@ -192,7 +192,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="18">
 </span><span data-line="19">
 <div class="viewcode-block" id="InferencePackingConfig">
-<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.InferencePackingConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.infer_packing.InferencePackingConfig">[docs]</a>
 </span><span data-line="20"><span class="nd">@dataclass</span>
 </span><span data-line="21"><span class="k">class</span><span class="w"> </span><span class="nc">InferencePackingConfig</span><span class="p">:</span>
 </span><span data-line="22"><span class="w">    </span><span class="sd">"""Configuration describing how sequences should be packed.</span>
@@ -211,7 +211,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="34">
 </span><span data-line="35">
 <div class="viewcode-block" id="PackedBatch">
-<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.PackedBatch">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.infer_packing.PackedBatch">[docs]</a>
 </span><span data-line="36"><span class="nd">@dataclass</span>
 </span><span data-line="37"><span class="k">class</span><span class="w"> </span><span class="nc">PackedBatch</span><span class="p">:</span>
 </span><span data-line="38"><span class="w">    </span><span class="sd">"""Container describing a packed collection of requests.</span>
@@ -259,7 +259,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="79">
 </span><span data-line="80">
 <div class="viewcode-block" id="block_diag_mask">
-<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.block_diag_mask">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.infer_packing.block_diag_mask">[docs]</a>
 </span><span data-line="81"><span class="k">def</span><span class="w"> </span><span class="nf">block_diag_mask</span><span class="p">(</span><span class="n">segment_ids</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">LongTensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">torch</span><span class="o">.</span><span class="n">BoolTensor</span><span class="p">:</span>
 </span><span data-line="82"><span class="w">    </span><span class="sd">"""Construct a block diagonal mask from per-token segment ids.</span>
 </span><span data-line="83">
@@ -419,7 +419,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="236">
 </span><span data-line="237">
 <div class="viewcode-block" id="pack_requests">
-<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.pack_requests">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.infer_packing.pack_requests">[docs]</a>
 </span><span data-line="238"><span class="k">def</span><span class="w"> </span><span class="nf">pack_requests</span><span class="p">(</span><span class="n">requests</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Request</span><span class="p">],</span> <span class="n">cfg</span><span class="p">:</span> <span class="n">InferencePackingConfig</span><span class="p">,</span> <span class="n">pad_token_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">PackedBatch</span><span class="p">:</span>
 </span><span data-line="239"><span class="w">    </span><span class="sd">"""Pack a collection of requests into one or more streams.</span>
 </span><span data-line="240">
@@ -538,7 +538,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="352">
 </span><span data-line="353">
 <div class="viewcode-block" id="unpack_spans">
-<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.unpack_spans">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.infer_packing.html#gliner.infer_packing.unpack_spans">[docs]</a>
 </span><span data-line="354"><span class="k">def</span><span class="w"> </span><span class="nf">unpack_spans</span><span class="p">(</span><span class="n">per_token_outputs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span> <span class="n">packed</span><span class="p">:</span> <span class="n">PackedBatch</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">Any</span><span class="p">]:</span>
 </span><span data-line="355"><span class="w">    </span><span class="sd">"""Unpack encoder outputs back to the original request layout.</span>
 </span><span data-line="356">

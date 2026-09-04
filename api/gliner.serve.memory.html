@@ -138,19 +138,7 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator"><code class="docutils literal notranslate"><span class="pre">GLiNERMemoryEstimator</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.measure_cuda_context"><code class="docutils literal notranslate">measure_cuda_context()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.measure_model_memory"><code class="docutils literal notranslate">measure_model_memory()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.available_memory"><code class="docutils literal notranslate">available_memory()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.calibrate"><code class="docutils literal notranslate">calibrate()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.per_sample_at"><code class="docutils literal notranslate">per_sample_at()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.serve.memory.GLiNERMemoryEstimator.batch_size_fn"><code class="docutils literal notranslate">batch_size_fn()</span></code></a></li>
-</ul>
-</li>
-</ul>
-</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6">
@@ -179,89 +167,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.serve.memory">
-<span id="gliner-serve-memory-module"></span><h1>gliner.serve.memory module<a class="headerlink" href="#module-gliner.serve.memory" title="Link to this heading">¶</a></h1>
-<p>Memory estimation for GLiNER via precomputed calibration table.</p>
-<p>Startup calibration runs the model on probe batches at power-of-two sequence
-lengths and records peak GPU memory per sample. At request time <code class="docutils literal notranslate"><span class="pre">batch_size_fn</span></code>
-picks the largest precompiled batch size that satisfies</p>
-<blockquote>
-<div><p>per_sample(seq_len) * N  &lt;=  total_gpu - cuda_context - model_weights</p>
-</div></blockquote>
-<p>using a pessimistic (rounded-up) seq_len and a safety factor on per-sample
-memory. Labels and relations are NOT scaled as a separate dimension — they are
-part of the model input, so callers must include their word count in
-<code class="docutils literal notranslate"><span class="pre">seq_len</span></code> when invoking <code class="docutils literal notranslate"><span class="pre">batch_size_fn</span></code>.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.serve.memory.</span></span><span class="sig-name descname"><span class="pre">GLiNERMemoryEstimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>Precomputed memory table for GLiNER inference.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">safety_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_memory_fraction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.9</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calibration_probe_batch_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.measure_cuda_context">
-<span class="sig-name descname"><span class="pre">measure_cuda_context</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_cuda_context"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.measure_cuda_context" title="Link to this definition">¶</a></dt>
-<dd><p>Record CUDA context overhead. Must be called before the model loads.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.measure_model_memory">
-<span class="sig-name descname"><span class="pre">measure_model_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.measure_model_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.measure_model_memory" title="Link to this definition">¶</a></dt>
-<dd><p>Record model weight memory. Must be called after the model loads.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.available_memory">
-<span class="sig-name descname"><span class="pre">available_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.available_memory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.available_memory" title="Link to this definition">¶</a></dt>
-<dd><p>Budget for a batch: <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.calibrate">
-<span class="sig-name descname"><span class="pre">calibrate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">batch_method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_seq_len</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">64</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.calibrate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.calibrate" title="Link to this definition">¶</a></dt>
-<dd><p>Populate <code class="docutils literal notranslate"><span class="pre">per_sample_table</span></code> across power-of-two seq lengths.</p>
-<p>Uses a single dummy label so the probed sequence length is dominated
-by text tokens; label/relation words are accounted for at lookup time
-by the caller extending <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.per_sample_at">
-<span class="sig-name descname"><span class="pre">per_sample_at</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.per_sample_at"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.per_sample_at" title="Link to this definition">¶</a></dt>
-<dd><p>Pessimistic per-sample memory at or above <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.serve.memory.GLiNERMemoryEstimator.batch_size_fn">
-<span class="sig-name descname"><span class="pre">batch_size_fn</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_len</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precompiled_sizes</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/serve/memory.html#GLiNERMemoryEstimator.batch_size_fn"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.serve.memory.GLiNERMemoryEstimator.batch_size_fn" title="Link to this definition">¶</a></dt>
-<dd><p>Largest precompiled batch size satisfying <code class="docutils literal notranslate"><span class="pre">per_sample</span> <span class="pre">*</span> <span class="pre">N</span> <span class="pre">&lt;=</span> <span class="pre">budget</span></code>.</p>
-<p>Budget = <code class="docutils literal notranslate"><span class="pre">total_gpu</span> <span class="pre">-</span> <span class="pre">cuda_context</span> <span class="pre">-</span> <span class="pre">model_weights</span></code> (times the
-configured <code class="docutils literal notranslate"><span class="pre">target_memory_fraction</span></code>). The caller is responsible for
-folding label / relation word counts into <code class="docutils literal notranslate"><span class="pre">seq_len</span></code>.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="gliner-serve-memory-module">
+<h1>gliner.serve.memory module<a class="headerlink" href="#gliner-serve-memory-module" title="Link to this heading">¶</a></h1>
 </section>
 
         </article><button class="back-to-top" type="button">

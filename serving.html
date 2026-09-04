@@ -258,6 +258,18 @@ coalesces them into a single forward pass:</p>
 </span><span data-line="4"><span class="p">)</span>  <span class="c1"># → list[dict], one per input text</span>
 </span></pre></div>
 </div>
+<p>Label descriptions and per-text label sets use the same API as local inference:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">outputs</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+</span><span data-line="2">    <span class="p">[</span><span class="s2">"John works at Google"</span><span class="p">,</span> <span class="s2">"Paris is in France"</span><span class="p">],</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="p">[</span>
+</span><span data-line="4">        <span class="p">{</span><span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual"</span><span class="p">,</span> <span class="s2">"organization"</span><span class="p">:</span> <span class="s2">"A company or institution"</span><span class="p">},</span>
+</span><span data-line="5">        <span class="p">{</span><span class="s2">"location"</span><span class="p">:</span> <span class="s2">"A geographical place"</span><span class="p">},</span>
+</span><span data-line="6">    <span class="p">],</span>
+</span><span data-line="7"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Each dictionary key is returned as the entity label; its value is the prompt encoded
+for that text. A single dictionary is shared across every input text.</p>
 <p>Network or server errors surface as <code class="docutils literal notranslate"><span class="pre">gliner.serve.client.GLiNERClientError</span></code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>

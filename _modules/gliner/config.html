@@ -182,14 +182,14 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="8">
 </span><span data-line="9">
 <div class="viewcode-block" id="RNNEncoderConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.RNNEncoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.RNNEncoderConfig">[docs]</a>
 </span><span data-line="10"><span class="k">class</span><span class="w"> </span><span class="nc">RNNEncoderConfig</span><span class="p">(</span><span class="n">PretrainedConfig</span><span class="p">):</span>
 </span><span data-line="11"><span class="w">    </span><span class="sd">"""Configuration for an RNN that contextualizes existing hidden states."""</span>
 </span><span data-line="12">
 </span><span data-line="13">    <span class="n">model_type</span> <span class="o">=</span> <span class="s2">"rnn"</span>
 </span><span data-line="14">
 <div class="viewcode-block" id="RNNEncoderConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.RNNEncoderConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.RNNEncoderConfig.__init__">[docs]</a>
 </span><span data-line="15">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="16">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="17">        <span class="n">hidden_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span>
@@ -233,7 +233,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="53">
 </span><span data-line="54">
 <div class="viewcode-block" id="normalize_context_encoder_config">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.normalize_context_encoder_config">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.normalize_context_encoder_config">[docs]</a>
 </span><span data-line="55"><span class="k">def</span><span class="w"> </span><span class="nf">normalize_context_encoder_config</span><span class="p">(</span>
 </span><span data-line="56">    <span class="n">encoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">dict</span><span class="p">,</span> <span class="n">ContextEncoderConfig</span><span class="p">]],</span>
 </span><span data-line="57">    <span class="o">*</span><span class="p">,</span>
@@ -304,7 +304,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="121">
 </span><span data-line="122">
 <div class="viewcode-block" id="BaseGLiNERConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BaseGLiNERConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BaseGLiNERConfig">[docs]</a>
 </span><span data-line="123"><span class="k">class</span><span class="w"> </span><span class="nc">BaseGLiNERConfig</span><span class="p">(</span><span class="n">PretrainedConfig</span><span class="p">):</span>
 </span><span data-line="124"><span class="w">    </span><span class="sd">"""Base configuration class for all GLiNER models."""</span>
 </span><span data-line="125">
@@ -313,7 +313,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="128">
 </span><span data-line="129">    <span class="c1"># Keep positional compatibility for downstream callers of this public config API.</span>
 <div class="viewcode-block" id="BaseGLiNERConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BaseGLiNERConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BaseGLiNERConfig.__init__">[docs]</a>
 </span><span data-line="130">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>  <span class="c1"># noqa: PLR0917, RUF100</span>
 </span><span data-line="131">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="132">        <span class="n">model_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">"microsoft/deberta-v3-small"</span><span class="p">,</span>
@@ -435,12 +435,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="246">
 </span><span data-line="247">
 <div class="viewcode-block" id="UniEncoderConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderConfig">[docs]</a>
 </span><span data-line="248"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
 </span><span data-line="249"><span class="w">    </span><span class="sd">"""Base configuration for uni-encoder GLiNER models."""</span>
 </span><span data-line="250">
 <div class="viewcode-block" id="UniEncoderConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderConfig.__init__">[docs]</a>
 </span><span data-line="251">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="252">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
@@ -448,12 +448,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="253">
 </span><span data-line="254">
 <div class="viewcode-block" id="UniEncoderSpanConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanConfig">[docs]</a>
 </span><span data-line="255"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
 </span><span data-line="256"><span class="w">    </span><span class="sd">"""Configuration for uni-encoder span-based GLiNER model."""</span>
 </span><span data-line="257">
 <div class="viewcode-block" id="UniEncoderSpanConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanConfig.__init__">[docs]</a>
 </span><span data-line="258">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="259">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="260">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">"token_level"</span><span class="p">:</span>
@@ -465,12 +465,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="264">
 </span><span data-line="265">
 <div class="viewcode-block" id="UniEncoderTokenConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenConfig">[docs]</a>
 </span><span data-line="266"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
 </span><span data-line="267"><span class="w">    </span><span class="sd">"""Configuration for uni-encoder token-based GLiNER model."""</span>
 </span><span data-line="268">
 <div class="viewcode-block" id="UniEncoderTokenConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenConfig.__init__">[docs]</a>
 </span><span data-line="269">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="270">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="271">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">"token_level"</span>
@@ -480,12 +480,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="273">
 </span><span data-line="274">
 <div class="viewcode-block" id="UniEncoderSpanDecoderConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanDecoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanDecoderConfig">[docs]</a>
 </span><span data-line="275"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanDecoderConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
 </span><span data-line="276"><span class="w">    </span><span class="sd">"""Configuration for uni-encoder span model with decoder for label generation."""</span>
 </span><span data-line="277">
 <div class="viewcode-block" id="UniEncoderSpanDecoderConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanDecoderConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanDecoderConfig.__init__">[docs]</a>
 </span><span data-line="278">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="279">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="280">        <span class="n">labels_decoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -528,10 +528,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="315">
 </span><span data-line="316">
 <div class="viewcode-block" id="UniEncoderTokenDecoderConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenDecoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenDecoderConfig">[docs]</a>
 </span><span data-line="317"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenDecoderConfig</span><span class="p">(</span><span class="n">UniEncoderSpanDecoderConfig</span><span class="p">):</span>
 <div class="viewcode-block" id="UniEncoderTokenDecoderConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenDecoderConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenDecoderConfig.__init__">[docs]</a>
 </span><span data-line="318">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="319">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="320">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">"token_level"</span>
@@ -542,7 +542,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="323">
 </span><span data-line="324">
 <div class="viewcode-block" id="StreamingSpanConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.StreamingSpanConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.StreamingSpanConfig">[docs]</a>
 </span><span data-line="325"><span class="k">class</span><span class="w"> </span><span class="nc">StreamingSpanConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
 </span><span data-line="326"><span class="w">    </span><span class="sd">"""Configuration for span NER backed directly by a causal decoder.</span>
 </span><span data-line="327">
@@ -558,7 +558,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="337">    <span class="n">model_type</span> <span class="o">=</span> <span class="s2">"gliner_streaming_span"</span>
 </span><span data-line="338">
 <div class="viewcode-block" id="StreamingSpanConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.StreamingSpanConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.StreamingSpanConfig.__init__">[docs]</a>
 </span><span data-line="339">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="340">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="341">        <span class="n">model_name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -625,10 +625,10 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="400">
 </span><span data-line="401">
 <div class="viewcode-block" id="UniEncoderRelexConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderRelexConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderRelexConfig">[docs]</a>
 </span><span data-line="402"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderRelexConfig</span><span class="p">(</span><span class="n">UniEncoderConfig</span><span class="p">):</span>
 <div class="viewcode-block" id="UniEncoderRelexConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderRelexConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderRelexConfig.__init__">[docs]</a>
 </span><span data-line="403">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="404">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="405">        <span class="n">relations_layer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -691,12 +691,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="460">
 </span><span data-line="461">
 <div class="viewcode-block" id="UniEncoderSpanRelexConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanRelexConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanRelexConfig">[docs]</a>
 </span><span data-line="462"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderSpanRelexConfig</span><span class="p">(</span><span class="n">UniEncoderRelexConfig</span><span class="p">):</span>
 </span><span data-line="463"><span class="w">    </span><span class="sd">"""Configuration for uni-encoder span model with relation extraction."""</span>
 </span><span data-line="464">
 <div class="viewcode-block" id="UniEncoderSpanRelexConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderSpanRelexConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderSpanRelexConfig.__init__">[docs]</a>
 </span><span data-line="465">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="466">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="467">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"gliner_uni_encoder_span_relex"</span>
@@ -707,12 +707,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="470">
 </span><span data-line="471">
 <div class="viewcode-block" id="UniEncoderTokenRelexConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenRelexConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenRelexConfig">[docs]</a>
 </span><span data-line="472"><span class="k">class</span><span class="w"> </span><span class="nc">UniEncoderTokenRelexConfig</span><span class="p">(</span><span class="n">UniEncoderRelexConfig</span><span class="p">):</span>
 </span><span data-line="473"><span class="w">    </span><span class="sd">"""Configuration for uni-encoder token-level model with relation extraction."""</span>
 </span><span data-line="474">
 <div class="viewcode-block" id="UniEncoderTokenRelexConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.UniEncoderTokenRelexConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.UniEncoderTokenRelexConfig.__init__">[docs]</a>
 </span><span data-line="475">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="476">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="477">        <span class="bp">self</span><span class="o">.</span><span class="n">model_type</span> <span class="o">=</span> <span class="s2">"gliner_uni_encoder_token_relex"</span>
@@ -722,12 +722,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="479">
 </span><span data-line="480">
 <div class="viewcode-block" id="BiEncoderConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderConfig">[docs]</a>
 </span><span data-line="481"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
 </span><span data-line="482"><span class="w">    </span><span class="sd">"""Base configuration for bi-encoder GLiNER models."""</span>
 </span><span data-line="483">
 <div class="viewcode-block" id="BiEncoderConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderConfig.__init__">[docs]</a>
 </span><span data-line="484">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">labels_encoder_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="485"><span class="w">        </span><span class="sd">"""Initialize BiEncoderConfig.</span>
 </span><span data-line="486">
@@ -750,12 +750,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="501">
 </span><span data-line="502">
 <div class="viewcode-block" id="BiEncoderSpanConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderSpanConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderSpanConfig">[docs]</a>
 </span><span data-line="503"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderSpanConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
 </span><span data-line="504"><span class="w">    </span><span class="sd">"""Configuration for bi-encoder span-based GLiNER model."""</span>
 </span><span data-line="505">
 <div class="viewcode-block" id="BiEncoderSpanConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderSpanConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderSpanConfig.__init__">[docs]</a>
 </span><span data-line="506">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="507">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="508">        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">==</span> <span class="s2">"token_level"</span><span class="p">:</span>
@@ -766,12 +766,12 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="511">
 </span><span data-line="512">
 <div class="viewcode-block" id="BiEncoderTokenConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderTokenConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderTokenConfig">[docs]</a>
 </span><span data-line="513"><span class="k">class</span><span class="w"> </span><span class="nc">BiEncoderTokenConfig</span><span class="p">(</span><span class="n">BiEncoderConfig</span><span class="p">):</span>
 </span><span data-line="514"><span class="w">    </span><span class="sd">"""Configuration for bi-encoder token-based GLiNER model."""</span>
 </span><span data-line="515">
 <div class="viewcode-block" id="BiEncoderTokenConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.BiEncoderTokenConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.BiEncoderTokenConfig.__init__">[docs]</a>
 </span><span data-line="516">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 </span><span data-line="517">        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 </span><span data-line="518">        <span class="bp">self</span><span class="o">.</span><span class="n">span_mode</span> <span class="o">=</span> <span class="s2">"token_level"</span>
@@ -781,7 +781,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="520">
 </span><span data-line="521">
 <div class="viewcode-block" id="GLiNERConfig">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.GLiNERConfig">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.GLiNERConfig">[docs]</a>
 </span><span data-line="522"><span class="k">class</span><span class="w"> </span><span class="nc">GLiNERConfig</span><span class="p">(</span><span class="n">BaseGLiNERConfig</span><span class="p">):</span>
 </span><span data-line="523"><span class="w">    </span><span class="sd">"""Legacy configuration class that auto-detects model type.</span>
 </span><span data-line="524">
@@ -795,7 +795,7 @@ data-aria-dark="Switch to auto color mode">
 </span><span data-line="532"><span class="sd">    """</span>
 </span><span data-line="533">
 <div class="viewcode-block" id="GLiNERConfig.__init__">
-<a class="viewcode-back" href="../../api/gliner.config.html#gliner.GLiNERConfig.__init__">[docs]</a>
+<a class="viewcode-back" href="../../api/gliner.config.html#gliner.config.GLiNERConfig.__init__">[docs]</a>
 </span><span data-line="534">    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
 </span><span data-line="535">        <span class="bp">self</span><span class="p">,</span>
 </span><span data-line="536">        <span class="n">labels_encoder</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>

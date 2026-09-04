@@ -139,28 +139,6 @@ data-aria-dark="Switch to auto color mode">
       <i class="i-lucide close"></i>
     </button>
     <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel"><code class="docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.device"><code class="docutils literal notranslate">device</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.prepare_inputs"><code class="docutils literal notranslate">prepare_inputs()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.forward"><code class="docutils literal notranslate">forward()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gliner.runtime.ONNXRuntimeModel"><code class="docutils literal notranslate"><span class="pre">ONNXRuntimeModel</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.runtime.ONNXRuntimeModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.ONNXRuntimeModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.ONNXRuntimeModel.device"><code class="docutils literal notranslate">device</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.ONNXRuntimeModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#gliner.runtime.OpenVINOModel"><code class="docutils literal notranslate"><span class="pre">OpenVINOModel</span></code></a><ul>
-<li><a class="reference internal" href="#gliner.runtime.OpenVINOModel.runtime_name"><code class="docutils literal notranslate">runtime_name</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.OpenVINOModel.__init__"><code class="docutils literal notranslate">__init__()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.runtime.OpenVINOModel.run_inference"><code class="docutils literal notranslate">run_inference()</span></code></a></li>
-</ul>
-</li>
 <li><a class="reference internal" href="#submodules">Submodules</a></li>
 </ul>
 </div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
@@ -192,128 +170,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.runtime">
-<span id="gliner-runtime-package"></span><h1>gliner.runtime package<a class="headerlink" href="#module-gliner.runtime" title="Link to this heading">¶</a></h1>
-<p>Runtime adapters for exported GLiNER models.</p>
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.</span></span><span class="sig-name descname"><span class="pre">BaseRuntimeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
-<p>Backend-independent adapter for exported GLiNER models.</p>
-<p>Concrete adapters only need to create and introspect their backend session,
-then implement <a class="reference internal" href="#gliner.runtime.BaseRuntimeModel.run_inference" title="gliner.runtime.BaseRuntimeModel.run_inference"><code class="xref py py-meth docutils literal notranslate"><span class="pre">run_inference()</span></code></a>. Input binding and GLiNER output
-construction are shared because those semantics are encoded in the graph’s
-input and output names.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.runtime_name">
-<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'runtime'</span></em><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.runtime_name" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_names</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_names</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.device">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.device" title="Link to this definition">¶</a></dt>
-<dd><p>Return the host device used to stage runtime inputs.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.prepare_inputs">
-<span class="sig-name descname"><span class="pre">prepare_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.prepare_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.prepare_inputs" title="Link to this definition">¶</a></dt>
-<dd><p>Convert values to NumPy, filter extras, and validate graph inputs.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.forward">
-<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.forward" title="Link to this definition">¶</a></dt>
-<dd><p>Bind graph inputs, execute the backend, and return a GLiNER output.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.BaseRuntimeModel.run_inference">
-<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/base.html#BaseRuntimeModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.BaseRuntimeModel.run_inference" title="Link to this definition">¶</a></dt>
-<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.runtime.ONNXRuntimeModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.</span></span><span class="sig-name descname"><span class="pre">ONNXRuntimeModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/onnx.html#ONNXRuntimeModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.ONNXRuntimeModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a></p>
-<p>Run any supported exported GLiNER graph with ONNX Runtime.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.runtime.ONNXRuntimeModel.runtime_name">
-<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'onnxruntime'</span></em><a class="headerlink" href="#gliner.runtime.ONNXRuntimeModel.runtime_name" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.ONNXRuntimeModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session_options</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">providers</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/onnx.html#ONNXRuntimeModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.ONNXRuntimeModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="gliner.runtime.ONNXRuntimeModel.device">
-<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">device</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">device</span></em><a class="headerlink" href="#gliner.runtime.ONNXRuntimeModel.device" title="Link to this definition">¶</a></dt>
-<dd><p>Return the host device used to stage runtime inputs.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.ONNXRuntimeModel.run_inference">
-<span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/onnx.html#ONNXRuntimeModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.ONNXRuntimeModel.run_inference" title="Link to this definition">¶</a></dt>
-<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="gliner.runtime.OpenVINOModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.runtime.</span></span><span class="sig-name descname"><span class="pre">OpenVINOModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.OpenVINOModel" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <a class="reference internal" href="gliner.runtime.base.html#gliner.runtime.base.BaseRuntimeModel" title="gliner.runtime.base.BaseRuntimeModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseRuntimeModel</span></code></a></p>
-<p>Run any supported exported GLiNER ONNX or IR graph with OpenVINO.</p>
-<dl class="field-list simple">
-</dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="gliner.runtime.OpenVINOModel.runtime_name">
-<span class="sig-name descname"><span class="pre">runtime_name</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'openvino'</span></em><a class="headerlink" href="#gliner.runtime.OpenVINOModel.runtime_name" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.OpenVINOModel.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compiled_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CPU'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">core</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.__init__"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.OpenVINOModel.__init__" title="Link to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="gliner.runtime.OpenVINOModel.run_inference">
-<span class="sig-name descname"><span class="pre">run_inference</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/runtime/openvino.html#OpenVINOModel.run_inference"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.runtime.OpenVINOModel.run_inference" title="Link to this definition">¶</a></dt>
-<dd><p>Execute a prepared input mapping and return outputs keyed by name.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-</dd></dl>
-
+          <section id="gliner-runtime-package">
+<h1>gliner.runtime package<a class="headerlink" href="#gliner-runtime-package" title="Link to this heading">¶</a></h1>
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
