@@ -194,7 +194,8 @@ class BaseProcessor(ABC):
             prompt: List[str] = []
             for ent in ents:
                 prompt.append(self.ent_token)
-                if add_entities:
+                # Empty strings produce no subtokens and must not count as prompt words.
+                if add_entities and str(ent):
                     prompt.append(str(ent))
 
             prompt += self._extra_prompt_tokens(i, text, ents)
@@ -355,6 +356,10 @@ class BaseProcessor(ABC):
                 types = list(set([el[-1] for el in b[key]] + negs_i))
                 random.shuffle(types)
                 types = types[: int(self.config.max_types)]
+
+            if key == "ner" and not b[key] and not types:
+                # Keep one entity marker and an all-negative target for empty examples.
+                types = [""]
 
             class_to_id = {k: v for v, k in enumerate(types, start=1)}
             id_to_class = {k: v for v, k in class_to_id.items()}
@@ -662,7 +667,7 @@ class StreamingSpanProcessor(UniEncoderSpanProcessor):
             if include_flags[i]:
                 ents = self._maybe_remap_entities(self._select_entities(i, entities, blank))
                 for ent in ents:
-                    if add_entities:
+                    if add_entities and str(ent):
                         prompt.append(str(ent))
                     prompt.append(self.label_token)
                 prompt.append(self.sep_token)
@@ -1148,6 +1153,9 @@ class BaseBiEncoderProcessor(BaseProcessor):
             classes.extend(types)
         random.shuffle(classes)
         classes = list(set(classes))[: int(self.config.max_types * len(batch_list))]
+        if not classes and batch_list and all(not b["ner"] for b in batch_list):
+            # Bi-encoders share candidates, so only an entirely empty pool needs a fallback.
+            classes = [""]
         class_to_id = {k: v for v, k in enumerate(classes, start=1)}
         id_to_class = {k: v for v, k in class_to_id.items()}
 
@@ -1741,6 +1749,10 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 random.shuffle(types)
                 types = types[: int(self.config.max_types)]
 
+            if not b["ner"] and not types:
+                # Supply an unnamed NER candidate without inventing relation types.
+                types = [""]
+
             class_to_id = {k: v for v, k in enumerate(types, start=1)}
             id_to_class = {k: v for v, k in class_to_id.items()}
             class_to_ids.append(class_to_id)
@@ -2223,7 +2235,9 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
 
             prompt: List[str] = []
             for ent in ents:
-                prompt += [self.ent_token, str(ent)]
+                prompt.append(self.ent_token)
+                if str(ent):
+                    prompt.append(str(ent))
             prompt.append(self.sep_token)
 
             for rel in rels:
