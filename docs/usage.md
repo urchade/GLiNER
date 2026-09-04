@@ -113,6 +113,32 @@ for i, entities in enumerate(all_entities):
 - **Efficient**: Better GPU utilization
 - **Scalable**: Handle large document collections
 
+### Label descriptions
+
+Models trained to use descriptive labels can receive a dictionary. Dictionary keys are
+returned in predictions, while values are encoded as the label prompts:
+
+```python
+labels = {
+    "person": "A human individual, including fictional characters",
+    "organization": "A company, institution, agency, or other group of people",
+}
+entities = model.predict_entities(text, labels)
+```
+
+For batched inference, provide one dictionary or list of labels per text:
+
+```python
+label_sets = [
+    {"person": "A human individual"},
+    {"location": "A geographical place"},
+]
+entities = model.inference(["Alice arrived", "Paris is sunny"], label_sets)
+```
+
+Descriptions must be unique within each label set. They are not supported with
+precomputed prompt embeddings.
+
 ## Using Different Model Architectures
 
 GLiNER supports multiple architecture variants, each optimized for different scenarios.

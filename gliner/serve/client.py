@@ -5,6 +5,18 @@ from typing import Any, Dict, List, Union, Optional
 DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_ROUTE_PREFIX = "/gliner"
 
+LabelSet = Union[List[str], Dict[str, str]]
+Labels = Union[LabelSet, List[LabelSet]]
+
+
+def _labels_for_texts(labels: Labels, num_texts: int) -> List[LabelSet]:
+    """Return one label set per text while preserving shared label sets."""
+    if isinstance(labels, list) and labels and isinstance(labels[0], (list, dict)):
+        if len(labels) != num_texts:
+            raise ValueError(f"Per-text labels must have length {num_texts}, got {len(labels)}")
+        return labels
+    return [labels] * num_texts
+
 
 class GLiNERClientError(RuntimeError):
     """Raised when the GLiNER server returns an error or is unreachable."""
@@ -46,7 +58,7 @@ class GLiNERClient:
     def _build_payload(
         self,
         text: str,
-        labels: List[str],
+        labels: LabelSet,
         relations: Optional[List[str]],
         threshold: Optional[float],
         relation_threshold: Optional[float],
@@ -92,7 +104,7 @@ class GLiNERClient:
     def predict(
         self,
         text: Union[str, List[str]],
-        labels: List[str],
+        labels: Labels,
         relations: Optional[List[str]] = None,
         threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
@@ -103,13 +115,14 @@ class GLiNERClient:
         """Blocking prediction. ``str`` in -> ``dict`` out; ``list`` in -> ``list`` out."""
         single = isinstance(text, str)
         items = [text] if single else list(text)
+        labels_list = _labels_for_texts(labels, len(items))
 
         payloads = [
             self._build_payload(
-                t, labels, relations, threshold, relation_threshold,
+                t, label_set, relations, threshold, relation_threshold,
                 flat_ner, multi_label, adapter_id,
             )
-            for t in items
+            for t, label_set in zip(items, labels_list)
         ]
 
         if len(payloads) == 1:
@@ -126,7 +139,7 @@ class GLiNERClient:
     async def predict_async(
         self,
         text: Union[str, List[str]],
-        labels: List[str],
+        labels: Labels,
         relations: Optional[List[str]] = None,
         threshold: Optional[float] = None,
         relation_threshold: Optional[float] = None,
@@ -139,13 +152,14 @@ class GLiNERClient:
 
         single = isinstance(text, str)
         items = [text] if single else list(text)
+        labels_list = _labels_for_texts(labels, len(items))
 
         payloads = [
             self._build_payload(
-                t, labels, relations, threshold, relation_threshold,
+                t, label_set, relations, threshold, relation_threshold,
                 flat_ner, multi_label, adapter_id,
             )
-            for t in items
+            for t, label_set in zip(items, labels_list)
         ]
 
         results = await asyncio.gather(
