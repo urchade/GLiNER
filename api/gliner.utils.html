@@ -138,14 +138,7 @@ data-aria-dark="Switch to auto color mode">
     <button class="rside-close js-menu xl:hidden" aria-label="Close Table of Contents" type="button" aria-controls="rside" aria-expanded="false">
       <i class="i-lucide close"></i>
     </button>
-    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div class="localtoc"><h3>On this page</h3><ul>
-<li><a class="reference internal" href="#gliner.utils.load_config_as_namespace"><code class="docutils literal notranslate"><span class="pre">load_config_as_namespace()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.utils.dict_to_namespace"><code class="docutils literal notranslate"><span class="pre">dict_to_namespace()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.utils.namespace_to_dict"><code class="docutils literal notranslate"><span class="pre">namespace_to_dict()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.utils.is_module_available"><code class="docutils literal notranslate"><span class="pre">is_module_available()</span></code></a></li>
-<li><a class="reference internal" href="#gliner.utils.MissedPackageException"><code class="docutils literal notranslate"><span class="pre">MissedPackageException</span></code></a></li>
-</ul>
-</div><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
+    <div class="sy-scrollbar sy-rside-inner px-6 xl:top-16 xl:sticky xl:pl-0 pt-6 pb-4"><div id="ethical-ad-placement" data-ea-publisher="readthedocs"></div></div>
   </aside>
   <div class="rside-overlay js-menu" role="button" aria-label="Close Table of Contents" aria-controls="rside" aria-expanded="false"></div>
   <main class="sy-main w-full max-sm:max-w-full print:pt-6">
@@ -174,71 +167,8 @@ data-aria-dark="Switch to auto color mode">
 </div><div class="flex flex-col break-words justify-between">
       <div class="min-w-0 max-w-6xl px-6 pb-6 pt-8 xl:px-12">
         <article class="yue" role="main">
-          <section id="module-gliner.utils">
-<span id="gliner-utils-module"></span><h1>gliner.utils module<a class="headerlink" href="#module-gliner.utils" title="Link to this heading">¶</a></h1>
-<dl class="py function">
-<dt class="sig sig-object py" id="gliner.utils.load_config_as_namespace">
-<span class="sig-prename descclassname"><span class="pre">gliner.utils.</span></span><span class="sig-name descname"><span class="pre">load_config_as_namespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">config_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/utils.html#load_config_as_namespace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.utils.load_config_as_namespace" title="Link to this definition">¶</a></dt>
-<dd><p>Load YAML/JSON config file as nested Namespace.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>config_file</strong> (<em>str</em><em> | </em><em>Path</em>) – Path to config file</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Nested argparse.Namespace</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p><em>Namespace</em></p>
-</dd>
-</dl>
-<p class="rubric">Example</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="n">load_config_as_namespace</span><span class="p">(</span><span class="s2">"config.yaml"</span><span class="p">)</span>
-</span><span data-line="2"><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">model_name</span><span class="p">)</span>
-</span><span data-line="3"><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">lr_encoder</span><span class="p">)</span>
-</span></pre></div>
-</div>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gliner.utils.dict_to_namespace">
-<span class="sig-prename descclassname"><span class="pre">gliner.utils.</span></span><span class="sig-name descname"><span class="pre">dict_to_namespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/utils.html#dict_to_namespace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.utils.dict_to_namespace" title="Link to this definition">¶</a></dt>
-<dd><p>Recursively convert dict to Namespace.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gliner.utils.namespace_to_dict">
-<span class="sig-prename descclassname"><span class="pre">gliner.utils.</span></span><span class="sig-name descname"><span class="pre">namespace_to_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/utils.html#namespace_to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.utils.namespace_to_dict" title="Link to this definition">¶</a></dt>
-<dd><p>Convert Namespace back to dict.</p>
-<dl class="field-list simple">
-</dl>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="gliner.utils.is_module_available">
-<span class="sig-prename descclassname"><span class="pre">gliner.utils.</span></span><span class="sig-name descname"><span class="pre">is_module_available</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gliner/utils.html#is_module_available"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.utils.is_module_available" title="Link to this definition">¶</a></dt>
-<dd><p>Checks whether the specified Python module is available.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><p><strong>module_name</strong> (<em>str</em>) – The name of the module to check.</p>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>True if the module is available, False otherwise.</p>
-</dd>
-<dt class="field-odd">Return type<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bool</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py exception">
-<dt class="sig sig-object py" id="gliner.utils.MissedPackageException">
-<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">gliner.utils.</span></span><span class="sig-name descname"><span class="pre">MissedPackageException</span></span><a class="reference internal" href="../_modules/gliner/utils.html#MissedPackageException"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#gliner.utils.MissedPackageException" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
-<p>Raised when the requested decoder model is not supported.</p>
-</dd></dl>
-
+          <section id="gliner-utils-module">
+<h1>gliner.utils module<a class="headerlink" href="#gliner-utils-module" title="Link to this heading">¶</a></h1>
 </section>
 
         </article><button class="back-to-top" type="button">
