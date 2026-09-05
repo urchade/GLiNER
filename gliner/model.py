@@ -398,6 +398,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         data_processor: BaseProcessor | None = None,
         backbone_from_pretrained: bool | None = False,
         cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
         **kwargs,
     ):
         """Initialize a BaseGLiNER model.
@@ -409,6 +410,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             data_processor: Pre-initialized data processor. If None, creates a new processor.
             backbone_from_pretrained: Whether to load the backbone from pretrained weights.
             cache_dir: Directory for caching downloaded models.
+            local_files_only: Only load local or cached files.
             **kwargs: Additional keyword arguments passed to model creation.
         """
         super().__init__()
@@ -417,12 +419,16 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if model is not None:
             self.model = model
         else:
-            self.model = self._create_model(config, backbone_from_pretrained, cache_dir, **kwargs)
+            self.model = self._create_model(
+                config, backbone_from_pretrained, cache_dir, local_files_only=local_files_only, **kwargs
+            )
 
         if data_processor is not None:
             self.data_processor = data_processor
         else:
-            self.data_processor = self._create_data_processor(config, cache_dir, tokenizer, **kwargs)
+            self.data_processor = self._create_data_processor(
+                config, cache_dir, tokenizer, local_files_only=local_files_only, **kwargs
+            )
 
         if isinstance(self.model, BaseRuntimeModel):
             self.runtime = self.model.runtime_name
@@ -1118,6 +1124,10 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         # Save tokenizer
         self.data_processor.transformer_tokenizer.save_pretrained(save_directory)
+        for name in ("labels_tokenizer", "decoder_tokenizer"):
+            auxiliary_tokenizer = getattr(self.data_processor, name, None)
+            if auxiliary_tokenizer is not None:
+                auxiliary_tokenizer.save_pretrained(save_directory / name)
 
         # Push to hub if requested
         if push_to_hub:
@@ -1549,6 +1559,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             tokenizer = AutoTokenizer.from_pretrained(
                 cls._get_tokenizer_source(config_instance),
                 cache_dir=cache_dir,
+                local_files_only=model_kwargs.get("local_files_only", False),
             )
             cls._set_tokenizer_spec_tokens(tokenizer)
         # Create model instance from scratch
@@ -1765,6 +1776,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         if load_tokenizer:
             tokenizer = cls._load_tokenizer(config, model_dir, cache_dir, local_files_only=local_files_only)
 
+        # Auxiliary tokenizers saved with the model take precedence over Hub identifiers.
+        for name in ("labels_tokenizer", "decoder_tokenizer"):
+            tokenizer_dir = model_dir / name
+            if name not in model_kwargs and (tokenizer_dir / "tokenizer_config.json").is_file():
+                model_kwargs[name] = AutoTokenizer.from_pretrained(
+                    tokenizer_dir, cache_dir=cache_dir, local_files_only=local_files_only
+                )
+
         if runtime == "torch":
             # Find the model file. _resolve_model_file picks the variant file
             # if present, falls back to the default fp32 file with a warning if
@@ -1783,6 +1802,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                         config,
                         tokenizer=tokenizer,
                         backbone_from_pretrained=False,
+                        local_files_only=local_files_only,
                         cache_dir=cache_dir,
                         **model_kwargs,
                     )
@@ -1858,6 +1878,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     config,
                     tokenizer=tokenizer,
                     backbone_from_pretrained=False,
+                    local_files_only=local_files_only,
                     cache_dir=cache_dir,
                     **model_kwargs,
                 )
@@ -1958,7 +1979,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
                     core=core,
                 )
 
-            instance = cls(config, tokenizer=tokenizer, model=model)
+            instance = cls(
+                config,
+                tokenizer=tokenizer,
+                model=model,
+                cache_dir=cache_dir,
+                local_files_only=local_files_only,
+                **model_kwargs,
+            )
 
         return instance
 
@@ -2486,12 +2514,19 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
 class BaseEncoderGLiNER(BaseGLiNER):
     def _create_model(self, config, backbone_from_pretrained, cache_dir, **kwargs):
-        self.model = self.model_class(config, backbone_from_pretrained, cache_dir=cache_dir, **kwargs)
+        model_kwargs = {
+            key: value for key, value in kwargs.items() if key not in {"labels_tokenizer", "decoder_tokenizer"}
+        }
+        self.model = self.model_class(config, backbone_from_pretrained, cache_dir=cache_dir, **model_kwargs)
         return self.model
 
-    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+    def _create_data_processor(
+        self, config, cache_dir, tokenizer=None, words_splitter=None, local_files_only=False, **kwargs
+    ):
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
             self._set_tokenizer_spec_tokens(tokenizer)
         self.data_processor = self.data_processor_class(config, tokenizer, words_splitter)
         return self.data_processor
@@ -3447,10 +3482,18 @@ class BaseEncoderGLiNER(BaseGLiNER):
 
 
 class BaseBiEncoderGLiNER(BaseEncoderGLiNER):
-    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
-        labels_tokenizer = AutoTokenizer.from_pretrained(config.labels_encoder, cache_dir=cache_dir)
+    def _create_data_processor(
+        self, config, cache_dir, tokenizer=None, words_splitter=None, local_files_only=False, **kwargs
+    ):
+        labels_tokenizer = kwargs.get("labels_tokenizer")
+        if labels_tokenizer is None:
+            labels_tokenizer = AutoTokenizer.from_pretrained(
+                config.labels_encoder, cache_dir=cache_dir, local_files_only=local_files_only
+            )
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
             self._set_tokenizer_spec_tokens(tokenizer)
 
         self.data_processor = self.data_processor_class(
@@ -3818,9 +3861,13 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
     def _get_special_tokens(self):
         return [self.config.label_token, self.config.sep_token]
 
-    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+    def _create_data_processor(
+        self, config, cache_dir, tokenizer=None, words_splitter=None, local_files_only=False, **kwargs
+    ):
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
         if tokenizer.pad_token is None:
             if tokenizer.eos_token is None:
                 tokenizer.add_special_tokens({"pad_token": "<|pad|>"})
@@ -5204,20 +5251,24 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
     data_collator_class = UniEncoderSpanDecoderDataCollator
     decoder_class = SpanGenerativeDecoder
 
-    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+    def _create_data_processor(
+        self, config, cache_dir, tokenizer=None, words_splitter=None, local_files_only=False, **kwargs
+    ):
         """Create data processor with decoder tokenizer."""
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
             self._set_tokenizer_spec_tokens(tokenizer)
 
         if words_splitter is None:
             words_splitter = WordsSplitter(config.words_splitter_type)
 
         # Load decoder tokenizer
-        decoder_tokenizer = None
-        if config.labels_decoder is not None:
+        decoder_tokenizer = kwargs.get("decoder_tokenizer")
+        if decoder_tokenizer is None and config.labels_decoder is not None:
             decoder_tokenizer = AutoTokenizer.from_pretrained(
-                config.labels_decoder, cache_dir=cache_dir, add_prefix_space=True
+                config.labels_decoder, cache_dir=cache_dir, add_prefix_space=True, local_files_only=local_files_only
             )
             if decoder_tokenizer.pad_token is None:
                 decoder_tokenizer.pad_token = decoder_tokenizer.eos_token
@@ -5702,10 +5753,14 @@ class UniEncoderSpanRelexGLiNER(BaseEncoderGLiNER):
     data_collator_class = RelationExtractionSpanDataCollator
     decoder_class = SpanRelexDecoder
 
-    def _create_data_processor(self, config, cache_dir, tokenizer=None, words_splitter=None, **kwargs):
+    def _create_data_processor(
+        self, config, cache_dir, tokenizer=None, words_splitter=None, local_files_only=False, **kwargs
+    ):
         """Create relation extraction data processor."""
         if tokenizer is None:
-            tokenizer = AutoTokenizer.from_pretrained(config.model_name, cache_dir=cache_dir)
+            tokenizer = AutoTokenizer.from_pretrained(
+                config.model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
             self._set_tokenizer_spec_tokens(tokenizer)
 
         if words_splitter is None:

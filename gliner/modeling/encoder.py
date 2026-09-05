@@ -61,6 +61,7 @@ class Transformer(nn.Module):
         from_pretrained: bool = False,
         labels_encoder: bool = False,
         cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
     ) -> None:
         """Initializes the transformer wrapper.
 
@@ -74,6 +75,7 @@ class Transformer(nn.Module):
             labels_encoder: If True, initializes as a labels encoder using
                 `config.labels_encoder_config`. Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            local_files_only: Only load local or cached files.
 
         Raises:
             MissedPackageException: If required packages (llm2vec, peft) are not installed
@@ -85,7 +87,9 @@ class Transformer(nn.Module):
         else:
             encoder_config = config.encoder_config
         if encoder_config is None:
-            encoder_config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
+            encoder_config = AutoConfig.from_pretrained(
+                model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
             if config.vocab_size != -1:
                 encoder_config.vocab_size = config.vocab_size
 
@@ -124,7 +128,9 @@ class Transformer(nn.Module):
             ModelClass = AutoModel
 
         if from_pretrained:
-            self.model = ModelClass.from_pretrained(model_name, **kwargs, trust_remote_code=True)
+            self.model = ModelClass.from_pretrained(
+                model_name, **kwargs, trust_remote_code=True, cache_dir=cache_dir, local_files_only=local_files_only
+            )
         elif not custom:
             self.model = ModelClass.from_config(encoder_config, trust_remote_code=True)
         else:
@@ -139,7 +145,7 @@ class Transformer(nn.Module):
                     stacklevel=2,
                 )
             else:
-                adapter_config = LoraConfig.from_pretrained(model_name)
+                adapter_config = LoraConfig.from_pretrained(model_name, local_files_only=local_files_only)
                 self.model = get_peft_model(self.model, adapter_config)
 
         if config.fuse_layers:
@@ -681,7 +687,13 @@ class Encoder(nn.Module):
             from the model's native hidden size.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initializes the encoder.
 
         Args:
@@ -690,10 +702,13 @@ class Encoder(nn.Module):
             from_pretrained: If True, loads pretrained weights for the transformer.
                 Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            local_files_only: Only load local or cached files.
         """
         super().__init__()
 
-        self.bert_layer = Transformer(config.model_name, config, from_pretrained, cache_dir=cache_dir)
+        self.bert_layer = Transformer(
+            config.model_name, config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only
+        )
 
         bert_hidden_size = self.bert_layer.model.config.hidden_size
 
@@ -893,7 +908,13 @@ class BiEncoder(Encoder):
             encoder hidden size differs from config.hidden_size.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initializes the bi-encoder.
 
         Args:
@@ -902,10 +923,18 @@ class BiEncoder(Encoder):
             from_pretrained: If True, loads pretrained weights for both encoders.
                 Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained)
+        super().__init__(config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only)
         if config.labels_encoder is not None:
-            self.labels_encoder = Transformer(config.labels_encoder, config, from_pretrained, True, cache_dir=cache_dir)
+            self.labels_encoder = Transformer(
+                config.labels_encoder,
+                config,
+                from_pretrained,
+                True,
+                cache_dir=cache_dir,
+                local_files_only=local_files_only,
+            )
             le_hidden_size = self.labels_encoder.model.config.hidden_size
 
             if config.hidden_size != le_hidden_size:

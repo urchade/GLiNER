@@ -81,6 +81,7 @@ class DecoderTransformer(nn.Module):
         from_pretrained: bool = False,
         cache_dir: str | Path | None = None,
         use_causal_lm: bool = True,
+        local_files_only: bool = False,
     ) -> None:
         """Initializes the decoder transformer.
 
@@ -92,6 +93,7 @@ class DecoderTransformer(nn.Module):
             from_pretrained: If True, loads pretrained weights. If False, initializes
                 from config only. Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            local_files_only: Only load local or cached files.
             use_causal_lm: Use ``AutoModelForCausalLM`` and return vocabulary logits.
                 When False, use ``AutoModel`` and return backbone hidden states.
 
@@ -103,7 +105,9 @@ class DecoderTransformer(nn.Module):
         if decoder_config is None:
             decoder_config = getattr(config, "labels_decoder_config", None)
         if decoder_config is None:
-            decoder_config = AutoConfig.from_pretrained(model_name, cache_dir=cache_dir)
+            decoder_config = AutoConfig.from_pretrained(
+                model_name, cache_dir=cache_dir, local_files_only=local_files_only
+            )
 
         # Decoder backbones are constructed separately from encoder backbones,
         # so explicitly propagate GLiNER's top-level attention override.
@@ -124,6 +128,7 @@ class DecoderTransformer(nn.Module):
         if from_pretrained:
             model_kwargs = {
                 "cache_dir": cache_dir,
+                "local_files_only": local_files_only,
                 "trust_remote_code": True,
             }
             if attn_implementation is not None:
@@ -136,6 +141,8 @@ class DecoderTransformer(nn.Module):
             # Keep the resolved Hugging Face config attached to GLiNER so later
             # token resizing is serialized into gliner_config.json.
             config.decoder_config = self.model.config
+        else:
+            config.labels_decoder_config = self.model.config
 
         adapter_config_file = Path(model_name) / "adapter_config.json"
 
@@ -146,7 +153,7 @@ class DecoderTransformer(nn.Module):
                     stacklevel=2,
                 )
             else:
-                adapter_config = LoraConfig.from_pretrained(model_name)
+                adapter_config = LoraConfig.from_pretrained(model_name, local_files_only=local_files_only)
                 self.model = get_peft_model(self.model, adapter_config)
 
         self.config = config
@@ -189,6 +196,7 @@ class Decoder(nn.Module):
         from_pretrained: bool = False,
         cache_dir: str | Path | None = None,
         use_causal_lm: bool = True,
+        local_files_only: bool = False,
     ) -> None:
         """Initializes the decoder.
 
@@ -199,6 +207,7 @@ class Decoder(nn.Module):
             from_pretrained: If True, loads pretrained weights for the decoder.
                 Defaults to False.
             cache_dir: Optional directory for caching downloaded models. Defaults to None.
+            local_files_only: Only load local or cached files.
             use_causal_lm: Use a causal language-model head when True, or return
                 backbone hidden states through ``AutoModel`` when False.
         """
@@ -211,6 +220,7 @@ class Decoder(nn.Module):
             from_pretrained,
             cache_dir=cache_dir,
             use_causal_lm=use_causal_lm,
+            local_files_only=local_files_only,
         )
 
         self.decoder_hidden_size = self.decoder_layer.model.config.hidden_size
