@@ -6,6 +6,7 @@ for different parameter groups, and robust error handling during training.
 """
 
 import os
+import math
 import inspect
 import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
@@ -69,6 +70,8 @@ class TrainingArguments(transformers.TrainingArguments):
         negatives: Ratio of negative samples to use. Defaults to 1.0.
         masking: Masking strategy for training ('global' or other strategies).
             Defaults to 'global'.
+        warmup_ratio: Fraction of training steps used for warmup when
+            warmup_steps is zero. Retained for compatibility with Transformers v4.
     """
 
     cache_dir: Optional[str] = field(default=None)
@@ -87,6 +90,20 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_type: Optional[str] = "focal"
     use_span_width_weight: Optional[bool] = False
     dice_gamma: Optional[float] = 1.0
+    warmup_ratio: float = 0.0
+
+    def __post_init__(self):
+        if not 0.0 <= self.warmup_ratio <= 1.0:
+            raise ValueError("warmup_ratio must lie in range [0, 1]")
+        super().__post_init__()
+
+    def get_warmup_steps(self, num_training_steps: int):
+        # New Transformers versions accept ratios through warmup_steps instead.
+        # Keep the legacy ratio separate so 1.0 still means all training steps,
+        # and epoch-based training uses the actual step count from Trainer.
+        if self.warmup_steps == 0:
+            return math.ceil(num_training_steps * self.warmup_ratio)
+        return super().get_warmup_steps(num_training_steps)
 
 
 class Trainer(transformers.Trainer):
