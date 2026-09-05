@@ -22,7 +22,8 @@ def _require_onnxruntime() -> Any:
     except ImportError as error:
         raise ImportError(
             "ONNX Runtime is required for runtime='onnxruntime'. Install it with "
-            "`pip install onnxruntime` (or `onnxruntime-gpu` for GPU execution)."
+            '`pip install "gliner[onnx]"` for CPU or `pip install "gliner[gpu]"` for GPU execution. '
+            "Install only one ONNX Runtime package."
         ) from error
 
 

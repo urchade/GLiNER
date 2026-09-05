@@ -36,17 +36,21 @@ maintainers = [
 
 dependencies = [
     "torch>=2.0.0",
-    "transformers>=4.51.3,<5.14.0",
+    "transformers>=4.51.3,<5.17.0",
     "huggingface_hub>=0.21.4",
+    "numpy",
+    "packaging",
+    "safetensors",
     "tqdm",
-    "onnxruntime",
     "sentencepiece",
 ]
 
 dynamic = ["version"]
 
 [project.optional-dependencies]
+onnx = ["onnxruntime"]
 gpu = ["onnxruntime-gpu"]
+openvino = ["openvino"]
 tokenizers = [
     "langdetect",
     "python-mecab-ko",
@@ -85,7 +89,7 @@ testpaths = ["tests"]
 line-length = 120
 indent-width = 4
 output-format = "grouped"
-target-version = "py39"
+target-version = "py310"
 
 # Exclude common directories
 exclude = [
