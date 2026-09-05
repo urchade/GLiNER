@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple
 from functools import partial
 from dataclasses import field, dataclass
 
@@ -25,9 +25,7 @@ def _threshold_compare_tensor(threshold, batch_size: int, device, dims: int):
     return threshold
 
 
-def _get_valid_classes_mask(
-    num_classes, id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], device
-) -> torch.Tensor:
+def _get_valid_classes_mask(num_classes, id_to_classes: Dict[int, str] | List[Dict[int, str]], device) -> torch.Tensor:
     """
     Create a boolean mask indicating valid classes for each batch item.
 
@@ -43,10 +41,7 @@ def _get_valid_classes_mask(
     if isinstance(id_to_classes, list):
         # For batch-level decoding, we need to create a mask for each batch item
         valid_classes = torch.tensor(
-            [
-                [class_idx + 1 in id_to_class for class_idx in range(num_classes)]
-                for id_to_class in id_to_classes
-            ],
+            [[class_idx + 1 in id_to_class for class_idx in range(num_classes)] for id_to_class in id_to_classes],
             dtype=torch.bool,
             device=device,
         )
@@ -80,12 +75,12 @@ class Span:
     end: int
     entity_type: str
     score: float
-    class_probs: Optional[Dict[str, float]] = None
-    generated_labels: Optional[List[str]] = None
-    class_index: Optional[int] = field(default=None, compare=False, repr=False)
-    span_index: Optional[int] = field(default=None, compare=False, repr=False)
-    vector: Optional[Any] = field(default=None, compare=False, repr=False)
-    label_vector: Optional[Any] = field(default=None, compare=False, repr=False)
+    class_probs: Dict[str, float] | None = None
+    generated_labels: List[str] | None = None
+    class_index: int | None = field(default=None, compare=False, repr=False)
+    span_index: int | None = field(default=None, compare=False, repr=False)
+    vector: Any | None = field(default=None, compare=False, repr=False)
+    label_vector: Any | None = field(default=None, compare=False, repr=False)
 
 
 class DecodedRelation(tuple):
@@ -98,12 +93,12 @@ class DecodedRelation(tuple):
     final relation candidates have been selected.
     """
 
-    pair_index: Optional[int]
-    class_index: Optional[int]
-    vector: Optional[Any]
-    label_vector: Optional[Any]
-    head_relation_vector: Optional[Any]
-    tail_relation_vector: Optional[Any]
+    pair_index: int | None
+    class_index: int | None
+    vector: Any | None
+    label_vector: Any | None
+    head_relation_vector: Any | None
+    tail_relation_vector: Any | None
 
     def __new__(
         cls,
@@ -112,12 +107,12 @@ class DecodedRelation(tuple):
         tail_idx: int,
         score: float,
         *,
-        pair_index: Optional[int] = None,
-        class_index: Optional[int] = None,
-        vector: Optional[Any] = None,
-        label_vector: Optional[Any] = None,
-        head_relation_vector: Optional[Any] = None,
-        tail_relation_vector: Optional[Any] = None,
+        pair_index: int | None = None,
+        class_index: int | None = None,
+        vector: Any | None = None,
+        label_vector: Any | None = None,
+        head_relation_vector: Any | None = None,
+        tail_relation_vector: Any | None = None,
     ) -> "DecodedRelation":
         instance = super().__new__(cls, (head_idx, label, tail_idx, score))
         instance.pair_index = pair_index
@@ -185,7 +180,7 @@ class BaseDecoder(ABC):
         pass
 
     def _get_id_to_class_for_sample(
-        self, id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], sample_idx: int
+        self, id_to_classes: Dict[int, str] | List[Dict[int, str]], sample_idx: int
     ) -> Dict[int, str]:
         """
         Get id_to_classes mapping for a specific sample.
@@ -306,11 +301,7 @@ class BaseSpanDecoder(BaseDecoder):
                 sorted by probability in descending order, containing up to k entries.
         """
         num_classes = probs_tensor.shape[0]
-        valid_indices = [
-            class_id - 1
-            for class_id in sorted(id_to_class)
-            if 1 <= class_id <= num_classes
-        ]
+        valid_indices = [class_id - 1 for class_id in sorted(id_to_class) if 1 <= class_id <= num_classes]
         if not valid_indices:
             return {}
 
@@ -325,10 +316,7 @@ class BaseSpanDecoder(BaseDecoder):
 
         # Convert to dict, mapping class names to probabilities
         # Note: class indices are 1-indexed (0 is padding), so we add 1
-        return {
-            id_to_class[idx + 1]: prob
-            for idx, prob in zip(top_indices.tolist(), top_probs.tolist())
-        }
+        return {id_to_class[idx + 1]: prob for idx, prob in zip(top_indices.tolist(), top_probs.tolist(), strict=False)}
 
     @abstractmethod
     def _build_span_tuple(
@@ -340,7 +328,7 @@ class BaseSpanDecoder(BaseDecoder):
         score: float,
         id_to_class: Dict[int, str],
         span_label_map: Dict[int, List[str]],
-        class_probs: Optional[Dict[str, float]] = None,
+        class_probs: Dict[str, float] | None = None,
     ) -> Span:
         """
         Build a Span object with decoder-specific format.
@@ -373,7 +361,7 @@ class BaseSpanDecoder(BaseDecoder):
         multi_label: bool,
         span_label_map: Dict[int, List[str]],
         return_class_probs: bool = False,
-        input_spans_i: Optional[List[Tuple[int, int]]] = None,
+        input_spans_i: List[Tuple[int, int]] | None = None,
     ) -> List[tuple]:
         """
         Decode spans for a single batch item.
@@ -445,7 +433,7 @@ class BaseSpanDecoder(BaseDecoder):
         k_list = k_idx.tolist()
         c_list = c_idx.tolist()
 
-        for s, k, c, flat_idx, score in zip(s_list, k_list, c_list, flat_idxs, scores):
+        for s, k, c, flat_idx, score in zip(s_list, k_list, c_list, flat_idxs, scores, strict=False):
             # Get class probabilities if requested
             class_probs = None
             if return_class_probs:
@@ -463,14 +451,14 @@ class BaseSpanDecoder(BaseDecoder):
         self,
         probs: torch.Tensor,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         K: int,
         threshold: float,
         flat_ner: bool,
         multi_label: bool,
         span_label_maps: List[Dict[int, List[str]]],
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
     ) -> List[List[Span]]:
         """
         Batch-level decoding: single torch.where on the full (B, L, K, C) tensor.
@@ -549,8 +537,7 @@ class BaseSpanDecoder(BaseDecoder):
         # that are absent from that row's id_to_class and _build_span_tuple raises KeyError.
         num_classes = probs.shape[-1]
         if any(
-            any(class_idx + 1 not in mapping for class_idx in range(num_classes))
-            for mapping in id_to_class_per_item
+            any(class_idx + 1 not in mapping for class_idx in range(num_classes)) for mapping in id_to_class_per_item
         ):
             valid_classes = _get_valid_classes_mask(num_classes, id_to_class_per_item, device)
             probs = probs.masked_fill(~valid_classes[:, None, None, :], float("-inf"))
@@ -597,14 +584,16 @@ class BaseSpanDecoder(BaseDecoder):
 
         # Group by batch item and build Span objects (pure Python)
         batch_spans: List[List[Span]] = [[] for _ in range(B)]
-        for j, (b, s, k, c, flat_idx, score) in enumerate(zip(b_list, s_list, k_list, c_list, flat_idxs, scores)):
+        for j, (b, s, k, c, flat_idx, score) in enumerate(
+            zip(b_list, s_list, k_list, c_list, flat_idxs, scores, strict=False)
+        ):
             id_to_class_i = id_to_class_per_item[b]
 
             class_probs = None
             if return_class_probs:
                 class_probs = {
                     id_to_class_i[idx + 1]: prob
-                    for idx, prob in zip(top_indices_list[j], top_probs_list[j])
+                    for idx, prob in zip(top_indices_list[j], top_probs_list[j], strict=False)
                     if idx + 1 in id_to_class_i
                 }
 
@@ -620,13 +609,13 @@ class BaseSpanDecoder(BaseDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output: torch.Tensor,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
         **kwargs,
     ) -> List[List[Span]]:
         """
@@ -685,7 +674,7 @@ class SpanDecoder(BaseSpanDecoder):
         score: float,
         id_to_class: Dict[int, str],
         span_label_map: Dict[int, List[str]],
-        class_probs: Optional[Dict[str, float]] = None,
+        class_probs: Dict[str, float] | None = None,
     ) -> Span:
         """
         Build Span object without generative labels.
@@ -748,14 +737,11 @@ class SpanDecoder(BaseSpanDecoder):
                     continue
                 allowed_mask = torch.zeros_like(valid_spans[batch_idx])
                 for start, end in set(allowed_spans):
-                    allowed_mask |= (span_idx[batch_idx, :, 0] == start) & (
-                        span_idx[batch_idx, :, 1] == end
-                    )
+                    allowed_mask |= (span_idx[batch_idx, :, 0] == start) & (span_idx[batch_idx, :, 1] == end)
                 valid_spans[batch_idx] &= allowed_mask
 
         id_to_class_per_item = [
-            self._get_id_to_class_for_sample(id_to_classes, batch_idx)
-            for batch_idx in range(batch_size)
+            self._get_id_to_class_for_sample(id_to_classes, batch_idx) for batch_idx in range(batch_size)
         ]
         valid_classes = torch.tensor(
             [
@@ -771,11 +757,7 @@ class SpanDecoder(BaseSpanDecoder):
             dtype=probabilities.dtype,
             device=probabilities.device,
         ).view(batch_size, 1, 1)
-        candidate_mask = (
-            valid_spans.unsqueeze(-1)
-            & valid_classes.unsqueeze(1)
-            & (probabilities > threshold_tensor)
-        )
+        candidate_mask = valid_spans.unsqueeze(-1) & valid_classes.unsqueeze(1) & (probabilities > threshold_tensor)
         batch_indices, span_positions, class_indices = torch.where(candidate_mask)
         if batch_indices.numel() == 0:
             return [[] for _ in range(batch_size)]
@@ -811,7 +793,7 @@ class SpanDecoder(BaseSpanDecoder):
 
         candidates_by_batch = [[] for _ in range(batch_size)]
         for row_index, ((batch_idx, start, end, class_idx, span_position), score) in enumerate(
-            zip(index_rows, score_rows)
+            zip(index_rows, score_rows, strict=False)
         ):
             id_to_class = id_to_class_per_item[batch_idx]
             class_probs = None
@@ -821,6 +803,7 @@ class SpanDecoder(BaseSpanDecoder):
                     for index, probability in zip(
                         top_index_rows[row_index],
                         top_prob_rows[row_index],
+                        strict=False,
                     )
                     if index + 1 in id_to_class
                 }
@@ -896,8 +879,8 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
     """
 
     def _update_id_to_classes_with_generated(
-        self, id_to_classes: Union[Dict, List[Dict]], gen_labels: List[str], batch_size: int
-    ) -> Union[Dict, List[Dict]]:
+        self, id_to_classes: Dict | List[Dict], gen_labels: List[str], batch_size: int
+    ) -> Dict | List[Dict]:
         """
         Update id_to_classes mapping with generated labels for prompt mode.
 
@@ -968,7 +951,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
                 labels_b = [span_labels[i * num_gen_sequences : (i + 1) * num_gen_sequences] for i in range(n)]
 
                 # Create mapping from flat_index to labels
-                span_label_maps[b] = dict(zip(flat_indices, labels_b))
+                span_label_maps[b] = dict(zip(flat_indices, labels_b, strict=False))
                 cursor += n
 
         return span_label_maps
@@ -982,7 +965,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
         score: float,
         id_to_class: Dict[int, str],
         span_label_map: Dict[int, List[str]],
-        class_probs: Optional[Dict[str, float]] = None,
+        class_probs: Dict[str, float] | None = None,
     ) -> Span:
         """
         Build Span object with generative labels.
@@ -1018,16 +1001,16 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
     def decode_generative(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output: torch.Tensor,
         gen_labels: List[str],
-        sel_idx: Optional[torch.LongTensor] = None,
+        sel_idx: torch.LongTensor | None = None,
         num_gen_sequences: int = 1,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
     ) -> List[List[tuple]]:
         """
         Decode model output with generated labels.
@@ -1091,16 +1074,16 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output: torch.Tensor,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        gen_labels: Optional[List[str]] = None,
-        sel_idx: Optional[torch.LongTensor] = None,
+        gen_labels: List[str] | None = None,
+        sel_idx: torch.LongTensor | None = None,
         num_gen_sequences: int = 1,
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
         **kwargs,
     ) -> List[List[tuple]]:
         """
@@ -1162,9 +1145,9 @@ def _decode_relations_batch(
     rel_idx: torch.Tensor,
     rel_logits: torch.Tensor,
     rel_mask: torch.Tensor,
-    rel_probs_threshold: Union[float, List[float]],
+    rel_probs_threshold: float | List[float],
     spans: List[List[tuple]],
-    rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+    rel_id_to_classes: Dict[int, str] | List[Dict[int, str]],
     batch_size: int,
 ) -> List[List[tuple]]:
     """Vectorized relation decoding shared by Span and Token relex decoders.
@@ -1189,8 +1172,7 @@ def _decode_relations_batch(
     relations: List[List[tuple]] = [[] for _ in range(batch_size)]
 
     rel_id_to_class_per_item = [
-        rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes
-        for i in range(batch_size)
+        rel_id_to_classes[i] if isinstance(rel_id_to_classes, list) else rel_id_to_classes for i in range(batch_size)
     ]
 
     # 1. Sigmoid — one kernel
@@ -1272,7 +1254,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         score: float,
         id_to_class: Dict[int, str],
         span_label_map: Dict[int, List[str]],
-        class_probs: Optional[Dict[str, float]] = None,
+        class_probs: Dict[str, float] | None = None,
     ) -> Span:
         """Build an entity Span object for relation extraction.
 
@@ -1310,9 +1292,9 @@ class SpanRelexDecoder(BaseSpanDecoder):
     def _build_entity_span_to_decoded_idx(
         self,
         spans: List[List[tuple]],
-        entity_spans: Optional[torch.Tensor],
+        entity_spans: torch.Tensor | None,
         batch_size: int,
-    ) -> List[Optional[dict]]:
+    ) -> List[dict | None]:
         """Build mapping from model entity indices to decoded span indices.
 
         Maps entity positions in the model's internal target_span_rep
@@ -1358,13 +1340,13 @@ class SpanRelexDecoder(BaseSpanDecoder):
         self,
         model_output,
         spans: List[List[tuple]],
-        rel_idx: Optional[torch.Tensor],
-        rel_logits: Optional[torch.Tensor],
-        rel_mask: Optional[torch.Tensor],
-        rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        threshold: Union[float, List[float]],
+        rel_idx: torch.Tensor | None,
+        rel_logits: torch.Tensor | None,
+        rel_mask: torch.Tensor | None,
+        rel_id_to_classes: Dict[int, str] | List[Dict[int, str]],
+        threshold: float | List[float],
         batch_size: int,
-        entity_spans: Optional[torch.Tensor] = None,
+        entity_spans: torch.Tensor | None = None,
     ) -> List[List[tuple]]:
         """Decode relations between detected entity spans.
 
@@ -1402,9 +1384,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
         if rel_mask is None:
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
-        rel_id_to_class_per_item = [
-            self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)
-        ]
+        rel_id_to_class_per_item = [self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)]
 
         rel_probs = torch.sigmoid(rel_logits)
         num_classes = rel_probs.shape[-1]
@@ -1487,18 +1467,18 @@ class SpanRelexDecoder(BaseSpanDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output,
-        rel_idx: Optional[torch.Tensor] = None,
-        rel_logits: Optional[torch.Tensor] = None,
-        rel_mask: Optional[torch.Tensor] = None,
+        rel_idx: torch.Tensor | None = None,
+        rel_logits: torch.Tensor | None = None,
+        rel_mask: torch.Tensor | None = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
         relation_threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
-        rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
-        entity_spans: Optional[torch.Tensor] = None,
+        rel_id_to_classes: Dict[int, str] | List[Dict[int, str]] | None = None,
+        entity_spans: torch.Tensor | None = None,
         **kwargs,
     ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
         """Decode model output to extract entities and relations.
@@ -1590,7 +1570,7 @@ class TokenDecoder(BaseDecoder):
         end_i: torch.Tensor,
         id_to_classes: Dict[int, str],
         threshold: float,
-        input_spans_i: Optional[set] = None,
+        input_spans_i: set | None = None,
     ) -> List[tuple]:
         """
         Calculate spans and their scores from start/end/inside predictions.
@@ -1618,8 +1598,8 @@ class TokenDecoder(BaseDecoder):
         end_cpu = end_i.tolist()
 
         span_i = []
-        for st, cls_st in zip(*start_idx):
-            for ed, cls_ed in zip(*end_idx):
+        for st, cls_st in zip(*start_idx, strict=False):
+            for ed, cls_ed in zip(*end_idx, strict=False):
                 if ed >= st and cls_st == cls_ed:
                     if input_spans_i is not None and (st, ed) not in input_spans_i:
                         continue
@@ -1648,7 +1628,7 @@ class TokenDecoder(BaseDecoder):
     def _decode_from_spans(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         span_logits: torch.Tensor,
         span_idx: torch.Tensor,
         span_mask: torch.Tensor,
@@ -1656,7 +1636,7 @@ class TokenDecoder(BaseDecoder):
         threshold: float = 0.5,
         multi_label: bool = False,
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
     ) -> List[List[tuple]]:
         """
         Decode from span-level predictions.
@@ -1742,16 +1722,16 @@ class TokenDecoder(BaseDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        model_output: Optional[torch.Tensor] = None,
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
+        model_output: torch.Tensor | None = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        span_logits: Optional[torch.Tensor] = None,
-        span_idx: Optional[torch.Tensor] = None,
-        span_mask: Optional[torch.Tensor] = None,
+        span_logits: torch.Tensor | None = None,
+        span_idx: torch.Tensor | None = None,
+        span_mask: torch.Tensor | None = None,
         return_class_probs: bool = False,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
         **kwargs,
     ) -> List[List[Span]]:
         """
@@ -1809,9 +1789,7 @@ class TokenDecoder(BaseDecoder):
         if model_output is not None:
             batch_size = len(tokens)
             num_classes = model_output.shape[-2]
-            id_to_class_per_item = [
-                self._get_id_to_class_for_sample(id_to_classes, i) for i in range(batch_size)
-            ]
+            id_to_class_per_item = [self._get_id_to_class_for_sample(id_to_classes, i) for i in range(batch_size)]
 
             # Per-sample label sets share a batch-wide class dimension. Exclude padded
             # class slots before candidate search so they cannot produce unmapped spans.
@@ -1878,9 +1856,9 @@ class TokenRelexDecoder(TokenDecoder):
     def _build_entity_span_to_decoded_idx(
         self,
         spans: List[List[tuple]],
-        entity_spans: Optional[torch.Tensor],
+        entity_spans: torch.Tensor | None,
         batch_size: int,
-    ) -> List[Optional[dict]]:
+    ) -> List[dict | None]:
         """Build mapping from model entity indices to decoded span indices.
 
         Uses span boundaries (start, end) to match model entities to decoded spans.
@@ -1920,13 +1898,13 @@ class TokenRelexDecoder(TokenDecoder):
     def _decode_relations(
         self,
         spans: List[List[tuple]],
-        rel_idx: Optional[torch.Tensor],
-        rel_logits: Optional[torch.Tensor],
-        rel_mask: Optional[torch.Tensor],
-        rel_id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        threshold: Union[float, List[float]],
+        rel_idx: torch.Tensor | None,
+        rel_logits: torch.Tensor | None,
+        rel_mask: torch.Tensor | None,
+        rel_id_to_classes: Dict[int, str] | List[Dict[int, str]],
+        threshold: float | List[float],
         batch_size: int,
-        entity_spans: Optional[torch.Tensor] = None,
+        entity_spans: torch.Tensor | None = None,
     ) -> List[List[tuple]]:
         """Decode relations between detected entity spans.
 
@@ -1954,9 +1932,7 @@ class TokenRelexDecoder(TokenDecoder):
         if rel_mask is None:
             rel_mask = torch.ones(rel_idx[..., 0].shape, dtype=torch.bool, device=rel_idx.device)
 
-        rel_id_to_class_per_item = [
-            self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)
-        ]
+        rel_id_to_class_per_item = [self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)]
 
         rel_probs = torch.sigmoid(rel_logits)
         num_classes = rel_probs.shape[-1]
@@ -2034,17 +2010,17 @@ class TokenRelexDecoder(TokenDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output: torch.Tensor,
-        rel_idx: Optional[torch.Tensor] = None,
-        rel_logits: Optional[torch.Tensor] = None,
-        rel_mask: Optional[torch.Tensor] = None,
+        rel_idx: torch.Tensor | None = None,
+        rel_logits: torch.Tensor | None = None,
+        rel_mask: torch.Tensor | None = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
         relation_threshold: float = 0.5,
         multi_label: bool = False,
-        rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
-        entity_spans: Optional[torch.Tensor] = None,
+        rel_id_to_classes: Dict[int, str] | List[Dict[int, str]] | None = None,
+        entity_spans: torch.Tensor | None = None,
         **kwargs,
     ) -> Tuple[List[List[tuple]], List[List[tuple]]]:
         """Decode model output to extract entities and relations.
@@ -2151,18 +2127,18 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
     def decode_generative(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
         model_output: torch.Tensor,
         gen_labels: List[str],
-        sel_idx: Optional[torch.LongTensor] = None,
+        sel_idx: torch.LongTensor | None = None,
         num_gen_sequences: int = 1,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        span_logits: Optional[torch.Tensor] = None,
-        span_idx: Optional[torch.Tensor] = None,
-        span_mask: Optional[torch.Tensor] = None,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        span_logits: torch.Tensor | None = None,
+        span_idx: torch.Tensor | None = None,
+        span_mask: torch.Tensor | None = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
     ) -> List[List[tuple]]:
         """Decode model output with generated labels.
 
@@ -2269,18 +2245,18 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
     def decode(
         self,
         tokens: List[List[str]],
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]],
-        model_output: Optional[torch.Tensor] = None,
+        id_to_classes: Dict[int, str] | List[Dict[int, str]],
+        model_output: torch.Tensor | None = None,
         flat_ner: bool = False,
         threshold: float = 0.5,
         multi_label: bool = False,
-        gen_labels: Optional[List[str]] = None,
-        sel_idx: Optional[torch.LongTensor] = None,
+        gen_labels: List[str] | None = None,
+        sel_idx: torch.LongTensor | None = None,
         num_gen_sequences: int = 1,
-        span_logits: Optional[torch.Tensor] = None,
-        span_idx: Optional[torch.Tensor] = None,
-        span_mask: Optional[torch.Tensor] = None,
-        input_spans: Optional[List[List[Tuple[int, int]]]] = None,
+        span_logits: torch.Tensor | None = None,
+        span_idx: torch.Tensor | None = None,
+        span_mask: torch.Tensor | None = None,
+        input_spans: List[List[Tuple[int, int]]] | None = None,
         **kwargs,
     ) -> List[List[tuple]]:
         """Decode model output, with optional generative label support.

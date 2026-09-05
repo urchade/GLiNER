@@ -10,7 +10,7 @@ pass, results can be unpacked back to the original request ordering.
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Sequence
 from dataclasses import dataclass
 
 import numpy as np
@@ -29,7 +29,7 @@ class InferencePackingConfig:
     """
 
     max_length: int
-    sep_token_id: Optional[int] = None
+    sep_token_id: int | None = None
     streams_per_batch: int = 1
 
 
@@ -226,7 +226,7 @@ def _build_segment_ids(streams: List[_PackedStream], max_len: int) -> torch.Long
     for stream in streams:
         seg = torch.zeros(max_len, dtype=torch.long)
         seg_id = 1
-        for offset, length in zip(stream.offsets, stream.lengths):
+        for offset, length in zip(stream.offsets, stream.lengths, strict=False):
             if length == 0:
                 continue
             seg[offset : offset + length] = seg_id

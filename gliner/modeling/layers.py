@@ -1,4 +1,4 @@
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple
 
 import torch
 import torch.nn.functional as F
@@ -43,8 +43,8 @@ class LstmSeq2SeqEncoder(nn.Module):
         self,
         x: torch.Tensor,
         mask: torch.Tensor,
-        hidden: Optional[Tuple[torch.Tensor, torch.Tensor]] = None,
-        lengths: Optional[Union[List[int], torch.Tensor]] = None,
+        hidden: Tuple[torch.Tensor, torch.Tensor] | None = None,
+        lengths: List[int] | torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Encodes input sequences through the LSTM.
 
@@ -74,7 +74,7 @@ class LstmSeq2SeqEncoder(nn.Module):
         return output
 
 
-def create_projection_layer(hidden_size: int, dropout: float, out_dim: Optional[int] = None) -> nn.Sequential:
+def create_projection_layer(hidden_size: int, dropout: float, out_dim: int | None = None) -> nn.Sequential:
     """Creates a two-layer projection network with ReLU activation and dropout.
 
     The projection layer expands the input by 4x in the hidden layer before
@@ -148,10 +148,10 @@ class MultiheadAttention(nn.Module):
     def forward(
         self,
         query: torch.Tensor,
-        key: Optional[torch.Tensor] = None,
-        value: Optional[torch.Tensor] = None,
-        head_mask: Optional[torch.Tensor] = None,
-        attn_mask: Optional[torch.Tensor] = None,
+        key: torch.Tensor | None = None,
+        value: torch.Tensor | None = None,
+        head_mask: torch.Tensor | None = None,
+        attn_mask: torch.Tensor | None = None,
     ) -> Tuple[torch.Tensor, None]:
         """Computes multi-head attention.
 
@@ -238,7 +238,7 @@ class SelfAttentionBlock(nn.Module):
         self.k_proj = nn.Linear(d_model, d_model)
         self.v_proj = nn.Linear(d_model, d_model)
 
-    def forward(self, x: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, x: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Applies self-attention to input tensor.
 
         Args:
@@ -290,8 +290,8 @@ class CrossAttentionBlock(nn.Module):
         self,
         query: torch.Tensor,
         key: torch.Tensor,
-        value: Optional[torch.Tensor] = None,
-        mask: Optional[torch.Tensor] = None,
+        value: torch.Tensor | None = None,
+        mask: torch.Tensor | None = None,
     ) -> torch.Tensor:
         """Applies cross-attention from query to key-value pairs.
 
@@ -371,8 +371,8 @@ class CrossFuser(nn.Module):
         self,
         query: torch.Tensor,
         key: torch.Tensor,
-        query_mask: Optional[torch.Tensor] = None,
-        key_mask: Optional[torch.Tensor] = None,
+        query_mask: torch.Tensor | None = None,
+        key_mask: torch.Tensor | None = None,
     ) -> Tuple[torch.Tensor, torch.Tensor]:
         """Applies cross-fusion between query and key sequences.
 
@@ -436,7 +436,7 @@ class LayersFuser(nn.Module):
         output_projection: Final projection to output dimension.
     """
 
-    def __init__(self, num_layers: int, hidden_size: int, output_size: Optional[int] = None) -> None:
+    def __init__(self, num_layers: int, hidden_size: int, output_size: int | None = None) -> None:
         """Initializes the layer fusion module.
 
         Args:

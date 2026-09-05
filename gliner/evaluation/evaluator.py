@@ -187,7 +187,7 @@ class BaseNEREvaluator(BaseEvaluator):
         """
         all_true_ent = []
         all_outs_ent = []
-        for i, j in zip(self.all_true, self.all_outs):
+        for i, j in zip(self.all_true, self.all_outs, strict=False):
             e = self.get_ground_truth(i)
             all_true_ent.append(e)
             e = self.get_predictions(j)
@@ -288,7 +288,7 @@ class BaseRelexEvaluator(BaseEvaluator):
         """
         all_true_rel = []
         all_outs_rel = []
-        for true_item, pred_item in zip(self.all_true, self.all_outs):
+        for true_item, pred_item in zip(self.all_true, self.all_outs, strict=False):
             true_ent, true_rel = true_item
             pred_ent, pred_rel = pred_item
             e = self.get_ground_truth(true_ent, true_rel)

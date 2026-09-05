@@ -2,7 +2,6 @@
 
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from typing import Union, Optional
 
 import torch
 from torch import nn
@@ -162,14 +161,14 @@ class RNNContextEncoder(BaseContextEncoder):
         return output
 
 
-ContextEncoderConfigLike = Optional[Union[dict, PretrainedConfig]]
+ContextEncoderConfigLike = dict | PretrainedConfig | None
 
 
 def build_context_encoder(
     encoder_config: ContextEncoderConfigLike,
     *,
     input_size: int,
-    output_size: Optional[int] = None,
+    output_size: int | None = None,
     dropout: float = 0.0,
 ) -> BaseContextEncoder:
     """Build a context encoder with a stable dense-input/dense-output contract."""

@@ -6,7 +6,7 @@ includes custom generation implementations and numerical stability improvements.
 """
 
 import warnings
-from typing import Any, List, Tuple, Union, Optional
+from typing import Any, List, Tuple
 from pathlib import Path
 
 import torch
@@ -79,7 +79,7 @@ class DecoderTransformer(nn.Module):
         model_name: str,
         config: Any,
         from_pretrained: bool = False,
-        cache_dir: Optional[Union[str, Path]] = None,
+        cache_dir: str | Path | None = None,
         use_causal_lm: bool = True,
     ) -> None:
         """Initializes the decoder transformer.
@@ -152,7 +152,7 @@ class DecoderTransformer(nn.Module):
         self.config = config
         self.use_causal_lm = use_causal_lm
 
-    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Optional[Any]]:
+    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Any | None]:
         """Forward pass through the decoder model.
 
         Args:
@@ -187,7 +187,7 @@ class Decoder(nn.Module):
         self,
         config: Any,
         from_pretrained: bool = False,
-        cache_dir: Optional[Union[str, Path]] = None,
+        cache_dir: str | Path | None = None,
         use_causal_lm: bool = True,
     ) -> None:
         """Initializes the decoder.
@@ -233,13 +233,13 @@ class Decoder(nn.Module):
     def generate_from_embeds_custom(
         self,
         inputs_embeds: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
         max_new_tokens: int = 32,
-        eos_token_id: Optional[int] = None,
-        pad_token_id: Optional[int] = None,
+        eos_token_id: int | None = None,
+        pad_token_id: int | None = None,
         temperature: float = 1.0,
         do_sample: bool = False,
-        labels_trie: Optional[LabelsTrie] = None,
+        labels_trie: LabelsTrie | None = None,
         **kwargs: Any,
     ) -> torch.LongTensor:
         """Custom generation implementation from embeddings with optional trie constraints.
@@ -352,14 +352,14 @@ class Decoder(nn.Module):
     def generate_from_embeds(
         self,
         inputs_embeds: torch.Tensor,
-        attention_mask: Optional[torch.Tensor] = None,
+        attention_mask: torch.Tensor | None = None,
         max_new_tokens: int = 32,
-        eos_token_id: Optional[int] = None,
-        pad_token_id: Optional[int] = None,
+        eos_token_id: int | None = None,
+        pad_token_id: int | None = None,
         temperature: float = 1.0,
         do_sample: bool = False,
         num_return_sequences: int = 1,
-        labels_trie: Optional[LabelsTrie] = None,
+        labels_trie: LabelsTrie | None = None,
         **kwargs: Any,
     ) -> torch.LongTensor:
         """Generation from embeddings using Hugging Face's generate API.
@@ -474,7 +474,7 @@ class Decoder(nn.Module):
         else:
             return self.decoder_layer.model.generate(*args, **kwargs)
 
-    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Optional[Any]]:
+    def forward(self, *args: Any, **kwargs: Any) -> Tuple[torch.Tensor, Any | None]:
         """Forward pass through the decoder.
 
         Computes logits for the input sequence without generation.

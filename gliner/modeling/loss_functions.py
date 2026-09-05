@@ -61,8 +61,7 @@ def span_dice_loss(
         return per_element.sum()
     else:
         raise ValueError(
-            f"Invalid value for argument 'reduction': '{reduction}'. "
-            "Supported modes: 'none', 'mean', 'sum'"
+            f"Invalid value for argument 'reduction': '{reduction}'. Supported modes: 'none', 'mean', 'sum'"
         )
 
 

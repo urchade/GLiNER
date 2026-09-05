@@ -1,6 +1,6 @@
 import warnings
 from abc import ABC, abstractmethod
-from typing import List, Union, Optional
+from typing import List
 
 import torch
 
@@ -25,9 +25,9 @@ class GLiNERBasePipeline(ABC):
 
     def __init__(
         self,
-        model_id: Optional[str] = None,
-        model: Optional[GLiNER] = None,
-        prompt: Optional[str] = None,
+        model_id: str | None = None,
+        model: GLiNER | None = None,
+        prompt: str | None = None,
         device="cuda:0",
     ):
         """
@@ -82,7 +82,7 @@ class GLiNERBasePipeline(ABC):
         pass
 
     @abstractmethod
-    def evaluate(self, dataset_id: str, labels: Optional[List[str]] = None, threshold: float = 0.5):
+    def evaluate(self, dataset_id: str, labels: List[str] | None = None, threshold: float = 0.5):
         """
         Evaluates the model on a given dataset.
 
@@ -114,7 +114,7 @@ class GLiNERBasePipeline(ABC):
 
     def __call__(
         self,
-        texts: Union[str, List[str]],
+        texts: str | List[str],
         labels: List[str] = ["match"],
         threshold: float = 0.5,
         batch_size: int = 8,

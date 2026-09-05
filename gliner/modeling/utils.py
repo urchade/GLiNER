@@ -1,4 +1,4 @@
-from typing import Tuple, Optional
+from typing import Tuple
 
 import torch
 
@@ -472,7 +472,7 @@ def build_all_entity_pairs(
 
 def extract_spans_from_tokens(
     scores: torch.Tensor,
-    labels: Optional[torch.Tensor] = None,
+    labels: torch.Tensor | None = None,
     threshold: float = 0.5,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """

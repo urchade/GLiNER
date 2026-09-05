@@ -1,12 +1,12 @@
 """HTTP client for the GLiNER Ray Serve deployment."""
 
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List
 
 DEFAULT_BASE_URL = "http://localhost:8000"
 DEFAULT_ROUTE_PREFIX = "/gliner"
 
-LabelSet = Union[List[str], Dict[str, str]]
-Labels = Union[LabelSet, List[LabelSet]]
+LabelSet = List[str] | Dict[str, str]
+Labels = LabelSet | List[LabelSet]
 
 
 def _labels_for_texts(labels: Labels, num_texts: int) -> List[LabelSet]:
@@ -59,12 +59,12 @@ class GLiNERClient:
         self,
         text: str,
         labels: LabelSet,
-        relations: Optional[List[str]],
-        threshold: Optional[float],
-        relation_threshold: Optional[float],
+        relations: List[str] | None,
+        threshold: float | None,
+        relation_threshold: float | None,
         flat_ner: bool,
         multi_label: bool,
-        adapter_id: Optional[str],
+        adapter_id: str | None,
     ) -> Dict[str, Any]:
         """Build the JSON payload for a single prediction request."""
         payload: Dict[str, Any] = {
@@ -103,15 +103,15 @@ class GLiNERClient:
 
     def predict(
         self,
-        text: Union[str, List[str]],
+        text: str | List[str],
         labels: Labels,
-        relations: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
+        relations: List[str] | None = None,
+        threshold: float | None = None,
+        relation_threshold: float | None = None,
         flat_ner: bool = True,
         multi_label: bool = False,
-        adapter_id: Optional[str] = None,
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        adapter_id: str | None = None,
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """Blocking prediction. ``str`` in -> ``dict`` out; ``list`` in -> ``list`` out."""
         single = isinstance(text, str)
         items = [text] if single else list(text)
@@ -119,10 +119,16 @@ class GLiNERClient:
 
         payloads = [
             self._build_payload(
-                t, label_set, relations, threshold, relation_threshold,
-                flat_ner, multi_label, adapter_id,
+                t,
+                label_set,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
+                adapter_id,
             )
-            for t, label_set in zip(items, labels_list)
+            for t, label_set in zip(items, labels_list, strict=False)
         ]
 
         if len(payloads) == 1:
@@ -138,15 +144,15 @@ class GLiNERClient:
 
     async def predict_async(
         self,
-        text: Union[str, List[str]],
+        text: str | List[str],
         labels: Labels,
-        relations: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
+        relations: List[str] | None = None,
+        threshold: float | None = None,
+        relation_threshold: float | None = None,
         flat_ner: bool = True,
         multi_label: bool = False,
-        adapter_id: Optional[str] = None,
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        adapter_id: str | None = None,
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """Async version of predict."""
         import asyncio  # noqa: PLC0415
 
@@ -156,19 +162,23 @@ class GLiNERClient:
 
         payloads = [
             self._build_payload(
-                t, label_set, relations, threshold, relation_threshold,
-                flat_ner, multi_label, adapter_id,
+                t,
+                label_set,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
+                adapter_id,
             )
-            for t, label_set in zip(items, labels_list)
+            for t, label_set in zip(items, labels_list, strict=False)
         ]
 
-        results = await asyncio.gather(
-            *(asyncio.to_thread(self._post, p) for p in payloads)
-        )
+        results = await asyncio.gather(*(asyncio.to_thread(self._post, p) for p in payloads))
 
         return results[0] if single else list(results)
 
-    def adapter_cache_status(self, adapter_id: Optional[str] = None) -> Dict[str, Any]:
+    def adapter_cache_status(self, adapter_id: str | None = None) -> Dict[str, Any]:
         """Return PolyLoRA adapter cache status from the server."""
         import json  # noqa: PLC0415
         import urllib.parse  # noqa: PLC0415

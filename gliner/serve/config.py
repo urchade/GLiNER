@@ -1,6 +1,6 @@
 """Configuration for GLiNER Ray Serve deployment."""
 
-from typing import List, Optional
+from typing import List
 from dataclasses import field, dataclass
 
 
@@ -16,7 +16,7 @@ class GLiNERServeConfig:
     device: str = "cuda"
     dtype: str = "bfloat16"
 
-    quantization: Optional[str] = None
+    quantization: str | None = None
 
     max_model_len: int = 2048
     max_span_width: int = 12
@@ -56,15 +56,15 @@ class GLiNERServeConfig:
 
     http_port: int = 8000
 
-    ray_address: Optional[str] = None
+    ray_address: str | None = None
 
     enable_polylora: bool = False
-    polylora_adapter_weight_modules: Optional[List[str]] = None
+    polylora_adapter_weight_modules: List[str] | None = None
     polylora_max_rank: int = 16
     polylora_max_gpu_adapters: int = 8
-    polylora_max_cpu_adapters: Optional[int] = 128
-    polylora_disk_cache_dir: Optional[str] = None
-    polylora_max_disk_adapters: Optional[int] = None
+    polylora_max_cpu_adapters: int | None = 128
+    polylora_disk_cache_dir: str | None = None
+    polylora_max_disk_adapters: int | None = None
     polylora_base_adapter_id: str = "__base__"
     polylora_use_triton_kernels: bool = True
     polylora_adapter_id_pattern: str = r"^[A-Za-z0-9_.-]{1,128}$"

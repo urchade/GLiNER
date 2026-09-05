@@ -1,7 +1,7 @@
 import random
 import warnings
 from abc import ABC, abstractmethod
-from typing import Dict, List, Tuple, Union, Optional, Sequence
+from typing import Dict, List, Tuple, Sequence
 from collections import defaultdict
 
 import torch
@@ -152,9 +152,9 @@ class BaseProcessor(ABC):
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],
-        entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
-        blank: Optional[str] = None,
-        add_entities: Optional[bool] = True,
+        entities: Sequence[Sequence[str]] | Dict[int, Sequence[str]] | Sequence[str],
+        blank: str | None = None,
+        add_entities: bool | None = True,
         **kwargs,
     ) -> Tuple[List[List[str]], List[int]]:
         """Prepare input texts with entity type prompts.
@@ -208,8 +208,8 @@ class BaseProcessor(ABC):
     def _select_entities(
         self,
         i: int,
-        entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
-        blank: Optional[str] = None,
+        entities: Sequence[Sequence[str]] | Dict[int, Sequence[str]] | Sequence[str],
+        blank: str | None = None,
     ) -> List[str]:
         """Select entities for a specific example.
 
@@ -318,7 +318,7 @@ class BaseProcessor(ABC):
         return tokenized_inputs
 
     def batch_generate_class_mappings(
-        self, batch_list: List[Dict], negatives: Optional[List[str]] = None, key: str = "ner", sampled_neg: int = 100
+        self, batch_list: List[Dict], negatives: List[str] | None = None, key: str = "ner", sampled_neg: int = 100
     ) -> Tuple[List[Dict[str, int]], List[Dict[int, str]]]:
         """Generate class mappings for a batch with negative sampling.
 
@@ -371,10 +371,10 @@ class BaseProcessor(ABC):
     def collate_raw_batch(
         self,
         batch_list: List[Dict],
-        entity_types: Optional[List[Union[str, List[str]]]] = None,
-        negatives: Optional[List[str]] = None,
-        class_to_ids: Optional[Union[Dict[str, int], List[Dict[str, int]]]] = None,
-        id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
+        entity_types: List[str | List[str]] | None = None,
+        negatives: List[str] | None = None,
+        class_to_ids: Dict[str, int] | List[Dict[str, int]] | None = None,
+        id_to_classes: Dict[int, str] | List[Dict[int, str]] | None = None,
         key="ner",
     ) -> Dict:
         """Collate a raw batch with optional dynamic or provided label mappings.
@@ -413,7 +413,7 @@ class BaseProcessor(ABC):
             if entity_types and isinstance(entity_types[0], list):
                 # Per-example mappings
                 built = [make_mapping(t) for t in entity_types]  # list of (fwd, rev)
-                class_to_ids, id_to_classes = list(zip(*built))
+                class_to_ids, id_to_classes = list(zip(*built, strict=False))
                 class_to_ids, id_to_classes = list(class_to_ids), list(id_to_classes)
             else:
                 # Single mapping for all examples
@@ -646,17 +646,15 @@ class StreamingSpanProcessor(UniEncoderSpanProcessor):
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],
-        entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
-        blank: Optional[str] = None,
-        add_entities: Optional[bool] = True,
-        include_prompt: Union[bool, Sequence[bool]] = True,
+        entities: Sequence[Sequence[str]] | Dict[int, Sequence[str]] | Sequence[str],
+        blank: str | None = None,
+        add_entities: bool | None = True,
+        include_prompt: bool | Sequence[bool] = True,
         **kwargs,
     ) -> Tuple[List[List[str]], List[int]]:
         """Build ``label<<LABEL>>...<<SEP>>text`` token sequences."""
         del kwargs
-        include_flags = (
-            [include_prompt] * len(texts) if isinstance(include_prompt, bool) else list(include_prompt)
-        )
+        include_flags = [include_prompt] * len(texts) if isinstance(include_prompt, bool) else list(include_prompt)
         if len(include_flags) != len(texts):
             raise ValueError("include_prompt must match the number of texts")
 
@@ -1089,8 +1087,7 @@ class BaseBiEncoderProcessor(BaseProcessor):
             return entities, None, None
 
         entity_rows = [
-            [label for label, _ in sorted(mapping.items(), key=lambda item: item[1])]
-            for mapping in classes_to_id
+            [label for label, _ in sorted(mapping.items(), key=lambda item: item[1])] for mapping in classes_to_id
         ]
         if not entity_rows:
             return [], None, None
@@ -1188,9 +1185,7 @@ class BiEncoderSpanProcessor(UniEncoderSpanProcessor, BaseBiEncoderProcessor):
         labels_gather_indices = None
         prompts_embedding_mask = None
         if prepare_entities:
-            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(
-                batch["classes_to_id"]
-            )
+            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(batch["classes_to_id"])
         else:
             entities = None
         tokenized_input = self.tokenize_inputs(batch["tokens"], entities)
@@ -1225,9 +1220,7 @@ class BiEncoderTokenProcessor(UniEncoderTokenProcessor, BaseBiEncoderProcessor):
         labels_gather_indices = None
         prompts_embedding_mask = None
         if prepare_entities:
-            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(
-                batch["classes_to_id"]
-            )
+            entities, labels_gather_indices, prompts_embedding_mask = self._prepare_entity_batch(batch["classes_to_id"])
         else:
             entities = None
 
@@ -1694,8 +1687,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
     def batch_generate_class_mappings(
         self,
         batch_list: List[Dict],
-        ner_negatives: Optional[List[str]] = None,
-        rel_negatives: Optional[List[str]] = None,
+        ner_negatives: List[str] | None = None,
+        rel_negatives: List[str] | None = None,
         sampled_neg: int = 100,
     ) -> Tuple[List[Dict[str, int]], List[Dict[int, str]], List[Dict[str, int]], List[Dict[int, str]]]:
         """Generate class mappings for both entities and relations.
@@ -1783,14 +1776,14 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
     def collate_raw_batch(
         self,
         batch_list: List[Dict],
-        entity_types: Optional[List[Union[str, List[str]]]] = None,
-        relation_types: Optional[List[Union[str, List[str]]]] = None,
-        ner_negatives: Optional[List[str]] = None,
-        rel_negatives: Optional[List[str]] = None,
-        class_to_ids: Optional[Union[Dict[str, int], List[Dict[str, int]]]] = None,
-        id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
-        rel_class_to_ids: Optional[Union[Dict[str, int], List[Dict[str, int]]]] = None,
-        rel_id_to_classes: Optional[Union[Dict[int, str], List[Dict[int, str]]]] = None,
+        entity_types: List[str | List[str]] | None = None,
+        relation_types: List[str | List[str]] | None = None,
+        ner_negatives: List[str] | None = None,
+        rel_negatives: List[str] | None = None,
+        class_to_ids: Dict[str, int] | List[Dict[str, int]] | None = None,
+        id_to_classes: Dict[int, str] | List[Dict[int, str]] | None = None,
+        rel_class_to_ids: Dict[str, int] | List[Dict[str, int]] | None = None,
+        rel_id_to_classes: Dict[int, str] | List[Dict[int, str]] | None = None,
         key="ner",
     ) -> Dict:
         """Collate a raw batch with entity and relation label mappings.
@@ -1828,7 +1821,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             # Build mappings from entity_types
             if entity_types and isinstance(entity_types[0], list):
                 built = [make_mapping(t) for t in entity_types]
-                class_to_ids, id_to_classes = list(zip(*built))
+                class_to_ids, id_to_classes = list(zip(*built, strict=False))
                 class_to_ids, id_to_classes = list(class_to_ids), list(id_to_classes)
             else:
                 class_to_ids, id_to_classes = make_mapping(entity_types or [])
@@ -1836,7 +1829,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
             # Build relation mappings
             if relation_types and isinstance(relation_types[0], list):
                 built = [make_mapping(t) for t in relation_types]
-                rel_class_to_ids, rel_id_to_classes = list(zip(*built))
+                rel_class_to_ids, rel_id_to_classes = list(zip(*built, strict=False))
                 rel_class_to_ids, rel_id_to_classes = list(rel_class_to_ids), list(rel_id_to_classes)
             else:
                 rel_class_to_ids, rel_id_to_classes = make_mapping(relation_types or [])
@@ -2194,9 +2187,9 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
     def prepare_inputs(
         self,
         texts: Sequence[Sequence[str]],
-        entities: Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]],
-        blank: Optional[str] = None,
-        relations: Optional[Union[Sequence[Sequence[str]], Dict[int, Sequence[str]], Sequence[str]]] = None,
+        entities: Sequence[Sequence[str]] | Dict[int, Sequence[str]] | Sequence[str],
+        blank: str | None = None,
+        relations: Sequence[Sequence[str]] | Dict[int, Sequence[str]] | Sequence[str] | None = None,
         **kwargs,
     ) -> Tuple[List[List[str]], List[int]]:
         """Prepare input texts with entity and relation type prompts.

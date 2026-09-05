@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 import torch
@@ -39,10 +39,10 @@ class GLiNERClassifier(GLiNERBasePipeline):
 
     def __init__(
         self,
-        model_id: Optional[str] = None,
-        model: Optional[GLiNER] = None,
+        model_id: str | None = None,
+        model: GLiNER | None = None,
         device: str = "cuda:0",
-        prompt: Optional[str] = None,
+        prompt: str | None = None,
     ):
         """
         Initializes the GLiNERClassifier.
@@ -171,9 +171,9 @@ class GLiNERClassifier(GLiNERBasePipeline):
 
     def evaluate(
         self,
-        dataset_id: Optional[str] = None,
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = None,
+        dataset_id: str | None = None,
+        dataset: Dataset | None = None,
+        labels: List[str] | None = None,
         threshold: float = 0.5,
         max_examples: float = -1,
     ):

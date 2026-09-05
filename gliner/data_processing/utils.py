@@ -1,5 +1,5 @@
 import random
-from typing import Dict, List, Tuple, Optional, Sequence
+from typing import Dict, List, Tuple, Sequence
 
 import torch
 
@@ -96,7 +96,7 @@ def prepare_word_mask(
     texts: Sequence[Sequence[str]],
     tokenized_inputs,
     *,
-    skip_first_words: Optional[Sequence[int]] = None,
+    skip_first_words: Sequence[int] | None = None,
     token_level: bool = False,
     subtoken_pooling: str = "first",
 ) -> List[List[int]]:
@@ -158,7 +158,7 @@ def prepare_word_mask(
     for i in range(n):
         word_ids = tokenized_inputs.word_ids(i)
         mask: List[int] = []
-        prev_word_id: Optional[int] = None
+        prev_word_id: int | None = None
         seen_words = 0  # counts distinct word_ids we've traversed in this sequence
 
         for token_idx, wid in enumerate(word_ids):

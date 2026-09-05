@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List
 
 import torch
 
@@ -26,7 +26,7 @@ class BaseDataCollator(ABC):
     def __init__(
         self,
         config,
-        data_processor: Optional[BaseProcessor] = None,
+        data_processor: BaseProcessor | None = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
         return_entities: bool = False,
@@ -126,7 +126,7 @@ class BaseDataCollator(ABC):
 
     @staticmethod
     def _get_id_to_classes_for_sample(
-        id_to_classes: Union[Dict[int, str], List[Dict[int, str]]], sample_idx: int
+        id_to_classes: Dict[int, str] | List[Dict[int, str]], sample_idx: int
     ) -> Dict[int, str]:
         """
         Get id_to_classes mapping for a specific sample.
@@ -220,14 +220,11 @@ class SpanDataCollator(BaseSpanCollator):
     def __init__(
         self,
         config,
-        data_processor: Optional[
-            Union[
-                UniEncoderSpanProcessor,
-                BiEncoderSpanProcessor,
-                UniEncoderSpanDecoderProcessor,
-                StreamingSpanProcessor,
-            ]
-        ] = None,
+        data_processor: UniEncoderSpanProcessor
+        | BiEncoderSpanProcessor
+        | UniEncoderSpanDecoderProcessor
+        | StreamingSpanProcessor
+        | None = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
         return_entities: bool = False,
@@ -250,7 +247,7 @@ class SpanDataCollator(BaseSpanCollator):
         self.prepare_entities = prepare_entities
 
     def __call__(
-        self, input_x: List[Dict[str, Any]], entity_types: Optional[Union[List[str], List[List[str]]]] = None, **kwargs
+        self, input_x: List[Dict[str, Any]], entity_types: List[str] | List[List[str]] | None = None, **kwargs
     ) -> Dict[str, Any]:
         """
         Collate batch for span-based model.
@@ -303,7 +300,7 @@ class TokenDataCollator(BaseTokenCollator):
     def __init__(
         self,
         config,
-        data_processor: Optional[Union[UniEncoderTokenProcessor, BiEncoderTokenProcessor]] = None,
+        data_processor: UniEncoderTokenProcessor | BiEncoderTokenProcessor | None = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
         return_entities: bool = False,
@@ -326,7 +323,7 @@ class TokenDataCollator(BaseTokenCollator):
         self.prepare_entities = prepare_entities
 
     def __call__(
-        self, input_x: List[Dict[str, Any]], entity_types: Optional[Union[List[str], List[List[str]]]] = None, **kwargs
+        self, input_x: List[Dict[str, Any]], entity_types: List[str] | List[List[str]] | None = None, **kwargs
     ) -> Dict[str, Any]:
         """
         Collate batch for token-based model.
@@ -372,7 +369,7 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
     def __init__(
         self,
         config,
-        data_processor: Optional[RelationExtractionSpanProcessor] = None,
+        data_processor: RelationExtractionSpanProcessor | None = None,
         return_tokens: bool = False,
         return_id_to_classes: bool = False,
         return_entities: bool = False,
@@ -400,10 +397,10 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
     def collate_batch(
         self,
         input_x: List[Dict[str, Any]],
-        entity_types: Optional[Union[List[str], List[List[str]]]] = None,
-        relation_types: Optional[Union[List[str], List[List[str]]]] = None,
-        ner_negatives: Optional[List[str]] = None,
-        rel_negatives: Optional[List[str]] = None,
+        entity_types: List[str] | List[List[str]] | None = None,
+        relation_types: List[str] | List[List[str]] | None = None,
+        ner_negatives: List[str] | None = None,
+        rel_negatives: List[str] | None = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """
@@ -439,10 +436,10 @@ class RelationExtractionSpanDataCollator(BaseSpanCollator):
     def __call__(
         self,
         input_x: List[Dict[str, Any]],
-        entity_types: Optional[Union[List[str], List[List[str]]]] = None,
-        relation_types: Optional[Union[List[str], List[List[str]]]] = None,
-        ner_negatives: Optional[List[str]] = None,
-        rel_negatives: Optional[List[str]] = None,
+        entity_types: List[str] | List[List[str]] | None = None,
+        relation_types: List[str] | List[List[str]] | None = None,
+        ner_negatives: List[str] | None = None,
+        rel_negatives: List[str] | None = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """
