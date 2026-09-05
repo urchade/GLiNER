@@ -354,7 +354,7 @@ class AsyncStreamingEngine:
                     if not request.future.done():
                         request.future.set_exception(error)
             else:
-                for request, output in zip(batch, outputs):
+                for request, output in zip(batch, outputs, strict=False):
                     if not request.future.done():
                         if isinstance(output, Exception):
                             request.future.set_exception(output)

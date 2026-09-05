@@ -1,10 +1,11 @@
 """Ray Serve deployment for GLiNER with dynamic batching and memory-aware batch sizing."""
+
 from __future__ import annotations
 
 import os
 import re
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple
 
 import torch
 
@@ -15,8 +16,8 @@ from .memory import GLiNERMemoryEstimator
 
 logger = logging.getLogger(__name__)
 
-LabelSet = Union[List[str], Dict[str, str]]
-Labels = Union[LabelSet, List[LabelSet]]
+LabelSet = List[str] | Dict[str, str]
+Labels = LabelSet | List[LabelSet]
 
 
 def _min_batch_value(value):
@@ -190,7 +191,7 @@ class GLiNERServer:
         if adapter_id == self.config.polylora_base_adapter_id:
             raise ValueError(f"{adapter_id!r} is reserved for base-only inference")
 
-    def adapter_cache_status(self, adapter_id: Optional[str] = None) -> Dict[str, Any]:
+    def adapter_cache_status(self, adapter_id: str | None = None) -> Dict[str, Any]:
         if not self.config.enable_polylora or self._polylora_model is None:
             return {"enabled": False, "base_adapter_id": self.config.polylora_base_adapter_id}
         store = self._polylora_model.adapter_store
@@ -218,7 +219,7 @@ class GLiNERServer:
             response["gpu_resident"] = adapter_id in self._polylora_model.adapter_cache.adapter_to_slot
         return response
 
-    def ensure_adapter_loaded(self, adapter_id: Optional[str]) -> Optional[str]:
+    def ensure_adapter_loaded(self, adapter_id: str | None) -> str | None:
         if adapter_id is None:
             return self.config.polylora_base_adapter_id if self.config.enable_polylora else None
         if adapter_id == self.config.polylora_base_adapter_id:
@@ -232,9 +233,9 @@ class GLiNERServer:
 
     def _resolve_adapter_ids(
         self,
-        adapter_ids: Optional[str | List[Optional[str]]],
+        adapter_ids: str | List[str | None] | None,
         valid_to_orig_idx: List[int],
-    ) -> Optional[str | List[Optional[str]]]:
+    ) -> str | List[str | None] | None:
         if not self.config.enable_polylora:
             if isinstance(adapter_ids, list):
                 for adapter_id in adapter_ids:
@@ -308,7 +309,7 @@ class GLiNERServer:
 
         logger.info("Memory calibration complete.")
 
-    def batch_size_fn(self, seq_len: Optional[int] = None) -> int:
+    def batch_size_fn(self, seq_len: int | None = None) -> int:
         """Largest precompiled batch size that fits at ``seq_len``.
 
         With no arguments, returns the worst-case answer (``max_model_len``),
@@ -330,8 +331,8 @@ class GLiNERServer:
     def observed_seq_len(
         self,
         texts: List[str],
-        labels: Optional[Labels] = None,
-        relations: Optional[List[str] | List[List[str] | None]] = None,
+        labels: Labels | None = None,
+        relations: List[str] | List[List[str] | None] | None = None,
     ) -> int:
         """Total input word count: longest text + all label/relation words.
 
@@ -351,8 +352,7 @@ class GLiNERServer:
             if normalized_relations:
                 if isinstance(normalized_relations[0], list):
                     prompt_words += max(
-                        sum(len(relation.split()) for relation in relation_set)
-                        for relation_set in normalized_relations
+                        sum(len(relation.split()) for relation in relation_set) for relation_set in normalized_relations
                     )
                 else:
                     prompt_words += sum(len(r.split()) for r in normalized_relations)
@@ -375,13 +375,13 @@ class GLiNERServer:
         self,
         texts: List[str],
         labels: Labels,
-        relations: Optional[List[str] | List[List[str] | None]] = None,
+        relations: List[str] | List[List[str] | None] | None = None,
         threshold: float | List[float] = 0.5,
         relation_threshold: float | List[float] = 0.5,
         flat_ner: bool | List[bool] = True,
         multi_label: bool | List[bool] = False,
-        adapter_ids: Optional[str | List[Optional[str]]] = None,
-    ) -> Union[List[List[Dict[str, Any]]], Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]]:
+        adapter_ids: str | List[str | None] | None = None,
+    ) -> List[List[Dict[str, Any]]] | Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]:
         """Run batch inference using low-level methods (no DataLoader).
 
         This is the core inference method that avoids DataLoader initialization
@@ -455,7 +455,7 @@ class GLiNERServer:
         threshold: float | List[float],
         flat_ner: bool | List[bool],
         multi_label: bool | List[bool],
-        adapter_ids: Optional[str | List[Optional[str]]] = None,
+        adapter_ids: str | List[str | None] | None = None,
     ) -> List[List[Dict[str, Any]]]:
         """Run NER batch inference using low-level methods."""
         prepared = self.model.prepare_batch(texts, labels)
@@ -507,12 +507,12 @@ class GLiNERServer:
         self,
         texts: List[str],
         labels: Labels,
-        relations: Optional[List[str] | List[List[str] | None]],
+        relations: List[str] | List[List[str] | None] | None,
         threshold: float | List[float],
         relation_threshold: float | List[float],
         flat_ner: bool | List[bool],
         multi_label: bool | List[bool],
-        adapter_ids: Optional[str | List[Optional[str]]] = None,
+        adapter_ids: str | List[str | None] | None = None,
     ) -> Tuple[List[List[Dict[str, Any]]], List[List[Dict[str, Any]]]]:
         """Run relation extraction batch inference using low-level methods."""
         relations = _normalize_relation_lists(relations)
@@ -577,14 +577,14 @@ class GLiNERServer:
 
     def predict(
         self,
-        texts: Union[str, List[str]],
+        texts: str | List[str],
         labels: Labels,
-        relations: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
+        relations: List[str] | None = None,
+        threshold: float | None = None,
+        relation_threshold: float | None = None,
         flat_ner: bool = True,
         multi_label: bool = False,
-        adapter_id: Optional[str] = None,
+        adapter_id: str | None = None,
     ) -> List[Dict[str, Any]]:
         """Predict entities and optionally relations.
 
@@ -624,7 +624,7 @@ class GLiNERServer:
                 multi_label=multi_label,
                 adapter_ids=adapter_id,
             )
-            results = [{"entities": ents, "relations": r} for ents, r in zip(entities, rels)]
+            results = [{"entities": ents, "relations": r} for ents, r in zip(entities, rels, strict=False)]
         else:
             entities = self._run_batch_internal(
                 texts,
@@ -677,12 +677,12 @@ def _build_deployment(config: GLiNERServeConfig):
             self,
             texts: List[str],
             labels_list: List[LabelSet],
-            relations_list: List[Optional[List[str]]],
+            relations_list: List[List[str] | None],
             thresholds: List[float],
             relation_thresholds: List[float],
             flat_ner_list: List[bool],
             multi_label_list: List[bool],
-            adapter_ids: List[Optional[str]],
+            adapter_ids: List[str | None],
         ) -> List[Dict[str, Any]]:
             """Single forward pass over the Ray-accumulated batch.
 
@@ -717,7 +717,7 @@ def _build_deployment(config: GLiNERServeConfig):
                     multi_label=multi_label_list,
                     adapter_ids=adapter_ids,
                 )
-                return [{"entities": ents, "relations": r} for ents, r in zip(entities, rels)]
+                return [{"entities": ents, "relations": r} for ents, r in zip(entities, rels, strict=False)]
 
             entities = self.server._run_batch_internal(
                 texts,
@@ -733,12 +733,12 @@ def _build_deployment(config: GLiNERServeConfig):
             self,
             text: str,
             labels: LabelSet,
-            relations: Optional[List[str]] = None,
-            threshold: Optional[float] = None,
-            relation_threshold: Optional[float] = None,
+            relations: List[str] | None = None,
+            threshold: float | None = None,
+            relation_threshold: float | None = None,
             flat_ner: bool = True,
             multi_label: bool = False,
-            adapter_id: Optional[str] = None,
+            adapter_id: str | None = None,
         ) -> Dict[str, Any]:
             """Single prediction endpoint."""
             if threshold is None:
@@ -879,9 +879,9 @@ class GLiNERFactory:
 
     def __init__(
         self,
-        model: Optional[str] = None,
+        model: str | None = None,
         *,
-        config: Optional[GLiNERServeConfig] = None,
+        config: GLiNERServeConfig | None = None,
         **kwargs,
     ):
         """Build a config (if not provided) and start the Ray Serve deployment.
@@ -911,15 +911,15 @@ class GLiNERFactory:
 
     def predict(
         self,
-        texts: Union[str, List[str]],
+        texts: str | List[str],
         labels: Labels,
-        relations: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
+        relations: List[str] | None = None,
+        threshold: float | None = None,
+        relation_threshold: float | None = None,
         flat_ner: bool = True,
         multi_label: bool = False,
-        adapter_id: Optional[str] = None,
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        adapter_id: str | None = None,
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """Blocking prediction. Returns a dict for ``str`` input, list for list input."""
         single = isinstance(texts, str)
         items = [texts] if single else list(texts)
@@ -936,22 +936,22 @@ class GLiNERFactory:
                 multi_label,
                 adapter_id,
             )
-            for t, label_set in zip(items, labels_list)
+            for t, label_set in zip(items, labels_list, strict=False)
         ]
         results = [ref.result() for ref in refs]
         return results[0] if single else results
 
     async def predict_async(
         self,
-        texts: Union[str, List[str]],
+        texts: str | List[str],
         labels: Labels,
-        relations: Optional[List[str]] = None,
-        threshold: Optional[float] = None,
-        relation_threshold: Optional[float] = None,
+        relations: List[str] | None = None,
+        threshold: float | None = None,
+        relation_threshold: float | None = None,
         flat_ner: bool = True,
         multi_label: bool = False,
-        adapter_id: Optional[str] = None,
-    ) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        adapter_id: str | None = None,
+    ) -> Dict[str, Any] | List[Dict[str, Any]]:
         """Async prediction. Concurrent calls accumulate into one batch."""
         import asyncio  # noqa: PLC0415
 
@@ -970,7 +970,7 @@ class GLiNERFactory:
                 multi_label,
                 adapter_id,
             )
-            for t, label_set in zip(items, labels_list)
+            for t, label_set in zip(items, labels_list, strict=False)
         ]
         results = list(await asyncio.gather(*refs))
         return results[0] if single else results

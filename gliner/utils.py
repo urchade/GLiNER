@@ -1,13 +1,13 @@
 import json
 import argparse
 import importlib.util
-from typing import Any, Dict, Union
+from typing import Any, Dict
 from pathlib import Path
 
 import yaml
 
 
-def load_config_as_namespace(config_file: Union[str, Path]) -> argparse.Namespace:
+def load_config_as_namespace(config_file: str | Path) -> argparse.Namespace:
     """
     Load YAML/JSON config file as nested Namespace.
 

@@ -1,5 +1,5 @@
 import os
-from typing import List, Union, Optional
+from typing import List
 
 import evaluate
 from datasets import Dataset, load_dataset
@@ -35,10 +35,10 @@ class GLiNERQuestionAnswerer(GLiNERBasePipeline):
 
     def __init__(
         self,
-        model_id: Optional[str] = None,
-        model: Optional[GLiNER] = None,
+        model_id: str | None = None,
+        model: GLiNER | None = None,
         device: str = "cuda:0",
-        prompt: Optional[str] = None,
+        prompt: str | None = None,
     ):
         """
         Initializes the GLiNERQuestionAnswerer.
@@ -75,7 +75,7 @@ class GLiNERQuestionAnswerer(GLiNERBasePipeline):
 
         return batch_predicted_labels
 
-    def prepare_texts(self, texts: List[str], questions: Union[List[str], str], **kwargs):
+    def prepare_texts(self, texts: List[str], questions: List[str] | str, **kwargs):
         """
         Prepares prompts for question-answering by appending questions to texts.
 
@@ -100,8 +100,8 @@ class GLiNERQuestionAnswerer(GLiNERBasePipeline):
 
     def __call__(
         self,
-        texts: Union[str, List[str]],
-        questions: Union[str, List[str]],
+        texts: str | List[str],
+        questions: str | List[str],
         labels: List[str] = ["answer"],
         threshold: float = 0.5,
         batch_size: int = 8,
@@ -111,9 +111,9 @@ class GLiNERQuestionAnswerer(GLiNERBasePipeline):
 
     def evaluate(
         self,
-        dataset_id: Optional[str] = None,
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = None,
+        dataset_id: str | None = None,
+        dataset: Dataset | None = None,
+        labels: List[str] | None = None,
         threshold: float = 0.5,
         max_examples: float = -1,
     ):
@@ -140,8 +140,8 @@ class GLiNERSquadEvaluator(GLiNERQuestionAnswerer):
     def evaluate(
         self,
         dataset_id: str = "rajpurkar/squad_v2",
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = ["answer"],
+        dataset: Dataset | None = None,
+        labels: List[str] | None = ["answer"],
         threshold: float = 0.5,
         max_examples: int = -1,
     ):

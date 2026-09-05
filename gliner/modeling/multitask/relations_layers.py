@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 
 import torch
 import torch.nn.functional as F
@@ -22,7 +22,7 @@ def compute_degree(A: torch.Tensor) -> torch.Tensor:
     return A.sum(dim=-1).clamp(min=1e-6)
 
 
-def _apply_pair_mask(A: torch.Tensor, mask: Optional[torch.Tensor]) -> torch.Tensor:
+def _apply_pair_mask(A: torch.Tensor, mask: torch.Tensor | None) -> torch.Tensor:
     """Zero out adjacency entries where at least one endpoint is masked.
 
     This ensures that edges to/from padded entities are properly masked out.
@@ -42,9 +42,7 @@ def _apply_pair_mask(A: torch.Tensor, mask: Optional[torch.Tensor]) -> torch.Ten
     return A * m.unsqueeze(2) * m.unsqueeze(1)  # (B, E, E)
 
 
-def dot_product_adjacency(
-    X: torch.Tensor, mask: Optional[torch.Tensor] = None, normalize: bool = False
-) -> torch.Tensor:
+def dot_product_adjacency(X: torch.Tensor, mask: torch.Tensor | None = None, normalize: bool = False) -> torch.Tensor:
     """Compute adjacency matrix using dot-product (cosine) similarity.
 
     Computes pairwise similarities between entity embeddings using either
@@ -91,7 +89,7 @@ class MLPDecoder(nn.Module):
         super().__init__()
         self.mlp = nn.Sequential(nn.Linear(2 * in_dim, hidden_dim), nn.ReLU(), nn.Linear(hidden_dim, 1))
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Compute adjacency matrix using MLP on concatenated node pairs.
 
         Args:
@@ -129,7 +127,7 @@ class AttentionAdjacency(nn.Module):
         super().__init__()
         self.attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Compute adjacency matrix from attention weights.
 
         Args:
@@ -168,7 +166,7 @@ class BilinearDecoder(nn.Module):
         super().__init__()
         self.proj = nn.Linear(in_dim, latent_dim)
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Compute adjacency using bilinear projection.
 
         Args:
@@ -205,7 +203,7 @@ class SimpleGCNLayer(nn.Module):
         super().__init__()
         self.linear = nn.Linear(in_dim, out_dim)
 
-    def forward(self, X: torch.Tensor, A: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, A: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Apply graph convolution with symmetric normalization.
 
         Args:
@@ -253,7 +251,7 @@ class GCNDecoder(nn.Module):
         self.gcn = SimpleGCNLayer(in_dim, hidden_dim)
         self.proj = nn.Linear(hidden_dim, hidden_dim)
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Compute adjacency using GCN refinement.
 
         Args:
@@ -293,7 +291,7 @@ class GATDecoder(nn.Module):
         self.attn = nn.MultiheadAttention(d_model, nhead, batch_first=True)
         self.linear = nn.Linear(d_model, hidden_dim)
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
         """Compute adjacency using GAT refinement.
 
         Args:
@@ -365,7 +363,7 @@ class RelationsRepLayer(nn.Module):
             class _Dot(nn.Module):
                 """Simple wrapper for dot-product adjacency with mask support."""
 
-                def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None) -> torch.Tensor:
+                def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None) -> torch.Tensor:
                     return dot_product_adjacency(X, mask)
 
             self.relation_rep_layer = _Dot()
@@ -387,7 +385,7 @@ class RelationsRepLayer(nn.Module):
         else:
             raise ValueError(f"Unknown relation mode: {relation_mode}")
 
-    def forward(self, X: torch.Tensor, mask: Optional[torch.Tensor] = None, *args: Any, **kwargs: Any) -> torch.Tensor:
+    def forward(self, X: torch.Tensor, mask: torch.Tensor | None = None, *args: Any, **kwargs: Any) -> torch.Tensor:
         """Compute adjacency matrix from entity embeddings.
 
         Args:

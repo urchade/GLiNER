@@ -1,5 +1,3 @@
-from typing import Union, Optional
-
 from transformers import DebertaV2Config, ModernBertConfig, PretrainedConfig
 from transformers.models.auto import CONFIG_MAPPING
 
@@ -41,7 +39,7 @@ class RNNEncoderConfig(PretrainedConfig):
         self.rnn_type = rnn_type
 
 
-ContextEncoderConfig = Union[DebertaV2Config, ModernBertConfig, RNNEncoderConfig]
+ContextEncoderConfig = DebertaV2Config | ModernBertConfig | RNNEncoderConfig
 
 
 def _default_num_attention_heads(hidden_size: int) -> int:
@@ -53,12 +51,12 @@ def _default_num_attention_heads(hidden_size: int) -> int:
 
 
 def normalize_context_encoder_config(
-    encoder_config: Optional[Union[dict, ContextEncoderConfig]],
+    encoder_config: dict | ContextEncoderConfig | None,
     *,
     hidden_size: int,
     dropout: float,
     default_num_hidden_layers: int = 1,
-) -> Optional[ContextEncoderConfig]:
+) -> ContextEncoderConfig | None:
     """Normalize configs shared by span and streaming-label context encoders."""
     if encoder_config is None:
         return None
@@ -148,17 +146,17 @@ class BaseGLiNERConfig(PretrainedConfig):
         fuse_layers: bool = False,
         embed_ent_token: bool = True,
         class_token_index: int = -1,
-        encoder_config: Optional[dict] = None,
-        span_encoder_config: Optional[dict] = None,
+        encoder_config: dict | None = None,
+        span_encoder_config: dict | None = None,
         ent_token: str = "<<ENT>>",
         sep_token: str = "<<SEP>>",
-        _attn_implementation: Optional[str] = None,
+        _attn_implementation: str | None = None,
         token_loss_coef: float = 1.0,
         span_loss_coef: float = 1.0,
         represent_spans: bool = False,
         neg_spans_ratio: float = 1.0,
-        precomputed_prompts_mode: Optional[bool] = None,
-        id_to_classes: Optional[dict] = None,
+        precomputed_prompts_mode: bool | None = None,
+        id_to_classes: dict | None = None,
         **kwargs,
     ):
         """Initialize BaseGLiNERConfig.
@@ -277,11 +275,11 @@ class UniEncoderSpanDecoderConfig(UniEncoderConfig):
 
     def __init__(
         self,
-        labels_decoder: Optional[str] = None,
-        decoder_mode: Optional[str] = None,
+        labels_decoder: str | None = None,
+        decoder_mode: str | None = None,
         full_decoder_context: bool = True,
         blank_entity_prob: float = 0.1,
-        labels_decoder_config: Optional[dict] = None,
+        labels_decoder_config: dict | None = None,
         decoder_loss_coef=0.5,
         **kwargs,
     ):
@@ -338,16 +336,16 @@ class StreamingSpanConfig(UniEncoderConfig):
 
     def __init__(
         self,
-        model_name: Optional[str] = None,
-        decoder_config: Optional[dict] = None,
-        labels_encoder_config: Optional[dict] = None,
-        span_encoder_config: Optional[dict] = None,
+        model_name: str | None = None,
+        decoder_config: dict | None = None,
+        labels_encoder_config: dict | None = None,
+        span_encoder_config: dict | None = None,
         label_token: str = "<<LABEL>>",
         sep_token_index: int = -1,
-        max_cache_length: Optional[int] = None,
-        right_context_width: Optional[int] = None,
-        labels_decoder: Optional[str] = None,
-        labels_decoder_config: Optional[dict] = None,
+        max_cache_length: int | None = None,
+        right_context_width: int | None = None,
+        labels_decoder: str | None = None,
+        labels_decoder_config: dict | None = None,
         **kwargs,
     ):
         # ``labels_decoder`` used to identify this architecture's only
@@ -402,8 +400,8 @@ class StreamingSpanConfig(UniEncoderConfig):
 class UniEncoderRelexConfig(UniEncoderConfig):
     def __init__(
         self,
-        relations_layer: Optional[str] = None,
-        triples_layer: Optional[str] = None,
+        relations_layer: str | None = None,
+        triples_layer: str | None = None,
         embed_rel_token: bool = True,
         rel_token_index: int = -1,
         rel_token: str = "<<REL>>",
@@ -413,7 +411,7 @@ class UniEncoderRelexConfig(UniEncoderConfig):
         augment_ent_drop_prob=(0.0, 1.0),
         augment_rel_drop_prob=(0.0, 0.3),
         augment_add_other_prob=0.5,
-        rel_id_to_classes: Optional[dict] = None,
+        rel_id_to_classes: dict | None = None,
         **kwargs,
     ):
         """Initialize UniEncoderRelexConfig.
@@ -481,7 +479,7 @@ class UniEncoderTokenRelexConfig(UniEncoderRelexConfig):
 class BiEncoderConfig(BaseGLiNERConfig):
     """Base configuration for bi-encoder GLiNER models."""
 
-    def __init__(self, labels_encoder: Optional[str] = None, labels_encoder_config: Optional[dict] = None, **kwargs):
+    def __init__(self, labels_encoder: str | None = None, labels_encoder_config: dict | None = None, **kwargs):
         """Initialize BiEncoderConfig.
 
         Args:
@@ -533,9 +531,9 @@ class GLiNERConfig(BaseGLiNERConfig):
 
     def __init__(
         self,
-        labels_encoder: Optional[str] = None,
-        labels_decoder: Optional[str] = None,
-        relations_layer: Optional[str] = None,
+        labels_encoder: str | None = None,
+        labels_decoder: str | None = None,
+        relations_layer: str | None = None,
         **kwargs,
     ):
         """Initialize GLiNERConfig.

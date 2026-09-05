@@ -92,7 +92,7 @@ class BaseRuntimeModel(ABC):
         else:
             if len(args) > len(input_order):
                 raise TypeError(f"Expected at most {len(input_order)} positional inputs, received {len(args)}.")
-            bound = dict(zip(input_order, args))
+            bound = dict(zip(input_order, args, strict=False))
 
         for name in self.input_names:
             if name not in kwargs:

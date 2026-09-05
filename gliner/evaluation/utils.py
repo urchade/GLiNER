@@ -1,5 +1,5 @@
 import warnings
-from typing import List, Union, Literal
+from typing import List, Literal
 from collections import defaultdict
 
 import numpy as np
@@ -40,7 +40,7 @@ def _prf_divide(
     modifier: str,
     average: str,
     warn_for: List[str],
-    zero_division: Union[str, int] = "warn",
+    zero_division: str | int = "warn",
 ) -> np.ndarray:
     """Performs division and handles divide-by-zero with warnings."""
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -76,7 +76,7 @@ def flatten_for_eval(y_true, y_pred):
     all_true = []
     all_pred = []
 
-    for i, (true, pred) in enumerate(zip(y_true, y_pred)):
+    for i, (true, pred) in enumerate(zip(y_true, y_pred, strict=False)):
         all_true.extend([[*t, i] for t in true])
         all_pred.extend([[*p, i] for p in pred])
 

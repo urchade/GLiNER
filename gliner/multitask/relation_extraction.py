@@ -1,5 +1,5 @@
 import os
-from typing import List, Union, Optional
+from typing import List
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -34,13 +34,13 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     def __init__(
         self,
-        model_id: Optional[str] = None,
-        model: Optional[GLiNER] = None,
+        model_id: str | None = None,
+        model: GLiNER | None = None,
         device: str = "cuda:0",
         ner_threshold: float = 0.5,
         rel_threshold: float = 0.5,
         return_index: bool = False,
-        prompt: Optional[str] = None,
+        prompt: str | None = None,
     ):
         """
         Initializes the GLiNERRelationExtractor.
@@ -128,10 +128,10 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     def __call__(
         self,
-        texts: Union[str, List[str]],
-        relations: Optional[List[str]] = None,
+        texts: str | List[str],
+        relations: List[str] | None = None,
         entities: List[str] = ["named entity"],
-        relation_labels: Optional[List[List[str]]] = None,
+        relation_labels: List[List[str]] | None = None,
         ner_threshold: float = 0.5,
         rel_threshold: float = 0.5,
         batch_size: int = 8,
@@ -156,9 +156,9 @@ class GLiNERRelationExtractor(GLiNERBasePipeline):
 
     def evaluate(
         self,
-        dataset_id: Optional[str] = None,
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = None,
+        dataset_id: str | None = None,
+        dataset: Dataset | None = None,
+        labels: List[str] | None = None,
         threshold: float = 0.5,
         max_examples: float = -1,
     ):
@@ -218,7 +218,9 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
 
             current_labels = []
 
-            for head_id, tail_id, relation in zip(labels["head"], labels["tail"], labels["relation_text"]):
+            for head_id, tail_id, relation in zip(
+                labels["head"], labels["tail"], labels["relation_text"], strict=False
+            ):
                 current_index = 0
                 head_data = None
                 tail_data = None
@@ -301,8 +303,8 @@ class GLiNERDocREDEvaluator(GLiNERRelationExtractor):
     def evaluate(
         self,
         dataset_id: str = "thunlp/docred",
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = None,
+        dataset: Dataset | None = None,
+        labels: List[str] | None = None,
         threshold: float = 0.5,
         max_examples: int = -1,
     ):

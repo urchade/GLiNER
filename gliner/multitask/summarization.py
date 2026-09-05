@@ -1,5 +1,5 @@
 import os
-from typing import List, Union, Optional
+from typing import List
 
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
@@ -34,10 +34,10 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
     def __init__(
         self,
-        model_id: Optional[str] = None,
-        model: Optional[GLiNER] = None,
+        model_id: str | None = None,
+        model: GLiNER | None = None,
         device: str = "cuda:0",
-        prompt: Optional[str] = None,
+        prompt: str | None = None,
     ):
         """
         Initializes the GLiNERSummarizer.
@@ -94,7 +94,7 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
     def __call__(
         self,
-        texts: Union[str, List[str]],
+        texts: str | List[str],
         labels: List[str] = ["summary"],
         threshold: float = 0.25,
         batch_size: int = 8,
@@ -104,9 +104,9 @@ class GLiNERSummarizer(GLiNERBasePipeline):
 
     def evaluate(
         self,
-        dataset_id: Optional[str] = None,
-        dataset: Optional[Dataset] = None,
-        labels: Optional[List[str]] = None,
+        dataset_id: str | None = None,
+        dataset: Dataset | None = None,
+        labels: List[str] | None = None,
         threshold: float = 0.5,
         max_examples: float = -1,
     ):

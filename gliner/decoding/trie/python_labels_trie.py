@@ -33,7 +33,7 @@ class Node:
 
 
 class Trie:
-    def __init__(self, init_value: Optional[List[List[int]]] = None):
+    def __init__(self, init_value: List[List[int]] | None = None):
         # Root has key=0 and is permanent (matches the C++ code)
         self.root = Node(0, True)
         if init_value:
@@ -82,14 +82,14 @@ class Trie:
         # If not found or only root, nothing to remove
         if len(branch) <= 1:
             return
-        for child, parent in zip(reversed(branch[1:]), reversed(branch[:-1])):
+        for child, parent in zip(reversed(branch[1:]), reversed(branch[:-1]), strict=False):
             if child.has_children() or child.is_permanent():
                 break
             parent.delete_child(child.get_key())
 
 
 class LabelsTrie:
-    def __init__(self, entities: Optional[List[List[int]]] = None):
+    def __init__(self, entities: List[List[int]] | None = None):
         """Initialize the trie.
 
         Args:

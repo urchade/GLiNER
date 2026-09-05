@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any
 from dataclasses import field, dataclass
 
 import torch
@@ -32,40 +32,40 @@ class GLiNERBaseOutput(ModelOutput):
             or [batch_size, num_spans, hidden_size].
     """
 
-    loss: Optional[torch.FloatTensor] = None
-    logits: Optional[torch.FloatTensor] = None
-    prompts_embedding: Optional[torch.FloatTensor] = None
-    prompts_embedding_mask: Optional[torch.LongTensor] = None
-    words_embedding: Optional[torch.FloatTensor] = None
-    mask: Optional[torch.LongTensor] = None
-    span_idx: Optional[torch.LongTensor] = None
-    span_mask: Optional[torch.Tensor] = None
-    span_logits: Optional[torch.FloatTensor] = None
-    span_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
+    loss: torch.FloatTensor | None = None
+    logits: torch.FloatTensor | None = None
+    prompts_embedding: torch.FloatTensor | None = None
+    prompts_embedding_mask: torch.LongTensor | None = None
+    words_embedding: torch.FloatTensor | None = None
+    mask: torch.LongTensor | None = None
+    span_idx: torch.LongTensor | None = None
+    span_mask: torch.Tensor | None = None
+    span_logits: torch.FloatTensor | None = None
+    span_embeddings: torch.FloatTensor | None = field(default=None, kw_only=True)
 
 
 @dataclass
 class GLiNERRepresentationOutput(ModelOutput):
     """Intermediate prompt and text representations produced by GLiNER backbones."""
 
-    prompts_embedding: Optional[torch.FloatTensor] = None
-    prompts_embedding_mask: Optional[torch.LongTensor] = None
-    words_embedding: Optional[torch.FloatTensor] = None
-    mask: Optional[torch.LongTensor] = None
-    past_key_values: Optional[Any] = None
-    past_word_embeddings: Optional[torch.FloatTensor] = None
-    past_word_mask: Optional[torch.LongTensor] = None
+    prompts_embedding: torch.FloatTensor | None = None
+    prompts_embedding_mask: torch.LongTensor | None = None
+    words_embedding: torch.FloatTensor | None = None
+    mask: torch.LongTensor | None = None
+    past_key_values: Any | None = None
+    past_word_embeddings: torch.FloatTensor | None = None
+    past_word_mask: torch.LongTensor | None = None
 
 
 @dataclass
 class GLiNERStreamingSpanOutput(GLiNERBaseOutput):
     """Span-classification output with reusable decoder and word cache state."""
 
-    past_key_values: Optional[Any] = None
-    past_word_embeddings: Optional[torch.FloatTensor] = None
-    past_word_mask: Optional[torch.LongTensor] = None
-    cached_prompts_embedding: Optional[torch.FloatTensor] = None
-    cached_prompts_mask: Optional[torch.LongTensor] = None
+    past_key_values: Any | None = None
+    past_word_embeddings: torch.FloatTensor | None = None
+    past_word_mask: torch.LongTensor | None = None
+    cached_prompts_embedding: torch.FloatTensor | None = None
+    cached_prompts_mask: torch.LongTensor | None = None
 
 
 @dataclass
@@ -94,10 +94,10 @@ class GLiNERDecoderOutput(GLiNERBaseOutput):
             where the last dimension contains [start_idx, end_idx].
     """
 
-    decoder_loss: Optional[torch.FloatTensor] = None
-    decoder_embedding: Optional[torch.FloatTensor] = None
-    decoder_embedding_mask: Optional[torch.LongTensor] = None
-    decoder_span_idx: Optional[torch.LongTensor] = None
+    decoder_loss: torch.FloatTensor | None = None
+    decoder_embedding: torch.FloatTensor | None = None
+    decoder_embedding_mask: torch.LongTensor | None = None
+    decoder_span_idx: torch.LongTensor | None = None
 
 
 @dataclass
@@ -137,12 +137,12 @@ class GLiNERRelexOutput(GLiNERBaseOutput):
             [batch_size, num_relations, hidden_size].
     """
 
-    rel_idx: Optional[torch.LongTensor] = None
-    rel_logits: Optional[torch.FloatTensor] = None
-    rel_mask: Optional[torch.FloatTensor] = None
-    entity_spans: Optional[torch.LongTensor] = None
-    rel_prompts_embedding: Optional[torch.FloatTensor] = None
-    rel_prompts_embedding_mask: Optional[torch.LongTensor] = None
-    relation_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
-    relation_head_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
-    relation_tail_embeddings: Optional[torch.FloatTensor] = field(default=None, kw_only=True)
+    rel_idx: torch.LongTensor | None = None
+    rel_logits: torch.FloatTensor | None = None
+    rel_mask: torch.FloatTensor | None = None
+    entity_spans: torch.LongTensor | None = None
+    rel_prompts_embedding: torch.FloatTensor | None = None
+    rel_prompts_embedding_mask: torch.LongTensor | None = None
+    relation_embeddings: torch.FloatTensor | None = field(default=None, kw_only=True)
+    relation_head_embeddings: torch.FloatTensor | None = field(default=None, kw_only=True)
+    relation_tail_embeddings: torch.FloatTensor | None = field(default=None, kw_only=True)

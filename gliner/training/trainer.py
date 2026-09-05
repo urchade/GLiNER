@@ -9,7 +9,8 @@ import os
 import math
 import inspect
 import logging
-from typing import Any, Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple
+from pathlib import Path
 from dataclasses import field, dataclass
 
 import torch
@@ -23,6 +24,7 @@ def _get_trainer_imports():
     from transformers.trainer import get_parameter_names, is_sagemaker_mp_enabled  # noqa: PLC0415
 
     return get_parameter_names, is_sagemaker_mp_enabled
+
 
 ALL_LAYERNORM_LAYERS = [nn.LayerNorm]
 
@@ -74,22 +76,22 @@ class TrainingArguments(transformers.TrainingArguments):
             warmup_steps is zero. Retained for compatibility with Transformers v4.
     """
 
-    cache_dir: Optional[str] = field(default=None)
+    cache_dir: str | None = field(default=None)
     optim: str = field(default="adamw_torch")
-    others_lr: Optional[float] = None
-    others_weight_decay: Optional[float] = 0.0
-    focal_loss_alpha: Optional[float] = -1
-    focal_loss_gamma: Optional[float] = 0
-    rel_focal_loss_alpha: Optional[float] = None
-    rel_focal_loss_gamma: Optional[float] = None
-    focal_loss_prob_margin: Optional[float] = 0
-    label_smoothing: Optional[float] = 0
-    loss_reduction: Optional[str] = "sum"
-    negatives: Optional[float] = 1.0
-    masking: Optional[str] = "global"
-    loss_type: Optional[str] = "focal"
-    use_span_width_weight: Optional[bool] = False
-    dice_gamma: Optional[float] = 1.0
+    others_lr: float | None = None
+    others_weight_decay: float | None = 0.0
+    focal_loss_alpha: float | None = -1
+    focal_loss_gamma: float | None = 0
+    rel_focal_loss_alpha: float | None = None
+    rel_focal_loss_gamma: float | None = None
+    focal_loss_prob_margin: float | None = 0
+    label_smoothing: float | None = 0
+    loss_reduction: str | None = "sum"
+    negatives: float | None = 1.0
+    masking: str | None = "global"
+    loss_type: str | None = "focal"
+    use_span_width_weight: bool | None = False
+    dice_gamma: float | None = 1.0
     warmup_ratio: float = 0.0
 
     def __post_init__(self):
@@ -114,7 +116,49 @@ class Trainer(transformers.Trainer):
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
 
-    def _save(self, output_dir: Optional[str] = None, state_dict=None):
+    def _load_gliner_checkpoint(self, checkpoint, model) -> bool:
+        """Restore native GLiNER weights in place; defer other formats to Transformers."""
+        from gliner.model import BaseGLiNER  # noqa: PLC0415
+
+        _, is_sagemaker_mp_enabled = _get_trainer_imports()
+        if self.is_deepspeed_enabled or self.is_fsdp_enabled or is_sagemaker_mp_enabled():
+            return False
+
+        model = self.accelerator.unwrap_model(model)
+        model = getattr(model, "_orig_mod", model)
+        checkpoint = Path(checkpoint)
+        if not isinstance(model, BaseGLiNER) or not (checkpoint / "gliner_config.json").is_file():
+            return False
+
+        # Match from_pretrained's preference for safetensors. Its loader also
+        # restores aliases omitted from safetensors files with shared weights.
+        model_file = checkpoint / "model.safetensors"
+        if not model_file.is_file():
+            model_file = checkpoint / "pytorch_model.bin"
+        if not model_file.is_file():
+            return False
+
+        logger.info("Loading GLiNER model from %s", checkpoint)
+        state_dict = model._load_state_dict(model_file, map_location="cpu")
+        # save_pretrained serializes the inner model, without the wrapper's
+        # `model.` prefix. Copy into existing parameters to preserve optimizer
+        # references when resuming training.
+        inner_model = getattr(model.model, "_orig_mod", model.model)
+        load_result = inner_model.load_state_dict(state_dict, strict=False)
+        del state_dict
+        self._issue_warnings_after_load(load_result)
+        return True
+
+    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
+        target = self.model if model is None else model
+        if not self._load_gliner_checkpoint(resume_from_checkpoint, target):
+            return super()._load_from_checkpoint(resume_from_checkpoint, model=model)
+
+    def _load_best_model(self):
+        if not self._load_gliner_checkpoint(self.state.best_model_checkpoint, self.model):
+            return super()._load_best_model()
+
+    def _save(self, output_dir: str | None = None, state_dict=None):
         # called by HF during checkpoint saves
         if not self.args.should_save:
             return
@@ -147,7 +191,7 @@ class Trainer(transformers.Trainer):
         if proc is not None and hasattr(proc, "save_pretrained"):
             proc.save_pretrained(output_dir)
 
-    def save_model(self, output_dir: Optional[str] = None, _internal_call: bool = False):
+    def save_model(self, output_dir: str | None = None, _internal_call: bool = False):
         # make final save consistent with checkpoint saving
         self._save(output_dir)
 
@@ -164,7 +208,7 @@ class Trainer(transformers.Trainer):
         model,
         inputs,
         return_outputs: bool = False,
-        num_items_in_batch: Optional[int] = None,
+        num_items_in_batch: int | None = None,
     ):
         # Prepare inputs are done in training_step / prediction_step
         rel_alpha = (
@@ -195,8 +239,8 @@ class Trainer(transformers.Trainer):
     def training_step(
         self,
         model: nn.Module,
-        inputs: Dict[str, Union[torch.Tensor, Any]],
-        num_items_in_batch: Optional[int] = None,
+        inputs: Dict[str, torch.Tensor | Any],
+        num_items_in_batch: int | None = None,
     ) -> torch.Tensor:
         model.train()
         inputs = self._prepare_inputs(inputs)
@@ -328,10 +372,10 @@ class Trainer(transformers.Trainer):
     def prediction_step(
         self,
         model: nn.Module,
-        inputs: Dict[str, Union[torch.Tensor, Any]],
+        inputs: Dict[str, torch.Tensor | Any],
         prediction_loss_only: bool,
-        ignore_keys: Optional[List[str]] = None,
-    ) -> Tuple[Optional[torch.Tensor], Optional[torch.Tensor], Optional[torch.Tensor]]:
+        ignore_keys: List[str] | None = None,
+    ) -> Tuple[torch.Tensor | None, torch.Tensor | None, torch.Tensor | None]:
         model.eval()
         inputs = self._prepare_inputs(inputs)
 
@@ -367,7 +411,7 @@ class Trainer(transformers.Trainer):
 
         return self.accelerator.prepare(DataLoader(train_dataset, **dataloader_params))
 
-    def get_eval_dataloader(self, eval_dataset: Optional[Union[str, Dataset]] = None) -> DataLoader:
+    def get_eval_dataloader(self, eval_dataset: str | Dataset | None = None) -> DataLoader:
         if eval_dataset is None and self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
 

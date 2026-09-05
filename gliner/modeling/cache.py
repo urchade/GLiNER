@@ -24,9 +24,7 @@ def _empty_long() -> torch.Tensor:
 
 
 def _device_matches(actual: torch.device, requested: torch.device) -> bool:
-    return actual.type == requested.type and (
-        requested.index is None or actual.index == requested.index
-    )
+    return actual.type == requested.type and (requested.index is None or actual.index == requested.index)
 
 
 if DynamicLayer is not None:
@@ -48,8 +46,7 @@ if DynamicLayer is not None:
         def _next_capacity(self, required: int) -> int:
             if self.maximum_length is not None and required > self.maximum_length:
                 raise ValueError(
-                    f"KV cache requires {required} positions, exceeding its "
-                    f"maximum length of {self.maximum_length}"
+                    f"KV cache requires {required} positions, exceeding its maximum length of {self.maximum_length}"
                 )
             capacity = max(1, self.initial_capacity, self.capacity)
             while capacity < required:
@@ -266,10 +263,7 @@ class CacheState:
             self.prompts_embedding,
             self.prompts_mask,
         )
-        tensors_match = all(
-            tensor is None or _device_matches(tensor.device, requested)
-            for tensor in model_tensors
-        )
+        tensors_match = all(tensor is None or _device_matches(tensor.device, requested) for tensor in model_tensors)
         if tensors_match and _past_kv_on_device(self.past_key_values, requested):
             # The normal streaming path stays on one device. Returning the exact
             # state preserves the cache object and its preallocated KV storage.
@@ -340,9 +334,7 @@ def _cache_layers(past_kv):
             keys = getattr(layer, "keys", None)
             values = getattr(layer, "values", None)
             if initialized and keys is not None and values is not None:
-                if ReusableDynamicLayer is not None and isinstance(
-                    layer, ReusableDynamicLayer
-                ):
+                if ReusableDynamicLayer is not None and isinstance(layer, ReusableDynamicLayer):
                     active = slice(0, layer.get_seq_length())
                     keys = keys[..., active, :]
                     values = values[..., active, :]
@@ -354,7 +346,7 @@ def _cache_layers(past_kv):
     key_cache = getattr(past_kv, "key_cache", None)
     value_cache = getattr(past_kv, "value_cache", None)
     if key_cache is not None and value_cache is not None:
-        for layer_idx, (keys, values) in enumerate(zip(key_cache, value_cache)):
+        for layer_idx, (keys, values) in enumerate(zip(key_cache, value_cache, strict=False)):
             if torch.is_tensor(keys) and torch.is_tensor(values):
                 yield layer_idx, keys, values
 
@@ -367,9 +359,7 @@ def _dynamic_cache_from_layers(layer_values) -> DynamicCache:
 
 
 def _is_dynamic_cache_like(past_kv) -> bool:
-    return hasattr(past_kv, "layers") or (
-        hasattr(past_kv, "key_cache") and hasattr(past_kv, "value_cache")
-    )
+    return hasattr(past_kv, "layers") or (hasattr(past_kv, "key_cache") and hasattr(past_kv, "value_cache"))
 
 
 def _past_kv_on_device(past_kv, device: torch.device) -> bool:
@@ -395,8 +385,7 @@ def _move_past_kv(past_kv, device):
     cache_layers = list(_cache_layers(past_kv))
     if cache_layers or _is_dynamic_cache_like(past_kv):
         return _dynamic_cache_from_layers(
-            (layer_idx, keys.to(device), values.to(device))
-            for layer_idx, keys, values in cache_layers
+            (layer_idx, keys.to(device), values.to(device)) for layer_idx, keys, values in cache_layers
         )
     if hasattr(past_kv, "to"):
         return past_kv.to(device)
