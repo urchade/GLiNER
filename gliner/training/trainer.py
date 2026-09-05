@@ -10,6 +10,7 @@ import math
 import inspect
 import logging
 from typing import Any, Dict, List, Tuple, Union, Optional
+from pathlib import Path
 from dataclasses import field, dataclass
 
 import torch
@@ -113,6 +114,48 @@ class Trainer(transformers.Trainer):
     - no hard dependency on self.use_apex
     - skips only OOM by default (other exceptions are raised so you don't silently get 0 loss)
     """
+
+    def _load_gliner_checkpoint(self, checkpoint, model) -> bool:
+        """Restore native GLiNER weights in place; defer other formats to Transformers."""
+        from gliner.model import BaseGLiNER  # noqa: PLC0415
+
+        _, is_sagemaker_mp_enabled = _get_trainer_imports()
+        if self.is_deepspeed_enabled or self.is_fsdp_enabled or is_sagemaker_mp_enabled():
+            return False
+
+        model = self.accelerator.unwrap_model(model)
+        model = getattr(model, "_orig_mod", model)
+        checkpoint = Path(checkpoint)
+        if not isinstance(model, BaseGLiNER) or not (checkpoint / "gliner_config.json").is_file():
+            return False
+
+        # Match from_pretrained's preference for safetensors. Its loader also
+        # restores aliases omitted from safetensors files with shared weights.
+        model_file = checkpoint / "model.safetensors"
+        if not model_file.is_file():
+            model_file = checkpoint / "pytorch_model.bin"
+        if not model_file.is_file():
+            return False
+
+        logger.info("Loading GLiNER model from %s", checkpoint)
+        state_dict = model._load_state_dict(model_file, map_location="cpu")
+        # save_pretrained serializes the inner model, without the wrapper's
+        # `model.` prefix. Copy into existing parameters to preserve optimizer
+        # references when resuming training.
+        inner_model = getattr(model.model, "_orig_mod", model.model)
+        load_result = inner_model.load_state_dict(state_dict, strict=False)
+        del state_dict
+        self._issue_warnings_after_load(load_result)
+        return True
+
+    def _load_from_checkpoint(self, resume_from_checkpoint, model=None):
+        target = self.model if model is None else model
+        if not self._load_gliner_checkpoint(resume_from_checkpoint, target):
+            return super()._load_from_checkpoint(resume_from_checkpoint, model=model)
+
+    def _load_best_model(self):
+        if not self._load_gliner_checkpoint(self.state.best_model_checkpoint, self.model):
+            return super()._load_best_model()
 
     def _save(self, output_dir: Optional[str] = None, state_dict=None):
         # called by HF during checkpoint saves
