@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
@@ -282,6 +280,12 @@ data-aria-dark="Switch to auto color mode">
 </section>
 <section id="advanced-format-explicit-labels-and-negatives">
 <h3>Advanced Format: Explicit Labels and Negatives<a class="headerlink" href="#advanced-format-explicit-labels-and-negatives" title="Link to this heading">¶</a></h3>
+<p>Examples with <code class="docutils literal notranslate"><span class="pre">&quot;ner&quot;:</span> <span class="pre">[]</span></code> are supported. If no candidate entity types are
+available, the processor uses one empty-string label (<code class="docutils literal notranslate"><span class="pre">&quot;&quot;</span></code>) with all-zero
+targets. For uni-encoders, this produces an entity marker without label text.
+Bi-encoders use the empty-string label only when the shared batch label pool is
+empty. To train a negative example against specific entity types, supply
+<code class="docutils literal notranslate"><span class="pre">ner_labels</span></code> or <code class="docutils literal notranslate"><span class="pre">ner_negatives</span></code> as described below.</p>
 <p>You can improve training by explicitly defining:</p>
 <ol class="arabic simple">
 <li><p><strong>Positive labels</strong> (<code class="docutils literal notranslate"><span class="pre">ner_labels</span></code>): Entity types present in this example, recomened to specify for fixed label set use cases.</p></li>

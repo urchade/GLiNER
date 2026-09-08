@@ -10,9 +10,7 @@ This documentation includes installation guides, tutorials, advanced topics, and
 intro
 instalation
 quickstart
-input_limits
 usage
-streaming
 configs
 training
 architectures

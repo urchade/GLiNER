@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
@@ -229,19 +227,22 @@ files from the export directory. Both export methods write these files
 automatically; keep an OpenVINO <code class="docutils literal notranslate"><span class="pre">.xml</span></code> file beside its matching <code class="docutils literal notranslate"><span class="pre">.bin</span></code> file.</p>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">¶</a></h2>
-<p>ONNX Runtime CPU support is included in the default installation:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner
+<p>For ONNX Runtime CPU support, install the optional <code class="docutils literal notranslate"><span class="pre">onnx</span></code> extra:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[onnx]"</span>
 </span></pre></div>
 </div>
 <p>Install the Python <code class="docutils literal notranslate"><span class="pre">onnx</span></code> package when exporting a PyTorch checkpoint to ONNX:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>gliner<span class="w"> </span>onnx
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[onnx]"</span><span class="w"> </span>onnx
 </span></pre></div>
 </div>
 <p>For ONNX Runtime with CUDA execution providers, install the GPU extra:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[gpu]"</span>
 </span></pre></div>
 </div>
-<p>Add <code class="docutils literal notranslate"><span class="pre">onnx</span></code> to the same command if this environment will also export models.</p>
+<p>Add <code class="docutils literal notranslate"><span class="pre">onnx</span></code> to the same command if this environment will also export models.
+Choose only one of <code class="docutils literal notranslate"><span class="pre">gliner[onnx]</span></code> and <code class="docutils literal notranslate"><span class="pre">gliner[gpu]</span></code>: both runtime packages
+provide the same Python module and must not be installed together. The default
+<code class="docutils literal notranslate"><span class="pre">gliner</span></code> installation does not install either ONNX Runtime package.</p>
 <p>For direct OpenVINO export and inference, install the OpenVINO extra. Direct
 OpenVINO conversion does not create an intermediate ONNX model:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[openvino]"</span>

@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Architectures</a></li>
@@ -325,7 +323,7 @@ data-aria-dark="Switch to auto color mode">
 before encoding labels. Whether labels share a later backbone context with the
 text depends on the architecture: uni-encoders share it, while bi-encoders keep
 the two sequences separate. Cached StreamingSpan sessions use their causal
-decoder context instead. See <a class="reference internal" href="input_limits.html"><span class="std std-doc">Input limits and truncation</span></a> for
+decoder context instead. See <a class="reference internal" href="usage.html#input-limits-and-truncation"><span class="std std-ref">Input limits and truncation</span></a> for
 the complete behavior and production preflight guidance.</p>
 </section>
 </section>
@@ -1004,7 +1002,7 @@ or nested span decoder applies the threshold. A streaming call returns the
 complete current entity snapshot with document-relative character offsets. It
 is not a delta: callers that render live changes should compare consecutive
 snapshots to identify additions, updates, and removals.</p>
-<p>The <a class="reference internal" href="streaming.html"><span class="std std-doc">StreamingSpan guide</span></a> covers the session API, persistent
+<p>The <a class="reference internal" href="usage.html#streamingspan-models"><span class="std std-ref">StreamingSpan guide</span></a> covers the session API, persistent
 batches, asynchronous microbatching, cache cleanup, configuration, and
 deployment trade-offs. A PII-oriented checkpoint is available at
 <a class="reference external" href="https://huggingface.co/knowledgator/gliner-stream-pii-v1.0">knowledgator/gliner-stream-pii-v1.0</a>.</p>

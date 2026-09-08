@@ -16,16 +16,16 @@ automatically; keep an OpenVINO `.xml` file beside its matching `.bin` file.
 
 ## Installation
 
-ONNX Runtime CPU support is included in the default installation:
+For ONNX Runtime CPU support, install the optional `onnx` extra:
 
 ```bash
-pip install gliner
+pip install "gliner[onnx]"
 ```
 
 Install the Python `onnx` package when exporting a PyTorch checkpoint to ONNX:
 
 ```bash
-pip install gliner onnx
+pip install "gliner[onnx]" onnx
 ```
 
 For ONNX Runtime with CUDA execution providers, install the GPU extra:
@@ -35,6 +35,9 @@ pip install "gliner[gpu]"
 ```
 
 Add `onnx` to the same command if this environment will also export models.
+Choose only one of `gliner[onnx]` and `gliner[gpu]`: both runtime packages
+provide the same Python module and must not be installed together. The default
+`gliner` installation does not install either ONNX Runtime package.
 
 For direct OpenVINO export and inference, install the OpenVINO extra. Direct
 OpenVINO conversion does not create an intermediate ONNX model:

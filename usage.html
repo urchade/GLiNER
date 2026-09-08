@@ -2,7 +2,7 @@
 <html lang="en" data-accent-color="violet" data-content_root="./">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Advanced Usage - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="StreamingSpan" href="streaming.html" /><link rel="prev" title="Input limits and truncation" href="input_limits.html" /><script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Advanced Usage - Home 0.2.24 documentation</title><link rel="index" title="Index" href="genindex.html" /><link rel="search" title="Search" href="search.html" /><link rel="next" title="Components &amp; Configs" href="configs.html" /><link rel="prev" title="Quickstart" href="quickstart.html" /><script>
     function setColorMode(t){let e=document.documentElement;e.setAttribute("data-color-mode",t);let a=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,s=t;"auto"===t&&(s=a?"dark":"light"),"light"===s?(e.classList.remove("dark"),e.classList.add("light")):(e.classList.remove("light"),e.classList.add("dark"))}
     setColorMode(localStorage._theme||"auto");
   </script><link rel="stylesheet" type="text/css" href="_static/pygments.css?v=e1a1ceaf" />
@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
@@ -148,6 +146,16 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#label-descriptions">Label descriptions</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#input-limits-and-truncation">Input limits and truncation</a><ul>
+<li><a class="reference internal" href="#what-config-max-len-counts">What <code class="docutils literal notranslate">max_len</span></code> counts</a></li>
+<li><a class="reference internal" href="#do-labels-reduce-the-text-budget">Do labels reduce the text budget?</a></li>
+<li><a class="reference internal" href="#behavior-when-text-exceeds-max-len">Behavior when text exceeds <code class="docutils literal notranslate"><span class="pre">max_len</span></code></a></li>
+<li><a class="reference internal" href="#production-preflight-without-processor-internals">Production preflight without processor internals</a></li>
+<li><a class="reference internal" href="#processing-long-documents">Processing long documents</a></li>
+<li><a class="reference internal" href="#changing-max-len">Changing <code class="docutils literal notranslate"><span class="pre">max_len</span></code></a></li>
+<li><a class="reference internal" href="#architecture-specific-limits">Architecture-specific limits</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#using-different-model-architectures">Using Different Model Architectures</a><ul>
 <li><a class="reference internal" href="#uniencoder-models-standard">UniEncoder Models (Standard)</a></li>
 <li><a class="reference internal" href="#biencoder-models-scalable">BiEncoder Models (Scalable)</a></li>
@@ -163,6 +171,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li><a class="reference internal" href="#local-models-and-caching">Local Models and Caching</a><ul>
 <li><a class="reference internal" href="#loading-from-local-directory">Loading from Local Directory</a></li>
+<li><a class="reference internal" href="#loading-models-offline">Loading models offline</a></li>
 <li><a class="reference internal" href="#device-selection">Device Selection</a></li>
 <li><a class="reference internal" href="#reduced-precision-loading-dtype">Reduced-precision loading (<code class="docutils literal notranslate"><span class="pre">dtype</span></code>)</a><ul>
 <li><a class="reference internal" href="#skipping-the-random-init-shell-low-cpu-mem-usage">Skipping the random-init shell (<code class="docutils literal notranslate"><span class="pre">low_cpu_mem_usage</span></code>)</a></li>
@@ -191,7 +200,7 @@ data-aria-dark="Switch to auto color mode">
 </ul>
 </li>
 <li><a class="reference internal" href="#advanced-relation-extraction-with-utca">Advanced Relation Extraction with UTCA</a><ul>
-<li><a class="reference internal" href="#id1">Installation</a></li>
+<li><a class="reference internal" href="#id3">Installation</a></li>
 <li><a class="reference internal" href="#setting-up-the-pipeline">Setting Up the Pipeline</a></li>
 <li><a class="reference internal" href="#running-the-pipeline">Running the Pipeline</a></li>
 <li><a class="reference internal" href="#advanced-utca-features">Advanced UTCA Features</a></li>
@@ -209,11 +218,29 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#prompt-compression-precomputed-prompt-embeddings">&#9889; Prompt Compression (Precomputed Prompt Embeddings)</a><ul>
 <li><a class="reference internal" href="#how-it-works">How it works</a></li>
 <li><a class="reference internal" href="#basic-usage-entity-extraction">Basic usage (entity extraction)</a></li>
-<li><a class="reference internal" href="#id2">Relation extraction</a></li>
+<li><a class="reference internal" href="#id4">Relation extraction</a></li>
 <li><a class="reference internal" href="#end-to-end-distillation">End-to-end distillation</a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#streamingspan-models">StreamingSpan models</a></li>
+<li><a class="reference internal" href="#streamingspan-models">StreamingSpan models</a><ul>
+<li><a class="reference internal" href="#quick-start">Quick start</a></li>
+<li><a class="reference internal" href="#architecture">Architecture</a></li>
+<li><a class="reference internal" href="#choosing-an-inference-mode">Choosing an inference mode</a><ul>
+<li><a class="reference internal" href="#stateless-inference">Stateless inference</a></li>
+<li><a class="reference internal" href="#flexible-synchronous-sessions">Flexible synchronous sessions</a></li>
+<li><a class="reference internal" href="#persistent-fixed-order-batches">Persistent fixed-order batches</a></li>
+<li><a class="reference internal" href="#asynchronous-dynamic-microbatching">Asynchronous dynamic microbatching</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#session-and-cache-lifecycle">Session and cache lifecycle</a><ul>
+<li><a class="reference internal" href="#context-limits">Context limits</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#prediction-and-revision-controls">Prediction and revision controls</a></li>
+<li><a class="reference internal" href="#chunking-guidance">Chunking guidance</a></li>
+<li><a class="reference internal" href="#configuration-and-training">Configuration and training</a></li>
+</ul>
+</li>
 <li><a class="reference internal" href="#tips-and-best-practices">Tips and Best Practices</a></li>
 <li><a class="reference internal" href="#troubleshooting">Troubleshooting</a><ul>
 <li><a class="reference internal" href="#low-accuracy">Low Accuracy</a></li>
@@ -379,8 +406,8 @@ currently return vectors.</p>
 contains more splitter tokens than the checkpoint’s <code class="docutils literal notranslate"><span class="pre">model.config.max_len</span></code>,
 GLiNER 0.2.27 warns and predicts from only the retained prefix; the returned
 entities contain no truncation flag. Check the limit before inference or split
-the document into overlapping windows. See <a class="reference internal" href="input_limits.html"><span class="std std-doc">Input limits and
-truncation</span></a> for the exact token definition, a public preflight
+the document into overlapping windows. See <a class="reference internal" href="#input-limits-and-truncation">Input limits and
+truncation</a> for the exact token definition, a public preflight
 example, prompt-budget details, and architecture-specific behavior.</p>
 </div>
 </section>
@@ -420,25 +447,279 @@ example, prompt-budget details, and architecture-specific behavior.</p>
 </ul>
 <section id="label-descriptions">
 <h3>Label descriptions<a class="headerlink" href="#label-descriptions" title="Link to this heading">¶</a></h3>
-<p>Models trained to use descriptive labels can receive a dictionary. Dictionary keys are
-returned in predictions, while values are encoded as the label prompts:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
-</span><span data-line="2">    <span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual, including fictional characters"</span><span class="p">,</span>
-</span><span data-line="3">    <span class="s2">"organization"</span><span class="p">:</span> <span class="s2">"A company, institution, agency, or other group of people"</span><span class="p">,</span>
-</span><span data-line="4"><span class="p">}</span>
-</span><span data-line="5"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+<p>Models trained to use descriptive labels can receive a dictionary mapping label names
+to descriptions. Dictionary keys are returned in predictions, while values are encoded
+as the label prompts. For a single text, put all labels in <strong>one dictionary</strong>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">text</span> <span class="o">=</span> <span class="s2">"Microsoft was founded by Bill Gates and Paul Allen."</span>
+</span><span data-line="2"><span class="n">labels</span> <span class="o">=</span> <span class="p">{</span>
+</span><span data-line="3">    <span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual, including fictional characters"</span><span class="p">,</span>
+</span><span data-line="4">    <span class="s2">"organization"</span><span class="p">:</span> <span class="s2">"A company, institution, agency, or other group of people"</span><span class="p">,</span>
+</span><span data-line="5"><span class="p">}</span>
+</span><span data-line="6"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="7">
+</span><span data-line="8"><span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="9">    <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s2">"text"</span><span class="p">],</span> <span class="s2">"=&gt;"</span><span class="p">,</span> <span class="n">entity</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
 </span></pre></div>
 </div>
-<p>For batched inference, provide one dictionary or list of labels per text:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">label_sets</span> <span class="o">=</span> <span class="p">[</span>
-</span><span data-line="2">    <span class="p">{</span><span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual"</span><span class="p">},</span>
-</span><span data-line="3">    <span class="p">{</span><span class="s2">"location"</span><span class="p">:</span> <span class="s2">"A geographical place"</span><span class="p">},</span>
-</span><span data-line="4"><span class="p">]</span>
-</span><span data-line="5"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">([</span><span class="s2">"Alice arrived"</span><span class="p">,</span> <span class="s2">"Paris is sunny"</span><span class="p">],</span> <span class="n">label_sets</span><span class="p">)</span>
+<p>For a batch that shares the same labels and descriptions, pass that dictionary directly:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Alice works at Microsoft"</span><span class="p">,</span> <span class="s2">"Bob works at Google"</span><span class="p">]</span>
+</span><span data-line="2"><span class="n">all_entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
 </span></pre></div>
 </div>
-<p>Descriptions must be unique within each label set. They are not supported with
-precomputed prompt embeddings.</p>
+<p>For <strong>different labels or descriptions per input text</strong>, pass a list containing one
+dictionary per text. Each dictionary contains the complete label set for its text:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">texts</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"Alice works at Microsoft"</span><span class="p">,</span> <span class="s2">"Paris is sunny"</span><span class="p">]</span>
+</span><span data-line="2"><span class="n">label_sets</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="3">    <span class="p">{</span>
+</span><span data-line="4">        <span class="s2">"person"</span><span class="p">:</span> <span class="s2">"A human individual"</span><span class="p">,</span>
+</span><span data-line="5">        <span class="s2">"organization"</span><span class="p">:</span> <span class="s2">"A company or institution"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="p">},</span>  <span class="c1"># Labels for texts[0].</span>
+</span><span data-line="7">    <span class="p">{</span>
+</span><span data-line="8">        <span class="s2">"location"</span><span class="p">:</span> <span class="s2">"A geographical place"</span><span class="p">,</span>
+</span><span data-line="9">    <span class="p">},</span>  <span class="c1"># Labels for texts[1].</span>
+</span><span data-line="10"><span class="p">]</span>
+</span><span data-line="11"><span class="n">all_entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">label_sets</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+</span><span data-line="12">
+</span><span data-line="13"><span class="k">for</span> <span class="n">text</span><span class="p">,</span> <span class="n">entities</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">texts</span><span class="p">,</span> <span class="n">all_entities</span><span class="p">):</span>
+</span><span data-line="14">    <span class="nb">print</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+</span><span data-line="15">    <span class="k">for</span> <span class="n">entity</span> <span class="ow">in</span> <span class="n">entities</span><span class="p">:</span>
+</span><span data-line="16">        <span class="nb">print</span><span class="p">(</span><span class="n">entity</span><span class="p">[</span><span class="s2">"text"</span><span class="p">],</span> <span class="s2">"=&gt;"</span><span class="p">,</span> <span class="n">entity</span><span class="p">[</span><span class="s2">"label"</span><span class="p">])</span>
+</span></pre></div>
+</div>
+<p>The outer list must have the same length and order as <code class="docutils literal notranslate"><span class="pre">texts</span></code>, including entries for
+empty texts. A list such as <code class="docutils literal notranslate"><span class="pre">[{&quot;person&quot;:</span> <span class="pre">&quot;A</span> <span class="pre">human</span> <span class="pre">individual&quot;},</span> <span class="pre">{&quot;location&quot;:</span> <span class="pre">&quot;A</span> <span class="pre">geographical</span> <span class="pre">place&quot;}]</span></code>
+means two texts with one label each; it does not mean two labels for one text. To use
+both labels with <code class="docutils literal notranslate"><span class="pre">predict_entities(text,</span> <span class="pre">...)</span></code>, combine them into a single dictionary:
+<code class="docutils literal notranslate"><span class="pre">{&quot;person&quot;:</span> <span class="pre">&quot;A</span> <span class="pre">human</span> <span class="pre">individual&quot;,</span> <span class="pre">&quot;location&quot;:</span> <span class="pre">&quot;A</span> <span class="pre">geographical</span> <span class="pre">place&quot;}</span></code>.</p>
+<p>Without descriptions, use a shared list of label strings or one list of strings per
+text. Description dictionaries must have string keys and values, and descriptions
+must be unique within each dictionary. They are not supported with precomputed
+prompt embeddings.</p>
+</section>
+</section>
+<section id="input-limits-and-truncation">
+<span id="id1"></span><h2>Input limits and truncation<a class="headerlink" href="#input-limits-and-truncation" title="Link to this heading">¶</a></h2>
+<p>GLiNER does not automatically split a long document into windows. For ordinary
+stateless inference, each input that exceeds the checkpoint’s <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>
+is reduced to a prefix. In GLiNER 0.2.27 this produces a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code>, but the
+prediction call still succeeds and its return value does not say that part of
+the input was skipped.</p>
+<p>This behavior applies to span, token, bi-encoder, decoder, and relation
+extraction models. Cached StreamingSpan sessions are the exception described
+under <strong>Architecture-specific limits</strong> below.</p>
+<section id="what-config-max-len-counts">
+<h3>What <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> counts<a class="headerlink" href="#what-config-max-len-counts" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> is the maximum number of <strong>text tokens produced by GLiNER’s
+word splitter</strong>. It is not a character count, a whitespace-word count, a
+transformer subword count, or the total prompt-plus-text sequence length.</p>
+<p>For raw-text inference, the processing order is:</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span><span data-line="1">raw text
+</span><span data-line="2">  -&gt; WordsSplitter(config.words_splitter_type)
+</span><span data-line="3">  -&gt; N text tokens
+</span><span data-line="4">  -&gt; if N &gt; config.max_len: warn and keep tokens[:config.max_len]
+</span><span data-line="5">  -&gt; add the entity/relation-type prompt
+</span><span data-line="6">  -&gt; transformer subword tokenization
+</span><span data-line="7">  -&gt; model
+</span></pre></div>
+</div>
+<p>The default <code class="docutils literal notranslate"><span class="pre">whitespace</span></code> splitter also separates punctuation. For example,
+<code class="docutils literal notranslate"><span class="pre">&quot;Acme,</span> <span class="pre">Inc.&quot;</span></code> becomes four splitter tokens (<code class="docutils literal notranslate"><span class="pre">Acme</span></code>, <code class="docutils literal notranslate"><span class="pre">,</span></code>, <code class="docutils literal notranslate"><span class="pre">Inc</span></code>, <code class="docutils literal notranslate"><span class="pre">.</span></code>), even
+though a simple <code class="docutils literal notranslate"><span class="pre">text.split()</span></code> returns two strings. Other
+<code class="docutils literal notranslate"><span class="pre">words_splitter_type</span></code> values segment text differently. Always inspect the
+loaded checkpoint rather than assuming the configuration default:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_len</span><span class="p">)</span>
+</span><span data-line="2"><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">words_splitter_type</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>The base configuration defaults to <code class="docutils literal notranslate"><span class="pre">max_len=384</span></code>, but checkpoints can save a
+different value. For example,
+<code class="docutils literal notranslate"><span class="pre">EmergentMethods/gliner_medium_news-v2.1</span></code> saves <code class="docutils literal notranslate"><span class="pre">max_len=296</span></code>.</p>
+</section>
+<section id="do-labels-reduce-the-text-budget">
+<h3>Do labels reduce the text budget?<a class="headerlink" href="#do-labels-reduce-the-text-budget" title="Link to this heading">¶</a></h3>
+<p>At the <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> stage, <strong>no</strong>. GLiNER splits and truncates the text
+first, then prepends or separately encodes the entity-type prompt. Ten labels
+and one hundred labels therefore receive the same <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> allowance
+for text.</p>
+<p>There is a second, independent limit to consider. A transformer sees
+subtokens, and uni-encoder architectures put the label prompt and retained text
+in one transformer sequence. Prompt subtokens therefore consume part of any
+finite tokenizer or backbone context capacity. A finite tokenizer limit can
+truncate the text tail; a backbone limit can instead reject an oversized
+combined sequence. Either way, adding labels reduces the remaining combined
+headroom even though it does not change <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>.</p>
+<p>GLiNER calls the transformer tokenizer with <code class="docutils literal notranslate"><span class="pre">truncation=True</span></code> but without an
+explicit tokenizer <code class="docutils literal notranslate"><span class="pre">max_length</span></code>, so the tokenizer’s registered limit and
+truncation side determine tokenizer-level behavior. Some tokenizers do not
+register a finite limit; Transformers may then warn that no maximum was
+provided and perform no tokenizer-level truncation. That does not prove that
+the backbone supports an unlimited sequence.</p>
+</section>
+<section id="behavior-when-text-exceeds-max-len">
+<h3>Behavior when text exceeds <code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#behavior-when-text-exceeds-max-len" title="Link to this heading">¶</a></h3>
+<p>For each input independently, when <code class="docutils literal notranslate"><span class="pre">num_tokens</span> <span class="pre">&gt;</span> <span class="pre">model.config.max_len</span></code>, GLiNER
+0.2.27:</p>
+<ol class="arabic simple">
+<li><p>emits a <code class="docutils literal notranslate"><span class="pre">UserWarning</span></code> such as
+<code class="docutils literal notranslate"><span class="pre">Sentence</span> <span class="pre">of</span> <span class="pre">length</span> <span class="pre">987</span> <span class="pre">has</span> <span class="pre">been</span> <span class="pre">truncated</span> <span class="pre">to</span> <span class="pre">296</span></code>;</p></li>
+<li><p>retains only the first <code class="docutils literal notranslate"><span class="pre">max_len</span></code> splitter tokens;</p></li>
+<li><p>runs inference normally on that prefix; and</p></li>
+<li><p>returns ordinary-looking predictions with no truncation metadata.</p></li>
+</ol>
+<p>Text after the retained prefix is never presented to the model. Entities there
+cannot be returned, and entities crossing the boundary are incomplete. The
+same prefix truncation occurs during training when a pre-tokenized example is
+too long.</p>
+<p>Python warning filters control whether the warning is visible. With the default
+filter, repeated warnings from the same location may be shown only once per
+process. Warnings may also bypass an application’s structured logs. Do not use
+the presence or absence of the warning as a per-request completeness signal.</p>
+<p>As of 0.2.27, <code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> and <code class="docutils literal notranslate"><span class="pre">inference</span></code> do not provide a
+<code class="docutils literal notranslate"><span class="pre">return_truncation_info</span></code> result and do not have a <code class="docutils literal notranslate"><span class="pre">truncation=&quot;error&quot;</span></code> mode.
+<a class="reference external" href="https://github.com/urchade/GLiNER/issues/231">Issue #231</a> tracks the request for
+fail-on-truncation behavior.</p>
+</section>
+<section id="production-preflight-without-processor-internals">
+<h3>Production preflight without processor internals<a class="headerlink" href="#production-preflight-without-processor-internals" title="Link to this heading">¶</a></h3>
+<p>Use the public <code class="docutils literal notranslate"><span class="pre">prepare_batch</span></code> stage to count exactly the splitter tokens that
+stateless inference will receive. This avoids depending on
+<code class="docutils literal notranslate"><span class="pre">model.data_processor.words_splitter</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">def</span><span class="w"> </span><span class="nf">truncation_info</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">):</span>
+</span><span data-line="2">    <span class="n">prepared</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="3">    <span class="n">num_tokens</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]</span> <span class="k">else</span> <span class="mi">0</span>
+</span><span data-line="4">    <span class="n">max_len</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_len</span>
+</span><span data-line="5">    <span class="k">return</span> <span class="p">{</span>
+</span><span data-line="6">        <span class="s2">"truncated"</span><span class="p">:</span> <span class="n">num_tokens</span> <span class="o">&gt;</span> <span class="n">max_len</span><span class="p">,</span>
+</span><span data-line="7">        <span class="s2">"num_tokens"</span><span class="p">:</span> <span class="n">num_tokens</span><span class="p">,</span>
+</span><span data-line="8">        <span class="s2">"max_len"</span><span class="p">:</span> <span class="n">max_len</span><span class="p">,</span>
+</span><span data-line="9">    <span class="p">}</span>
+</span><span data-line="10">
+</span><span data-line="11">
+</span><span data-line="12"><span class="n">info</span> <span class="o">=</span> <span class="n">truncation_info</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="13"><span class="k">if</span> <span class="n">info</span><span class="p">[</span><span class="s2">"truncated"</span><span class="p">]:</span>
+</span><span data-line="14">    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+</span><span data-line="15">        <span class="sa">f</span><span class="s2">"GLiNER input has </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'num_tokens'</span><span class="p">]</span><span class="si">}</span><span class="s2"> tokens; "</span>
+</span><span data-line="16">        <span class="sa">f</span><span class="s2">"the model limit is </span><span class="si">{</span><span class="n">info</span><span class="p">[</span><span class="s1">'max_len'</span><span class="p">]</span><span class="si">}</span><span class="s2">"</span>
+</span><span data-line="17">    <span class="p">)</span>
+</span><span data-line="18">
+</span><span data-line="19"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For a batch, <code class="docutils literal notranslate"><span class="pre">prepared[&quot;tokens&quot;]</span></code> contains one token list per non-empty input;
+<code class="docutils literal notranslate"><span class="pre">prepared[&quot;valid_to_orig_idx&quot;]</span></code> maps those lists back to the original batch
+indices. Emit the resulting information in the service response or reject the
+request before inference, according to the service contract.</p>
+<p>This preflight covers <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>; it does not measure a combined
+uni-encoder subword sequence, an inference-packing limit, or a cached streaming
+session’s remaining context.</p>
+</section>
+<section id="processing-long-documents">
+<h3>Processing long documents<a class="headerlink" href="#processing-long-documents" title="Link to this heading">¶</a></h3>
+<p>For full-document coverage, split the text into overlapping windows no longer
+than <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>, predict each window, shift its character offsets back to
+document coordinates, and reconcile duplicate predictions from overlaps. The
+public preparation result includes the exact token-to-character maps needed to
+make splitter-aligned windows:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">def</span><span class="w"> </span><span class="nf">iter_gliner_windows</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">overlap</span><span class="p">):</span>
+</span><span data-line="2">    <span class="n">prepared</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">prepare_batch</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span>
+</span><span data-line="3">    <span class="k">if</span> <span class="ow">not</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">]:</span>
+</span><span data-line="4">        <span class="k">return</span>
+</span><span data-line="5">
+</span><span data-line="6">    <span class="n">tokens</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"tokens"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="7">    <span class="n">starts</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"start_token_map"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="8">    <span class="n">ends</span> <span class="o">=</span> <span class="n">prepared</span><span class="p">[</span><span class="s2">"end_token_map"</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="9">    <span class="n">window_size</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">max_len</span>
+</span><span data-line="10">
+</span><span data-line="11">    <span class="k">if</span> <span class="ow">not</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">overlap</span> <span class="o">&lt;</span> <span class="n">window_size</span><span class="p">:</span>
+</span><span data-line="12">        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"overlap must be in [0, model.config.max_len)"</span><span class="p">)</span>
+</span><span data-line="13">
+</span><span data-line="14">    <span class="n">step</span> <span class="o">=</span> <span class="n">window_size</span> <span class="o">-</span> <span class="n">overlap</span>
+</span><span data-line="15">    <span class="k">for</span> <span class="n">first</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">),</span> <span class="n">step</span><span class="p">):</span>
+</span><span data-line="16">        <span class="n">last</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">first</span> <span class="o">+</span> <span class="n">window_size</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">))</span>
+</span><span data-line="17">        <span class="n">char_start</span> <span class="o">=</span> <span class="n">starts</span><span class="p">[</span><span class="n">first</span><span class="p">]</span>
+</span><span data-line="18">        <span class="n">char_end</span> <span class="o">=</span> <span class="n">ends</span><span class="p">[</span><span class="n">last</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span>
+</span><span data-line="19">        <span class="k">yield</span> <span class="n">char_start</span><span class="p">,</span> <span class="n">text</span><span class="p">[</span><span class="n">char_start</span><span class="p">:</span><span class="n">char_end</span><span class="p">]</span>
+</span><span data-line="20">        <span class="k">if</span> <span class="n">last</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">):</span>
+</span><span data-line="21">            <span class="k">break</span>
+</span></pre></div>
+</div>
+<p>For span models, an overlap of at least <code class="docutils literal notranslate"><span class="pre">max_width</span> <span class="pre">-</span> <span class="pre">1</span></code> tokens ensures that an
+entity no wider than <code class="docutils literal notranslate"><span class="pre">max_width</span></code> is fully contained in some window. A larger
+overlap may be useful for contextual accuracy, and token-level models may need
+a task-specific overlap because their entity length is not bounded by
+<code class="docutils literal notranslate"><span class="pre">max_width</span></code>. Relation extraction also needs application-specific merging;
+relations whose endpoints never occur together in a window cannot be inferred.</p>
+<p>GLiNER does not merge window outputs for you. When shifting an entity from a
+window beginning at <code class="docutils literal notranslate"><span class="pre">char_start</span></code>, add <code class="docutils literal notranslate"><span class="pre">char_start</span></code> to both <code class="docutils literal notranslate"><span class="pre">entity[&quot;start&quot;]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">entity[&quot;end&quot;]</span></code>. A common overlap policy is to group predictions by
+<code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">end,</span> <span class="pre">label)</span></code> and retain the highest score.</p>
+</section>
+<section id="changing-max-len">
+<h3>Changing <code class="docutils literal notranslate"><span class="pre">max_len</span></code><a class="headerlink" href="#changing-max-len" title="Link to this heading">¶</a></h3>
+<p>The loader’s <code class="docutils literal notranslate"><span class="pre">max_length</span></code> argument overrides the saved <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span>
+</span><span data-line="2">    <span class="s2">"urchade/gliner_small-v2.1"</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">max_length</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>The name difference is intentional: <code class="docutils literal notranslate"><span class="pre">max_length=</span></code> at load time writes
+<code class="docutils literal notranslate"><span class="pre">model.config.max_len</span></code>. Passing <code class="docutils literal notranslate"><span class="pre">max_length</span></code> or <code class="docutils literal notranslate"><span class="pre">truncation</span></code> to
+<code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> is not a supported way to change the word-level limit.</p>
+<p>Increasing this value does not resize the backbone context, change the
+transformer tokenizer’s <code class="docutils literal notranslate"><span class="pre">model_max_length</span></code>, or guarantee quality beyond the
+lengths used to train the checkpoint. Subword expansion and the label prompt
+can make the combined sequence longer than the word-token count suggests, and
+longer inputs require more memory. Prefer windowing unless the checkpoint and
+backbone are known to support the larger value.</p>
+</section>
+<section id="architecture-specific-limits">
+<h3>Architecture-specific limits<a class="headerlink" href="#architecture-specific-limits" title="Link to this heading">¶</a></h3>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Architecture or path</p></th>
+<th class="head"><p>How the label prompt is encoded</p></th>
+<th class="head"><p>Effective-limit notes</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>UniEncoderSpan and UniEncoderToken</p></td>
+<td><p>Prompt and text share one backbone sequence</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> is text-only, but a finite backbone/tokenizer subword limit includes the prompt</p></td>
+</tr>
+<tr class="row-odd"><td><p>UniEncoder span/token decoders</p></td>
+<td><p>Main encoder prompt and text share a sequence; generated labels use an auxiliary decoder</p></td>
+<td><p>The main encoder has the same two-stage limits as other uni-encoders; the decoder has its own generation limits</p></td>
+</tr>
+<tr class="row-even"><td><p>UniEncoder relation extraction</p></td>
+<td><p>Entity labels, relation labels, and text share one sequence</p></td>
+<td><p>Both prompt types can consume the combined backbone context, but neither changes the first-stage text-only <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> check</p></td>
+</tr>
+<tr class="row-odd"><td><p>BiEncoderSpan and BiEncoderToken</p></td>
+<td><p>Text and labels are encoded separately</p></td>
+<td><p>Label count does not consume the text encoder sequence; each encoder still has its own tokenizer/backbone limit</p></td>
+</tr>
+<tr class="row-even"><td><p>StreamingSpan without <code class="docutils literal notranslate"><span class="pre">session_id</span></code></p></td>
+<td><p>Prompt and text share one causal sequence</p></td>
+<td><p>Uses the normal stateless <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> prefix truncation, followed by the causal backbone limit</p></td>
+</tr>
+<tr class="row-odd"><td><p>Cached StreamingSpan session</p></td>
+<td><p>The initial prompt and all appended text share the decoder context</p></td>
+<td><p>Stateless <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> truncation is bypassed; exceeding the smaller of <code class="docutils literal notranslate"><span class="pre">max_cache_length</span></code> and the decoder’s native limit raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> instead of dropping old text</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Inference packing adds another independent setting:
+<code class="docutils literal notranslate"><span class="pre">InferencePackingConfig.max_length</span></code> is measured in already-tokenized backbone
+token IDs, not splitter tokens. If one encoded request is longer than that
+value, the current packer keeps its first <code class="docutils literal notranslate"><span class="pre">max_length</span></code> token IDs without the
+<code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> warning. Set the packing limit for the complete encoded
+request (including a uni-encoder prompt), or disable packing for requests that
+may exceed it.</p>
+<p>Finally, <code class="docutils literal notranslate"><span class="pre">max_width</span></code> is not an input-length limit. It controls the widest
+candidate entity span, in splitter tokens, for span-based architectures.</p>
 </section>
 </section>
 <section id="using-different-model-architectures">
@@ -726,6 +1007,36 @@ vectors.</p>
 </span><span data-line="10"><span class="p">)</span>
 </span></pre></div>
 </div>
+</section>
+<section id="loading-models-offline">
+<span id="id2"></span><h3>Loading models offline<a class="headerlink" href="#loading-models-offline" title="Link to this heading">¶</a></h3>
+<p>Prepare a complete model directory on a machine with internet access:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"urchade/gliner_multi-v2.1"</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span><span class="o">.</span><span class="n">save_pretrained</span><span class="p">(</span><span class="s2">"gliner-offline"</span><span class="p">,</span> <span class="n">safe_serialization</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Copy the entire <code class="docutils literal notranslate"><span class="pre">gliner-offline</span></code> directory to the offline machine, then load it:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"gliner-offline"</span><span class="p">,</span> <span class="n">local_files_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">save_pretrained</span></code> includes model weights, the resolved backbone configuration,
+and tokenizers. Models with a separate label encoder or generative decoder also
+save their auxiliary tokenizer in <code class="docutils literal notranslate"><span class="pre">labels_tokenizer/</span></code> or <code class="docutils literal notranslate"><span class="pre">decoder_tokenizer/</span></code>.
+Keep these subdirectories with the model when copying it.</p>
+<p>Older Hub checkpoints may contain a GLiNER configuration that only names the
+backbone, such as <code class="docutils literal notranslate"><span class="pre">microsoft/mdeberta-v3-base</span></code>, without embedding its configuration.
+Downloading that checkpoint’s files alone may therefore be insufficient. Loading
+and saving it with the code above resolves and packages those dependencies.</p>
+<p><code class="docutils literal notranslate"><span class="pre">local_files_only=True</span></code> restricts loading to local files and the Hugging Face
+cache; it does not download missing dependencies. An incomplete legacy checkpoint
+still requires its missing backbone configuration or tokenizer to be cached or
+provided locally. If the backbone files are in a separate local directory,
+<code class="docutils literal notranslate"><span class="pre">model_name</span></code> in <code class="docutils literal notranslate"><span class="pre">gliner_config.json</span></code> can point to that directory. Missing files
+raise an error without attempting a network connection.</p>
 </section>
 <section id="device-selection">
 <h3>Device Selection<a class="headerlink" href="#device-selection" title="Link to this heading">¶</a></h3>
@@ -1245,8 +1556,8 @@ vectors.</p>
 <section id="advanced-relation-extraction-with-utca">
 <h2>Advanced Relation Extraction with UTCA<a class="headerlink" href="#advanced-relation-extraction-with-utca" title="Link to this heading">¶</a></h2>
 <p>For more nuanced control over relation extraction, use the <a class="reference external" href="https://github.com/Knowledgator/utca">utca</a> framework:</p>
-<section id="id1">
-<h3>Installation<a class="headerlink" href="#id1" title="Link to this heading">¶</a></h3>
+<section id="id3">
+<h3>Installation<a class="headerlink" href="#id3" title="Link to this heading">¶</a></h3>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">pip<span class="w"> </span>install<span class="w"> </span>utca<span class="w"> </span>-U
 </span></pre></div>
 </div>
@@ -1651,8 +1962,8 @@ compression — the stored matrix is frozen but everything else keeps training.<
 </span></pre></div>
 </div>
 </section>
-<section id="id2">
-<h3>Relation extraction<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
+<section id="id4">
+<h3>Relation extraction<a class="headerlink" href="#id4" title="Link to this heading">¶</a></h3>
 <p>For relex models (<code class="docutils literal notranslate"><span class="pre">UniEncoderSpanRelexModel</span></code> / <code class="docutils literal notranslate"><span class="pre">UniEncoderTokenRelexModel</span></code>),
 pass <code class="docutils literal notranslate"><span class="pre">rel_labels</span></code> so the <code class="docutils literal notranslate"><span class="pre">&lt;&lt;REL&gt;&gt;</span></code> prompt embeddings are compressed as well:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">compress_prompt_embeddings</span><span class="p">(</span>
@@ -1698,37 +2009,441 @@ diverse in-domain corpus serves both roles.</p>
 </section>
 </section>
 <section id="streamingspan-models">
-<h2>StreamingSpan models<a class="headerlink" href="#streamingspan-models" title="Link to this heading">¶</a></h2>
-<p>StreamingSpan uses a causal text backbone and reuses its decoder, label, and
-word caches as text arrives. Load a StreamingSpan checkpoint normally; GLiNER
-selects the architecture from the saved configuration.</p>
+<span id="id5"></span><h2>StreamingSpan models<a class="headerlink" href="#streamingspan-models" title="Link to this heading">¶</a></h2>
+<p>StreamingSpan is GLiNER’s architecture for named entity recognition over text
+that arrives incrementally. It uses a causal decoder as the text backbone,
+retains reusable state between chunks, and revises recent span predictions when
+new right context becomes available.</p>
+<p>Use the
+<a class="reference external" href="https://huggingface.co/knowledgator/gliner-stream-pii-v1.0">knowledgator/gliner-stream-pii-v1.0</a>
+checkpoint to get started with streaming PII detection. <code class="docutils literal notranslate"><span class="pre">GLiNER.from_pretrained</span></code>
+reads <code class="docutils literal notranslate"><span class="pre">model_type=&quot;gliner_streaming_span&quot;</span></code> from the checkpoint and selects
+<code class="docutils literal notranslate"><span class="pre">StreamingSpanGLiNER</span></code> automatically.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">from</span><span class="w"> </span><span class="nn">gliner</span><span class="w"> </span><span class="kn">import</span> <span class="n">GLiNER</span>
 </span><span data-line="2">
 </span><span data-line="3"><span class="n">model</span> <span class="o">=</span> <span class="n">GLiNER</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">"knowledgator/gliner-stream-pii-v1.0"</span><span class="p">)</span>
-</span><span data-line="4"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"person"</span><span class="p">,</span> <span class="s2">"email address"</span><span class="p">,</span> <span class="s2">"phone number"</span><span class="p">]</span>
-</span><span data-line="5"><span class="n">session_id</span> <span class="o">=</span> <span class="s2">"document-a"</span>
-</span><span data-line="6">
-</span><span data-line="7"><span class="k">try</span><span class="p">:</span>
-</span><span data-line="8">    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"Alice Johnson's email is "</span><span class="p">,</span> <span class="s2">"alice@example.com."</span><span class="p">]:</span>
-</span><span data-line="9">        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
-</span><span data-line="10">            <span class="p">[</span><span class="n">chunk</span><span class="p">],</span>
-</span><span data-line="11">            <span class="n">labels</span><span class="p">,</span>
-</span><span data-line="12">            <span class="n">session_id</span><span class="o">=</span><span class="p">[</span><span class="n">session_id</span><span class="p">],</span>
-</span><span data-line="13">            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-</span><span data-line="14">        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-</span><span data-line="15">        <span class="nb">print</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
-</span><span data-line="16"><span class="k">finally</span><span class="p">:</span>
-</span><span data-line="17">    <span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+</span><span data-line="4"><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
 </span></pre></div>
 </div>
-<p>Every call returns the complete current snapshot, not only newly detected
-entities. Recent predictions may be added, updated, or removed as right context
-arrives. For aligned streams, use <code class="docutils literal notranslate"><span class="pre">model.create_streaming_batch(...)</span></code>; for
-independently arriving streams, use <code class="docutils literal notranslate"><span class="pre">model.create_async_streaming_engine(...)</span></code>.
-Ordinary <code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> or <code class="docutils literal notranslate"><span class="pre">inference</span></code> calls without <code class="docutils literal notranslate"><span class="pre">session_id</span></code> remain
-stateless.</p>
-<p>See the <a class="reference internal" href="streaming.html"><span class="std std-doc">StreamingSpan guide</span></a> for all inference modes, cache
-lifecycle, architecture details, configuration, and operational guidance.</p>
+<section id="quick-start">
+<h3>Quick start<a class="headerlink" href="#quick-start" title="Link to this heading">¶</a></h3>
+<p>Pass one chunk at a time with a stable session ID. The chunks are concatenated
+exactly as supplied, so retain spaces and punctuation at chunk boundaries.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">labels</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"person"</span><span class="p">,</span> <span class="s2">"email address"</span><span class="p">,</span> <span class="s2">"phone number"</span><span class="p">]</span>
+</span><span data-line="2"><span class="n">session_id</span> <span class="o">=</span> <span class="s2">"support-call-42"</span>
+</span><span data-line="3"><span class="n">chunks</span> <span class="o">=</span> <span class="p">[</span>
+</span><span data-line="4">    <span class="s2">"Customer Alice Johnson "</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"can be reached at alice@example.com "</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s2">"or +1 202-555-0147."</span><span class="p">,</span>
+</span><span data-line="7"><span class="p">]</span>
+</span><span data-line="8">
+</span><span data-line="9"><span class="k">try</span><span class="p">:</span>
+</span><span data-line="10">    <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chunks</span><span class="p">:</span>
+</span><span data-line="11">        <span class="n">snapshot</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="12">            <span class="p">[</span><span class="n">chunk</span><span class="p">],</span>
+</span><span data-line="13">            <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="14">            <span class="n">session_id</span><span class="o">=</span><span class="p">[</span><span class="n">session_id</span><span class="p">],</span>
+</span><span data-line="15">            <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="16">        <span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+</span><span data-line="17">        <span class="nb">print</span><span class="p">(</span><span class="n">snapshot</span><span class="p">)</span>
+</span><span data-line="18"><span class="k">finally</span><span class="p">:</span>
+</span><span data-line="19">    <span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="n">session_id</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>For <code class="docutils literal notranslate"><span class="pre">model.inference(...,</span> <span class="pre">session_id=[...])</span></code>, labels can also be a single
+<code class="docutils literal notranslate"><span class="pre">{&quot;label</span> <span class="pre">name&quot;:</span> <span class="pre">&quot;description&quot;}</span></code> dictionary shared by all input chunks, or a list
+of dictionaries with one complete label set per input chunk/session. See
+<a class="reference internal" href="#label-descriptions"><span class="xref myst">Label descriptions</span></a> for the input formats. Keep each
+session’s label names, descriptions, and order consistent across calls; changing
+them requires <code class="docutils literal notranslate"><span class="pre">recompute=True</span></code> or clearing that session.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">snapshot</span></code> is the complete set of entities currently active for the
+accumulated session text. It is not a list of only the entities detected in the
+latest chunk. An entity has the same shape as an ordinary GLiNER prediction:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="p">{</span>
+</span><span data-line="2">    <span class="s2">"start"</span><span class="p">:</span> <span class="mi">9</span><span class="p">,</span>           <span class="c1"># document-relative, inclusive character offset</span>
+</span><span data-line="3">    <span class="s2">"end"</span><span class="p">:</span> <span class="mi">22</span><span class="p">,</span>            <span class="c1"># document-relative, exclusive character offset</span>
+</span><span data-line="4">    <span class="s2">"text"</span><span class="p">:</span> <span class="s2">"Alice Johnson"</span><span class="p">,</span>
+</span><span data-line="5">    <span class="s2">"label"</span><span class="p">:</span> <span class="s2">"person"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.93</span><span class="p">,</span>
+</span><span data-line="7"><span class="p">}</span>
+</span></pre></div>
+</div>
+<p>Scores and even the active boundaries may change between snapshots as more
+context arrives. Consumers that need an event stream should diff consecutive
+snapshots by <code class="docutils literal notranslate"><span class="pre">(start,</span> <span class="pre">end,</span> <span class="pre">label)</span></code>.</p>
+</section>
+<section id="architecture">
+<h3>Architecture<a class="headerlink" href="#architecture" title="Link to this heading">¶</a></h3>
+<p><img alt="GLiNER StreamingSpan architecture" src="_images/gliner-streaming-architecture.svg" /></p>
+<p>StreamingSpan uses the following cold and warm paths:</p>
+<ol class="arabic simple">
+<li><p>On the first append, labels and text are serialized as
+<code class="docutils literal notranslate"><span class="pre">label&lt;&lt;LABEL&gt;&gt;...&lt;&lt;SEP&gt;&gt;text</span></code> and passed through the causal decoder.</p></li>
+<li><p>A compact label context encoder processes only the prompt through
+<code class="docutils literal notranslate"><span class="pre">&lt;&lt;SEP&gt;&gt;</span></code>. Each <code class="docutils literal notranslate"><span class="pre">&lt;&lt;LABEL&gt;&gt;</span></code> state becomes an entity-type representation,
+which is cached.</p></li>
+<li><p>Text subtokens are pooled into word representations. The model constructs
+span representations and scores them against the label representations.</p></li>
+<li><p>On later appends, only the new decoder tokens are evaluated. Cached KV,
+label, and word states are reused and extended.</p></li>
+<li><p>Scores for new and recently revisited span boundaries are merged into the
+session’s score history, then the complete history is decoded.</p></li>
+</ol>
+<p>The default <code class="docutils literal notranslate"><span class="pre">markerV2</span></code> span layer combines the candidate’s start word, end
+word, and latest visible word. Candidate width is bounded by <code class="docutils literal notranslate"><span class="pre">max_width</span></code>.
+<code class="docutils literal notranslate"><span class="pre">right_context_width</span></code> determines how far behind the newest word an existing
+span may be revisited; it defaults to <code class="docutils literal notranslate"><span class="pre">max_width</span></code>. Setting it to <code class="docutils literal notranslate"><span class="pre">0</span></code> keeps old
+span scores fixed.</p>
+<p>An optional <code class="docutils literal notranslate"><span class="pre">span_encoder_config</span></code> adds a dense-input DeBERTa-v2, ModernBERT, or
+RNN encoder before span construction. A bidirectional span encoder can change
+every historical word representation, so the model re-scores all historical
+span candidates after each append. This still reuses causal decoder states;
+<code class="docutils literal notranslate"><span class="pre">recompute=True</span></code> is the option that rebuilds the entire accumulated sequence.</p>
+<p>For a component-level explanation, see
+<a class="reference internal" href="architectures.html"><span class="std std-doc">GLiNER StreamingSpan</span></a> in the architecture guide.</p>
+</section>
+<section id="choosing-an-inference-mode">
+<h3>Choosing an inference mode<a class="headerlink" href="#choosing-an-inference-mode" title="Link to this heading">¶</a></h3>
+<p>StreamingSpan provides four inference surfaces. They share prediction
+semantics but differ in who owns the cache and how work is batched.</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Surface</p></th>
+<th class="head"><p>Cache ownership</p></th>
+<th class="head"><p>Scheduling</p></th>
+<th class="head"><p>Best fit</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">predict_entities</span></code> or <code class="docutils literal notranslate"><span class="pre">inference</span></code> without <code class="docutils literal notranslate"><span class="pre">session_id</span></code></p></td>
+<td><p>None</p></td>
+<td><p>Ordinary GLiNER batching</p></td>
+<td><p>Complete, independent texts</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">inference(...,</span> <span class="pre">session_id=[...])</span></code></p></td>
+<td><p>One cache per ID on the model</p></td>
+<td><p>Compatible sessions are batched per call</p></td>
+<td><p>Flexible synchronous session sets</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">create_streaming_batch(...)</span></code></p></td>
+<td><p>One persistent batched cache on the handle</p></td>
+<td><p>Fixed rows advance together</p></td>
+<td><p>Stable groups with aligned arrival cadence</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">create_async_streaming_engine(...)</span></code></p></td>
+<td><p>One cache per ID on the model</p></td>
+<td><p>Dynamic microbatching</p></td>
+<td><p>Concurrent, independently arriving streams</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<section id="stateless-inference">
+<h4>Stateless inference<a class="headerlink" href="#stateless-inference" title="Link to this heading">¶</a></h4>
+<p>The architecture can process complete texts without retaining state. Omitting
+<code class="docutils literal notranslate"><span class="pre">session_id</span></code> delegates to the ordinary GLiNER inference pipeline.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">entities</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">predict_entities</span><span class="p">(</span>
+</span><span data-line="2">    <span class="s2">"Alice Johnson's email is alice@example.com."</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="5"><span class="p">)</span>
+</span><span data-line="6">
+</span><span data-line="7"><span class="n">batch</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="8">    <span class="p">[</span><span class="s2">"Alice called."</span><span class="p">,</span> <span class="s2">"Bob emailed."</span><span class="p">],</span>
+</span><span data-line="9">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="10">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span data-line="11"><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Use stateless inference when the whole input is already available. It avoids
+session lifecycle and cache-memory concerns.</p>
+</section>
+<section id="flexible-synchronous-sessions">
+<h4>Flexible synchronous sessions<a class="headerlink" href="#flexible-synchronous-sessions" title="Link to this heading">¶</a></h4>
+<p>Supplying <code class="docutils literal notranslate"><span class="pre">session_id</span></code> turns each input into an append operation. Use one
+stable, non-empty session ID per text; IDs must be unique within one call.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">session_ids</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"call-a"</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">]</span>
+</span><span data-line="2">
+</span><span data-line="3"><span class="n">first</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="4">    <span class="p">[</span><span class="s2">"Alice Johnson "</span><span class="p">,</span> <span class="s2">"Bob Smith "</span><span class="p">],</span>
+</span><span data-line="5">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">session_id</span><span class="o">=</span><span class="n">session_ids</span><span class="p">,</span>
+</span><span data-line="7">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="8"><span class="p">)</span>
+</span><span data-line="9"><span class="n">second</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">inference</span><span class="p">(</span>
+</span><span data-line="10">    <span class="p">[</span><span class="s2">"shared her email."</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">],</span>
+</span><span data-line="11">    <span class="n">labels</span><span class="p">,</span>
+</span><span data-line="12">    <span class="n">session_id</span><span class="o">=</span><span class="n">session_ids</span><span class="p">,</span>
+</span><span data-line="13">    <span class="n">batch_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span>
+</span><span data-line="14"><span class="p">)</span>
+</span><span data-line="15">
+</span><span data-line="16"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="n">session_ids</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Cold sessions are batched together. Warm sessions with the same cached decoder
+length are also batched together; different lengths are processed in separate
+groups. <code class="docutils literal notranslate"><span class="pre">batch_size</span></code> limits how many append requests enter a group at once.
+Session order may change between calls because state is addressed by ID.</p>
+<p>A blank chunk returns <code class="docutils literal notranslate"><span class="pre">[]</span></code> and does not advance that session. Labels must stay
+in the same order for the lifetime of a session. To use a different label set,
+clear the session or append non-empty text with <code class="docutils literal notranslate"><span class="pre">recompute=True</span></code>.</p>
+</section>
+<section id="persistent-fixed-order-batches">
+<h4>Persistent fixed-order batches<a class="headerlink" href="#persistent-fixed-order-batches" title="Link to this heading">¶</a></h4>
+<p>When the same streams advance together, a persistent batch avoids repeatedly
+stacking and splitting their historical KV caches. The session-to-row mapping
+and labels are immutable for the handle’s lifetime.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="k">with</span> <span class="n">model</span><span class="o">.</span><span class="n">create_streaming_batch</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">session_ids</span><span class="o">=</span><span class="p">[</span><span class="s2">"call-a"</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">],</span>
+</span><span data-line="3">    <span class="n">labels</span><span class="o">=</span><span class="n">labels</span><span class="p">,</span>
+</span><span data-line="4"><span class="p">)</span> <span class="k">as</span> <span class="n">stream</span><span class="p">:</span>
+</span><span data-line="5">    <span class="n">first</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"Alice Johnson "</span><span class="p">,</span> <span class="s2">"Bob Smith "</span><span class="p">])</span>
+</span><span data-line="6">    <span class="n">second</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">"shared her email."</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">])</span>
+</span><span data-line="7">
+</span><span data-line="8">    <span class="c1"># Keep call-a unchanged while call-b advances.</span>
+</span><span data-line="9">    <span class="n">third</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="s2">""</span><span class="p">,</span> <span class="s2">" It is +1 202-555-0147."</span><span class="p">])</span>
+</span></pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">append</span></code> returns one complete snapshot per row. An empty row retains its
+existing snapshot. If every row is empty, no model forward is performed.</p>
+<p>The handle offers two lifecycle operations:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">reset()</span></code> discards the complete batched cache but keeps the handle, row
+mapping, and labels usable.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">close()</span></code> releases the cache and permanently closes the handle. The context
+manager calls it automatically.</p></li>
+</ul>
+<p>Passing <code class="docutils literal notranslate"><span class="pre">recompute=True</span></code> to <code class="docutils literal notranslate"><span class="pre">append</span></code> rebuilds every row from its complete
+accumulated text. It is a batch-wide operation.</p>
+</section>
+<section id="asynchronous-dynamic-microbatching">
+<h4>Asynchronous dynamic microbatching<a class="headerlink" href="#asynchronous-dynamic-microbatching" title="Link to this heading">¶</a></h4>
+<p>The asynchronous engine collects independently arriving appends for a short
+window and sends compatible sessions through batched forwards. Calls for the
+same session remain FIFO ordered, while different session IDs can be submitted
+concurrently.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="kn">import</span><span class="w"> </span><span class="nn">asyncio</span>
+</span><span data-line="2">
+</span><span data-line="3">
+</span><span data-line="4"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="n">session_id</span><span class="p">,</span> <span class="n">chunks</span><span class="p">):</span>
+</span><span data-line="5">    <span class="n">latest</span> <span class="o">=</span> <span class="p">[]</span>
+</span><span data-line="6">    <span class="k">async</span> <span class="k">for</span> <span class="n">latest</span> <span class="ow">in</span> <span class="n">engine</span><span class="o">.</span><span class="n">stream</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">chunks</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">threshold</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+</span><span data-line="7">        <span class="nb">print</span><span class="p">(</span><span class="n">session_id</span><span class="p">,</span> <span class="n">latest</span><span class="p">)</span>
+</span><span data-line="8">    <span class="k">return</span> <span class="n">latest</span>
+</span><span data-line="9">
+</span><span data-line="10">
+</span><span data-line="11"><span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">main</span><span class="p">():</span>
+</span><span data-line="12">    <span class="k">async</span> <span class="k">with</span> <span class="n">model</span><span class="o">.</span><span class="n">create_async_streaming_engine</span><span class="p">(</span>
+</span><span data-line="13">        <span class="n">max_batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span>
+</span><span data-line="14">        <span class="n">batch_wait_timeout_ms</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+</span><span data-line="15">        <span class="n">queue_capacity</span><span class="o">=</span><span class="mi">4096</span><span class="p">,</span>
+</span><span data-line="16">    <span class="p">)</span> <span class="k">as</span> <span class="n">engine</span><span class="p">:</span>
+</span><span data-line="17">        <span class="n">results</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">gather</span><span class="p">(</span>
+</span><span data-line="18">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">"call-a"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Alice "</span><span class="p">,</span> <span class="s2">"shared her email."</span><span class="p">]),</span>
+</span><span data-line="19">            <span class="n">consume</span><span class="p">(</span><span class="n">engine</span><span class="p">,</span> <span class="s2">"call-b"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"Bob "</span><span class="p">,</span> <span class="s2">"shared his number."</span><span class="p">]),</span>
+</span><span data-line="20">        <span class="p">)</span>
+</span><span data-line="21">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-a"</span><span class="p">)</span>
+</span><span data-line="22">        <span class="k">await</span> <span class="n">engine</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-b"</span><span class="p">)</span>
+</span><span data-line="23">        <span class="k">return</span> <span class="n">results</span>
+</span><span data-line="24">
+</span><span data-line="25">
+</span><span data-line="26"><span class="n">snapshots</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">main</span><span class="p">())</span>
+</span></pre></div>
+</div>
+<p>The engine runs model work outside the event-loop thread and uses one worker per
+engine, avoiding competing cache mutations and CUDA launches.
+<code class="docutils literal notranslate"><span class="pre">max_batch_size</span></code> caps a microbatch, <code class="docutils literal notranslate"><span class="pre">batch_wait_timeout_ms</span></code> trades a small amount
+of latency for more batching opportunities, and <code class="docutils literal notranslate"><span class="pre">queue_capacity</span></code> applies
+backpressure to producers. Leaving the async context drains queued work and
+closes the scheduler.</p>
+<p>Use <code class="docutils literal notranslate"><span class="pre">await</span> <span class="pre">engine.clear_session(id)</span></code> while an engine is active; it waits for
+earlier work on that session before removing the cache. Blank appends return
+<code class="docutils literal notranslate"><span class="pre">[]</span></code> without entering the queue or changing state.</p>
+</section>
+</section>
+<section id="session-and-cache-lifecycle">
+<h3>Session and cache lifecycle<a class="headerlink" href="#session-and-cache-lifecycle" title="Link to this heading">¶</a></h3>
+<p>A session retains more than the decoder’s KV tensors:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Cached state</p></th>
+<th class="head"><p>Purpose</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Decoder KV and attention state</p></td>
+<td><p>Lets new tokens attend to the prompt and historical text without re-encoding it</p></td>
+</tr>
+<tr class="row-odd"><td><p>Pooled word states</p></td>
+<td><p>Supports spans that cross chunk boundaries and recent span rescoring</p></td>
+</tr>
+<tr class="row-even"><td><p>Label representations</p></td>
+<td><p>Avoids re-encoding an unchanged entity-type prompt</p></td>
+</tr>
+<tr class="row-odd"><td><p>Text, tokens, and character offsets</p></td>
+<td><p>Produces document-relative entity offsets and text</p></td>
+</tr>
+<tr class="row-even"><td><p>Span-score history</p></td>
+<td><p>Preserves old candidates and replaces scores for revised boundaries</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>KV, word, and label tensors stay with the model device. Historical span scores
+are kept on CPU so the prediction history does not consume progressively more
+accelerator memory.</p>
+<p>For sessions created through <code class="docutils literal notranslate"><span class="pre">inference(...,</span> <span class="pre">session_id=...)</span></code> or the async
+engine, use:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">(</span><span class="s2">"call-a"</span><span class="p">)</span>             <span class="c1"># one session</span>
+</span><span data-line="2"><span class="n">model</span><span class="o">.</span><span class="n">clear_session</span><span class="p">([</span><span class="s2">"call-b"</span><span class="p">,</span> <span class="s2">"call-c"</span><span class="p">])</span>  <span class="c1"># several sessions</span>
+</span><span data-line="3"><span class="n">model</span><span class="o">.</span><span class="n">clear_sessions</span><span class="p">()</span>                    <span class="c1"># every model-owned session</span>
+</span><span data-line="4"><span class="nb">print</span><span class="p">(</span><span class="n">model</span><span class="o">.</span><span class="n">session_count</span><span class="p">)</span>
+</span></pre></div>
+</div>
+<p>Persistent <code class="docutils literal notranslate"><span class="pre">StreamingBatch</span></code> handles own their cache separately and are not
+included in <code class="docutils literal notranslate"><span class="pre">model.session_count</span></code>; use the handle’s <code class="docutils literal notranslate"><span class="pre">reset()</span></code> or <code class="docutils literal notranslate"><span class="pre">close()</span></code>.
+Model-owned sessions have no automatic TTL or LRU eviction.</p>
+<section id="context-limits">
+<h4>Context limits<a class="headerlink" href="#context-limits" title="Link to this heading">¶</a></h4>
+<p>The effective session limit is the smaller of <code class="docutils literal notranslate"><span class="pre">max_cache_length</span></code>, when set, and
+the decoder backbone’s native positional limit. The serialized label prompt
+also consumes decoder positions. Streaming sessions disable preprocessing
+truncation, and the implementation does not silently evict old context. An
+append that would exceed the limit raises <code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; finish and clear the
+session, reset its batch, or start a new session.</p>
+<p>This differs from stateless StreamingSpan and other GLiNER inference, where
+<code class="docutils literal notranslate"><span class="pre">config.max_len</span></code> is a text-only splitter-token limit and an overlong input is
+reduced to a prefix. See <a class="reference internal" href="#input-limits-and-truncation">Input limits and truncation</a>.</p>
+<p>A persistent batch stores the padded physical width of every append. Group
+streams with similar chunk sizes to reduce padded cache positions and avoid
+reaching the physical context limit earlier than necessary.</p>
+</section>
+</section>
+<section id="prediction-and-revision-controls">
+<h3>Prediction and revision controls<a class="headerlink" href="#prediction-and-revision-controls" title="Link to this heading">¶</a></h3>
+<p>The streaming APIs accept the standard span-decoding controls:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Option</p></th>
+<th class="head"><p>Effect</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<td><p>Minimum entity score; defaults to <code class="docutils literal notranslate"><span class="pre">0.5</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">flat_ner</span></code></p></td>
+<td><p>If <code class="docutils literal notranslate"><span class="pre">True</span></code>, choose non-overlapping entities; set <code class="docutils literal notranslate"><span class="pre">False</span></code> for nested NER</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multi_label</span></code></p></td>
+<td><p>Permit more than one label for a span</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">return_class_probs</span></code></p></td>
+<td><p>Add per-class probabilities to each returned entity</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">recompute</span></code></p></td>
+<td><p>Rebuild state from all accumulated text instead of incrementally appending</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">packing_config</span></code>, <code class="docutils literal notranslate"><span class="pre">input_spans</span></code>, and external model-input tensors are not
+supported when <code class="docutils literal notranslate"><span class="pre">session_id</span></code> is supplied. They remain available to the stateless
+parent inference path where otherwise supported.</p>
+<p>Two model configuration fields control incremental revisions:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">max_width</span></code> is the maximum candidate span width in words.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">right_context_width</span></code> is the number of words behind the latest word whose
+span endings are eligible for rescoring. <code class="docutils literal notranslate"><span class="pre">None</span></code> is normalized to <code class="docutils literal notranslate"><span class="pre">max_width</span></code>.</p></li>
+</ul>
+<p>A larger right-context window can improve revisions at the cost of scoring more
+candidates per append. <code class="docutils literal notranslate"><span class="pre">recompute=True</span></code> is useful as an occasional correctness
+check or when changing labels, but it forfeits incremental decoder savings for
+that call.</p>
+</section>
+<section id="chunking-guidance">
+<h3>Chunking guidance<a class="headerlink" href="#chunking-guidance" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Prefer chunks that end at word, punctuation, or sentence boundaries. Splitting
+one logical word across calls makes the word splitter treat the pieces as
+separate streaming words.</p></li>
+<li><p>Preserve boundary whitespace. <code class="docutils literal notranslate"><span class="pre">&quot;Alice</span> <span class="pre">&quot;</span></code> followed by <code class="docutils literal notranslate"><span class="pre">&quot;joined&quot;</span></code> reconstructs
+<code class="docutils literal notranslate"><span class="pre">&quot;Alice</span> <span class="pre">joined&quot;</span></code>; <code class="docutils literal notranslate"><span class="pre">&quot;Alice&quot;</span></code> followed by <code class="docutils literal notranslate"><span class="pre">&quot;joined&quot;</span></code> reconstructs
+<code class="docutils literal notranslate"><span class="pre">&quot;Alicejoined&quot;</span></code>.</p></li>
+<li><p>Smaller chunks provide earlier updates but incur more Python, tokenization,
+decoding, and scheduling overhead. Larger chunks improve throughput but delay
+the first prediction.</p></li>
+<li><p>Use stable, tenant-safe session IDs and always clear abandoned sessions.</p></li>
+<li><p>Treat every response as replaceable state. Do not append snapshots directly
+to a result list as though they were deltas.</p></li>
+</ul>
+</section>
+<section id="configuration-and-training">
+<h3>Configuration and training<a class="headerlink" href="#configuration-and-training" title="Link to this heading">¶</a></h3>
+<p>StreamingSpan checkpoints use <code class="docutils literal notranslate"><span class="pre">model_type:</span> <span class="pre">gliner_streaming_span</span></code>. The main
+architecture-specific fields are:</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">model_name</span></code> / <code class="docutils literal notranslate"><span class="pre">decoder_config</span></code></p></td>
+<td><p>Causal decoder backbone and its saved configuration</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">label_token</span></code></p></td>
+<td><p>Marker placed after each label; defaults to <code class="docutils literal notranslate"><span class="pre">&lt;&lt;LABEL&gt;&gt;</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sep_token</span></code></p></td>
+<td><p>Boundary between the entity prompt and text; defaults to <code class="docutils literal notranslate"><span class="pre">&lt;&lt;SEP&gt;&gt;</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">labels_encoder_config</span></code></p></td>
+<td><p>DeBERTa-v2, ModernBERT, or RNN encoder for the compact prompt</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">span_mode</span></code></p></td>
+<td><p>Span representation; StreamingSpan defaults to <code class="docutils literal notranslate"><span class="pre">markerV2</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">span_encoder_config</span></code></p></td>
+<td><p>Optional DeBERTa-v2, ModernBERT, or RNN word context encoder</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">subtoken_pooling</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">first</span></code>, <code class="docutils literal notranslate"><span class="pre">last</span></code>, <code class="docutils literal notranslate"><span class="pre">mean</span></code>, or <code class="docutils literal notranslate"><span class="pre">max</span></code> pooling into words</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_width</span></code></p></td>
+<td><p>Maximum entity span width in words</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">right_context_width</span></code></p></td>
+<td><p>Rolling span revision window</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_cache_length</span></code></p></td>
+<td><p>Optional upper bound on cached decoder positions</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">max_len</span></code></p></td>
+<td><p>Stateless preprocessing limit; cached sessions use the decoder context limit instead</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Normally these values should come from the checkpoint rather than be overridden
+at inference time. To train or fine-tune the architecture, adapt
+<code class="docutils literal notranslate"><span class="pre">configs/config_streaming_span.yaml</span></code> and use the normal GLiNER training entry
+point:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>train.py<span class="w"> </span>--config<span class="w"> </span>configs/config_streaming_span.yaml
+</span></pre></div>
+</div>
+<p>The data format and general trainer options are the same as for other
+span-based GLiNER models; see <a class="reference internal" href="training.html"><span class="std std-doc">Training</span></a> and
+<a class="reference internal" href="configs.html"><span class="std std-doc">Configuration</span></a>. The executable
+<a class="reference external" href="https://github.com/urchade/GLiNER/blob/main/examples/streaming_inference_modes.py">inference modes example</a>
+demonstrates every serving surface, while the
+<a class="reference external" href="https://github.com/urchade/GLiNER/blob/main/examples/streaming_span.py">interactive streaming example</a>
+shows how to diff and render live snapshots.</p>
+</section>
 </section>
 <section id="tips-and-best-practices">
 <h2>Tips and Best Practices<a class="headerlink" href="#tips-and-best-practices" title="Link to this heading">¶</a></h2>
@@ -1838,16 +2553,16 @@ lifecycle, architecture details, configuration, and operational guidance.</p>
   </svg>
   <span>Back to top</span>
 </button><div class="navigation flex print:hidden"><div class="navigation-prev">
-    <a href="input_limits.html">
+    <a href="quickstart.html">
       <i class="i-lucide chevron-left"></i>
       <div class="page-info">
-        <span>Previous</span><div class="title">Input limits and truncation</div></div>
+        <span>Previous</span><div class="title">Quickstart</div></div>
     </a>
   </div><div class="navigation-next">
-    <a href="streaming.html">
+    <a href="configs.html">
       <div class="page-info">
         <span>Next</span>
-        <div class="title">StreamingSpan</div>
+        <div class="title">Components &amp; Configs</div>
       </div>
       <i class="i-lucide chevron-right"></i>
     </a>

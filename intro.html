@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
@@ -314,11 +312,14 @@ data-aria-dark="Switch to auto color mode">
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>gliner
 </span></pre></div>
 </div>
-<p>CPU ONNX Runtime support is included in the default installation. Install
-<code class="docutils literal notranslate"><span class="pre">onnx</span></code> when exporting models, or install GLiNER with the GPU feature for CUDA
-execution providers:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span>onnx
-</span><span data-line="2">!pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[gpu]"</span>
+<p>ONNX Runtime is optional. Choose the <code class="docutils literal notranslate"><span class="pre">onnx</span></code> extra for CPU inference or the
+<code class="docutils literal notranslate"><span class="pre">gpu</span></code> extra for CUDA execution providers. Install only one: the CPU and GPU
+packages share the same Python module. Also install <code class="docutils literal notranslate"><span class="pre">onnx</span></code> when exporting models:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">!pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[onnx]"</span><span class="w">  </span><span class="c1"># CPU</span>
+</span><span data-line="2"><span class="c1"># or</span>
+</span><span data-line="3">!pip<span class="w"> </span>install<span class="w"> </span><span class="s2">"gliner[gpu]"</span><span class="w">   </span><span class="c1"># NVIDIA GPU</span>
+</span><span data-line="4">
+</span><span data-line="5">!pip<span class="w"> </span>install<span class="w"> </span>onnx<span class="w">           </span><span class="c1"># additionally required for ONNX export</span>
 </span></pre></div>
 </div>
 <p>Install OpenVINO support to export models directly to OpenVINO IR or run them

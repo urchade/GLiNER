@@ -59,9 +59,7 @@ data-aria-dark="Switch to auto color mode">
 <li class="toctree-l1"><a class="reference internal" href="intro.html">Introduction to 👑 GLiNER</a></li>
 <li class="toctree-l1"><a class="reference internal" href="instalation.html">Installation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
-<li class="toctree-l1"><a class="reference internal" href="input_limits.html">Input limits and truncation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="usage.html">Advanced Usage</a></li>
-<li class="toctree-l1"><a class="reference internal" href="streaming.html">StreamingSpan</a></li>
 <li class="toctree-l1"><a class="reference internal" href="configs.html">Components &amp; Configs</a></li>
 <li class="toctree-l1"><a class="reference internal" href="training.html">Training</a></li>
 <li class="toctree-l1"><a class="reference internal" href="architectures.html">Architectures</a></li>
@@ -269,7 +267,11 @@ coalesces them into a single forward pass:</p>
 </span></pre></div>
 </div>
 <p>Each dictionary key is returned as the entity label; its value is the prompt encoded
-for that text. A single dictionary is shared across every input text.</p>
+for that text. A single dictionary is shared across every input text. When supplying
+a list of dictionaries, its length and order must match the input texts, and each
+dictionary contains all labels for its corresponding text. For a single text, put
+all labels in one dictionary. See <a class="reference internal" href="usage.html#label-descriptions"><span class="std std-ref">Label descriptions</span></a>
+for examples of shared and per-text label sets.</p>
 <p>Network or server errors surface as <code class="docutils literal notranslate"><span class="pre">gliner.serve.client.GLiNERClientError</span></code>.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -277,7 +279,7 @@ for that text. A single dictionary is shared across every input text.</p>
 overrides the loaded model’s text-only <code class="docutils literal notranslate"><span class="pre">config.max_len</span></code>; requests above it can
 still return HTTP success after GLiNER keeps only the prefix and emits a Python
 warning inside the replica. If the service contract requires full-input
-coverage, validate or window requests explicitly. See <a class="reference internal" href="input_limits.html"><span class="std std-doc">Input limits and
+coverage, validate or window requests explicitly. See <a class="reference internal" href="usage.html#input-limits-and-truncation"><span class="std std-ref">Input limits and
 truncation</span></a> for a preflight that uses the public model API.</p>
 </div>
 <p><strong>HTTP request (no client library):</strong></p>
