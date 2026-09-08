@@ -89,6 +89,13 @@ train_data = [
 
 ### Advanced Format: Explicit Labels and Negatives
 
+Examples with `"ner": []` are supported. If no candidate entity types are
+available, the processor uses one empty-string label (`""`) with all-zero
+targets. For uni-encoders, this produces an entity marker without label text.
+Bi-encoders use the empty-string label only when the shared batch label pool is
+empty. To train a negative example against specific entity types, supply
+`ner_labels` or `ner_negatives` as described below.
+
 You can improve training by explicitly defining:
 1. **Positive labels** (`ner_labels`): Entity types present in this example, recomened to specify for fixed label set use cases.
 2. **Negative labels** (`ner_negatives`): Entity types to use as negative examples

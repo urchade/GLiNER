@@ -80,7 +80,11 @@ outputs = client.predict(
 ```
 
 Each dictionary key is returned as the entity label; its value is the prompt encoded
-for that text. A single dictionary is shared across every input text.
+for that text. A single dictionary is shared across every input text. When supplying
+a list of dictionaries, its length and order must match the input texts, and each
+dictionary contains all labels for its corresponding text. For a single text, put
+all labels in one dictionary. See [Label descriptions](usage.md#label-descriptions)
+for examples of shared and per-text label sets.
 
 Network or server errors surface as `gliner.serve.client.GLiNERClientError`.
 
@@ -90,7 +94,7 @@ overrides the loaded model's text-only `config.max_len`; requests above it can
 still return HTTP success after GLiNER keeps only the prefix and emits a Python
 warning inside the replica. If the service contract requires full-input
 coverage, validate or window requests explicitly. See [Input limits and
-truncation](input_limits.md) for a preflight that uses the public model API.
+truncation](usage.md#input-limits-and-truncation) for a preflight that uses the public model API.
 :::
 
 **HTTP request (no client library):**

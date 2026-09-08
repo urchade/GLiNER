@@ -4142,6 +4142,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         *,
         batch_index=0,
         past_key_values=None,
+        label_names=None,
     ):
         current_attention = (
             batch["label_attention_mask"] if "label_attention_mask" in batch else batch["attention_mask"]
@@ -4172,6 +4173,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
             next_position_id=cached_length,
             session_id=session_id,
             labels=tuple(labels),
+            label_names=tuple(label_names) if label_names is not None else None,
             text=text,
             tokens=list(tokens),
             char_starts=list(char_starts),
@@ -4196,7 +4198,8 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         if not state.span_logits:
             return []
 
-        id_to_classes = {index + 1: label for index, label in enumerate(state.labels)}
+        label_names = state.label_names if state.label_names is not None else state.labels
+        id_to_classes = {index + 1: label for index, label in enumerate(label_names)}
         ordered_scores = sorted(state.span_logits.items())
         span_idx = torch.tensor(
             [[boundary for boundary, _ in ordered_scores]],
@@ -4234,11 +4237,16 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
             entities.append(entity)
         return entities
 
-    def _prepare_session_item(self, text, labels, session_id, recompute):
+    def _prepare_session_item(self, text, labels, session_id, recompute, label_names=None):
         """Prepare semantic and token metadata for one streaming append."""
+        label_names = tuple(labels if label_names is None else label_names)
         state = self._session_cache.get(session_id)
-        if state is not None and state.labels != tuple(labels) and not recompute:
-            raise ValueError(f"Labels for session {session_id!r} changed. Pass recompute=True or clear the session.")
+        if state is not None and not recompute:
+            previous_names = state.label_names if state.label_names is not None else state.labels
+            if state.labels != tuple(labels) or previous_names != label_names:
+                raise ValueError(
+                    f"Labels for session {session_id!r} changed. Pass recompute=True or clear the session."
+                )
 
         current_tokens, current_starts, current_ends = self.prepare_inputs([text])
         current_tokens = current_tokens[0]
@@ -4248,6 +4256,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         return {
             "session_id": session_id,
             "labels": tuple(labels),
+            "label_names": label_names,
             "state": state,
             "current_tokens": current_tokens,
             "current_starts": current_starts,
@@ -4303,6 +4312,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
                     item["combined_ends"],
                     batch_index=row,
                     past_key_values=row_cache,
+                    label_names=item["label_names"],
                 )
             )
         for state in states:
@@ -4772,6 +4782,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
                 next_position_id=cached.next_position + current_token_count,
                 session_id=item["session_id"],
                 labels=item["labels"],
+                label_names=item["label_names"],
                 text=item["combined_text"],
                 tokens=item["combined_tokens"],
                 char_starts=item["combined_starts"],
@@ -4807,6 +4818,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
                         request["labels"],
                         request["session_id"],
                         request.get("recompute", False),
+                        label_names=request.get("label_names"),
                     )
                 except Exception as error:
                     results[index] = error
@@ -5006,7 +5018,7 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
     def inference(
         self,
         texts: str | List[str],
-        labels: List[str],
+        labels: EntityLabels,
         flat_ner: bool = True,
         threshold: float = 0.5,
         multi_label: bool = False,
@@ -5028,6 +5040,9 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         takes precedence and refreshes every span over the combined session.
         Returned entities are a complete session snapshot, including any
         revisions or removals caused by the newly appended context.
+        Labels support shared or per-text label-to-description mappings, just
+        as in stateless inference. Changing names or descriptions in an existing
+        session requires ``recompute=True`` or clearing the session.
         """
         if session_id is None:
             return super().inference(
@@ -5066,8 +5081,9 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
         if not isinstance(recompute, bool):
             raise TypeError("recompute must be a boolean")
 
-        normalized_labels = list(dict.fromkeys(labels))
-        if not normalized_labels:
+        normalized_labels, label_names = _normalize_labels(labels, len(texts), list(range(len(texts))))
+        per_text_labels = bool(normalized_labels) and isinstance(normalized_labels[0], list)
+        if not normalized_labels or (per_text_labels and any(not label_set for label_set in normalized_labels)):
             raise ValueError("At least one label is required")
         if not isinstance(batch_size, int) or batch_size < 1:
             raise ValueError("batch_size must be a positive integer")
@@ -5082,7 +5098,8 @@ class StreamingSpanGLiNER(BaseEncoderGLiNER):
             requests.append(
                 {
                     "text": text,
-                    "labels": normalized_labels,
+                    "labels": normalized_labels[index] if per_text_labels else normalized_labels,
+                    "label_names": label_names[index] if per_text_labels else label_names,
                     "session_id": current_session,
                     "recompute": recompute,
                     "threshold": threshold,
