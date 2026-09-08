@@ -66,13 +66,20 @@ class BaseModel(ABC, nn.Module):
 
     data_processor = None
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the base model.
 
         Args:
             config: Configuration object containing model hyperparameters.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory path for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
         super().__init__()
         self.config = config
@@ -288,16 +295,25 @@ class BaseUniEncoderModel(BaseModel):
         cross_fuser (Optional[CrossFuser]): Optional cross-attention fusion layer.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the uni-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
-        self.token_rep_layer = self._init_token_rep_layer(config, from_pretrained, cache_dir=cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
+        self.token_rep_layer = self._init_token_rep_layer(
+            config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only
+        )
 
         if self.config.num_rnn_layers > 0:
             self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
@@ -317,6 +333,7 @@ class BaseUniEncoderModel(BaseModel):
         config: Any,
         from_pretrained: bool = False,
         cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
     ) -> nn.Module:
         """Initialize the token representation layer.
 
@@ -324,8 +341,9 @@ class BaseUniEncoderModel(BaseModel):
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        return Encoder(config, from_pretrained, cache_dir=cache_dir)
+        return Encoder(config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only)
 
     def _extract_prompt_features_and_word_embeddings(
         self,
@@ -435,15 +453,22 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         prompt_rep_layer (nn.Module): Projection layer for entity label embeddings.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the span-based uni-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         self.span_rep_layer = SpanRepLayer(
             span_mode=config.span_mode,
             hidden_size=config.hidden_size,
@@ -645,6 +670,7 @@ class StreamingSpanModel(UniEncoderSpanModel):
         config: Any,
         from_pretrained: bool = False,
         cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
     ) -> None:
         """Initialize the streaming span model.
 
@@ -652,8 +678,9 @@ class StreamingSpanModel(UniEncoderSpanModel):
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         if self.token_rep_layer.decoder_hidden_size != config.hidden_size:
             self.token_projection = nn.Linear(self.token_rep_layer.decoder_hidden_size, config.hidden_size)
         self.labels_encoder = StreamingSpanLabelsEncoder(config)
@@ -670,6 +697,7 @@ class StreamingSpanModel(UniEncoderSpanModel):
         config: Any,
         from_pretrained: bool = False,
         cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
     ) -> Decoder:
         """Initialize the token representation layer for the streaming span model.
 
@@ -677,8 +705,11 @@ class StreamingSpanModel(UniEncoderSpanModel):
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        return Decoder(config, from_pretrained, cache_dir=cache_dir, use_causal_lm=False)
+        return Decoder(
+            config, from_pretrained, cache_dir=cache_dir, use_causal_lm=False, local_files_only=local_files_only
+        )
 
     @staticmethod
     def _merge_cached_words(
@@ -1090,15 +1121,22 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         scorer (Scorer): Scoring layer for computing token-label compatibility.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the token-based uni-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
         if getattr(config, "represent_spans", False):
@@ -1302,16 +1340,25 @@ class BaseBiEncoderModel(BaseModel):
         cross_fuser (Optional[CrossFuser]): Optional cross-attention fusion layer.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the bi-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
-        self.token_rep_layer = BiEncoder(config, from_pretrained, cache_dir=cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
+        self.token_rep_layer = BiEncoder(
+            config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only
+        )
 
         if self.config.num_rnn_layers:
             self.rnn = LstmSeq2SeqEncoder(config, num_layers=self.config.num_rnn_layers)
@@ -1454,15 +1501,22 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         prompt_rep_layer (nn.Module): Projection layer for entity label embeddings.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the span-based bi-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         self.span_rep_layer = SpanRepLayer(
             span_mode=config.span_mode,
             hidden_size=config.hidden_size,
@@ -1647,15 +1701,22 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         scorer (Scorer): Scoring layer for computing token-label compatibility.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the token-based bi-encoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
     def forward(
@@ -1784,19 +1845,26 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             dimensions differ.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the span-decoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
-        self.decoder = self._init_decoder(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
+        self.decoder = self._init_decoder(config, from_pretrained, cache_dir, local_files_only=local_files_only)
 
-    def _init_decoder(self, config, from_pretrained, cache_dir) -> Decoder:
-        decoder = Decoder(config, from_pretrained, cache_dir=cache_dir)
+    def _init_decoder(self, config, from_pretrained, cache_dir, local_files_only=False) -> Decoder:
+        decoder = Decoder(config, from_pretrained, cache_dir=cache_dir, local_files_only=local_files_only)
         if self.config.hidden_size != decoder.decoder_hidden_size:
             self._enc2dec_proj = create_projection_layer(
                 self.config.hidden_size,
@@ -2304,16 +2372,23 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
             dimensions differ.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the token-level encoder-decoder model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
         # Cooperative MRO initializes both the token scorer and decoder.
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
 
     def select_token_decoder_embedding(
         self,
@@ -2682,15 +2757,22 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             scoring via concatenation.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the span-based relation extraction model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
 
         if config.relations_layer is not None:
             if config.relations_layer != "none":
@@ -3244,15 +3326,22 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
             scoring via concatenation.
     """
 
-    def __init__(self, config: Any, from_pretrained: bool = False, cache_dir: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        config: Any,
+        from_pretrained: bool = False,
+        cache_dir: str | Path | None = None,
+        local_files_only: bool = False,
+    ) -> None:
         """Initialize the span-based relation extraction model.
 
         Args:
             config: Model configuration object.
             from_pretrained: Whether to load from pretrained weights.
             cache_dir: Directory for caching pretrained models.
+            local_files_only: Only load local or cached files.
         """
-        super().__init__(config, from_pretrained, cache_dir)
+        super().__init__(config, from_pretrained, cache_dir, local_files_only=local_files_only)
         self.scorer = Scorer(config.hidden_size, config.dropout)
 
     def loss(
