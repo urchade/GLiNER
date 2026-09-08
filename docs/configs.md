@@ -163,7 +163,7 @@ configurations may override the base default.
 This is not necessarily the backbone's total context length. Uni-encoder
 prompts and text share the later transformer subword/context limit, while
 bi-encoders encode labels separately. See [Input limits and
-truncation](input_limits.md) for all limits and the StreamingSpan exception.
+truncation](usage.md#input-limits-and-truncation) for all limits and the StreamingSpan exception.
 
 ---
 

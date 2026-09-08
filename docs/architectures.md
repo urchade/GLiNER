@@ -32,7 +32,7 @@ All stateless architectures apply the checkpoint's text-only `config.max_len`
 before encoding labels. Whether labels share a later backbone context with the
 text depends on the architecture: uni-encoders share it, while bi-encoders keep
 the two sequences separate. Cached StreamingSpan sessions use their causal
-decoder context instead. See [Input limits and truncation](input_limits.md) for
+decoder context instead. See [Input limits and truncation](usage.md#input-limits-and-truncation) for
 the complete behavior and production preflight guidance.
 
 ## Vanilla GLiNER (UniEncoderSpan)
@@ -660,7 +660,7 @@ complete current entity snapshot with document-relative character offsets. It
 is not a delta: callers that render live changes should compare consecutive
 snapshots to identify additions, updates, and removals.
 
-The [StreamingSpan guide](streaming.md) covers the session API, persistent
+The [StreamingSpan guide](usage.md#streamingspan-models) covers the session API, persistent
 batches, asynchronous microbatching, cache cleanup, configuration, and
 deployment trade-offs. A PII-oriented checkpoint is available at
 [knowledgator/gliner-stream-pii-v1.0](https://huggingface.co/knowledgator/gliner-stream-pii-v1.0).

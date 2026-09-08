@@ -94,7 +94,7 @@ overrides the loaded model's text-only `config.max_len`; requests above it can
 still return HTTP success after GLiNER keeps only the prefix and emits a Python
 warning inside the replica. If the service contract requires full-input
 coverage, validate or window requests explicitly. See [Input limits and
-truncation](input_limits.md) for a preflight that uses the public model API.
+truncation](usage.md#input-limits-and-truncation) for a preflight that uses the public model API.
 :::
 
 **HTTP request (no client library):**
