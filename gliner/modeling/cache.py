@@ -240,6 +240,8 @@ class CacheState:
     char_ends: list[int] = field(default_factory=list)
     span_logits: dict[tuple[int, int], torch.Tensor] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
+    # Public names may differ from the model-facing prompts stored in labels.
+    label_names: tuple[str, ...] | None = None
 
     @property
     def next_position(self) -> int:

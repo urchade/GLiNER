@@ -45,6 +45,13 @@ finally:
     model.clear_session(session_id)
 ```
 
+For `model.inference(..., session_id=[...])`, labels can also be a single
+`{"label name": "description"}` dictionary shared by all input chunks, or a list
+of dictionaries with one complete label set per input chunk/session. See
+[Label descriptions](usage.md#label-descriptions) for the input formats. Keep each
+session's label names, descriptions, and order consistent across calls; changing
+them requires `recompute=True` or clearing that session.
+
 Each `snapshot` is the complete set of entities currently active for the
 accumulated session text. It is not a list of only the entities detected in the
 latest chunk. An entity has the same shape as an ordinary GLiNER prediction:

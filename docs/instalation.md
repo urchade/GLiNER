@@ -9,12 +9,15 @@ To begin using the GLiNER model, you can install the GLiNER Python library throu
 pip install gliner
 ```
 :::tip[ONNX Runtime]
-CPU inference with ONNX Runtime is included in the default installation. Install the separate `onnx` package to export models, or use the GPU feature for CUDA execution providers.
+ONNX Runtime is optional. Choose the `onnx` extra for CPU inference or the `gpu` extra for CUDA execution providers. Install only one: the CPU and GPU packages share the same Python module. Install the separate `onnx` package to export models.
 :::
 
 ```bash
-pip install onnx             # required for ONNX export
+pip install "gliner[onnx]"  # CPU-backed ONNX Runtime
+# or
 pip install "gliner[gpu]"   # GPU-backed ONNX Runtime
+
+pip install onnx           # additionally required for ONNX export
 ```
 
 :::tip[OpenVINO]

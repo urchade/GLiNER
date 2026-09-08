@@ -80,7 +80,11 @@ outputs = client.predict(
 ```
 
 Each dictionary key is returned as the entity label; its value is the prompt encoded
-for that text. A single dictionary is shared across every input text.
+for that text. A single dictionary is shared across every input text. When supplying
+a list of dictionaries, its length and order must match the input texts, and each
+dictionary contains all labels for its corresponding text. For a single text, put
+all labels in one dictionary. See [Label descriptions](usage.md#label-descriptions)
+for examples of shared and per-text label sets.
 
 Network or server errors surface as `gliner.serve.client.GLiNERClientError`.
 

@@ -178,29 +178,61 @@ for i, entities in enumerate(all_entities):
 
 ### Label descriptions
 
-Models trained to use descriptive labels can receive a dictionary. Dictionary keys are
-returned in predictions, while values are encoded as the label prompts:
+Models trained to use descriptive labels can receive a dictionary mapping label names
+to descriptions. Dictionary keys are returned in predictions, while values are encoded
+as the label prompts. For a single text, put all labels in **one dictionary**:
 
 ```python
+text = "Microsoft was founded by Bill Gates and Paul Allen."
 labels = {
     "person": "A human individual, including fictional characters",
     "organization": "A company, institution, agency, or other group of people",
 }
 entities = model.predict_entities(text, labels)
+
+for entity in entities:
+    print(entity["text"], "=>", entity["label"])
 ```
 
-For batched inference, provide one dictionary or list of labels per text:
+For a batch that shares the same labels and descriptions, pass that dictionary directly:
 
 ```python
-label_sets = [
-    {"person": "A human individual"},
-    {"location": "A geographical place"},
-]
-entities = model.inference(["Alice arrived", "Paris is sunny"], label_sets)
+texts = ["Alice works at Microsoft", "Bob works at Google"]
+all_entities = model.inference(texts, labels)
 ```
 
-Descriptions must be unique within each label set. They are not supported with
-precomputed prompt embeddings.
+For **different labels or descriptions per input text**, pass a list containing one
+dictionary per text. Each dictionary contains the complete label set for its text:
+
+```python
+texts = ["Alice works at Microsoft", "Paris is sunny"]
+label_sets = [
+    {
+        "person": "A human individual",
+        "organization": "A company or institution",
+    },  # Labels for texts[0].
+    {
+        "location": "A geographical place",
+    },  # Labels for texts[1].
+]
+all_entities = model.inference(texts, label_sets, batch_size=2)
+
+for text, entities in zip(texts, all_entities):
+    print(text)
+    for entity in entities:
+        print(entity["text"], "=>", entity["label"])
+```
+
+The outer list must have the same length and order as `texts`, including entries for
+empty texts. A list such as `[{"person": "A human individual"}, {"location": "A geographical place"}]`
+means two texts with one label each; it does not mean two labels for one text. To use
+both labels with `predict_entities(text, ...)`, combine them into a single dictionary:
+`{"person": "A human individual", "location": "A geographical place"}`.
+
+Without descriptions, use a shared list of label strings or one list of strings per
+text. Description dictionaries must have string keys and values, and descriptions
+must be unique within each dictionary. They are not supported with precomputed
+prompt embeddings.
 
 ## Using Different Model Architectures
 

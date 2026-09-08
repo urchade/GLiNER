@@ -1807,16 +1807,22 @@ class TokenDecoder(BaseDecoder):
             multi_label_values = _expand_batch_param(multi_label, batch_size, "multi_label")
             spans = []
 
-            for i, _ in enumerate(tokens):
+            for i, tokens_i in enumerate(tokens):
                 id_to_class_i = id_to_class_per_item[i]
                 input_spans_i = set(input_spans[i]) if input_spans is not None else None
                 threshold_i = thresholds[i]
+                # Batch padding can exceed the threshold, so exclude it before
+                # matching boundaries or selecting overlapping spans.
+                token_count = len(tokens_i)
+                start_i = scores_start[i, :token_count]
+                end_i = scores_end[i, :token_count]
+                inside_i = scores_inside[i, :token_count]
                 span_scores = self._calculate_span_score(
-                    self._get_indices_above_threshold(scores_start[i], threshold_i),
-                    self._get_indices_above_threshold(scores_end[i], threshold_i),
-                    torch.sigmoid(scores_inside[i]),
-                    torch.sigmoid(scores_start[i]),
-                    torch.sigmoid(scores_end[i]),
+                    self._get_indices_above_threshold(start_i, threshold_i),
+                    self._get_indices_above_threshold(end_i, threshold_i),
+                    torch.sigmoid(inside_i),
+                    torch.sigmoid(start_i),
+                    torch.sigmoid(end_i),
                     id_to_class_i,
                     threshold_i,
                     input_spans_i=input_spans_i,
