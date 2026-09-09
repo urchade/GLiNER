@@ -181,3 +181,19 @@ poetry.toml
 pyrightconfig.json
 
 .vscode
+
+# Claude Code persistent-memory scratch file, not part of the PR
+/CLAUDE.md
+
+# Research/design notes and local PR draft kept on disk for reference, not part of the PR
+/docs/archive/
+/docs/research/
+/docs/PR_DESCRIPTION.md
+
+# Output from scripts/conformal_validation.py
+/results/
+
+# Leftover scratch files from unrelated branches in this fork
+# (feature/vocab-pruning-engine), physically present but irrelevant here
+/ROADMAP.md
+/pruning_adr.md

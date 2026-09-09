@@ -17,6 +17,7 @@ architectures
 add_custom_architecture
 Runtime export and inference <convert_to_onnx>
 serving
+conformal
 ```
 
 ```{toctree}
