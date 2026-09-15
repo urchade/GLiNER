@@ -105,7 +105,8 @@ def prepare_word_mask(
     Maps subword tokens back to their original word positions, enabling span
     extraction at the word level. Each subword token is assigned an integer
     indicating which word it belongs to (1-indexed), with special tokens and
-    continuation subwords optionally masked as 0.
+    continuation subwords optionally masked as 0. Original word positions are
+    preserved even when a word produces no subtokens (for example, whitespace).
 
     This is essential for span-based NER where predictions are made at the word
     level but the model processes subword tokens. The mask allows the model to
@@ -159,7 +160,6 @@ def prepare_word_mask(
         word_ids = tokenized_inputs.word_ids(i)
         mask: List[int] = []
         prev_word_id: int | None = None
-        seen_words = 0  # counts distinct word_ids we've traversed in this sequence
 
         for token_idx, wid in enumerate(word_ids):
             if wid is None:
@@ -167,9 +167,6 @@ def prepare_word_mask(
                 mask.append(0)
             else:
                 is_first_subtoken = wid != prev_word_id
-                if is_first_subtoken:
-                    seen_words += 1
-
                 next_word_id = word_ids[token_idx + 1] if token_idx + 1 < len(word_ids) else None
                 is_last_subtoken = next_word_id != wid
                 select_subtoken = (
@@ -179,10 +176,10 @@ def prepare_word_mask(
                     or (subtoken_pooling == "last" and is_last_subtoken)
                 )
 
-                if seen_words <= skip_first_words[i] or not select_subtoken:
+                if wid < skip_first_words[i] or not select_subtoken:
                     mask.append(0)
                 else:
-                    mask.append(seen_words - skip_first_words[i])
+                    mask.append(wid - skip_first_words[i] + 1)
 
             prev_word_id = wid
 
