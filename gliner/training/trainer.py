@@ -97,7 +97,12 @@ class TrainingArguments(transformers.TrainingArguments):
     def __post_init__(self):
         if not 0.0 <= self.warmup_ratio <= 1.0:
             raise ValueError("warmup_ratio must lie in range [0, 1]")
+        # Transformers 5.x maps the deprecated warmup_ratio onto warmup_steps
+        # during initialization. Keep GLiNER's two supported inputs separate
+        # so an explicit warmup_steps value retains precedence.
+        warmup_steps = self.warmup_steps
         super().__post_init__()
+        self.warmup_steps = warmup_steps
 
     def get_warmup_steps(self, num_training_steps: int):
         # New Transformers versions accept ratios through warmup_steps instead.
