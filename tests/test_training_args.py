@@ -32,6 +32,20 @@ def test_direct_training_arguments_warmup(tmp_path):
     assert args.to_dict()["warmup_ratio"] == 0.25
 
 
+def test_direct_training_arguments_explicit_warmup_steps_take_precedence(tmp_path):
+    args = TrainingArguments(
+        output_dir=str(tmp_path),
+        use_cpu=True,
+        report_to="none",
+        warmup_steps=7,
+        warmup_ratio=0.25,
+    )
+
+    assert args.warmup_steps == 7
+    assert args.warmup_ratio == 0.25
+    assert args.get_warmup_steps(101) == 7
+
+
 @pytest.mark.parametrize("ratio", [-0.1, 1.1, float("nan")])
 def test_invalid_warmup_ratio(tmp_path, ratio):
     with pytest.raises(ValueError, match="warmup_ratio"):
@@ -39,7 +53,7 @@ def test_invalid_warmup_ratio(tmp_path, ratio):
 
 
 @pytest.mark.skipif(
-    "warmup_ratio" in transformers.TrainingArguments.__dataclass_fields__,
+    transformers.TrainingArguments.__dataclass_fields__["warmup_steps"].type is not float,
     reason="Fractional warmup_steps requires the new Transformers warmup API",
 )
 def test_fractional_warmup_steps_takes_precedence(tmp_path):
