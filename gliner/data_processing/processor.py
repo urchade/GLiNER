@@ -2022,7 +2022,7 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
         if "span_label" in batch and batch["span_label"] is not None:
             batch_ents = (batch["span_label"] > 0).sum(-1)
         else:
-            batch_ents = span_mask.long().squeeze(-1).sum(-1)
+            batch_ents = span_mask.long().sum(-1)
 
         # Batch CPU transfer to avoid per-element .item() sync
         batch_ents_cpu = batch_ents.tolist()
