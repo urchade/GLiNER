@@ -193,10 +193,10 @@ class GLiNERClassifier(GLiNERBasePipeline):
         Raises:
             ValueError: If neither `dataset_id` nor `dataset` is provided.
         """
-        if dataset is None and dataset_id is not None:
+        if dataset is None:
+            if dataset_id is None:
+                raise ValueError("Either 'dataset_id' or 'dataset' must be provided to start evaluation.")
             dataset = load_dataset(dataset_id)
-        else:
-            raise ValueError("Either 'dataset_id' or 'dataset' must be provided to start evaluation.")
 
         test_texts, classes, true_labels = self.prepare_dataset(dataset, labels, max_examples=max_examples)
 
