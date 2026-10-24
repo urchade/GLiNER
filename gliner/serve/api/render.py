@@ -1,4 +1,4 @@
-"""Render an analyze ``input`` into one Markdown text (NEW_API.md §3).
+"""Render a process request's ``input`` into one Markdown text (NEW_API.md §3).
 
 The renderer records the character range of every leaf, so a span found in the
 rendered text can be reported as a JSON Pointer to its leaf (``source``) with

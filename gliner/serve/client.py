@@ -23,7 +23,7 @@ class GLiNERClientError(RuntimeError):
 
 
 class GLiNERAPIError(GLiNERClientError):
-    """The analyze API rejected a request with an error object (``code``, ``message``, ``path``)."""
+    """The process API rejected a request with an error object (``code``, ``message``, ``path``)."""
 
     def __init__(
         self,
@@ -82,7 +82,7 @@ class GLiNERClient:
             timeout: Per-request timeout in seconds.
             max_concurrency: Maximum in-flight HTTP requests when predicting
                 on a list of texts. Bounds the client-side thread pool.
-            model: Model id for analyze requests. Defaults to the first id
+            model: Model id for process requests. Defaults to the first id
                 ``GET /v1/models`` reports.
         """
         self.url = base_url.rstrip("/") + route_prefix
@@ -231,7 +231,7 @@ class GLiNERClient:
     def is_adapter_cached(self, adapter_id: str) -> bool:
         return bool(self.adapter_cache_status(adapter_id).get("cached"))
 
-    # -- analyze API (``/v1``) ---------------------------------------------------------
+    # -- process API (``/v1``) ---------------------------------------------------------
 
     def _request(self, method: str, suffix: str, payload: Any = None) -> Any:
         """Call ``{url}/v1{suffix}``; API error objects raise ``GLiNERAPIError``."""
@@ -264,7 +264,7 @@ class GLiNERClient:
 
     @property
     def model(self) -> str:
-        """Model id sent with analyze requests: the one given, else the server's first model."""
+        """Model id sent with process requests: the one given, else the server's first model."""
         if self._model is None:
             self._model = self.models()["data"][0]["id"]
         return self._model
@@ -273,71 +273,86 @@ class GLiNERClient:
     def model(self, value: str | None) -> None:
         self._model = value
 
-    def _analyze_body(self, input, tasks, options, model) -> Dict[str, Any]:
+    def _process_body(self, input, tasks, defaults, options, model) -> Dict[str, Any]:
         body: Dict[str, Any] = {"model": model or self.model, "input": input, "tasks": tasks}
+        if defaults is not None:
+            body["defaults"] = defaults
         if options is not None:
             body["options"] = options
         return body
 
-    def _batch_body(self, items, options, model) -> Dict[str, Any]:
+    def _batch_body(self, items, defaults, options, model) -> Dict[str, Any]:
         body: Dict[str, Any] = {"model": model or self.model, "items": items}
+        if defaults is not None:
+            body["defaults"] = defaults
         if options is not None:
             body["options"] = options
         return body
 
-    def analyze(
+    def process(
         self,
         input: Any,
         tasks: Dict[str, Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
-        """``POST /v1/analyze``: one input, many named ``span`` / ``relation`` tasks.
+        """``POST /v1/process``: one input, many named ``span`` / ``relation`` tasks.
+
+        ``defaults`` sets ``adapter_id``, ``threshold``, ``entity_threshold``,
+        ``flat_ner`` and ``multi_label`` for every task that does not set its own.
 
         Example:
-            >>> client.analyze(
+            >>> client.process(
             ...     "Alice founded Acme in London.",
             ...     tasks={
-            ...         "entities": {"type": "span", "labels": ["person", "organization"], "threshold": 0.4},
-            ...         "places": {"type": "span", "labels": "location", "flat_ner": False},
+            ...         "entities": {"type": "span", "labels": ["person", "organization"]},
+            ...         "places": {"type": "span", "labels": "location", "threshold": 0.3, "adapter_id": None},
             ...     },
+            ...     defaults={"threshold": 0.5, "adapter_id": "news"},
             ... )["results"]["entities"]["value"]
         """
-        return self._request("POST", "/analyze", self._analyze_body(input, tasks, options, model))
+        return self._request("POST", "/process", self._process_body(input, tasks, defaults, options, model))
 
-    def analyze_batch(
+    def process_batch(
         self,
         items: List[Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
-        """``POST /v1/analyze/batch``: items are ``{"id"?, "input", "tasks", "options"?}``."""
-        return self._request("POST", "/analyze/batch", self._batch_body(items, options, model))
+        """``POST /v1/process/batch``: items are ``{"id"?, "input", "tasks", "defaults"?, "options"?}``.
 
-    async def analyze_async(
+        Batch-level ``defaults`` / ``options`` apply to every item; an item's own override them.
+        """
+        return self._request("POST", "/process/batch", self._batch_body(items, defaults, options, model))
+
+    async def process_async(
         self,
         input: Any,
         tasks: Dict[str, Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
         import asyncio  # noqa: PLC0415
 
-        return await asyncio.to_thread(self.analyze, input, tasks, options=options, model=model)
+        return await asyncio.to_thread(self.process, input, tasks, defaults=defaults, options=options, model=model)
 
-    async def analyze_batch_async(
+    async def process_batch_async(
         self,
         items: List[Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
         import asyncio  # noqa: PLC0415
 
-        return await asyncio.to_thread(self.analyze_batch, items, options=options, model=model)
+        return await asyncio.to_thread(self.process_batch, items, defaults=defaults, options=options, model=model)
 
     def extract_spans(
         self,
@@ -350,11 +365,16 @@ class GLiNERClient:
         adapter_id: str | None = None,
     ) -> List[Dict[str, Any]]:
         """One ``span`` task; returns its list of spans."""
-        task: Dict[str, Any] = {"type": "span", "labels": labels, "flat_ner": flat_ner, "multi_label": multi_label}
+        task: Dict[str, Any] = {
+            "type": "span",
+            "labels": labels,
+            "flat_ner": flat_ner,
+            "multi_label": multi_label,
+            "adapter_id": adapter_id,
+        }
         if threshold is not None:
             task["threshold"] = threshold
-        options = {"adapter_id": adapter_id} if adapter_id is not None else None
-        return self.analyze(input, {"spans": task}, options=options)["results"]["spans"]["value"]
+        return self.process(input, {"spans": task})["results"]["spans"]["value"]
 
     def extract_relations(
         self,
@@ -375,13 +395,13 @@ class GLiNERClient:
             "entity_labels": entity_labels,
             "flat_ner": flat_ner,
             "multi_label": multi_label,
+            "adapter_id": adapter_id,
         }
         if threshold is not None:
             task["threshold"] = threshold
         if entity_threshold is not None:
             task["entity_threshold"] = entity_threshold
-        options = {"adapter_id": adapter_id} if adapter_id is not None else None
-        return self.analyze(input, {"relations": task}, options=options)["results"]["relations"]["value"]
+        return self.process(input, {"relations": task})["results"]["relations"]["value"]
 
     def models(self) -> Dict[str, Any]:
         """``GET /v1/models``."""

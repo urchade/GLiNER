@@ -1,12 +1,12 @@
-"""Concurrent traffic on both GLiNER serving APIs: ``POST /gliner`` and ``/gliner/v1/analyze``.
+"""Concurrent traffic on both GLiNER serving APIs: ``POST /gliner`` and ``/gliner/v1/process``.
 
 Two levels:
 
 * **Engine, no model.** A simulated dynamic batcher merges rows from many
-  in-flight analyze requests into shared batches, the way Ray Serve's
+  in-flight process requests into shared batches, the way Ray Serve's
   ``@serve.batch`` does. Every response must equal the same request run alone.
 * **Ray Serve over HTTP, real model.** Threads and async clients send a mix of
-  legacy and analyze requests (single and multi-task, structured input,
+  legacy and process requests (single and multi-task, structured input,
   batch requests, invalid requests) at the same time. Every response must
   match the same request sent alone, both APIs must agree with each other,
   and errors must stay with the request that caused them. Needs Ray, a CUDA
@@ -24,7 +24,7 @@ from concurrent.futures import ThreadPoolExecutor
 import torch
 import pytest
 
-from tests.test_serve_analyze import MODEL, FakeModel, make_engine
+from tests.test_serve_process import MODEL, FakeModel, make_engine
 
 # -- engine with a simulated dynamic batcher -----------------------------------------
 
@@ -93,15 +93,15 @@ def _fake_requests():
             tasks = {"bad": {"type": "classify", "labels": ["x"]}}
         else:
             tasks = {"p": {"type": "span", "labels": ["person", "location"], "multi_label": True}}
-        requests.append(("analyze", {"model": MODEL, "input": {"t": text, "n": index}, "tasks": tasks}))
+        requests.append(("process", {"model": MODEL, "input": {"t": text, "n": index}, "tasks": tasks}))
     return requests
 
 
 def _run_alone(engine, kind, body):
     model = FakeModel()
     if kind == "batch":
-        return engine.analyze_batch(body, model.run_rows)
-    outcome = engine.analyze_many([body], model.run_rows)[0]
+        return engine.process_batch(body, model.run_rows)
+    outcome = engine.process_many([body], model.run_rows)[0]
     return outcome.to_dict() if hasattr(outcome, "to_dict") else outcome
 
 
@@ -114,8 +114,8 @@ def test_concurrent_requests_share_batches_and_get_their_own_results():
     async def send(kind, body):
         await asyncio.sleep(random.random() * 0.003)  # interleave arrivals
         if kind == "batch":
-            return await engine.analyze_batch_async(body, batcher.run_row)
-        outcome = (await engine.analyze_many_async([body], batcher.run_row))[0]
+            return await engine.process_batch_async(body, batcher.run_row)
+        outcome = (await engine.process_many_async([body], batcher.run_row))[0]
         return outcome.to_dict() if hasattr(outcome, "to_dict") else outcome
 
     async def main():
@@ -206,12 +206,12 @@ def _legacy(text, **params):
     return ("legacy", {"text": text, "labels": ENTITY_LABELS, **params})
 
 
-def _analyze(input, tasks):
-    return ("analyze", {"model": SERVE_MODEL, "input": input, "tasks": tasks})
+def _process(input, tasks):
+    return ("process", {"model": SERVE_MODEL, "input": input, "tasks": tasks})
 
 
 def _workload():
-    """A mix of legacy and analyze requests, each paired with a key to compare responses by."""
+    """A mix of legacy and process requests, each paired with a key to compare responses by."""
     work = []
     for index, text in enumerate(TEXTS):
         threshold = 0.3 + 0.1 * (index % 3)
@@ -220,8 +220,8 @@ def _workload():
             _legacy(text, relations=RELATIONS, threshold=0.4, relation_threshold=0.5),
             _legacy(text, flat_ner=False, multi_label=True),
             _legacy(text, labels={"person": "person", "organization": "company"}),
-            _analyze(text, {"ents": {"type": "span", "labels": ENTITY_LABELS, "threshold": threshold}}),
-            _analyze(
+            _process(text, {"ents": {"type": "span", "labels": ENTITY_LABELS, "threshold": threshold}}),
+            _process(
                 text,
                 {
                     "people": {"type": "span", "labels": "person", "threshold": 0.3},
@@ -235,7 +235,7 @@ def _workload():
                     },
                 },
             ),
-            _analyze(
+            _process(
                 {"headline": text, "meta": {"source": "wire", "tags": ["business"]}},
                 {"ents": {"type": "span", "labels": ENTITY_LABELS, "multi_label": True}},
             ),
@@ -251,14 +251,37 @@ def _workload():
                 },
             ),
         ]
+    # Shared settings in ``defaults``, overridden per task.
+    for text in TEXTS:
+        work.append(
+            (
+                "process",
+                {
+                    "model": SERVE_MODEL,
+                    "input": text,
+                    "defaults": {"threshold": 0.35, "flat_ner": False, "entity_threshold": 0.4},
+                    "tasks": {
+                        "ents": {"type": "span", "labels": ENTITY_LABELS},
+                        "strict": {"type": "span", "labels": ENTITY_LABELS, "threshold": 0.8, "flat_ner": True},
+                        "rels": {"type": "relation", "labels": RELATIONS, "entity_labels": ENTITY_LABELS},
+                    },
+                },
+            )
+        )
     # Invalid requests interleaved with valid ones must not disturb them.
     work += [
-        _analyze("x", {"t": {"type": "classify", "labels": ["a"]}}),
-        _analyze("x", {"t": {"type": "span", "labels": "a", "instruction": "find a"}}),
-        ("analyze", {"model": "nope", "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}}),
-        ("analyze", {"model": SERVE_MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}},
+        _process("x", {"t": {"type": "classify", "labels": ["a"]}}),
+        _process("x", {"t": {"type": "span", "labels": "a", "instruction": "find a"}}),
+        ("process", {"model": "nope", "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}}),
+        ("process", {"model": SERVE_MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}},
                      "options": {"adapter_id": "missing"}}),
-        ("analyze-raw", b"{not json"),
+        ("process", {"model": SERVE_MODEL, "input": "x",
+                     "tasks": {"ok": {"type": "span", "labels": "a"},
+                               "bad": {"type": "span", "labels": "a", "adapter_id": "missing"}}}),
+        ("process", {"model": SERVE_MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}},
+                     "defaults": {"threshold": "high"}}),
+        ("process-raw", b"{not json"),
+        ("old-route", {"model": SERVE_MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}}),
         ("legacy", {"text": TEXTS[0], "labels": ENTITY_LABELS, "adapter_id": "missing"}),
     ]  # fmt: skip
     return work
@@ -268,11 +291,13 @@ def _send(base, item):
     kind, body = item
     if kind == "legacy":
         return _post(f"{base}/gliner", body)
-    if kind == "analyze":
+    if kind == "old-route":  # the API was renamed from analyze to process
         return _post(f"{base}/gliner/v1/analyze", body)
+    if kind == "process":
+        return _post(f"{base}/gliner/v1/process", body)
     if kind == "batch":
-        return _post(f"{base}/gliner/v1/analyze/batch", body)
-    return _post(f"{base}/gliner/v1/analyze", None, raw=body)
+        return _post(f"{base}/gliner/v1/process/batch", body)
+    return _post(f"{base}/gliner/v1/process", None, raw=body)
 
 
 def _spans_equal(got, ref, threshold):
@@ -367,12 +392,13 @@ def test_concurrent_mixed_traffic_matches_requests_sent_alone(server_url):
     assert not mismatches, [_mismatch_summary(*mismatch) for mismatch in mismatches[:5]]
 
     statuses = {(work[index][0], got[0]) for index, got in zip(shuffled, concurrent, strict=True)}
-    assert ("analyze", 422) in statuses and ("analyze", 404) in statuses and ("legacy", 404) in statuses
+    assert ("process", 422) in statuses and ("process", 404) in statuses and ("legacy", 404) in statuses
+    assert ("old-route", 404) in statuses
     assert {status for kind, status in statuses if kind == "batch"} == {200}
 
 
 def test_both_apis_agree_on_the_same_question_under_load(server_url):
-    """Legacy and analyze requests for the same model input, sent concurrently, return the same predictions."""
+    """Legacy and process requests for the same model input, sent concurrently, return the same predictions."""
     relation_task = {
         "type": "relation",
         "labels": RELATIONS,
@@ -384,17 +410,17 @@ def test_both_apis_agree_on_the_same_question_under_load(server_url):
     for text in TEXTS:
         span_task = {"type": "span", "labels": ENTITY_LABELS, "threshold": 0.4}
         relex = _legacy(text, relations=RELATIONS, threshold=0.4, relation_threshold=0.5)
-        pairs += [(_legacy(text, threshold=0.4), _analyze(text, {"t": span_task}))] * 4
-        pairs += [(relex, _analyze(text, {"t": relation_task}))] * 4
+        pairs += [(_legacy(text, threshold=0.4), _process(text, {"t": span_task}))] * 4
+        pairs += [(relex, _process(text, {"t": relation_task}))] * 4
 
     with ThreadPoolExecutor(32) as pool:
         legacy_out = pool.map(lambda pair: _send(server_url, pair[0]), pairs)
-        analyze_out = pool.map(lambda pair: _send(server_url, pair[1]), pairs)
-        responses = list(zip(pairs, legacy_out, analyze_out, strict=True))
+        process_out = pool.map(lambda pair: _send(server_url, pair[1]), pairs)
+        responses = list(zip(pairs, legacy_out, process_out, strict=True))
 
-    for (legacy_request, _), (legacy_status, legacy_body), (analyze_status, analyze_body) in responses:
-        assert legacy_status == analyze_status == 200
-        result = analyze_body["results"]["t"]
+    for (legacy_request, _), (legacy_status, legacy_body), (process_status, process_body) in responses:
+        assert legacy_status == process_status == 200
+        result = process_body["results"]["t"]
         if "relations" in legacy_request[1]:
             assert result["value"], "expected relations"
             assert _relations_equal(result["value"], legacy_body["relations"], 0.5)
@@ -407,31 +433,31 @@ def test_async_clients_on_both_apis(server_url):
 
     client = GLiNERClient(server_url, timeout=120)
     tasks = {"ents": {"type": "span", "labels": ENTITY_LABELS}}
-    alone_analyze = [client.analyze(text, tasks) for text in TEXTS]
+    alone_process = [client.process(text, tasks) for text in TEXTS]
     alone_predict = [client.predict(text, ENTITY_LABELS) for text in TEXTS]
 
     async def main():
-        analyze = [client.analyze_async(text, tasks) for text in TEXTS * 4]
+        process = [client.process_async(text, tasks) for text in TEXTS * 4]
         predict = [client.predict_async(text, ENTITY_LABELS) for text in TEXTS * 4]
-        batch = client.analyze_batch_async([{"id": str(i), "input": t, "tasks": tasks} for i, t in enumerate(TEXTS)])
-        return await asyncio.gather(asyncio.gather(*analyze), asyncio.gather(*predict), batch)
+        batch = client.process_batch_async([{"id": str(i), "input": t, "tasks": tasks} for i, t in enumerate(TEXTS)])
+        return await asyncio.gather(asyncio.gather(*process), asyncio.gather(*predict), batch)
 
-    analyze, predict, batch = asyncio.run(main())
+    process, predict, batch = asyncio.run(main())
 
-    for index, response in enumerate(analyze):
-        assert _results_equal(response["results"], alone_analyze[index % len(TEXTS)]["results"])
+    for index, response in enumerate(process):
+        assert _results_equal(response["results"], alone_process[index % len(TEXTS)]["results"])
     for index, response in enumerate(predict):
         assert _spans_equal(response["entities"], alone_predict[index % len(TEXTS)]["entities"], 0.5)
     for index, item in enumerate(batch["items"]):
         assert item["id"] == str(index)
-        assert _results_equal(item["results"], alone_analyze[index]["results"])
+        assert _results_equal(item["results"], alone_process[index]["results"])
 
 
 def test_concurrency_batches_requests(server_url):
     """Many concurrent requests finish faster than the same requests sent one at a time."""
     import time  # noqa: PLC0415
 
-    work = [_analyze(text, {"ents": {"type": "span", "labels": ENTITY_LABELS}}) for text in TEXTS * 8]
+    work = [_process(text, {"ents": {"type": "span", "labels": ENTITY_LABELS}}) for text in TEXTS * 8]
     work += [_legacy(text) for text in TEXTS * 8]
 
     start = time.perf_counter()
@@ -453,7 +479,7 @@ def test_many_task_requests_run_in_gpu_batches_of_bounded_size(server_url):
     handle = _SERVED["handle"]
     num_tasks = 20  # each request alone needs more than two full batches
     work = [
-        _analyze(
+        _process(
             text,
             {
                 f"t{i}": {"type": "span", "labels": [ENTITY_LABELS[i % 3]], "threshold": 0.3 + i / 100}

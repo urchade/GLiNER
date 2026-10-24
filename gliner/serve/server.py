@@ -12,7 +12,7 @@ import torch
 
 from gliner import GLiNER, InferencePackingConfig
 
-from .api import APIError, AnalyzeEngine, capabilities_from_config
+from .api import APIError, ProcessEngine, capabilities_from_config
 from .stats import BatchStats
 from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
@@ -827,28 +827,28 @@ class GLiNERServer:
         entities = result[0] if self._supports_relations else result
         return [{"entities": ents} for ents in entities]
 
-    # -- analyze API -------------------------------------------------------------
+    # -- process API -------------------------------------------------------------
 
     @property
-    def analyze_engine(self) -> AnalyzeEngine:
-        """Request planner and result assembler of ``/v1/analyze``."""
-        engine = getattr(self, "_analyze_engine", None)
+    def process_engine(self) -> ProcessEngine:
+        """Request planner and result assembler of ``/v1/process``."""
+        engine = getattr(self, "_process_engine", None)
         if engine is None:
             words_splitter = self.model.data_processor.words_splitter
             max_words = min(
                 int(getattr(self.model.config, "max_len", self.config.max_model_len)), self.config.max_model_len
             )
-            engine = self._analyze_engine = AnalyzeEngine(
+            engine = self._process_engine = ProcessEngine(
                 capabilities_from_config(self.config, supports_relations=self._supports_relations),
                 max_words=max_words,
                 split_words=lambda text: [(start, end) for _, start, end in words_splitter(text)],
                 resolve_adapter=self.ensure_adapter_loaded,
-                window_overlap=self.config.analyze_window_overlap,
+                window_overlap=self.config.process_window_overlap,
             )
         return engine
 
     def run_rows(self, rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """Run analyze rows in memory-safe chunks (in-process, without Ray's batcher)."""
+        """Run process rows in memory-safe chunks (in-process, without Ray's batcher)."""
         outputs: List[Dict[str, Any]] = []
         chunk = max(1, self.config.max_batch_size)
         index = 0
@@ -877,34 +877,34 @@ class GLiNERServer:
             index += len(part)
         return outputs
 
-    def analyze(self, body: Any) -> Dict[str, Any]:
-        """``POST /v1/analyze`` in-process. Raises ``APIError`` for a rejected request."""
-        return self.analyze_engine.analyze(body, self.run_rows)
+    def process(self, body: Any) -> Dict[str, Any]:
+        """``POST /v1/process`` in-process. Raises ``APIError`` for a rejected request."""
+        return self.process_engine.process(body, self.run_rows)
 
-    def analyze_batch(self, body: Any) -> Dict[str, Any]:
-        """``POST /v1/analyze/batch`` in-process. Raises ``APIError`` for a bad envelope."""
-        return self.analyze_engine.analyze_batch(body, self.run_rows)
+    def process_batch(self, body: Any) -> Dict[str, Any]:
+        """``POST /v1/process/batch`` in-process. Raises ``APIError`` for a bad envelope."""
+        return self.process_engine.process_batch(body, self.run_rows)
 
     def capabilities(self, model_id: str | None = None) -> Dict[str, Any]:
-        info = self.analyze_engine.capabilities
+        info = self.process_engine.capabilities
         if model_id is not None and model_id not in info.model_ids():
             raise APIError("MODEL_NOT_FOUND", f"Model {model_id!r} is not served here", "/model")
         return info.to_dict()
 
     def models(self) -> Dict[str, Any]:
-        info = self.analyze_engine.capabilities
+        info = self.process_engine.capabilities
         return {"data": [{"id": info.model, "aliases": list(info.aliases)}]}
 
     def health(self) -> Dict[str, Any]:
         return {
             "status": "ok",
-            "model": self.analyze_engine.capabilities.model,
+            "model": self.process_engine.capabilities.model,
             "device": self.config.device,
             "cuda_available": torch.cuda.is_available(),
             "polylora": self.config.enable_polylora,
             "sequence_packing": self.packing_config is not None,
             "max_batch_size": self.batch_size_fn(),
-            "task_types": list(self.analyze_engine.capabilities.task_types),
+            "task_types": list(self.process_engine.capabilities.task_types),
         }
 
 
@@ -999,8 +999,8 @@ def _build_deployment(config: GLiNERServeConfig):
                 adapter_ids,
             )
 
-        async def _run_analyze_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
-            """One analyze row through the dynamic batcher, shared with ``predict``."""
+        async def _run_process_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
+            """One process row through the dynamic batcher, shared with ``predict``."""
             return await self._infer_batch(
                 row["text"],
                 row["labels"],
@@ -1012,16 +1012,16 @@ def _build_deployment(config: GLiNERServeConfig):
                 row["adapter_id"],
             )
 
-        async def analyze(self, body: Any) -> Dict[str, Any]:
-            """``/v1/analyze``: the response, or an ``{"error": ...}`` object."""
-            engine = self.server.analyze_engine
-            outcome = (await engine.analyze_many_async([body], self._run_analyze_row))[0]
+        async def process(self, body: Any) -> Dict[str, Any]:
+            """``/v1/process``: the response, or an ``{"error": ...}`` object."""
+            engine = self.server.process_engine
+            outcome = (await engine.process_many_async([body], self._run_process_row))[0]
             return outcome.to_dict() if isinstance(outcome, APIError) else outcome
 
-        async def analyze_batch(self, body: Any) -> Dict[str, Any]:
-            """``/v1/analyze/batch``: the response, or an ``{"error": ...}`` object."""
+        async def process_batch(self, body: Any) -> Dict[str, Any]:
+            """``/v1/process/batch``: the response, or an ``{"error": ...}`` object."""
             try:
-                return await self.server.analyze_engine.analyze_batch_async(body, self._run_analyze_row)
+                return await self.server.process_engine.process_batch_async(body, self._run_process_row)
             except APIError as exc:
                 return exc.to_dict()
 
@@ -1045,7 +1045,7 @@ def _build_deployment(config: GLiNERServeConfig):
             return stats
 
         async def _handle_v1(self, request, path: str):  # noqa: PLR0911
-            """Routes of the analyze API (``{route_prefix}/v1/...``)."""
+            """Routes of the process API (``{route_prefix}/v1/...``)."""
             from starlette.responses import JSONResponse  # noqa: PLC0415
 
             def respond(payload: Dict[str, Any]) -> JSONResponse:
@@ -1054,16 +1054,21 @@ def _build_deployment(config: GLiNERServeConfig):
 
             route = path[path.find("/v1/") :]
             method = request.method
-            if route in ("/v1/analyze", "/v1/analyze/batch"):
+            if route in ("/v1/process", "/v1/process/batch"):
                 if method != "POST":
                     return respond(APIError("INVALID_REQUEST", f"Use POST for {route}").to_dict())
                 try:
                     body = await _read_json_body(request, self.server.config.max_request_bytes)
                 except APIError as exc:
                     return respond(exc.to_dict())
-                if route == "/v1/analyze":
-                    return respond(await self.analyze(body))
-                return respond(await self.analyze_batch(body))
+                if route == "/v1/process":
+                    return respond(await self.process(body))
+                return respond(await self.process_batch(body))
+            capabilities_match = re.fullmatch(r"/v1/models/(.+)/capabilities", route)
+            if route not in ("/v1/health", "/v1/ready", "/v1/models", "/v1/adapter-cache") and not capabilities_match:
+                return JSONResponse(
+                    {"error": {"code": "INVALID_REQUEST", "message": f"Unknown route {route}"}}, status_code=404
+                )
             if method != "GET":
                 return respond(APIError("INVALID_REQUEST", f"Use GET for {route}").to_dict())
             if route in ("/v1/health", "/v1/ready"):
@@ -1075,12 +1080,7 @@ def _build_deployment(config: GLiNERServeConfig):
                     return respond(self.server.adapter_cache_status(request.query_params.get("adapter_id")))
                 except ValueError as exc:
                     return respond(APIError("INVALID_REQUEST", str(exc), "/adapter_id").to_dict())
-            match = re.fullmatch(r"/v1/models/(.+)/capabilities", route)
-            if match:
-                return respond(self.capabilities(match.group(1)))
-            return JSONResponse(
-                {"error": {"code": "INVALID_REQUEST", "message": f"Unknown route {route}"}}, status_code=404
-            )
+            return respond(self.capabilities(capabilities_match.group(1)))
 
         async def predict(
             self,
@@ -1299,22 +1299,26 @@ class GLiNERFactory:
         results = [ref.result() for ref in refs]
         return results[0] if single else results
 
-    # -- analyze API ---------------------------------------------------------------
+    # -- process API ---------------------------------------------------------------
 
     @property
     def model_id(self) -> str:
         return self.config.model_id or self.config.model
 
-    def _analyze_body(self, input: Any, tasks: Dict[str, Any] | None, options, model, body) -> Dict[str, Any]:
+    def _process_body(self, input: Any, tasks, defaults, options, model, body) -> Dict[str, Any]:
         if body is not None:
             return body
         request: Dict[str, Any] = {"model": model or self.model_id, "input": input, "tasks": tasks}
+        if defaults is not None:
+            request["defaults"] = defaults
         if options is not None:
             request["options"] = options
         return request
 
-    def _batch_body(self, items: List[Dict[str, Any]], options, model) -> Dict[str, Any]:
+    def _batch_body(self, items: List[Dict[str, Any]], defaults, options, model) -> Dict[str, Any]:
         body: Dict[str, Any] = {"model": model or self.model_id, "items": items}
+        if defaults is not None:
+            body["defaults"] = defaults
         if options is not None:
             body["options"] = options
         return body
@@ -1325,54 +1329,60 @@ class GLiNERFactory:
             raise APIError.from_dict(payload)
         return payload
 
-    def analyze(
+    def process(
         self,
         input: Any = None,
         tasks: Dict[str, Any] | None = None,
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
         body: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
-        """Run one ``/v1/analyze`` request; raises ``APIError`` when it is rejected.
+        """Run one ``/v1/process`` request; raises ``APIError`` when it is rejected.
 
         Pass ``input`` and ``tasks`` (``model`` defaults to the served model), or a
-        complete request as ``body``.
+        complete request as ``body``. ``defaults`` holds settings shared by the tasks.
         """
-        request = self._analyze_body(input, tasks, options, model, body)
-        return self._unwrap(self._handle.analyze.remote(request).result())
+        request = self._process_body(input, tasks, defaults, options, model, body)
+        return self._unwrap(self._handle.process.remote(request).result())
 
-    def analyze_batch(
+    def process_batch(
         self,
         items: List[Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
-        """Run a ``/v1/analyze/batch`` request; item errors are returned per item."""
-        return self._unwrap(self._handle.analyze_batch.remote(self._batch_body(items, options, model)).result())
+        """Run a ``/v1/process/batch`` request; item errors are returned per item."""
+        request = self._batch_body(items, defaults, options, model)
+        return self._unwrap(self._handle.process_batch.remote(request).result())
 
-    async def analyze_async(
+    async def process_async(
         self,
         input: Any = None,
         tasks: Dict[str, Any] | None = None,
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
         body: Dict[str, Any] | None = None,
     ) -> Dict[str, Any]:
-        """Async ``analyze``. Concurrent calls share model batches."""
-        request = self._analyze_body(input, tasks, options, model, body)
-        return self._unwrap(await self._handle.analyze.remote(request))
+        """Async ``process``. Concurrent calls share model batches."""
+        request = self._process_body(input, tasks, defaults, options, model, body)
+        return self._unwrap(await self._handle.process.remote(request))
 
-    async def analyze_batch_async(
+    async def process_batch_async(
         self,
         items: List[Dict[str, Any]],
         *,
+        defaults: Dict[str, Any] | None = None,
         options: Dict[str, Any] | None = None,
         model: str | None = None,
     ) -> Dict[str, Any]:
-        return self._unwrap(await self._handle.analyze_batch.remote(self._batch_body(items, options, model)))
+        request = self._batch_body(items, defaults, options, model)
+        return self._unwrap(await self._handle.process_batch.remote(request))
 
     def capabilities(self, model_id: str | None = None) -> Dict[str, Any]:
         return self._unwrap(self._handle.capabilities.remote(model_id).result())

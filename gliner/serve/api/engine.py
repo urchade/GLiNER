@@ -1,4 +1,4 @@
-"""Plan model rows for analyze requests, run them, and assemble results.
+"""Plan model rows for process requests, run them, and assemble results.
 
 Every task becomes one model row: the rendered input with the task's labels,
 thresholds and decoding flags. GLiNER attends over the labels together with
@@ -108,10 +108,10 @@ class Plan:
     error: APIError | None = None
 
 
-class AnalyzeEngine:
-    """Validate, plan, run and assemble analyze requests for GLiNER.
+class ProcessEngine:
+    """Validate, plan, run and assemble process requests for GLiNER.
 
-    The engine does not run the model. ``analyze*`` take a row runner:
+    The engine does not run the model. ``process*`` take a row runner:
 
     * sync: ``run_rows(rows) -> outputs``, one output per row;
     * async: ``run_row(row) -> awaitable output``, called once per row so a
@@ -143,14 +143,14 @@ class AnalyzeEngine:
 
     # -- public: sync -----------------------------------------------------------
 
-    def analyze(self, body: Any, run_rows: Callable[[list[Row]], list[RowOutput]]) -> dict[str, Any]:
+    def process(self, body: Any, run_rows: Callable[[list[Row]], list[RowOutput]]) -> dict[str, Any]:
         """One request; raises ``APIError`` when it is rejected or fails."""
-        outcome = self.analyze_many([body], run_rows)[0]
+        outcome = self.process_many([body], run_rows)[0]
         if isinstance(outcome, APIError):
             raise outcome
         return outcome
 
-    def analyze_many(
+    def process_many(
         self,
         bodies: Sequence[Any],
         run_rows: Callable[[list[Row]], list[RowOutput]],
@@ -170,21 +170,21 @@ class AnalyzeEngine:
             self._distribute(plans, results)
         return self._finish(outcomes, plans)
 
-    def analyze_batch(self, body: Any, run_rows: Callable[[list[Row]], list[RowOutput]]) -> dict[str, Any]:
-        """``/v1/analyze/batch``: many items, per-item errors, order kept."""
+    def process_batch(self, body: Any, run_rows: Callable[[list[Row]], list[RowOutput]]) -> dict[str, Any]:
+        """``/v1/process/batch``: many items, per-item errors, order kept."""
         items, model = self.parse_batch(body)
-        outcomes = self.analyze_many([item for _, item in items], run_rows, check_model=False)
+        outcomes = self.process_many([item for _, item in items], run_rows, check_model=False)
         return self.batch_response(items, model, outcomes)
 
     # -- public: async ----------------------------------------------------------
 
-    async def analyze_async(self, body: Any, run_row: Callable[[Row], Awaitable[RowOutput]]) -> dict[str, Any]:
-        outcome = (await self.analyze_many_async([body], run_row))[0]
+    async def process_async(self, body: Any, run_row: Callable[[Row], Awaitable[RowOutput]]) -> dict[str, Any]:
+        outcome = (await self.process_many_async([body], run_row))[0]
         if isinstance(outcome, APIError):
             raise outcome
         return outcome
 
-    async def analyze_many_async(
+    async def process_many_async(
         self,
         bodies: Sequence[Any],
         run_row: Callable[[Row], Awaitable[RowOutput]],
@@ -198,9 +198,9 @@ class AnalyzeEngine:
             self._distribute(plans, list(results))
         return self._finish(outcomes, plans)
 
-    async def analyze_batch_async(self, body: Any, run_row: Callable[[Row], Awaitable[RowOutput]]) -> dict[str, Any]:
+    async def process_batch_async(self, body: Any, run_row: Callable[[Row], Awaitable[RowOutput]]) -> dict[str, Any]:
         items, model = self.parse_batch(body)
-        outcomes = await self.analyze_many_async([item for _, item in items], run_row, check_model=False)
+        outcomes = await self.process_many_async([item for _, item in items], run_row, check_model=False)
         return self.batch_response(items, model, outcomes)
 
     # -- batch envelope -----------------------------------------------------------
@@ -218,9 +218,12 @@ class AnalyzeEngine:
         limit = self.capabilities.limit("max_batch_items")
         if limit and len(raw_items) > limit:
             raise invalid(f"At most {limit} items are allowed per batch", "/items")
-        batch_options = body.get("options")
-        if batch_options is not None and not isinstance(batch_options, dict):
-            raise invalid("'options' must be an object", "/options")
+        batch_shared = {}
+        for key in ("options", "defaults"):
+            value = body.get(key)
+            if value is not None and not isinstance(value, dict):
+                raise invalid(f"'{key}' must be an object", f"/{key}")
+            batch_shared[key] = value
         items: list[tuple[str | None, Any]] = []
         seen_ids: set[str] = set()
         for index, item in enumerate(raw_items):
@@ -235,11 +238,12 @@ class AnalyzeEngine:
                     raise invalid(f"Duplicate item ID {item_id!r}", f"/items/{index}/id")
                 seen_ids.add(item_id)
             item_body = {key: value for key, value in item.items() if key != "id"}
-            options = merge_options(batch_options, item.get("options"))
-            if options is None:
-                item_body.pop("options", None)
-            else:
-                item_body["options"] = options
+            for key, batch_value in batch_shared.items():  # item values override batch values
+                merged = merge_options(batch_value, item.get(key))
+                if merged is None:
+                    item_body.pop(key, None)
+                else:
+                    item_body[key] = merged
             items.append((item_id, item_body))
         return items, model
 
@@ -288,13 +292,18 @@ class AnalyzeEngine:
         return float(self.capabilities.default_thresholds.get("span", 0.5))
 
     def plan(self, parsed: ParsedRequest) -> Plan:
-        adapter_id = parsed.options.adapter_id
-        try:
-            self.resolve_adapter(adapter_id)
-        except KeyError as exc:
-            raise APIError("UNKNOWN_ADAPTER", str(exc).strip("'\""), "/options/adapter_id") from exc
-        except ValueError as exc:
-            raise invalid(str(exc), "/options/adapter_id") from exc
+        # Check every distinct adapter before anything runs; errors point to where it was set.
+        checked: set[str | None] = set()
+        for task in parsed.tasks:
+            if task.adapter_id in checked:
+                continue
+            try:
+                self.resolve_adapter(task.adapter_id)
+            except KeyError as exc:
+                raise APIError("UNKNOWN_ADAPTER", str(exc).strip("'\""), task.adapter_path) from exc
+            except ValueError as exc:
+                raise invalid(str(exc), task.adapter_path) from exc
+            checked.add(task.adapter_id)
 
         plan = Plan(parsed=parsed)
         text = parsed.rendered.text
@@ -328,7 +337,7 @@ class AnalyzeEngine:
                     "relation_threshold": relation_threshold,
                     "flat_ner": task.flat,
                     "multi_label": task.multi_label,
-                    "adapter_id": adapter_id,
+                    "adapter_id": task.adapter_id,
                 }
                 plan.refs.append(RowRef(task=task, row=row, offset=start, words=count + prompt))
         return plan
@@ -402,7 +411,7 @@ class AnalyzeEngine:
             except APIError as exc:
                 outcomes[index] = exc
             except Exception as exc:
-                logger.exception("Failed to assemble analyze results")
+                logger.exception("Failed to assemble process results")
                 outcomes[index] = APIError("INTERNAL", f"Result assembly failed: {exc}")
         return outcomes  # type: ignore[return-value]
 
@@ -458,7 +467,7 @@ class AnalyzeEngine:
         spans.sort(key=lambda span: (span["_start"], span["_end"], span["label"]))
         for span in spans:
             del span["_start"], span["_end"]
-        return {"type": "span", "value": spans, "threshold": self.threshold_for(task)}
+        return {"type": "span", "value": spans, "threshold": self.threshold_for(task), "adapter_id": task.adapter_id}
 
     def relation_result(
         self, rendered: RenderedInput, task: TaskSpec, pairs: list[tuple[RowRef, RowOutput]]
@@ -508,11 +517,12 @@ class AnalyzeEngine:
             "value": relations,
             "threshold": self.threshold_for(task),
             "entity_threshold": self.entity_threshold_for(task),
+            "adapter_id": task.adapter_id,
         }
 
 
 def _execution_error(exc: BaseException) -> APIError:
     if isinstance(exc, APIError):
         return exc
-    logger.error("Analyze execution failed: %s: %s", type(exc).__name__, exc)
+    logger.error("Process execution failed: %s: %s", type(exc).__name__, exc)
     return APIError("INTERNAL", f"Model execution failed: {type(exc).__name__}: {exc}")

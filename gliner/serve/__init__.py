@@ -20,7 +20,7 @@ Features:
     - Memory-aware batch sizing (prevents CUDA OOM)
     - Precompiled power-of-two batch sizes
     - NER and relation extraction support
-    - Analyze API (``POST /gliner/v1/analyze``): one input, many named span/relation tasks
+    - Process API (``POST /gliner/v1/process``): one input, many named span/relation tasks
     - FlashDeBERTa and sequence packing
 
 See docs/serving.md for full documentation.

@@ -275,29 +275,29 @@ def main():
         help="Regular expression for valid adapter ids",
     )
 
-    analyze_group = parser.add_argument_group("Analyze API (/v1/analyze)")
-    analyze_group.add_argument("--model-id", type=str, default=None, help="Public model id (defaults to --model)")
-    analyze_group.add_argument(
+    process_group = parser.add_argument_group("Process API (/v1/process)")
+    process_group.add_argument("--model-id", type=str, default=None, help="Public model id (defaults to --model)")
+    process_group.add_argument(
         "--model-aliases", type=_parse_str_list, default=[], help="Comma-separated extra accepted model ids"
     )
-    analyze_group.add_argument(
+    process_group.add_argument(
         "--label-template",
         type=str,
         default="{title}",
         help="Label text shown to the model; may use {id}, {title}, {description}",
     )
-    analyze_group.add_argument("--max-tasks", type=int, default=32, help="Maximum tasks per request (0: unlimited)")
-    analyze_group.add_argument(
+    process_group.add_argument("--max-tasks", type=int, default=32, help="Maximum tasks per request (0: unlimited)")
+    process_group.add_argument(
         "--max-batch-items", type=int, default=256, help="Maximum items per batch request (0: unlimited)"
     )
-    analyze_group.add_argument(
+    process_group.add_argument(
         "--max-input-chars", type=int, default=1_000_000, help="Maximum rendered input characters (0: unlimited)"
     )
-    analyze_group.add_argument(
+    process_group.add_argument(
         "--max-request-bytes", type=int, default=10_000_000, help="Maximum request body bytes (0: unlimited)"
     )
-    analyze_group.add_argument(
-        "--analyze-window-overlap",
+    process_group.add_argument(
+        "--process-window-overlap",
         type=float,
         default=0.25,
         help="Overlap of the windows that inputs longer than the model window are split into",
@@ -336,7 +336,7 @@ def main():
         max_batch_items=args.max_batch_items,
         max_input_chars=args.max_input_chars,
         max_request_bytes=args.max_request_bytes,
-        analyze_window_overlap=args.analyze_window_overlap,
+        process_window_overlap=args.process_window_overlap,
         tokenizer_threads=args.tokenizer_threads,
         decoding_threads=args.decoding_threads,
         enable_compilation=not args.no_compile,

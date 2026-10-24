@@ -1,4 +1,4 @@
-"""Analyze API (``/v1/analyze``) for GLiNER serving: validation, planning, batching, assembly.
+"""Process API (``/v1/process``) for GLiNER serving: validation, planning, batching, assembly.
 
 The engine is tested with a fake row runner that "recognizes" a fixed lexicon,
 so no model, GPU or Ray is needed.
@@ -10,7 +10,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from gliner.serve.api import APIError, AnalyzeEngine, render_input
+from gliner.serve.api import APIError, ProcessEngine, render_input
 from gliner.serve.server import GLiNERServer
 from gliner.serve.api.labels import normalize_labels
 from gliner.serve.api.capabilities import Capabilities
@@ -75,18 +75,18 @@ def make_engine(*, relations=True, max_words=512, resolve_adapter=None, **limits
         default_thresholds={"span": 0.5, "relation": 0.6} if relations else {"span": 0.5},
         limits={"max_tasks": 8, "max_labels_per_task": 5, "max_batch_items": 4, "max_input_chars": 10_000, **limits},
     )
-    return AnalyzeEngine(capabilities, max_words=max_words, resolve_adapter=resolve_adapter)
+    return ProcessEngine(capabilities, max_words=max_words, resolve_adapter=resolve_adapter)
 
 
-def analyze(engine, input, tasks, **extra):
+def process(engine, input, tasks, **extra):
     model = FakeModel()
-    response = engine.analyze({"model": MODEL, "input": input, "tasks": tasks, **extra}, model.run_rows)
+    response = engine.process({"model": MODEL, "input": input, "tasks": tasks, **extra}, model.run_rows)
     return response, model
 
 
 def error_of(engine, body, model=None):
     with pytest.raises(APIError) as info:
-        engine.analyze(body, (model or FakeModel()).run_rows)
+        engine.process(body, (model or FakeModel()).run_rows)
     return info.value
 
 
@@ -94,7 +94,7 @@ def error_of(engine, body, model=None):
 
 
 def test_span_task_on_string_input_reports_locations_and_threshold():
-    response, _ = analyze(make_engine(), "Alice works at Acme.", {"ents": {"type": "span", "labels": ["person"]}})
+    response, _ = process(make_engine(), "Alice works at Acme.", {"ents": {"type": "span", "labels": ["person"]}})
 
     assert response == {
         "model": MODEL,
@@ -103,6 +103,7 @@ def test_span_task_on_string_input_reports_locations_and_threshold():
                 "type": "span",
                 "value": [{"label": "person", "text": "Alice", "start": 0, "end": 5, "source": "", "score": 0.9}],
                 "threshold": 0.5,
+                "adapter_id": None,
             }
         },
     }
@@ -114,7 +115,7 @@ def test_every_task_is_one_row_and_all_rows_run_in_one_batch():
         "orgs": {"type": "span", "labels": "organization", "flat_ner": False, "multi_label": True},
         "places": {"type": "span", "labels": {"location": {"title": "place"}}},
     }
-    response, model = analyze(make_engine(), "Alice met Bob at Acme in Paris.", tasks)
+    response, model = process(make_engine(), "Alice met Bob at Acme in Paris.", tasks)
 
     assert len(model.calls) == 1  # one runner call: the rows share the batch
     rows = model.calls[0]
@@ -135,7 +136,7 @@ def test_identical_tasks_share_one_row():
         "a": {"type": "span", "labels": ["person"]},
         "b": {"type": "span", "labels": ["person"], "flat": True, "threshold": 0.5},
     }
-    response, model = analyze(make_engine(), "Alice", tasks)
+    response, model = process(make_engine(), "Alice", tasks)
 
     assert len(model.calls[0]) == 1
     assert response["results"]["a"]["value"] == response["results"]["b"]["value"]
@@ -143,7 +144,7 @@ def test_identical_tasks_share_one_row():
 
 def test_structured_input_reports_source_pointers_and_leaf_offsets():
     data = {"ticket": "Bob emailed Acme.", "customer": {"name": "Alice"}, "cities": ["London", "Paris"]}
-    response, model = analyze(make_engine(), data, {"ents": {"type": "span", "labels": ["person", "location"]}})
+    response, model = process(make_engine(), data, {"ents": {"type": "span", "labels": ["person", "location"]}})
 
     assert model.calls[0][0]["text"] == render_input(data).text
     assert response["results"]["ents"]["value"] == [
@@ -155,7 +156,7 @@ def test_structured_input_reports_source_pointers_and_leaf_offsets():
 
 
 def test_spans_on_headings_are_dropped():
-    response, _ = analyze(make_engine(), {"Alice": "Bob"}, {"ents": {"type": "span", "labels": ["person"]}})
+    response, _ = process(make_engine(), {"Alice": "Bob"}, {"ents": {"type": "span", "labels": ["person"]}})
 
     assert [span["text"] for span in response["results"]["ents"]["value"]] == ["Bob"]
 
@@ -180,7 +181,7 @@ def test_relation_task_runs_entities_and_relations_in_one_row():
             "entity_threshold": 0.2,
         }
     }
-    response, model = analyze(make_engine(), "Alice works at Acme.", tasks, options={"include_label_definitions": True})
+    response, model = process(make_engine(), "Alice works at Acme.", tasks, options={"include_label_definitions": True})
 
     (row,) = model.calls[0]
     assert row["labels"] == ["person", "organization"]
@@ -202,7 +203,7 @@ def test_relation_task_runs_entities_and_relations_in_one_row():
 
 def test_relation_defaults_come_from_capabilities():
     tasks = {"rels": {"type": "relation", "labels": "works_at", "entity_labels": ["person", "organization"]}}
-    response, model = analyze(make_engine(), "Alice works at Acme.", tasks)
+    response, model = process(make_engine(), "Alice works at Acme.", tasks)
 
     assert (model.calls[0][0]["threshold"], model.calls[0][0]["relation_threshold"]) == (0.5, 0.6)
     assert response["results"]["rels"]["threshold"] == 0.6
@@ -213,7 +214,7 @@ def test_span_and_relation_tasks_on_one_input_batch_together():
         "ents": {"type": "span", "labels": ["person", "organization"]},
         "rels": {"type": "relation", "labels": ["works_at"], "entity_labels": ["person", "organization"]},
     }
-    response, model = analyze(make_engine(), "Alice works at Acme.", tasks)
+    response, model = process(make_engine(), "Alice works at Acme.", tasks)
 
     assert len(model.calls) == 1
     assert [row["relations"] for row in model.calls[0]] == [None, ["works_at"]]
@@ -306,7 +307,7 @@ def test_invalid_requests_are_rejected_with_a_path(body, code, path):
 
 def test_model_alias_is_accepted_and_canonical_id_returned():
     model = FakeModel()
-    response = make_engine().analyze(
+    response = make_engine().process(
         {"model": "alias/gliner", "input": "Alice", "tasks": {"t": {"type": "span", "labels": "person"}}},
         model.run_rows,
     )
@@ -331,7 +332,7 @@ def test_adapter_id_is_passed_to_every_row():
     seen = []
     engine = make_engine(resolve_adapter=seen.append)
     tasks = {"a": {"type": "span", "labels": "person"}, "b": {"type": "span", "labels": "location"}}
-    _, model = analyze(engine, "Alice in Paris", tasks, options={"adapter_id": "legal"})
+    _, model = process(engine, "Alice in Paris", tasks, options={"adapter_id": "legal"})
 
     assert seen == ["legal"]
     assert [row["adapter_id"] for row in model.calls[0]] == ["legal", "legal"]
@@ -362,7 +363,7 @@ def test_long_input_runs_over_overlapping_windows_and_merges_spans():
     text = " ".join(["Alice"] + ["filler"] * 20 + ["Paris"] + ["filler"] * 20 + ["Bob"])
     # 2 prompt words (one label + its marker) leave 10 text words per window.
     engine = make_engine(max_words=12)
-    response, model = analyze(engine, text, {"t": {"type": "span", "labels": ["person", "location"]}})
+    response, model = process(engine, text, {"t": {"type": "span", "labels": ["person", "location"]}})
 
     rows = model.calls[0]
     assert len(rows) > 1
@@ -400,7 +401,7 @@ def test_batch_keeps_order_ids_and_per_item_errors_and_dedupes_rows():
         "options": {"adapter_id": None},
     }
     model = FakeModel()
-    response = make_engine().analyze_batch(body, model.run_rows)
+    response = make_engine().process_batch(body, model.run_rows)
 
     assert len(model.calls) == 1 and len(model.calls[0]) == 2  # "Alice" runs once for items a and c
     items = response["items"]
@@ -424,7 +425,7 @@ def test_batch_keeps_order_ids_and_per_item_errors_and_dedupes_rows():
 )
 def test_bad_batch_envelopes_are_rejected(body, path):
     with pytest.raises(APIError) as info:
-        make_engine().analyze_batch(body, FakeModel().run_rows)
+        make_engine().process_batch(body, FakeModel().run_rows)
 
     assert info.value.path == path
 
@@ -434,7 +435,7 @@ def test_runner_failure_is_reported_as_internal_error():
         raise RuntimeError("boom")
 
     with pytest.raises(APIError) as info:
-        make_engine().analyze({"model": MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}}, broken)
+        make_engine().process({"model": MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}}, broken)
 
     assert (info.value.code, info.value.status) == ("INTERNAL", 500)
 
@@ -454,7 +455,7 @@ def test_async_path_dispatches_rows_concurrently():
         "tasks": {"a": {"type": "span", "labels": "person"}, "b": {"type": "span", "labels": "location"}},
         "options": {"include_usage": True},
     }
-    response = asyncio.run(make_engine().analyze_async(body, run_row))
+    response = asyncio.run(make_engine().process_async(body, run_row))
 
     assert in_flight == [["person"], ["location"]]
     assert response["results"]["a"]["value"][0]["text"] == "Alice"
@@ -557,3 +558,133 @@ def test_rows_beyond_the_batch_size_run_in_precompiled_batch_sizes():
     stats = server.batch_stats.to_dict()
     assert stats["rows_per_pass"] == {"3": 1, "8": 2}
     assert stats["gpu_rows_per_pass"] == {"4": 1, "8": 2}
+
+
+# -- defaults and per-task settings ---------------------------------------------------
+
+
+def _known_adapters(*known):
+    def resolve(adapter_id):
+        if adapter_id is not None and adapter_id not in known:
+            raise KeyError(f"Unknown LoRA adapter id: {adapter_id}")
+
+    return resolve
+
+
+def test_defaults_apply_to_tasks_that_do_not_set_their_own():
+    engine = make_engine(resolve_adapter=_known_adapters("news", "legal"))
+    tasks = {
+        "a": {"type": "span", "labels": ["person"]},
+        "b": {"type": "span", "labels": ["location"], "threshold": 0.7, "adapter_id": "legal", "flat_ner": True},
+        "c": {"type": "relation", "labels": ["works at"], "entity_labels": ["person", "organization"]},
+    }
+    defaults = {"threshold": 0.3, "adapter_id": "news", "flat_ner": False, "multi_label": True, "entity_threshold": 0.2}
+    response, model = process(engine, "Alice in Paris works at Acme", tasks, defaults=defaults)
+
+    rows = model.calls[0]
+    assert [row["adapter_id"] for row in rows] == ["news", "legal", "news"]
+    assert [row["threshold"] for row in rows] == [0.3, 0.7, 0.2]  # relation rows use entity_threshold here
+    assert rows[2]["relation_threshold"] == 0.3  # the general threshold is the relation cutoff
+    assert [row["flat_ner"] for row in rows] == [False, True, False]
+    assert all(row["multi_label"] for row in rows)
+    results = response["results"]
+    assert (results["a"]["threshold"], results["a"]["adapter_id"]) == (0.3, "news")
+    assert (results["b"]["threshold"], results["b"]["adapter_id"]) == (0.7, "legal")
+    assert (results["c"]["threshold"], results["c"]["entity_threshold"]) == (0.3, 0.2)
+
+
+def test_null_in_a_task_skips_the_default():
+    engine = make_engine(resolve_adapter=_known_adapters("news"))
+    tasks = {"a": {"type": "span", "labels": ["person"], "threshold": None, "adapter_id": None}}
+    response, model = process(engine, "Alice", tasks, defaults={"threshold": 0.3, "adapter_id": "news"})
+
+    assert (model.calls[0][0]["threshold"], model.calls[0][0]["adapter_id"]) == (0.5, None)
+    assert (response["results"]["a"]["threshold"], response["results"]["a"]["adapter_id"]) == (0.5, None)
+
+
+def test_tasks_with_different_adapters_get_their_own_rows():
+    engine = make_engine(resolve_adapter=_known_adapters("a", "b"))
+    tasks = {
+        "base": {"type": "span", "labels": ["person"]},
+        "with_a": {"type": "span", "labels": ["person"], "adapter_id": "a"},
+        "also_a": {"type": "span", "labels": ["person"], "adapter_id": "a"},
+        "with_b": {"type": "span", "labels": ["person"], "adapter_id": "b"},
+    }
+    _, model = process(engine, "Alice", tasks)
+
+    assert [row["adapter_id"] for row in model.calls[0]] == [None, "a", "b"]  # "also_a" shares the "a" row
+
+
+@pytest.mark.parametrize(
+    ("body_extra", "task_extra", "path"),
+    [
+        ({}, {"adapter_id": "missing"}, "/tasks/t/adapter_id"),
+        ({"defaults": {"adapter_id": "missing"}}, {}, "/defaults/adapter_id"),
+        ({"options": {"adapter_id": "missing"}}, {}, "/options/adapter_id"),
+    ],
+)
+def test_unknown_adapter_error_points_to_where_it_was_set(body_extra, task_extra, path):
+    body = {"model": MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a", **task_extra}}, **body_extra}
+    error = error_of(make_engine(resolve_adapter=_known_adapters()), body)
+
+    assert (error.code, error.path) == ("UNKNOWN_ADAPTER", path)
+
+
+def test_options_adapter_id_is_an_alias_of_the_default_adapter():
+    engine = make_engine(resolve_adapter=_known_adapters("news", "legal"))
+    _, model = process(engine, "Alice", {"t": {"type": "span", "labels": "person"}}, options={"adapter_id": "news"})
+    assert model.calls[0][0]["adapter_id"] == "news"
+
+    body = {
+        "model": MODEL,
+        "input": "x",
+        "tasks": {"t": {"type": "span", "labels": "a"}},
+        "options": {"adapter_id": "news"},
+        "defaults": {"adapter_id": "legal"},
+    }
+    assert error_of(engine, body).path == "/options/adapter_id"
+
+
+@pytest.mark.parametrize(
+    ("defaults", "code", "path"),
+    [
+        ({"labels": ["x"]}, "INVALID_REQUEST", "/defaults/labels"),
+        ({"threshold": "high"}, "INVALID_REQUEST", "/defaults/threshold"),
+        ({"entity_threshold": 3}, "INVALID_REQUEST", "/defaults/entity_threshold"),
+        ({"multi_label": "yes"}, "INVALID_REQUEST", "/defaults/multi_label"),
+        ({"adapter_id": 5}, "INVALID_REQUEST", "/defaults/adapter_id"),
+        ({"flat": True, "flat_ner": False}, "INVALID_REQUEST", "/defaults/flat_ner"),
+        ({"instruction": "find people"}, "UNSUPPORTED_FIELD", "/defaults/instruction"),
+        ("x", "INVALID_REQUEST", "/defaults"),
+    ],
+)
+def test_bad_defaults_are_rejected_with_a_path(defaults, code, path):
+    body = {"model": MODEL, "input": "x", "tasks": {"t": {"type": "span", "labels": "a"}}, "defaults": defaults}
+    error = error_of(make_engine(), body)
+
+    assert (error.code, error.path) == (code, path)
+
+
+def test_batch_defaults_apply_to_items_and_item_defaults_override_them():
+    engine = make_engine(resolve_adapter=_known_adapters("news", "legal"))
+    task = {"t": {"type": "span", "labels": ["person"]}}
+    body = {
+        "model": MODEL,
+        "defaults": {"threshold": 0.3, "adapter_id": "news"},
+        "items": [
+            {"id": "a", "input": "Alice", "tasks": task},
+            {"id": "b", "input": "Bob", "tasks": task, "defaults": {"adapter_id": "legal"}},
+            {"id": "c", "input": "Alice", "tasks": task, "defaults": {"adapter_id": "missing"}},
+        ],
+    }
+    model = FakeModel()
+    response = engine.process_batch(body, model.run_rows)
+
+    assert [(row["text"], row["threshold"], row["adapter_id"]) for row in model.calls[0]] == [
+        ("Alice", 0.3, "news"),
+        ("Bob", 0.3, "legal"),
+    ]
+    items = response["items"]
+    assert items[0]["results"]["t"]["adapter_id"] == "news"
+    assert items[2]["error"]["code"] == "UNKNOWN_ADAPTER"
+    assert items[2]["error"]["path"] == "/items/2/defaults/adapter_id"

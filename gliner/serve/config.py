@@ -37,7 +37,7 @@ class GLiNERServeConfig:
 
     route_prefix: str = "/gliner"
 
-    # Analyze API (``{route_prefix}/v1/analyze``).
+    # Process API (``{route_prefix}/v1/process``).
     model_id: str | None = None  # public model id; defaults to ``model``
     model_aliases: List[str] = field(default_factory=list)
     label_template: str = "{title}"  # label text shown to the model; may use {id}, {title}, {description}
@@ -45,7 +45,7 @@ class GLiNERServeConfig:
     max_batch_items: int = 256
     max_input_chars: int = 1_000_000
     max_request_bytes: int = 10_000_000
-    analyze_window_overlap: float = 0.25  # overlap of the windows long inputs are split into
+    process_window_overlap: float = 0.25  # overlap of the windows long inputs are split into
 
     tokenizer_threads: int = 4
     decoding_threads: int = 4
@@ -83,8 +83,8 @@ class GLiNERServeConfig:
         from .api.labels import validate_template  # noqa: PLC0415
 
         validate_template(self.label_template)
-        if not 0.0 <= self.analyze_window_overlap < 1.0:
-            raise ValueError("analyze_window_overlap must be in [0, 1)")
+        if not 0.0 <= self.process_window_overlap < 1.0:
+            raise ValueError("process_window_overlap must be in [0, 1)")
         if self.max_batch_size not in self.precompiled_batch_sizes:
             self.precompiled_batch_sizes = sorted(set(self.precompiled_batch_sizes) | {self.max_batch_size})
         self.precompiled_batch_sizes = sorted(self.precompiled_batch_sizes)

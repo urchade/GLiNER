@@ -1,4 +1,4 @@
-"""Error codes of the analyze API (NEW_API.md §13.5)."""
+"""Error codes of the process API (NEW_API.md §13.5)."""
 
 from __future__ import annotations
 

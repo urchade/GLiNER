@@ -1,4 +1,4 @@
-"""Validation of analyze requests into task specs (NEW_API.md §4, §13.4).
+"""Validation of process requests into task specs (NEW_API.md §4, §13.4).
 
 GLiNER serves two task types:
 
@@ -7,6 +7,15 @@ GLiNER serves two task types:
 * ``relation`` -- relation ``labels``, ``entity_labels`` (required: GLiNER
   extracts the relation's entities in the same pass), ``threshold`` (relation
   cutoff), ``entity_threshold``, ``flat`` / ``flat_ner`` and ``multi_label``.
+
+Every task also takes ``adapter_id`` (PolyLoRA adapter; ``null`` is the base model).
+
+Settings shared by many tasks can be given once in the request's ``defaults``:
+``adapter_id``, ``threshold``, ``entity_threshold``, ``flat`` / ``flat_ner`` and
+``multi_label``. A task's own value wins; an explicit ``null`` in a task skips the
+request default and uses the deployment's. A default that does not apply to a
+task type (``entity_threshold`` on a ``span`` task) is skipped for it.
+``options.adapter_id`` is accepted as an alias of ``defaults.adapter_id``.
 
 GLiNER is not conditioned on instructions, so a non-null ``instruction`` is
 rejected with ``UNSUPPORTED_FIELD`` instead of being ignored.
@@ -37,11 +46,13 @@ OPTION_KEYS = frozenset(
 # ``include_evidence`` / ``include_layout_text`` / ``reference_date`` belong to
 # task and input types GLiNER does not serve; they are validated and have no effect.
 BOOLEAN_OPTIONS = ("include_label_definitions", "include_usage", "include_evidence", "include_layout_text")
-SPAN_FIELDS = frozenset({"type", "instruction", "labels", "threshold", "flat", "flat_ner", "multi_label"})
+SETTINGS = frozenset({"adapter_id", "threshold", "flat", "flat_ner", "multi_label", "instruction"})
+SPAN_FIELDS = SETTINGS | {"type", "labels"}
 RELATION_FIELDS = SPAN_FIELDS | {"entity_labels", "entity_threshold"}
 TASK_FIELDS = {"span": SPAN_FIELDS, "relation": RELATION_FIELDS}
-REQUEST_KEYS = frozenset({"model", "input", "tasks", "options"})
-BATCH_KEYS = frozenset({"model", "items", "options"})
+DEFAULT_KEYS = SETTINGS | {"entity_threshold"}
+REQUEST_KEYS = frozenset({"model", "input", "tasks", "options", "defaults"})
+BATCH_KEYS = frozenset({"model", "items", "options", "defaults"})
 
 
 @dataclass
@@ -55,6 +66,8 @@ class TaskSpec:
     multi_label: bool = False
     entity_labels: list[Label] | None = None  # relation only
     entity_threshold: float | None = None  # relation only
+    adapter_id: str | None = None
+    adapter_path: str | None = None  # where the adapter was set, for error paths
 
 
 @dataclass
@@ -117,8 +130,56 @@ def parse_options(raw: Any, path: str = "/options") -> Options:
     return options
 
 
+def _adapter(value: Any, where: str) -> str | None:
+    if value is not None and not isinstance(value, str):
+        raise invalid("'adapter_id' must be a string or null", where)
+    return value
+
+
+def _check_setting(key: str, value: Any, where: str) -> Any:
+    """Validate one setting value (``null`` means "use the deployment default")."""
+    if value is None:
+        return None
+    if key in ("threshold", "entity_threshold"):
+        return _threshold(value, where)
+    if key in ("flat", "flat_ner", "multi_label"):
+        return _bool(value, key, where)
+    if key == "adapter_id":
+        return _adapter(value, where)
+    if key == "instruction":
+        raise APIError(
+            "UNSUPPORTED_FIELD",
+            "GLiNER is not conditioned on instructions; describe what to find with labels",
+            where,
+        )
+    raise invalid(f"Unknown setting '{key}'", where)
+
+
+def parse_defaults(raw: Any, options: Options, path: str = "/defaults") -> dict[str, tuple[Any, str]]:
+    """Request-level settings as ``{key: (value, path)}``; ``flat_ner`` is stored as ``flat``."""
+    if raw is None:
+        raw = {}
+    if not isinstance(raw, dict):
+        raise invalid("'defaults' must be an object", path)
+    defaults: dict[str, tuple[Any, str]] = {}
+    for key, raw_value in raw.items():
+        if key not in DEFAULT_KEYS:
+            raise invalid(f"Unknown default '{key}'", f"{path}/{key}")
+        where = f"{path}/{key}"
+        value = _check_setting(key, raw_value, where)
+        name = "flat" if key == "flat_ner" else key
+        if name in defaults and defaults[name][0] != value:
+            raise invalid("'flat' and 'flat_ner' disagree; give only one of them", f"{path}/flat_ner")
+        defaults[name] = (value, where)
+    if options.adapter_id is not None:
+        if "adapter_id" in defaults and defaults["adapter_id"][0] != options.adapter_id:
+            raise invalid("'options.adapter_id' and 'defaults.adapter_id' disagree", "/options/adapter_id")
+        defaults.setdefault("adapter_id", (options.adapter_id, "/options/adapter_id"))
+    return defaults
+
+
 def merge_options(batch: Any, item: Any) -> Any:
-    """Item-level options override batch-level ones."""
+    """Item-level options (or defaults) override batch-level ones."""
     if batch is None:
         return item
     if item is None:
@@ -167,19 +228,22 @@ class RequestParser:
         if "input" not in body:
             raise invalid("'input' is required", "/input")
         options = parse_options(body.get("options"))
+        defaults = parse_defaults(body.get("defaults"), options)
         tasks_raw = body.get("tasks")
         if not isinstance(tasks_raw, dict) or not tasks_raw:
             raise invalid("'tasks' must be a non-empty object", "/tasks")
         max_tasks = self.capabilities.limit("max_tasks")
         if max_tasks and len(tasks_raw) > max_tasks:
             raise invalid(f"At most {max_tasks} tasks are allowed per request", "/tasks")
-        tasks = [self.parse_task(name, raw, pointer("tasks", name)) for name, raw in tasks_raw.items()]
+        tasks = [self.parse_task(name, raw, pointer("tasks", name), defaults) for name, raw in tasks_raw.items()]
         rendered = self.render(body["input"])
         return ParsedRequest(model=model, rendered=rendered, tasks=tasks, options=options)
 
     # -- tasks ----------------------------------------------------------------
 
-    def parse_task(self, name: str, raw: Any, path: str) -> TaskSpec:
+    def parse_task(
+        self, name: str, raw: Any, path: str, defaults: dict[str, tuple[Any, str]] | None = None
+    ) -> TaskSpec:
         if not name:
             raise invalid("Task names must be non-empty", path)
         if not isinstance(raw, dict):
@@ -208,19 +272,27 @@ class RequestParser:
         for key in raw:
             if key not in TASK_FIELDS[task_type]:
                 raise invalid(f"Field '{key}' is not valid for '{task_type}' tasks", f"{path}/{key}")
-        if raw.get("instruction") is not None:
-            raise APIError(
-                "UNSUPPORTED_FIELD",
-                "GLiNER is not conditioned on instructions; describe what to find with labels",
-                f"{path}/instruction",
-            )
+        defaults = defaults or {}
 
+        def setting(key: str) -> tuple[Any, str | None]:
+            """The task's value, else the request default; ``(None, None)`` when neither is set."""
+            keys = ("flat", "flat_ner") if key == "flat" else (key,)
+            given = {k: _check_setting(k, raw[k], f"{path}/{k}") for k in keys if k in raw}
+            if len(set(given.values())) > 1:
+                raise invalid("'flat' and 'flat_ner' disagree; give only one of them", f"{path}/flat_ner")
+            if given:
+                key_used = next(iter(given))
+                return given[key_used], f"{path}/{key_used}"
+            return defaults.get(key, (None, None))
+
+        setting("instruction")  # rejected when set
         task = TaskSpec(name=name, type=task_type, path=path, labels=[])
-        if raw.get("threshold") is not None:
-            task.threshold = _threshold(raw["threshold"], f"{path}/threshold")
-        task.flat = self.flat(raw, path)
-        if "multi_label" in raw:
-            task.multi_label = _bool(raw["multi_label"], "multi_label", f"{path}/multi_label")
+        task.threshold = setting("threshold")[0]
+        flat = setting("flat")[0]
+        task.flat = True if flat is None else flat
+        task.multi_label = bool(setting("multi_label")[0])
+        task.adapter_id, adapter_path = setting("adapter_id")
+        task.adapter_path = adapter_path or f"{path}/adapter_id"
         task.labels = self.labels(raw.get("labels"), f"{path}/labels", "labels")
         if task_type == "relation":
             if raw.get("entity_labels") is None:
@@ -229,16 +301,8 @@ class RequestParser:
                     f"{path}/entity_labels",
                 )
             task.entity_labels = self.labels(raw["entity_labels"], f"{path}/entity_labels", "entity_labels")
-            if raw.get("entity_threshold") is not None:
-                task.entity_threshold = _threshold(raw["entity_threshold"], f"{path}/entity_threshold")
+            task.entity_threshold = setting("entity_threshold")[0]
         return task
-
-    @staticmethod
-    def flat(raw: dict[str, Any], path: str) -> bool:
-        values = {key: _bool(raw[key], key, f"{path}/{key}") for key in ("flat", "flat_ner") if key in raw}
-        if len(set(values.values())) > 1:
-            raise invalid("'flat' and 'flat_ner' disagree; give only one of them", f"{path}/flat_ner")
-        return next(iter(values.values()), True)
 
     def labels(self, spec: Any, where: str, name: str) -> list[Label]:
         labels = normalize_labels(spec, where, template=self.capabilities.label_template)

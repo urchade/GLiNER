@@ -1,6 +1,6 @@
-"""Analyze API (``POST /v1/analyze``) for GLiNER serving: ``span`` and ``relation`` tasks.
+"""Process API (``POST /v1/process``) for GLiNER serving: ``span`` and ``relation`` tasks.
 
-The contract follows the Knowledgator unified analyze API (``NEW_API.md``),
+The contract follows the Knowledgator unified analyze API (``NEW_API.md``), served as ``process``,
 limited to the task types GLiNER can run. The modules do not need Ray or a
 model, so they can be used in-process and tested on their own:
 
@@ -11,7 +11,7 @@ model, so they can be used in-process and tested on their own:
 * ``capabilities`` what the served checkpoint can run
 """
 
-from .engine import AnalyzeEngine
+from .engine import ProcessEngine
 from .errors import ERROR_STATUS, APIError
 from .render import RenderedInput, render_input
 from .capabilities import Capabilities, capabilities_from_config
@@ -19,8 +19,8 @@ from .capabilities import Capabilities, capabilities_from_config
 __all__ = [
     "ERROR_STATUS",
     "APIError",
-    "AnalyzeEngine",
     "Capabilities",
+    "ProcessEngine",
     "RenderedInput",
     "capabilities_from_config",
     "render_input",
