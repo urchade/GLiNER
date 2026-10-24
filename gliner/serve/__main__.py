@@ -275,6 +275,34 @@ def main():
         help="Regular expression for valid adapter ids",
     )
 
+    analyze_group = parser.add_argument_group("Analyze API (/v1/analyze)")
+    analyze_group.add_argument("--model-id", type=str, default=None, help="Public model id (defaults to --model)")
+    analyze_group.add_argument(
+        "--model-aliases", type=_parse_str_list, default=[], help="Comma-separated extra accepted model ids"
+    )
+    analyze_group.add_argument(
+        "--label-template",
+        type=str,
+        default="{title}",
+        help="Label text shown to the model; may use {id}, {title}, {description}",
+    )
+    analyze_group.add_argument("--max-tasks", type=int, default=32, help="Maximum tasks per request (0: unlimited)")
+    analyze_group.add_argument(
+        "--max-batch-items", type=int, default=256, help="Maximum items per batch request (0: unlimited)"
+    )
+    analyze_group.add_argument(
+        "--max-input-chars", type=int, default=1_000_000, help="Maximum rendered input characters (0: unlimited)"
+    )
+    analyze_group.add_argument(
+        "--max-request-bytes", type=int, default=10_000_000, help="Maximum request body bytes (0: unlimited)"
+    )
+    analyze_group.add_argument(
+        "--analyze-window-overlap",
+        type=float,
+        default=0.25,
+        help="Overlap of the windows that inputs longer than the model window are split into",
+    )
+
     args = parser.parse_args()
 
     precompiled_sizes = [int(x.strip()) for x in args.precompiled_batch_sizes.split(",")]
@@ -301,6 +329,14 @@ def main():
         max_ongoing_requests=args.max_ongoing_requests,
         queue_capacity=args.queue_capacity,
         route_prefix=args.route_prefix,
+        model_id=args.model_id,
+        model_aliases=args.model_aliases,
+        label_template=args.label_template,
+        max_tasks=args.max_tasks,
+        max_batch_items=args.max_batch_items,
+        max_input_chars=args.max_input_chars,
+        max_request_bytes=args.max_request_bytes,
+        analyze_window_overlap=args.analyze_window_overlap,
         tokenizer_threads=args.tokenizer_threads,
         decoding_threads=args.decoding_threads,
         enable_compilation=not args.no_compile,

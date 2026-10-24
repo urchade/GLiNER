@@ -26,6 +26,7 @@ from gliner.modeling.utils import (
     build_entity_pairs,
     extract_prompt_features,
     extract_word_embeddings,
+    extract_spans_from_tokens,
     extract_prompt_features_and_word_embeddings,
 )
 from gliner.modeling.layers import MultiheadAttention
@@ -1362,3 +1363,22 @@ def test_biencoder_token_forward_uses_per_row_label_layout():
 
     assert output.logits.shape == (2, 2, 2, 3)
     assert output.prompts_embedding_mask.tolist() == [[1, 1], [1, 0]]
+
+
+def test_extract_spans_from_tokens_ignores_padded_words_and_entity_types():
+    # Row 1 has one real entity type and three real words; its padding scores high everywhere,
+    # as padded slots can in a batch whose rows have different label counts.
+    scores = torch.full((2, 4, 2, 3), -10.0)
+    scores[0, 0, 0] = 10.0  # row 0: one-word entity of type 0
+    scores[1, 1, 0] = 10.0  # row 1: one-word entity of type 0
+    scores[1, :, 1] = 10.0  # row 1: padded type 1
+    scores[1, 3, 0] = 10.0  # row 1: padded word 3
+    word_mask = torch.tensor([[1, 1, 1, 1], [1, 1, 1, 0]])
+    class_mask = torch.tensor([[1, 1], [1, 0]])
+
+    _, unmasked = extract_spans_from_tokens(scores)
+    span_idx, span_mask = extract_spans_from_tokens(scores, word_mask=word_mask, class_mask=class_mask)
+
+    assert unmasked.sum(1).tolist() == [1, 12]
+    assert span_mask.sum(1).tolist() == [1, 1]
+    assert span_idx[1, 0].tolist() == [1, 1]

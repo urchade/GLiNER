@@ -2783,6 +2783,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         threshold: float = 0.5,
         top_k: int | None = None,
         span_idx: torch.LongTensor | None = None,
+        class_mask: torch.Tensor | None = None,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor | None]:
         """Select entity spans for relation extraction.
 
@@ -2798,6 +2799,8 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             top_k: Optional limit on number of spans to select.
             span_idx: Optional span boundary indices of shape (B, L*K, 2).
                 If provided, selected boundaries are returned for decoding.
+            class_mask: Optional mask of real (non-padding) entity types, shape (B, C).
+                Padded types of rows with fewer labels are ignored when selecting spans.
 
         Returns:
             Tuple containing:
@@ -2816,7 +2819,10 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             span_prob_flat = span_labels.max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat == 1).bool()
         elif span_scores is not None and span_scores.size(-1) > 0:
-            span_prob_flat = torch.sigmoid(span_scores).max(dim=-1).values.view(B, -1)
+            span_prob = torch.sigmoid(span_scores)
+            if class_mask is not None:
+                span_prob = span_prob * class_mask[:, None, None, : span_prob.size(-1)].to(span_prob.dtype)
+            span_prob_flat = span_prob.max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat > threshold) & span_mask_flat.bool()
         else:
             keep = torch.zeros_like(span_mask_flat, dtype=torch.bool)
@@ -2886,6 +2892,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         labels: torch.Tensor | None = None,
         threshold: float = 0.5,
         return_embeddings: bool = False,
+        prompts_mask: torch.Tensor | None = None,
     ):
         span_idx = span_idx * span_mask.unsqueeze(-1).long()
         span_rep = self.span_rep_layer(words_embeddings, span_idx)
@@ -2898,7 +2905,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         )
         if has_relex:
             target_span_rep, target_span_mask, entity_spans = self.select_span_target_embedding(
-                span_rep, scores, span_mask, labels, threshold, span_idx=span_idx
+                span_rep, scores, span_mask, labels, threshold, span_idx=span_idx, class_mask=prompts_mask
             )
         else:
             target_span_rep, target_span_mask, entity_spans = None, None, None
@@ -3017,6 +3024,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             labels,
             threshold,
             return_embeddings=return_embeddings,
+            prompts_mask=prompts_embedding_mask,
         )
         if return_embeddings:
             scores, target_span_rep, target_span_mask, entity_spans, span_embeddings = span_outputs
@@ -3387,11 +3395,14 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
         labels: torch.Tensor | None = None,
         threshold: float = 0.5,
         return_embeddings: bool = False,
+        prompts_mask: torch.Tensor | None = None,
     ):
         scores = self.scorer(words_embeddings, prompts_embeddings)
 
         if span_idx is None:
-            span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
+            span_idx, span_mask = extract_spans_from_tokens(
+                scores, labels, threshold, word_mask=words_mask, class_mask=prompts_mask
+            )
             span_idx = span_idx * span_mask.unsqueeze(-1).long()
         target_span_rep = self.span_rep_layer(words_embeddings, span_idx)
 
