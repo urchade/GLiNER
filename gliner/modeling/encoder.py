@@ -983,6 +983,9 @@ class BiEncoder(Encoder):
         # backbones ("BertModel.forward() got an unexpected keyword argument
         # 'token_lengths'", #370).
         label_kwargs.pop("token_lengths", None)
+        # PolyLoRA adapters select one adapter per *text* row and wrap only the text encoder.
+        label_kwargs.pop("adapter_ids", None)
+        label_kwargs.pop("weight_indices", None)
         label_kwargs["attention_mask"] = attention_mask
         labels_embeddings = self.labels_encoder(input_ids, *args, **label_kwargs)
         if hasattr(self, "labels_projection"):

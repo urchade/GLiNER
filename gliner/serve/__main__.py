@@ -52,9 +52,10 @@ def main():
         "--quantization",
         type=str,
         default=None,
-        choices=["int8", None],
-        help="Real quantization to apply. Only 'int8' is accepted; for precision "
-        "changes (fp16/bf16) use --dtype instead.",
+        choices=["int8", "fp8", None],
+        help="Real quantization to apply: 'int8', or 'fp8' (FP8 linear layers, plus FP8 "
+        "attention with FlashDeBERTa; needs compute capability 8.9+, best with compilation). "
+        "For precision changes (fp16/bf16) use --dtype instead.",
     )
 
     limits_group = parser.add_argument_group("Model Limits")
@@ -274,6 +275,34 @@ def main():
         help="Regular expression for valid adapter ids",
     )
 
+    process_group = parser.add_argument_group("Process API (/v1/process)")
+    process_group.add_argument("--model-id", type=str, default=None, help="Public model id (defaults to --model)")
+    process_group.add_argument(
+        "--model-aliases", type=_parse_str_list, default=[], help="Comma-separated extra accepted model ids"
+    )
+    process_group.add_argument(
+        "--label-template",
+        type=str,
+        default="{title}",
+        help="Label text shown to the model; may use {id}, {title}, {description}",
+    )
+    process_group.add_argument("--max-tasks", type=int, default=32, help="Maximum tasks per request (0: unlimited)")
+    process_group.add_argument(
+        "--max-batch-items", type=int, default=256, help="Maximum items per batch request (0: unlimited)"
+    )
+    process_group.add_argument(
+        "--max-input-chars", type=int, default=1_000_000, help="Maximum rendered input characters (0: unlimited)"
+    )
+    process_group.add_argument(
+        "--max-request-bytes", type=int, default=10_000_000, help="Maximum request body bytes (0: unlimited)"
+    )
+    process_group.add_argument(
+        "--process-window-overlap",
+        type=float,
+        default=0.25,
+        help="Overlap of the windows that inputs longer than the model window are split into",
+    )
+
     args = parser.parse_args()
 
     precompiled_sizes = [int(x.strip()) for x in args.precompiled_batch_sizes.split(",")]
@@ -300,6 +329,14 @@ def main():
         max_ongoing_requests=args.max_ongoing_requests,
         queue_capacity=args.queue_capacity,
         route_prefix=args.route_prefix,
+        model_id=args.model_id,
+        model_aliases=args.model_aliases,
+        label_template=args.label_template,
+        max_tasks=args.max_tasks,
+        max_batch_items=args.max_batch_items,
+        max_input_chars=args.max_input_chars,
+        max_request_bytes=args.max_request_bytes,
+        process_window_overlap=args.process_window_overlap,
         tokenizer_threads=args.tokenizer_threads,
         decoding_threads=args.decoding_threads,
         enable_compilation=not args.no_compile,
