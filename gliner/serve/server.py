@@ -467,7 +467,11 @@ class GLiNERServer:
             return entity_results
 
         num_texts = len(texts)
-        if not getattr(self, "_polylora_mixes_adapters", True) and isinstance(adapter_ids, list) and len(set(adapter_ids)) > 1:
+        if (
+            not getattr(self, "_polylora_mixes_adapters", True)
+            and isinstance(adapter_ids, list)
+            and len(set(adapter_ids)) > 1
+        ):
             return self._run_batch_per_adapter(
                 texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
             )
@@ -498,7 +502,14 @@ class GLiNERServer:
         """Run a mixed-adapter batch as one sub-batch per adapter, in the original order."""
         (_, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids) = (
             self._per_text_inputs(  # one value per text, no padding (compilation is checked below)
-                texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids,
+                texts,
+                labels,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
+                adapter_ids,
                 pad=False,
             )
         )
@@ -509,12 +520,19 @@ class GLiNERServer:
         entities: List[Any] = [None] * len(texts)
         found_relations: List[Any] = [None] * len(texts)
         for adapter_id, indices in groups.items():
-            def pick(values):
+
+            def pick(values, indices=indices):
                 return None if values is None else [values[i] for i in indices]
 
             result = self._run_batch_internal(
-                pick(texts), pick(labels), pick(relations), pick(threshold), pick(relation_threshold),
-                pick(flat_ner), pick(multi_label), adapter_id,
+                pick(texts),
+                pick(labels),
+                pick(relations),
+                pick(threshold),
+                pick(relation_threshold),
+                pick(flat_ner),
+                pick(multi_label),
+                adapter_id,
             )
             group_entities, group_relations = result if self._supports_relations else (result, None)
             for position, index in enumerate(indices):

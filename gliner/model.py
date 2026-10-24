@@ -1014,7 +1014,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             raise RuntimeError("fp8 quantization requires a GPU with compute capability 8.9+ (Ada, Hopper or newer).")
         if not is_module_available("torchao"):
             raise ImportError("fp8 quantization requires the 'torchao' package. Install it with: pip install torchao")
-        from torchao.quantization import PerRow, quantize_, Float8DynamicActivationFloat8WeightConfig  # noqa: PLC0415
+        from torchao.quantization import PerRow, Float8DynamicActivationFloat8WeightConfig, quantize_  # noqa: PLC0415
 
         encoders = {
             name: module

@@ -526,11 +526,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -1218,11 +1214,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, embeddings, and span-level outputs.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -1582,11 +1574,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids=input_ids,
@@ -1777,11 +1765,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         Returns:
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids=input_ids,
@@ -2216,11 +2200,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         Returns:
             GLiNERDecoderOutput containing logits, losses, and decoder information.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -2577,11 +2557,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
         Returns:
             GLiNERDecoderOutput containing logits, losses, and decoder information.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
 
         representations = self.get_representations(
             input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
@@ -2975,11 +2951,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         Returns:
             GLiNERRelexOutput containing entity and relation predictions.
         """
-        encoder_kwargs = {
-            key: kwargs[key]
-            for key in ENCODER_KWARGS
-            if key in kwargs
-        }
+        encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
         word_lengths = encoder_kwargs.pop("word_lengths", None)
 
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **encoder_kwargs)
