@@ -5,48 +5,60 @@ from unittest.mock import patch
 
 import pytest
 
+import gliner  # noqa: F401  (import torch and transformers before any stub module exists)
+
+
+def _missing(name):
+    try:
+        importlib.import_module(name)
+    except ModuleNotFoundError as error:
+        if error.name not in {name, name.split(".")[0]}:
+            raise
+        return True
+    return False
+
+
+class Dataset:
+    def __init__(self, columns):
+        self.columns = columns
+
+    @classmethod
+    def from_dict(cls, columns):
+        return cls(columns)
+
+
+def _unavailable_load_dataset(*args, **kwargs):
+    raise AssertionError("load_dataset should be mocked by each test")
+
+
+def _unused_f1_score(*args, **kwargs):
+    raise AssertionError("the classifier stub does not calculate F1 scores")
+
+
+# gliner.multitask needs optional packages (datasets, scikit-learn, evaluate) the tests do not
+# use. Stand-ins for the missing ones exist only while it is imported: left in sys.modules they
+# would make other code believe those packages are installed.
+_stubs = {}
+if _missing("datasets"):
+    _stubs["datasets"] = ModuleType("datasets")
+    _stubs["datasets"].Dataset = Dataset
+    _stubs["datasets"].load_dataset = _unavailable_load_dataset
+if _missing("sklearn.metrics"):
+    _stubs["sklearn"] = ModuleType("sklearn")
+    _stubs["sklearn.metrics"] = ModuleType("sklearn.metrics")
+    _stubs["sklearn.metrics"].f1_score = _unused_f1_score
+    _stubs["sklearn"].metrics = _stubs["sklearn.metrics"]
+if _missing("evaluate"):
+    _stubs["evaluate"] = ModuleType("evaluate")
+
+sys.modules.update(_stubs)
 try:
-    datasets_module = importlib.import_module("datasets")
-except ModuleNotFoundError as error:
-    if error.name != "datasets":
-        raise
+    GLiNERClassifier = importlib.import_module("gliner.multitask.classification").GLiNERClassifier
+finally:
+    for _name in _stubs:
+        sys.modules.pop(_name, None)
 
-    datasets_module = ModuleType("datasets")
-
-    class Dataset:
-        def __init__(self, columns):
-            self.columns = columns
-
-        @classmethod
-        def from_dict(cls, columns):
-            return cls(columns)
-
-    def _unavailable_load_dataset(*args, **kwargs):
-        raise AssertionError("load_dataset should be mocked by each test")
-
-    datasets_module.Dataset = Dataset
-    datasets_module.load_dataset = _unavailable_load_dataset
-    sys.modules["datasets"] = datasets_module
-
-try:
-    importlib.import_module("sklearn.metrics")
-except ModuleNotFoundError as error:
-    if error.name not in {"sklearn", "sklearn.metrics"}:
-        raise
-
-    sklearn_module = ModuleType("sklearn")
-    metrics_module = ModuleType("sklearn.metrics")
-
-    def _unused_f1_score(*args, **kwargs):
-        raise AssertionError("the classifier stub does not calculate F1 scores")
-
-    metrics_module.f1_score = _unused_f1_score
-    sklearn_module.metrics = metrics_module
-    sys.modules["sklearn"] = sklearn_module
-    sys.modules["sklearn.metrics"] = metrics_module
-
-Dataset = datasets_module.Dataset
-GLiNERClassifier = importlib.import_module("gliner.multitask.classification").GLiNERClassifier
+Dataset = sys.modules["gliner.multitask.classification"].Dataset
 
 
 class _ClassifierStub:
