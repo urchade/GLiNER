@@ -20,6 +20,10 @@ LabelSet = List[str] | Dict[str, str]
 Labels = LabelSet | List[LabelSet]
 
 
+# One-word text used to pad batches up to a precompiled batch size.
+_FILLER_TEXT = "filler"
+
+
 def _min_batch_value(value):
     if isinstance(value, list):
         return min(value) if value else 0.5
@@ -75,6 +79,7 @@ class GLiNERServer:
         """
         self.config = config
         self._polylora_model = None
+        self._polylora_mixes_adapters = True
         self._adapter_id_re = re.compile(config.polylora_adapter_id_pattern)
 
         env_vars = config.to_env_vars()
@@ -165,6 +170,14 @@ class GLiNERServer:
         )
         self._polylora_model = PolyLoraModel(target_model, polylora_config)
         self._set_polylora_target_model(self._polylora_model)
+        # Stock HF DeBERTa projects its relative position embeddings once for the whole batch,
+        # so one forward can carry only one adapter on those layers. FlashDeBERTa projects them
+        # once per adapter (MultiLoraLinear.project_shared). Other encoders share no inputs.
+        self._polylora_mixes_adapters = not any(
+            type(module).__name__ == "DisentangledSelfAttention" for module in target_model.modules()
+        )
+        if not self._polylora_mixes_adapters:
+            logger.info("PolyLoRA on HF DeBERTa: batches with mixed adapters run one adapter at a time")
 
         logger.info(
             "PolyLoRA enabled with %d GPU slots, max rank %d, disk cache %s",
@@ -247,11 +260,24 @@ class GLiNERServer:
         if isinstance(adapter_ids, list):
             resolved = [self.ensure_adapter_loaded(adapter_ids[idx]) for idx in valid_to_orig_idx]
             return resolved
-        if adapter_ids is not None:
-            return self.ensure_adapter_loaded(adapter_ids)
-        if self.config.enable_polylora:
-            return [self.config.polylora_base_adapter_id for _ in valid_to_orig_idx]
-        return None
+        # PolyLoRA takes one adapter id per batch row.
+        adapter_id = self.ensure_adapter_loaded(adapter_ids)
+        return [adapter_id for _ in valid_to_orig_idx]
+
+    def _adapter_run_kwargs(self, adapter_ids: List[str | None] | None) -> Dict[str, Any]:
+        """Model kwargs selecting one adapter per batch row.
+
+        With PolyLoRA the ids are resolved to GPU cache slots here, right before the
+        forward pass, and passed as the ``weight_indices`` tensor. Passing the id strings
+        into a compiled model would make torch.compile guard on them and recompile for
+        new adapter mixes.
+        """
+        if adapter_ids is None:
+            return {}
+        polylora_model = getattr(self, "_polylora_model", None)
+        if polylora_model is None:
+            return {"adapter_ids": adapter_ids}
+        return {"weight_indices": polylora_model.resolve_adapters(adapter_ids)}
 
     def _detect_relation_support(self) -> bool:
         """Detect if the model supports relation extraction."""
@@ -262,6 +288,12 @@ class GLiNERServer:
         """Precompile model for configured batch sizes."""
         logger.info("Precompiling model for batch sizes: %s", self.config.precompiled_batch_sizes)
 
+        # Each batch size is its own compiled entry (per-row Python lists such as token
+        # lengths are specialised on their length). Past the limit torch silently runs
+        # uncompiled, so leave room for every precompiled size.
+        torch._dynamo.config.recompile_limit = max(
+            torch._dynamo.config.recompile_limit, 2 * len(self.config.precompiled_batch_sizes)
+        )
         self.model.compile()
 
         dummy_labels = ["person", "organization", "location"]
@@ -434,8 +466,20 @@ class GLiNERServer:
                 return entity_results, relation_results
             return entity_results
 
+        num_texts = len(texts)
+        if not getattr(self, "_polylora_mixes_adapters", True) and isinstance(adapter_ids, list) and len(set(adapter_ids)) > 1:
+            return self._run_batch_per_adapter(
+                texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+            )
+        if not getattr(self.model, "is_runtime_model", False) and num_texts:
+            (texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids) = (
+                self._per_text_inputs(
+                    texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+                )
+            )
+
         if self._supports_relations:
-            return self._run_batch_relex(
+            entities, found_relations = self._run_batch_relex(
                 texts,
                 labels,
                 relations,
@@ -445,8 +489,96 @@ class GLiNERServer:
                 multi_label,
                 adapter_ids,
             )
-        else:
-            return self._run_batch_ner(texts, labels, threshold, flat_ner, multi_label, adapter_ids)
+            return entities[:num_texts], found_relations[:num_texts]
+        return self._run_batch_ner(texts, labels, threshold, flat_ner, multi_label, adapter_ids)[:num_texts]
+
+    def _run_batch_per_adapter(
+        self, texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+    ):
+        """Run a mixed-adapter batch as one sub-batch per adapter, in the original order."""
+        (_, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids) = (
+            self._per_text_inputs(  # one value per text, no padding (compilation is checked below)
+                texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids,
+                pad=False,
+            )
+        )
+        groups: Dict[Any, List[int]] = {}
+        for index, adapter_id in enumerate(adapter_ids):
+            groups.setdefault(adapter_id, []).append(index)
+
+        entities: List[Any] = [None] * len(texts)
+        found_relations: List[Any] = [None] * len(texts)
+        for adapter_id, indices in groups.items():
+            def pick(values):
+                return None if values is None else [values[i] for i in indices]
+
+            result = self._run_batch_internal(
+                pick(texts), pick(labels), pick(relations), pick(threshold), pick(relation_threshold),
+                pick(flat_ner), pick(multi_label), adapter_id,
+            )
+            group_entities, group_relations = result if self._supports_relations else (result, None)
+            for position, index in enumerate(indices):
+                entities[index] = group_entities[position]
+                if group_relations is not None:
+                    found_relations[index] = group_relations[position]
+        if self._supports_relations:
+            return entities, found_relations
+        return entities
+
+    def _compiled_batch_padding(self, num_texts: int) -> int:
+        """Filler rows that round a batch up to the next precompiled batch size."""
+        if not self.config.enable_compilation:
+            return 0
+        for size in self.config.precompiled_batch_sizes:
+            if size >= num_texts:
+                return size - num_texts
+        return 0
+
+    def _per_text_inputs(
+        self, texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids, pad=True
+    ) -> tuple:
+        """Give every argument one value per text, and pad compiled batches.
+
+        All callers (warmup, memory calibration, ``predict`` and Ray's batcher) then
+        reach the compiled model with inputs of the same structure, so warmup compiles
+        what requests use. With compilation on, the batch is padded with one-word filler
+        texts up to the next precompiled batch size, so request batches of any size reuse
+        the warmed-up graphs instead of recompiling. Callers drop the filler outputs.
+        """
+        num_texts = len(texts)
+
+        def per_text(value):
+            if isinstance(value, list):
+                if len(value) != num_texts:
+                    raise ValueError(f"Per-text values must have length {num_texts}, got {len(value)}")
+                return list(value)
+            return [value] * num_texts
+
+        labels = list(_labels_for_texts(labels, num_texts))
+        if relations is not None:
+            relations = (
+                per_text(relations)
+                if relations and isinstance(relations[0], (list, type(None)))
+                else [relations] * num_texts
+            )
+        threshold = per_text(threshold)
+        relation_threshold = per_text(relation_threshold)
+        flat_ner = per_text(flat_ner)
+        multi_label = per_text(multi_label)
+        adapter_ids = per_text(adapter_ids)
+
+        padding = self._compiled_batch_padding(num_texts) if pad else 0
+        if padding:
+            texts = list(texts) + [_FILLER_TEXT] * padding
+            labels += [labels[0]] * padding
+            if relations is not None:
+                relations += [relations[0]] * padding
+            threshold += [threshold[0]] * padding
+            relation_threshold += [relation_threshold[0]] * padding
+            flat_ner += [flat_ner[0]] * padding
+            multi_label += [multi_label[0]] * padding
+            adapter_ids += [None] * padding  # filler rows run on the base model
+        return texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
 
     def _run_batch_ner(
         self,
@@ -472,9 +604,7 @@ class GLiNERServer:
             label_names=prepared["label_names"],
         )
 
-        run_kwargs: Dict[str, Any] = {}
-        if resolved_adapter_ids is not None:
-            run_kwargs["adapter_ids"] = resolved_adapter_ids
+        run_kwargs = self._adapter_run_kwargs(resolved_adapter_ids)
 
         model_output = self.model.run_batch(
             batch,
@@ -532,9 +662,7 @@ class GLiNERServer:
             label_names=prepared["label_names"],
         )
 
-        run_kwargs: Dict[str, Any] = {}
-        if resolved_adapter_ids is not None:
-            run_kwargs["adapter_ids"] = resolved_adapter_ids
+        run_kwargs = self._adapter_run_kwargs(resolved_adapter_ids)
 
         model_output = self.model.run_batch(
             batch,

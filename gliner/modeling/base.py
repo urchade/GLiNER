@@ -49,6 +49,17 @@ from .loss_functions import span_dice_loss, cross_entropy_loss, focal_loss_with_
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 
+# Keyword arguments a model forward passes on to the text encoder. ``adapter_ids`` and
+# ``weight_indices`` select per-row adapters when the encoder is wrapped by PolyLoRA.
+ENCODER_KWARGS = (
+    "packing_config",
+    "pair_attention_mask",
+    "token_lengths",
+    "word_lengths",
+    "adapter_ids",
+    "weight_indices",
+)
+
 
 class BaseModel(ABC, nn.Module):
     """Abstract base class for all GLiNER models.
@@ -517,7 +528,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -1209,7 +1220,7 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -1573,7 +1584,7 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -1768,7 +1779,7 @@ class BiEncoderTokenModel(BaseBiEncoderModel, UniEncoderTokenModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -2207,7 +2218,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -2568,7 +2579,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
 
@@ -2966,7 +2977,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         """
         encoder_kwargs = {
             key: kwargs[key]
-            for key in ("packing_config", "pair_attention_mask", "token_lengths", "word_lengths")
+            for key in ENCODER_KWARGS
             if key in kwargs
         }
         word_lengths = encoder_kwargs.pop("word_lengths", None)
