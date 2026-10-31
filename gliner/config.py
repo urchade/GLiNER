@@ -157,6 +157,20 @@ class BaseGLiNERConfig(PretrainedConfig):
         neg_spans_ratio: float = 1.0,
         precomputed_prompts_mode: bool | None = None,
         id_to_classes: dict | None = None,
+        logit_temperature: float = 1.0,
+        logit_bias: float = 0.0,
+        rel_logit_temperature: float = 1.0,
+        rel_logit_bias: float = 0.0,
+        use_calibrator: bool = False,
+        calibrator_mode: str | None = None,
+        calibrator_word_dim: int | None = None,
+        calibrator_label_dim: int | None = None,
+        calibrator_proj_size: int = 128,
+        calibrator_hidden_size: int = 256,
+        calibrator_beta_max: float = 5.0,
+        calibrator_dropout: float = 0.1,
+        calibrator_use_bias: bool = True,
+        calibrator_candidate_threshold: float = 0.01,
         **kwargs,
     ):
         """Initialize BaseGLiNERConfig.
@@ -195,6 +209,24 @@ class BaseGLiNERConfig(PretrainedConfig):
             neg_spans_ratio (float, optional): Ratio of negative spans. Defaults to 1.0.
             precomputed_prompts_mode (Optional[bool]): Whether to use precomputed prompts. Defaults to None.
             id_to_classes (Optional[dict]): Mapping from class IDs to class names. Defaults to None.
+            logit_temperature (float, optional): Post-hoc calibration temperature for entity
+                logits; probabilities are ``sigmoid(logit / T + b)``. Defaults to 1.0.
+            logit_bias (float, optional): Post-hoc calibration bias for entity logits. Defaults to 0.0.
+            rel_logit_temperature (float, optional): Calibration temperature for relation logits.
+                Defaults to 1.0.
+            rel_logit_bias (float, optional): Calibration bias for relation logits. Defaults to 0.0.
+            use_calibrator (bool, optional): Whether a calibration head (see
+                ``gliner/modeling/calibrator.py``) is attached. Defaults to False.
+            calibrator_mode (str, optional): 'span' or 'token'; None infers it from the architecture.
+            calibrator_word_dim (int, optional): Word embedding size seen by the head. None uses hidden_size.
+            calibrator_label_dim (int, optional): Label embedding size seen by the head. None uses hidden_size.
+            calibrator_proj_size (int, optional): Projection size of span / label representations. Defaults to 128.
+            calibrator_hidden_size (int, optional): Hidden size of the head MLP. Defaults to 256.
+            calibrator_beta_max (float, optional): Upper bound of the inverse temperature. Defaults to 5.0.
+            calibrator_dropout (float, optional): Dropout in the head MLP. Defaults to 0.1.
+            calibrator_use_bias (bool, optional): Whether the head also predicts a logit bias. Defaults to True.
+            calibrator_candidate_threshold (float, optional): Pairs with raw probability below this
+                keep their raw logit. Defaults to 0.01.
             **kwargs: Additional keyword arguments passed to parent class.
         """
         super().__init__(**kwargs)
@@ -241,6 +273,20 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.neg_spans_ratio = neg_spans_ratio
         self.precomputed_prompts_mode = precomputed_prompts_mode
         self.id_to_classes = id_to_classes
+        self.logit_temperature = logit_temperature
+        self.logit_bias = logit_bias
+        self.rel_logit_temperature = rel_logit_temperature
+        self.rel_logit_bias = rel_logit_bias
+        self.use_calibrator = use_calibrator
+        self.calibrator_mode = calibrator_mode
+        self.calibrator_word_dim = calibrator_word_dim
+        self.calibrator_label_dim = calibrator_label_dim
+        self.calibrator_proj_size = calibrator_proj_size
+        self.calibrator_hidden_size = calibrator_hidden_size
+        self.calibrator_beta_max = calibrator_beta_max
+        self.calibrator_dropout = calibrator_dropout
+        self.calibrator_use_bias = calibrator_use_bias
+        self.calibrator_candidate_threshold = calibrator_candidate_threshold
 
 
 class UniEncoderConfig(BaseGLiNERConfig):

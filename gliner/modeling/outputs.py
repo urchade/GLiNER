@@ -42,6 +42,9 @@ class GLiNERBaseOutput(ModelOutput):
     span_mask: torch.Tensor | None = None
     span_logits: torch.FloatTensor | None = None
     span_embeddings: torch.FloatTensor | None = field(default=None, kw_only=True)
+    # Set when a calibration head is attached: ``logits`` / ``span_logits`` are then calibrated.
+    uncalibrated_logits: torch.FloatTensor | None = field(default=None, kw_only=True)
+    uncalibrated_span_logits: torch.FloatTensor | None = field(default=None, kw_only=True)
 
 
 @dataclass

@@ -1,4 +1,4 @@
-__version__ = "0.2.29"
+__version__ = "0.2.30"
 
 from .model import GLiNER
 from .config import GLiNERConfig, StreamingSpanConfig

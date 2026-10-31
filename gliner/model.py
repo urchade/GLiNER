@@ -6,6 +6,7 @@ from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Any, Dict, List, Tuple, Mapping, Optional
 from pathlib import Path
 from threading import RLock
+from contextlib import contextmanager
 
 import torch
 import transformers
@@ -90,6 +91,7 @@ from .data_processing import (
     UniEncoderTokenDecoderProcessor,
     RelationExtractionTokenProcessor,
 )
+from .modeling.calibrator import GLiNERCalibrator, calibrator_mode, apply_calibrator, build_calibrator
 from .data_processing.utils import prepare_streaming_span_idx
 from .data_processing.collator import (
     BiEncoderSpanDataCollator,
@@ -389,6 +391,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     data_processor_class: type = None
     data_collator_class: type = None
     decoder_class: type = None
+    # Whether a calibration head (gliner/modeling/calibrator.py) can be attached.
+    supports_calibrator: bool = True
 
     def __init__(
         self,
@@ -444,6 +448,109 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
 
         self._keys_to_ignore_on_save = None
         self._inference_packing_config: InferencePackingConfig | None = None
+
+        self._calibrator_hook = None
+        self.calibrator_enabled = True
+        if getattr(config, "use_calibrator", False):
+            if self.runtime_model:
+                warnings.warn(
+                    "This model has a calibration head, but it is not applied with the "
+                    f"'{self.runtime}' runtime; scores are uncalibrated.",
+                    stacklevel=2,
+                )
+            elif self.supports_calibrator:
+                self._attach_calibrator(build_calibrator(config))
+
+    # ------------------------------------------------------------------
+    # Calibration head
+    # ------------------------------------------------------------------
+
+    def _core_model(self) -> nn.Module:
+        """The underlying model, looking through torch.compile wrappers."""
+        return getattr(self.model, "_orig_mod", self.model)
+
+    @property
+    def calibrator(self) -> GLiNERCalibrator | None:
+        """The attached calibration head, or None."""
+        if self.runtime_model:
+            return None
+        return getattr(self._core_model(), "calibrator", None)
+
+    def add_calibrator(
+        self,
+        word_dim: int | None = None,
+        label_dim: int | None = None,
+        **calibrator_kwargs: Any,
+    ) -> GLiNERCalibrator:
+        """Attach a fresh calibration head and record it in the config.
+
+        The head starts as the identity (beta = 1, bias = 0); fit it with
+        ``gliner.calibration.fit_calibrator`` or ``scripts/calibrate.py --method head``.
+
+        Args:
+            word_dim: Size of ``words_embedding``. Defaults to ``config.hidden_size``.
+            label_dim: Size of ``prompts_embedding``. Defaults to ``config.hidden_size``.
+            **calibrator_kwargs: Overrides for ``calibrator_*`` config fields, e.g.
+                ``hidden_size=256``, ``beta_max=5.0``, ``use_bias=True``,
+                ``candidate_threshold=0.01``.
+
+        Returns:
+            The new calibrator module.
+        """
+        if self.runtime_model:
+            raise RuntimeError("A calibration head can only be attached to a PyTorch-backed model.")
+        if not self.supports_calibrator:
+            raise NotImplementedError(f"{type(self).__name__} does not support a calibration head.")
+        for key, value in calibrator_kwargs.items():
+            attr = f"calibrator_{key}"
+            if not hasattr(self.config, attr):
+                raise TypeError(f"Unknown calibrator option '{key}'")
+            setattr(self.config, attr, value)
+        self.config.calibrator_word_dim = word_dim or self.config.calibrator_word_dim or self.config.hidden_size
+        self.config.calibrator_label_dim = label_dim or self.config.calibrator_label_dim or self.config.hidden_size
+        self.config.calibrator_mode = self.config.calibrator_mode or calibrator_mode(self.config)
+        self.config.use_calibrator = True
+
+        reference = next(self._core_model().parameters())
+        calibrator = build_calibrator(self.config).to(device=reference.device)
+        self._attach_calibrator(calibrator)
+        return calibrator
+
+    def remove_calibrator(self) -> None:
+        """Detach the calibration head and mark the config as uncalibrated."""
+        core = self._core_model()
+        if hasattr(core, "calibrator"):
+            del core.calibrator
+        if self._calibrator_hook is not None:
+            self._calibrator_hook.remove()
+            self._calibrator_hook = None
+        self.config.use_calibrator = False
+
+    def _attach_calibrator(self, calibrator: GLiNERCalibrator) -> None:
+        # Registered as a child of the core model so save_pretrained / from_pretrained carry it.
+        self._core_model().calibrator = calibrator
+        if self._calibrator_hook is None:
+            # A forward hook covers every inference path that calls self.model(...).
+            self._calibrator_hook = self._core_model().register_forward_hook(self._calibrator_forward_hook)
+
+    def _calibrator_forward_hook(self, module: nn.Module, args: Any, output: Any) -> Any:
+        calibrator = getattr(module, "calibrator", None)
+        if calibrator is None or not self.calibrator_enabled or module.training:
+            return None
+        # Training / loss computation (labels given) always sees raw logits.
+        if getattr(output, "loss", None) is not None or not hasattr(output, "logits"):
+            return None
+        return apply_calibrator(calibrator, output)
+
+    @contextmanager
+    def calibrator_disabled(self):
+        """Context manager that temporarily returns uncalibrated logits."""
+        previous = self.calibrator_enabled
+        self.calibrator_enabled = False
+        try:
+            yield self
+        finally:
+            self.calibrator_enabled = previous
 
     @abstractmethod
     def _create_model(self, config, backbone_from_pretrained, cache_dir, **kwargs):
@@ -2493,7 +2600,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             bf16: Whether to use bfloat16.
             dataloader_num_workers: Number of dataloader workers.
             report_to: Where to report metrics.
-            **kwargs: Additional training arguments.
+            **kwargs: Additional training arguments, e.g. ``loss_type``
+                ('focal', 'bce', 'dice', 'ce', 'ce_calibrated') and ``ce_calib_weight``.
 
         Returns:
             TrainingArguments instance.
@@ -3922,6 +4030,9 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
 
 class StreamingSpanGLiNER(BaseEncoderGLiNER):
     """Causal-decoder span model with optional per-session streaming state."""
+
+    # Session logits are merged across calls, so a per-call head would be inconsistent.
+    supports_calibrator = False
 
     config_class = StreamingSpanConfig
     model_class = StreamingSpanModel

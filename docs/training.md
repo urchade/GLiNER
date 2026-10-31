@@ -373,6 +373,70 @@ Run training:
 python train.py --config config.yaml
 ```
 
+## Loss Functions and Calibration
+
+Pick the loss with `loss_type` (in `create_training_args`, `train_model` kwargs or `training.loss_type` in the YAML config):
+
+| `loss_type` | Description |
+|---|---|
+| `focal` (default) | Per-(span, class) BCE with optional focal weighting (`focal_loss_alpha`, `focal_loss_gamma`). |
+| `bce` | Same as `focal` with `alpha=-1, gamma=0`. |
+| `dice` | Self-adjusting Dice loss (`dice_gamma`); span models only. |
+| `ce` | Multi-label cross-entropy against a fixed "no entity" logit at 0: every positive class must beat it, and it must beat every negative class. |
+| `ce_calibrated` | `ce` plus `ce_calib_weight` × mean per-class BCE, which keeps every sigmoid probability calibrated. |
+
+Because the "no entity" logit is fixed at 0, models trained with `ce` / `ce_calibrated` keep the usual `sigmoid(score) > threshold` decoding. These losses ignore `focal_loss_*`, `label_smoothing` and `focal_loss_prob_margin`, and support every architecture (span, token, bi-encoder, decoder, relation extraction). The relation adjacency loss always stays BCE.
+
+```python
+model.train_model(
+    train_dataset=train_data,
+    eval_dataset=None,
+    output_dir="models",
+    loss_type="ce_calibrated",
+    ce_calib_weight=0.5,
+)
+```
+
+### Post-hoc calibration of a trained model
+
+`scripts/calibrate.py` freezes a trained model and fits a temperature `T` (and, with `--fit-bias`, a bias `b`) on a held-out dataset in GLiNER format, so that `sigmoid(logit / T + b)` matches how often predictions are correct:
+
+```bash
+python scripts/calibrate.py --model models/checkpoint-1000 --data dev.json --output-dir models/calibrated
+```
+
+The weights are untouched. The values are stored in the config as `logit_temperature` / `logit_bias` (and `rel_logit_temperature` / `rel_logit_bias` for relations, which can be set by hand), and every decoder applies them. With the temperature alone, predictions at threshold 0.5 stay the same; scores and the meaning of other thresholds change. A bias also moves the 0.5 boundary. The script reports NLL, Brier score, ECE and entry-level precision/recall/F1 before and after, and writes `calibration_report.json` next to the model.
+
+### Calibration head
+
+`--method head` fits a small calibration head, adapted from GLiClass, with the backbone frozen. For every *candidate* (span, label) pair (raw probability at least `--candidate-threshold`, default 0.01), an MLP looks at:
+
+- the span's boundary and mean word embeddings,
+- the label embedding,
+- score statistics: the logit, its gap to the best and mean class, span width, and the number of labels.
+
+It predicts an inverse temperature β and a bias b, and the calibrated score is `sigmoid(β · logit + b)`. Pairs below the threshold keep their raw score. For token-level models, the pair is (word, label), and β and b scale its start / end / inside logits together.
+
+```bash
+python scripts/calibrate.py --model models/checkpoint-1000 --data dev.json --eval-data test.json \
+    --method head --output-dir models/calibrated
+```
+
+How the head is fitted:
+
+- It starts from a global Platt fit on the candidates and is pulled back toward it by a prior (`--prior-weight`, `--bias-prior-weight`).
+- It trains on 80% of `--data` and early-stops on the remaining 20% (`--eval-ratio`).
+- `--balance` (off by default) reweights candidates by raw confidence bin and correctness, as in GLiClass. On NER data it made held-out NLL worse.
+
+The script reports, for the raw model, global scaling and the head, which share of decoded spans in each score bin are correct, plus the calibration error (ECE).
+
+How the head is used:
+
+- It is saved with the model (`use_calibrator` and `calibrator_*` in the config, weights under `calibrator.*`) and applied on every PyTorch inference path.
+- Raw logits stay available as `uncalibrated_logits` on the model output.
+- `model.calibrator_disabled()` switches it off temporarily; `model.add_calibrator()` and `model.remove_calibrator()` attach and detach it.
+- It is not applied during training (when labels are passed), with the ONNX / OpenVINO runtimes, or for streaming models.
+
 ## Best Practices
 
 1. **Start with a pretrained model**: Fine-tuning is almost always better than training from scratch

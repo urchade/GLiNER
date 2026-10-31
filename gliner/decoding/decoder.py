@@ -6,6 +6,7 @@ from dataclasses import field, dataclass
 import torch
 
 from .utils import has_overlapping, has_overlapping_nested
+from ..calibration import calibrated_sigmoid
 
 
 def _expand_batch_param(value, batch_size: int, name: str) -> list:
@@ -640,7 +641,7 @@ class BaseSpanDecoder(BaseDecoder):
             List[List[Span]]: For each sample in batch, list of Span objects.
         """
         B, _, K, _ = model_output.shape  # B, L, K, C
-        probs = torch.sigmoid(model_output)
+        probs = calibrated_sigmoid(model_output, self.config)
 
         span_label_maps = [{} for _ in range(B)]
 
@@ -717,7 +718,7 @@ class SpanDecoder(BaseSpanDecoder):
         input_spans=None,
     ):
         """Decode logits paired with explicit absolute span boundaries."""
-        probabilities = torch.sigmoid(model_output)
+        probabilities = calibrated_sigmoid(model_output, self.config)
         if probabilities.dim() == 4:
             probabilities = probabilities.flatten(1, 2)
         span_idx = span_idx.view(span_idx.size(0), -1, 2)
@@ -1039,7 +1040,7 @@ class SpanGenerativeDecoder(BaseSpanDecoder):
             List[List[tuple]]: For each sample, list of span tuples with generated labels.
         """
         B, _, K, _ = model_output.shape  # B, L, K, C
-        probs = torch.sigmoid(model_output)
+        probs = calibrated_sigmoid(model_output, self.config)
 
         # Handle prompt mode: update id_to_classes with generated labels
         if self.config.decoder_mode == "prompt":
@@ -1149,6 +1150,7 @@ def _decode_relations_batch(
     spans: List[List[tuple]],
     rel_id_to_classes: Dict[int, str] | List[Dict[int, str]],
     batch_size: int,
+    config: Any = None,
 ) -> List[List[tuple]]:
     """Vectorized relation decoding shared by Span and Token relex decoders.
 
@@ -1164,6 +1166,7 @@ def _decode_relations_batch(
         spans: Per-sample span lists used for bounds checking.
         rel_id_to_classes: Class-id -> label mapping (global dict or per-sample list).
         batch_size: Number of samples in the batch.
+        config: Optional model config carrying relation calibration (temperature / bias).
 
     Returns:
         List of relation lists, one per sample.  Each relation is a tuple
@@ -1176,7 +1179,7 @@ def _decode_relations_batch(
     ]
 
     # 1. Sigmoid — one kernel
-    rel_probs = torch.sigmoid(rel_logits)
+    rel_probs = calibrated_sigmoid(rel_logits, config, kind="relation")
 
     num_classes = rel_probs.shape[-1]
     if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
@@ -1386,7 +1389,7 @@ class SpanRelexDecoder(BaseSpanDecoder):
 
         rel_id_to_class_per_item = [self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)]
 
-        rel_probs = torch.sigmoid(rel_logits)
+        rel_probs = calibrated_sigmoid(rel_logits, self.config, kind="relation")
         num_classes = rel_probs.shape[-1]
         if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
             valid_classes = _get_valid_classes_mask(num_classes, rel_id_to_class_per_item, rel_probs.device)
@@ -1558,7 +1561,7 @@ class TokenDecoder(BaseDecoder):
         Returns:
             List[torch.Tensor]: List of tensors containing indices above threshold.
         """
-        scores = torch.sigmoid(scores)
+        scores = calibrated_sigmoid(scores, self.config)
         return [k.tolist() for k in torch.where(scores > threshold)]
 
     def _calculate_span_score(
@@ -1669,7 +1672,7 @@ class TokenDecoder(BaseDecoder):
         spans = []
 
         # Apply sigmoid to get probabilities
-        span_probs = torch.sigmoid(span_logits)
+        span_probs = calibrated_sigmoid(span_logits, self.config)
 
         # Batch CPU transfer to avoid per-element .item() sync
         span_idx_cpu = span_idx.tolist()
@@ -1820,9 +1823,9 @@ class TokenDecoder(BaseDecoder):
                 span_scores = self._calculate_span_score(
                     self._get_indices_above_threshold(start_i, threshold_i),
                     self._get_indices_above_threshold(end_i, threshold_i),
-                    torch.sigmoid(inside_i),
-                    torch.sigmoid(start_i),
-                    torch.sigmoid(end_i),
+                    calibrated_sigmoid(inside_i, self.config),
+                    calibrated_sigmoid(start_i, self.config),
+                    calibrated_sigmoid(end_i, self.config),
                     id_to_class_i,
                     threshold_i,
                     input_spans_i=input_spans_i,
@@ -1940,7 +1943,7 @@ class TokenRelexDecoder(TokenDecoder):
 
         rel_id_to_class_per_item = [self._get_id_to_class_for_sample(rel_id_to_classes, i) for i in range(batch_size)]
 
-        rel_probs = torch.sigmoid(rel_logits)
+        rel_probs = calibrated_sigmoid(rel_logits, self.config, kind="relation")
         num_classes = rel_probs.shape[-1]
         if any(len(mapping) < num_classes for mapping in rel_id_to_class_per_item):
             valid_classes = _get_valid_classes_mask(num_classes, rel_id_to_class_per_item, rel_probs.device)
@@ -2195,7 +2198,7 @@ class TokenGenerativeDecoder(TokenDecoder, SpanGenerativeDecoder):
         multi_label_values = _expand_batch_param(multi_label, batch_size, "multi_label")
         spans = []
 
-        span_probs = torch.sigmoid(span_logits)
+        span_probs = calibrated_sigmoid(span_logits, self.config)
 
         # Batch CPU transfer to avoid per-element .item() sync
         span_idx_cpu = span_idx.tolist()

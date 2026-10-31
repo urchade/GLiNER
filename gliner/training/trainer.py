@@ -72,6 +72,13 @@ class TrainingArguments(transformers.TrainingArguments):
         negatives: Ratio of negative samples to use. Defaults to 1.0.
         masking: Masking strategy for training ('global' or other strategies).
             Defaults to 'global'.
+        loss_type: Loss function: 'focal' (default), 'bce', 'dice', 'ce'
+            (multi-label cross-entropy against a fixed "no entity" logit) or
+            'ce_calibrated' ('ce' plus a per-class BCE calibration term).
+        use_span_width_weight: Boost positive-span losses by span width.
+        dice_gamma: Self-adjustment exponent for the Dice loss.
+        ce_calib_weight: Weight of the BCE calibration term for
+            loss_type='ce_calibrated'. Defaults to 0.5.
         warmup_ratio: Fraction of training steps used for warmup when
             warmup_steps is zero. Retained for compatibility with Transformers v4.
     """
@@ -92,9 +99,13 @@ class TrainingArguments(transformers.TrainingArguments):
     loss_type: str | None = "focal"
     use_span_width_weight: bool | None = False
     dice_gamma: float | None = 1.0
+    ce_calib_weight: float | None = 0.5
     warmup_ratio: float = 0.0
 
     def __post_init__(self):
+        valid_loss_types = ("focal", "bce", "dice", "ce", "ce_calibrated")
+        if self.loss_type is not None and self.loss_type not in valid_loss_types:
+            raise ValueError(f"loss_type must be one of {valid_loss_types}, got '{self.loss_type}'")
         if not 0.0 <= self.warmup_ratio <= 1.0:
             raise ValueError("warmup_ratio must lie in range [0, 1]")
         # Transformers 5.x maps the deprecated warmup_ratio onto warmup_steps
@@ -235,6 +246,7 @@ class Trainer(transformers.Trainer):
             loss_type=self.args.loss_type,
             use_span_width_weight=self.args.use_span_width_weight,
             dice_gamma=self.args.dice_gamma,
+            ce_calib_weight=self.args.ce_calib_weight,
             **inputs,
         )
 
