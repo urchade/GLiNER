@@ -1,0 +1,7 @@
+gliner.modeling.calibrator module
+=================================
+
+.. automodule:: gliner.modeling.calibrator
+   :members:
+   :undoc-members:
+   :show-inheritance:

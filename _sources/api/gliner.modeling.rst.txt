@@ -22,6 +22,7 @@ Submodules
 
    gliner.modeling.base
    gliner.modeling.cache
+   gliner.modeling.calibrator
    gliner.modeling.context_encoders
    gliner.modeling.decoder
    gliner.modeling.encoder

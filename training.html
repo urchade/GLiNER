@@ -84,6 +84,7 @@ data-aria-dark="Switch to auto color mode">
 </li>
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.base.html">gliner.modeling.base module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.cache.html">gliner.modeling.cache module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.calibrator.html">gliner.modeling.calibrator module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.context_encoders.html">gliner.modeling.context_encoders module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.decoder.html">gliner.modeling.decoder module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/gliner.modeling.encoder.html">gliner.modeling.encoder module</a></li>
@@ -157,6 +158,11 @@ data-aria-dark="Switch to auto color mode">
 <li><a class="reference internal" href="#training-configuration">Training Configuration</a><ul>
 <li><a class="reference internal" href="#using-configuration-files">Using Configuration Files</a></li>
 <li><a class="reference internal" href="#training-script">Training Script</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#loss-functions-and-calibration">Loss Functions and Calibration</a><ul>
+<li><a class="reference internal" href="#post-hoc-calibration-of-a-trained-model">Post-hoc calibration of a trained model</a></li>
+<li><a class="reference internal" href="#calibration-head">Calibration head</a></li>
 </ul>
 </li>
 <li><a class="reference internal" href="#best-practices">Best Practices</a></li>
@@ -560,6 +566,82 @@ empty. To train a negative example against specific entity types, supply
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>train.py<span class="w"> </span>--config<span class="w"> </span>config.yaml
 </span></pre></div>
 </div>
+</section>
+</section>
+<section id="loss-functions-and-calibration">
+<h2>Loss Functions and Calibration<a class="headerlink" href="#loss-functions-and-calibration" title="Link to this heading">¶</a></h2>
+<p>Pick the loss with <code class="docutils literal notranslate"><span class="pre">loss_type</span></code> (in <code class="docutils literal notranslate"><span class="pre">create_training_args</span></code>, <code class="docutils literal notranslate"><span class="pre">train_model</span></code> kwargs or <code class="docutils literal notranslate"><span class="pre">training.loss_type</span></code> in the YAML config):</p>
+<div class="table-wrapper colwidths-auto docutils container">
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">loss_type</span></code></p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">focal</span></code> (default)</p></td>
+<td><p>Per-(span, class) BCE with optional focal weighting (<code class="docutils literal notranslate"><span class="pre">focal_loss_alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">focal_loss_gamma</span></code>).</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">bce</span></code></p></td>
+<td><p>Same as <code class="docutils literal notranslate"><span class="pre">focal</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha=-1,</span> <span class="pre">gamma=0</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dice</span></code></p></td>
+<td><p>Self-adjusting Dice loss (<code class="docutils literal notranslate"><span class="pre">dice_gamma</span></code>); span models only.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ce</span></code></p></td>
+<td><p>Multi-label cross-entropy against a fixed “no entity” logit at 0: every positive class must beat it, and it must beat every negative class.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ce_calibrated</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ce</span></code> plus <code class="docutils literal notranslate"><span class="pre">ce_calib_weight</span></code> × mean per-class BCE, which keeps every sigmoid probability calibrated.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Because the “no entity” logit is fixed at 0, models trained with <code class="docutils literal notranslate"><span class="pre">ce</span></code> / <code class="docutils literal notranslate"><span class="pre">ce_calibrated</span></code> keep the usual <code class="docutils literal notranslate"><span class="pre">sigmoid(score)</span> <span class="pre">&gt;</span> <span class="pre">threshold</span></code> decoding. These losses ignore <code class="docutils literal notranslate"><span class="pre">focal_loss_*</span></code>, <code class="docutils literal notranslate"><span class="pre">label_smoothing</span></code> and <code class="docutils literal notranslate"><span class="pre">focal_loss_prob_margin</span></code>, and support every architecture (span, token, bi-encoder, decoder, relation extraction). The relation adjacency loss always stays BCE.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span data-line="1"><span class="n">model</span><span class="o">.</span><span class="n">train_model</span><span class="p">(</span>
+</span><span data-line="2">    <span class="n">train_dataset</span><span class="o">=</span><span class="n">train_data</span><span class="p">,</span>
+</span><span data-line="3">    <span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+</span><span data-line="4">    <span class="n">output_dir</span><span class="o">=</span><span class="s2">"models"</span><span class="p">,</span>
+</span><span data-line="5">    <span class="n">loss_type</span><span class="o">=</span><span class="s2">"ce_calibrated"</span><span class="p">,</span>
+</span><span data-line="6">    <span class="n">ce_calib_weight</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+</span><span data-line="7"><span class="p">)</span>
+</span></pre></div>
+</div>
+<section id="post-hoc-calibration-of-a-trained-model">
+<h3>Post-hoc calibration of a trained model<a class="headerlink" href="#post-hoc-calibration-of-a-trained-model" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">scripts/calibrate.py</span></code> freezes a trained model and fits a temperature <code class="docutils literal notranslate"><span class="pre">T</span></code> (and, with <code class="docutils literal notranslate"><span class="pre">--fit-bias</span></code>, a bias <code class="docutils literal notranslate"><span class="pre">b</span></code>) on a held-out dataset in GLiNER format, so that <code class="docutils literal notranslate"><span class="pre">sigmoid(logit</span> <span class="pre">/</span> <span class="pre">T</span> <span class="pre">+</span> <span class="pre">b)</span></code> matches how often predictions are correct:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>scripts/calibrate.py<span class="w"> </span>--model<span class="w"> </span>models/checkpoint-1000<span class="w"> </span>--data<span class="w"> </span>dev.json<span class="w"> </span>--output-dir<span class="w"> </span>models/calibrated
+</span></pre></div>
+</div>
+<p>The weights are untouched. The values are stored in the config as <code class="docutils literal notranslate"><span class="pre">logit_temperature</span></code> / <code class="docutils literal notranslate"><span class="pre">logit_bias</span></code> (and <code class="docutils literal notranslate"><span class="pre">rel_logit_temperature</span></code> / <code class="docutils literal notranslate"><span class="pre">rel_logit_bias</span></code> for relations, which can be set by hand), and every decoder applies them. With the temperature alone, predictions at threshold 0.5 stay the same; scores and the meaning of other thresholds change. A bias also moves the 0.5 boundary. The script reports NLL, Brier score, ECE and entry-level precision/recall/F1 before and after, and writes <code class="docutils literal notranslate"><span class="pre">calibration_report.json</span></code> next to the model.</p>
+</section>
+<section id="calibration-head">
+<h3>Calibration head<a class="headerlink" href="#calibration-head" title="Link to this heading">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">--method</span> <span class="pre">head</span></code> fits a small calibration head, adapted from GLiClass, with the backbone frozen. For every <em>candidate</em> (span, label) pair (raw probability at least <code class="docutils literal notranslate"><span class="pre">--candidate-threshold</span></code>, default 0.01), an MLP looks at:</p>
+<ul class="simple">
+<li><p>the span’s boundary and mean word embeddings,</p></li>
+<li><p>the label embedding,</p></li>
+<li><p>score statistics: the logit, its gap to the best and mean class, span width, and the number of labels.</p></li>
+</ul>
+<p>It predicts an inverse temperature β and a bias b, and the calibrated score is <code class="docutils literal notranslate"><span class="pre">sigmoid(β</span> <span class="pre">·</span> <span class="pre">logit</span> <span class="pre">+</span> <span class="pre">b)</span></code>. Pairs below the threshold keep their raw score. For token-level models, the pair is (word, label), and β and b scale its start / end / inside logits together.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span data-line="1">python<span class="w"> </span>scripts/calibrate.py<span class="w"> </span>--model<span class="w"> </span>models/checkpoint-1000<span class="w"> </span>--data<span class="w"> </span>dev.json<span class="w"> </span>--eval-data<span class="w"> </span>test.json<span class="w"> </span><span class="se">\</span>
+</span><span data-line="2"><span class="w">    </span>--method<span class="w"> </span>head<span class="w"> </span>--output-dir<span class="w"> </span>models/calibrated
+</span></pre></div>
+</div>
+<p>How the head is fitted:</p>
+<ul class="simple">
+<li><p>It starts from a global Platt fit on the candidates and is pulled back toward it by a prior (<code class="docutils literal notranslate"><span class="pre">--prior-weight</span></code>, <code class="docutils literal notranslate"><span class="pre">--bias-prior-weight</span></code>).</p></li>
+<li><p>It trains on 80% of <code class="docutils literal notranslate"><span class="pre">--data</span></code> and early-stops on the remaining 20% (<code class="docutils literal notranslate"><span class="pre">--eval-ratio</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">--balance</span></code> (off by default) reweights candidates by raw confidence bin and correctness, as in GLiClass. On NER data it made held-out NLL worse.</p></li>
+</ul>
+<p>The script reports, for the raw model, global scaling and the head, which share of decoded spans in each score bin are correct, plus the calibration error (ECE).</p>
+<p>How the head is used:</p>
+<ul class="simple">
+<li><p>It is saved with the model (<code class="docutils literal notranslate"><span class="pre">use_calibrator</span></code> and <code class="docutils literal notranslate"><span class="pre">calibrator_*</span></code> in the config, weights under <code class="docutils literal notranslate"><span class="pre">calibrator.*</span></code>) and applied on every PyTorch inference path.</p></li>
+<li><p>Raw logits stay available as <code class="docutils literal notranslate"><span class="pre">uncalibrated_logits</span></code> on the model output.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">model.calibrator_disabled()</span></code> switches it off temporarily; <code class="docutils literal notranslate"><span class="pre">model.add_calibrator()</span></code> and <code class="docutils literal notranslate"><span class="pre">model.remove_calibrator()</span></code> attach and detach it.</p></li>
+<li><p>It is not applied during training (when labels are passed), with the ONNX / OpenVINO runtimes, or for streaming models.</p></li>
+</ul>
 </section>
 </section>
 <section id="best-practices">

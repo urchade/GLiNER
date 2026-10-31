@@ -27,6 +27,7 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   gliner.calibration
    gliner.config
    gliner.infer_packing
    gliner.model
