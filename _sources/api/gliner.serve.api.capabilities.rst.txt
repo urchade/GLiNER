@@ -1,0 +1,7 @@
+gliner.serve.api.capabilities module
+====================================
+
+.. automodule:: gliner.serve.api.capabilities
+   :members:
+   :undoc-members:
+   :show-inheritance:

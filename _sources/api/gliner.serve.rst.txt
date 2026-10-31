@@ -6,6 +6,14 @@ gliner.serve package
    :undoc-members:
    :show-inheritance:
 
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.serve.api
+
 Submodules
 ----------
 
@@ -16,3 +24,4 @@ Submodules
    gliner.serve.config
    gliner.serve.memory
    gliner.serve.server
+   gliner.serve.stats

@@ -1,0 +1,20 @@
+gliner.serve.api package
+========================
+
+.. automodule:: gliner.serve.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   gliner.serve.api.capabilities
+   gliner.serve.api.engine
+   gliner.serve.api.errors
+   gliner.serve.api.labels
+   gliner.serve.api.render
+   gliner.serve.api.request

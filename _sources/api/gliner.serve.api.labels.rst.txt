@@ -1,0 +1,7 @@
+gliner.serve.api.labels module
+==============================
+
+.. automodule:: gliner.serve.api.labels
+   :members:
+   :undoc-members:
+   :show-inheritance:

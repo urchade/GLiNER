@@ -1,0 +1,7 @@
+gliner.serve.stats module
+=========================
+
+.. automodule:: gliner.serve.stats
+   :members:
+   :undoc-members:
+   :show-inheritance:

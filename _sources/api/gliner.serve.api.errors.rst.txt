@@ -1,0 +1,7 @@
+gliner.serve.api.errors module
+==============================
+
+.. automodule:: gliner.serve.api.errors
+   :members:
+   :undoc-members:
+   :show-inheritance:
