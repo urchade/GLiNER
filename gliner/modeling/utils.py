@@ -474,6 +474,8 @@ def extract_spans_from_tokens(
     scores: torch.Tensor,
     labels: torch.Tensor | None = None,
     threshold: float = 0.5,
+    word_mask: torch.Tensor | None = None,
+    class_mask: torch.Tensor | None = None,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Extract entity spans from BIO-style token predictions.
@@ -482,6 +484,11 @@ def extract_spans_from_tokens(
         scores: (B, W, C, 3) - logits for [start, end, inside]
         labels: Optional (B, W, C, 3) - ground truth labels
         threshold: Confidence threshold (used when labels is None)
+        word_mask: Optional (B, W) - real (non-padding) words. Without it, padded
+            word positions of shorter rows can form spans.
+        class_mask: Optional (B, C) - real (non-padding) entity types. In a batch
+            whose rows have different label counts, padded types of a row can
+            score above the threshold and form spans at every position.
 
     Returns:
         span_idx: (B, N, 2) - [start, end] indices, padded
@@ -499,6 +506,12 @@ def extract_spans_from_tokens(
         start_mask = probs[..., 0] > threshold
         end_mask = probs[..., 1] > threshold
         inside_mask = probs[..., 2] > threshold
+        valid = torch.ones_like(start_mask)
+        if word_mask is not None:
+            valid = valid & word_mask[:, : scores.size(1), None].bool()
+        if class_mask is not None:
+            valid = valid & class_mask[:, None, : scores.size(2)].bool()
+        start_mask, end_mask, inside_mask = start_mask & valid, end_mask & valid, inside_mask & valid
 
     # Prepend zeros for cumsum indexing
     inside_cumsum = torch.nn.functional.pad(inside_mask.long().cumsum(dim=1), (0, 0, 1, 0))  # (B, W+1, C)

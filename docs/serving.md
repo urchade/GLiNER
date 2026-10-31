@@ -441,6 +441,132 @@ curl -X POST http://localhost:8000/gliner \
 For NER-only models the `"relations"` key is omitted; passing `relations=`
 to such a model is a no-op.
 
+## Analyze API (`/v1/analyze`)
+
+A second HTTP API runs next to the `POST /gliner` endpoint above: **one `input`, many named tasks**. It follows the Knowledgator unified analyze contract, limited to the two task types GLiNER can run: `span` (NER) and, on relation-extraction checkpoints, `relation`. The `POST /gliner` endpoint is unchanged.
+
+| Method | Path | Purpose |
+|---|---|---|
+| `POST` | `/gliner/v1/analyze` | One input, many tasks |
+| `POST` | `/gliner/v1/analyze/batch` | Many independent items |
+| `GET` | `/gliner/v1/models` | Served model id and aliases |
+| `GET` | `/gliner/v1/models/{model_id}/capabilities` | Task types, default thresholds, limits |
+| `GET` | `/gliner/v1/health`, `/gliner/v1/ready` | Liveness and readiness |
+| `GET` | `/gliner/v1/adapter-cache` | PolyLoRA adapter residency |
+
+### Request
+
+```bash
+curl -X POST http://localhost:8000/gliner/v1/analyze \
+  -H "Content-Type: application/json" \
+  -d '{
+        "model": "knowledgator/gliner-relex-base-v1.0",
+        "input": "Bill Gates founded Microsoft in 1975.",
+        "tasks": {
+          "people": {"type": "span", "labels": ["person"], "threshold": 0.3},
+          "orgs":   {"type": "span", "labels": {"organization": {"title": "company", "metadata": {"id": "ORG"}}},
+                     "flat_ner": false},
+          "edges":  {"type": "relation", "labels": ["founded"],
+                     "entity_labels": ["person", "organization"],
+                     "threshold": 0.5, "entity_threshold": 0.4}
+        },
+        "options": {"adapter_id": "customer-a", "include_usage": true}
+      }'
+```
+
+```json
+{
+  "model": "knowledgator/gliner-relex-base-v1.0",
+  "results": {
+    "people": {"type": "span", "threshold": 0.3,
+               "value": [{"label": "person", "text": "Bill Gates", "start": 0, "end": 10, "source": "", "score": 0.99}]},
+    "orgs":   {"type": "span", "threshold": 0.5,
+               "value": [{"label": "organization", "text": "Microsoft", "start": 19, "end": 28, "source": "", "score": 0.99}]},
+    "edges":  {"type": "relation", "threshold": 0.5, "entity_threshold": 0.4,
+               "value": [{"head": {"label": "person", "text": "Bill Gates", "start": 0, "end": 10, "source": ""},
+                          "relation": "founded",
+                          "tail": {"label": "organization", "text": "Microsoft", "start": 19, "end": 28, "source": ""},
+                          "score": 0.99}]}
+  },
+  "usage": {"rows": 3, "tokens": 25, "latency_ms": 40.1}
+}
+```
+
+`model` is required and must be the served id (`--model-id`, default `--model`) or an alias (`--model-aliases`).
+
+### Task fields
+
+| Field | `span` | `relation` | Meaning |
+|---|---|---|---|
+| `labels` | required | required | Entity types (`span`) or relation types (`relation`): a string, a list, `{id: description}` or `{id: {title, description, metadata}}` |
+| `entity_labels` | – | required | Entity types the relations connect |
+| `threshold` | entity cutoff | relation cutoff | Per task; defaults to `--default-threshold` / `--default-relation-threshold` |
+| `entity_threshold` | – | entity cutoff | Defaults to `--default-threshold` |
+| `flat_ner` (alias `flat`) | default `true` | default `true` | Forbid overlapping spans |
+| `multi_label` | default `false` | default `false` | Let one span carry several labels |
+
+Options: `adapter_id` (PolyLoRA adapter for every task of the request), `include_usage`, `include_label_definitions`.
+
+Labels: the model sees the label's `title` (or its id when there is no title), following `--label-template` (default `{title}`; for example `"{title}: {description}"`). Results always report the label **id**. `metadata` is never shown to the model; it comes back with `include_label_definitions`.
+
+### Structured input
+
+`input` can be JSON. It is rendered into one Markdown text, with keys as headings, and every located result reports `source`, the JSON Pointer of the field it came from. Offsets are relative to that field:
+
+```json
+"input": {"ticket": "Satya Nadella emailed Microsoft support.", "customer": {"name": "Bill Gates"}}
+```
+
+returns spans such as `{"text": "Bill Gates", "start": 0, "end": 10, "source": "/customer/name", ...}`. Spans that overlap a heading or cross two fields are dropped. Media nodes (`$type`) are rejected with `UNSUPPORTED_MODALITY`.
+
+### Batching
+
+Each task becomes one model row: the input with the task's own labels, thresholds and flags. Tasks with different label sets are not merged into one row, because GLiNER attends over the labels and the text together, so merging would change predictions. Instead, all rows of a request go through Ray Serve's dynamic batcher together, alongside the rows of concurrent requests and `POST /gliner` calls. A request with three tasks costs three rows of a shared forward pass. Identical rows are run once, both within a request and across the items of a `/v1/analyze/batch` request.
+
+Inputs longer than the model window (`--max-model-len` words minus the label prompt) run over overlapping windows (`--analyze-window-overlap`, default 0.25), and the results are merged.
+
+### Errors
+
+Requests are validated in full before anything runs. Errors carry a code and the JSON path of the problem:
+
+```json
+{"error": {"code": "UNSUPPORTED_TASK_TYPE", "message": "GLiNER does not serve 'classify' tasks", "path": "/tasks/intent/type"}}
+```
+
+| Code | HTTP | When |
+|---|---|---|
+| `INVALID_REQUEST` | 422 | Malformed request, unknown field, bad threshold, missing labels |
+| `UNSUPPORTED_TASK_TYPE` | 422 | Any task type other than `span`/`relation`; `relation` on an NER-only model |
+| `UNSUPPORTED_FIELD` | 422 | `instruction` (GLiNER is not instruction-conditioned), label `examples`/`aliases` |
+| `UNSUPPORTED_MODALITY` | 422 | Image, audio or layout input |
+| `INPUT_TOO_LONG` | 413 | Rendered input over `--max-input-chars` |
+| `PAYLOAD_TOO_LARGE` | 413 | Body over `--max-request-bytes` |
+| `MODEL_NOT_FOUND` | 404 | Unknown `model` |
+| `UNKNOWN_ADAPTER` | 404 | Unknown `options.adapter_id` |
+| `INTERNAL` | 500 | Execution failure |
+
+In a batch, each item succeeds or fails on its own, and item error paths are prefixed with `/items/{index}`.
+
+### Python
+
+```python
+from gliner.serve import GLiNERClient, GLiNERAPIError
+
+client = GLiNERClient()  # model id is read from /v1/models unless given
+response = client.analyze(
+    {"title": "Satya Nadella", "body": "He leads Microsoft."},
+    tasks={"ents": {"type": "span", "labels": ["person", "organization"], "threshold": 0.4}},
+)
+response["results"]["ents"]["value"]
+
+client.analyze_batch([{"id": "a", "input": "...", "tasks": {...}}, ...])
+client.extract_spans("Alice works at Acme", ["person", "organization"], threshold=0.4)
+client.extract_relations("Alice works at Acme", ["works at"], ["person", "organization"])
+client.capabilities()
+```
+
+`GLiNERFactory` (in-process deployment) has the same `analyze`, `analyze_batch`, their `*_async` variants, and `capabilities`. `GLiNERServer.analyze` runs the API without Ray.
+
 ## Docker
 
 **Build:**

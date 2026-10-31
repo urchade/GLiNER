@@ -150,6 +150,21 @@ def test_resolve_adapter_ids_uses_base_adapter_for_empty_request_ids():
     assert server._resolve_adapter_ids([None, "task-a", None], [0, 2]) == ["__base__", "__base__"]
 
 
+def test_resolve_adapter_ids_expands_one_request_adapter_to_every_row():
+    server = GLiNERServer.__new__(GLiNERServer)
+    server.config = Mock(enable_polylora=True, polylora_base_adapter_id="__base__")
+    server.ensure_adapter_loaded = lambda adapter_id: adapter_id or "__base__"
+
+    assert server._resolve_adapter_ids("task-a", [0, 2]) == ["task-a", "task-a"]
+    assert server._resolve_adapter_ids(None, [0, 1]) == ["__base__", "__base__"]
+
+
+def _padding_server(enable_compilation=True):
+    server = GLiNERServer.__new__(GLiNERServer)
+    server.config = Mock(enable_compilation=enable_compilation, precompiled_batch_sizes=[1, 2, 4, 8])
+    return server
+
+
 def test_run_batch_ner_passes_valid_text_adapter_ids():
     server = GLiNERServer.__new__(GLiNERServer)
     server.model = _FakeModel()
@@ -230,3 +245,27 @@ def test_runtime_server_splits_per_text_labels_into_singleton_batches():
         (["Paris"], {"location": "a geographical place"}, 0.6),
     ]
     assert results == [[{"label": "person"}], [{"label": "location"}]]
+
+
+def test_mixed_adapter_batch_runs_one_adapter_at_a_time_when_encoder_cannot_mix():
+    server = _padding_server(enable_compilation=False)
+    server._polylora_mixes_adapters = False
+    server._supports_relations = False
+    server.model = Mock(is_runtime_model=False)
+    calls = []
+
+    def run_batch(texts, labels, threshold, flat_ner, multi_label, adapter_ids):
+        calls.append((texts, threshold, adapter_ids))
+        return [f"{text}:{adapter}" for text, adapter in zip(texts, adapter_ids, strict=True)]
+
+    server._run_batch_ner = run_batch
+    results = server._run_batch_internal(
+        ["a", "b", "c", "d"], ["person"], threshold=[0.1, 0.2, 0.3, 0.4], adapter_ids=["x", None, "x", "y"]
+    )
+
+    assert results == ["a:x", "b:None", "c:x", "d:y"]
+    assert calls == [
+        (["a", "c"], [0.1, 0.3], ["x", "x"]),
+        (["b"], [0.2], [None]),
+        (["d"], [0.4], ["y"]),
+    ]

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import json
 import logging
 from typing import Any, Dict, List, Tuple
 
@@ -11,13 +12,20 @@ import torch
 
 from gliner import GLiNER, InferencePackingConfig
 
+from .api import APIError, ProcessEngine, capabilities_from_config
+from .stats import BatchStats
 from .config import GLiNERServeConfig
 from .memory import GLiNERMemoryEstimator
+from .api.errors import is_error_payload
 
 logger = logging.getLogger(__name__)
 
 LabelSet = List[str] | Dict[str, str]
 Labels = LabelSet | List[LabelSet]
+
+
+# One-word text used to pad batches up to a precompiled batch size.
+_FILLER_TEXT = "filler"
 
 
 def _min_batch_value(value):
@@ -75,6 +83,7 @@ class GLiNERServer:
         """
         self.config = config
         self._polylora_model = None
+        self._polylora_mixes_adapters = True
         self._adapter_id_re = re.compile(config.polylora_adapter_id_pattern)
 
         env_vars = config.to_env_vars()
@@ -146,6 +155,16 @@ class GLiNERServer:
         if torch.cuda.is_available():
             self._calibrate_memory()
 
+        self.batch_stats.reset()  # count request traffic only, not warmup and calibration
+
+    @property
+    def batch_stats(self) -> BatchStats:
+        """Forward passes by batch size since start-up (or the last reset)."""
+        stats = self.__dict__.get("_batch_stats")
+        if stats is None:
+            stats = self.__dict__["_batch_stats"] = BatchStats()
+        return stats
+
     def _initialize_polylora(self) -> None:
         try:
             from polylora import PolyLoraModel, PolyLoraConfig  # noqa: PLC0415
@@ -165,6 +184,14 @@ class GLiNERServer:
         )
         self._polylora_model = PolyLoraModel(target_model, polylora_config)
         self._set_polylora_target_model(self._polylora_model)
+        # Stock HF DeBERTa projects its relative position embeddings once for the whole batch,
+        # so one forward can carry only one adapter on those layers. FlashDeBERTa projects them
+        # once per adapter (MultiLoraLinear.project_shared). Other encoders share no inputs.
+        self._polylora_mixes_adapters = not any(
+            type(module).__name__ == "DisentangledSelfAttention" for module in target_model.modules()
+        )
+        if not self._polylora_mixes_adapters:
+            logger.info("PolyLoRA on HF DeBERTa: batches with mixed adapters run one adapter at a time")
 
         logger.info(
             "PolyLoRA enabled with %d GPU slots, max rank %d, disk cache %s",
@@ -247,11 +274,24 @@ class GLiNERServer:
         if isinstance(adapter_ids, list):
             resolved = [self.ensure_adapter_loaded(adapter_ids[idx]) for idx in valid_to_orig_idx]
             return resolved
-        if adapter_ids is not None:
-            return self.ensure_adapter_loaded(adapter_ids)
-        if self.config.enable_polylora:
-            return [self.config.polylora_base_adapter_id for _ in valid_to_orig_idx]
-        return None
+        # PolyLoRA takes one adapter id per batch row.
+        adapter_id = self.ensure_adapter_loaded(adapter_ids)
+        return [adapter_id for _ in valid_to_orig_idx]
+
+    def _adapter_run_kwargs(self, adapter_ids: List[str | None] | None) -> Dict[str, Any]:
+        """Model kwargs selecting one adapter per batch row.
+
+        With PolyLoRA the ids are resolved to GPU cache slots here, right before the
+        forward pass, and passed as the ``weight_indices`` tensor. Passing the id strings
+        into a compiled model would make torch.compile guard on them and recompile for
+        new adapter mixes.
+        """
+        if adapter_ids is None:
+            return {}
+        polylora_model = getattr(self, "_polylora_model", None)
+        if polylora_model is None:
+            return {"adapter_ids": adapter_ids}
+        return {"weight_indices": polylora_model.resolve_adapters(adapter_ids)}
 
     def _detect_relation_support(self) -> bool:
         """Detect if the model supports relation extraction."""
@@ -262,6 +302,12 @@ class GLiNERServer:
         """Precompile model for configured batch sizes."""
         logger.info("Precompiling model for batch sizes: %s", self.config.precompiled_batch_sizes)
 
+        # Each batch size is its own compiled entry (per-row Python lists such as token
+        # lengths are specialised on their length). Past the limit torch silently runs
+        # uncompiled, so leave room for every precompiled size.
+        torch._dynamo.config.recompile_limit = max(
+            torch._dynamo.config.recompile_limit, 2 * len(self.config.precompiled_batch_sizes)
+        )
         self.model.compile()
 
         dummy_labels = ["person", "organization", "location"]
@@ -434,8 +480,25 @@ class GLiNERServer:
                 return entity_results, relation_results
             return entity_results
 
+        num_texts = len(texts)
+        if (
+            not getattr(self, "_polylora_mixes_adapters", True)
+            and isinstance(adapter_ids, list)
+            and len(set(adapter_ids)) > 1
+        ):
+            return self._run_batch_per_adapter(
+                texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+            )
+        if not getattr(self.model, "is_runtime_model", False) and num_texts:
+            (texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids) = (
+                self._per_text_inputs(
+                    texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+                )
+            )
+
+        self.batch_stats.record(num_texts, len(texts))
         if self._supports_relations:
-            return self._run_batch_relex(
+            entities, found_relations = self._run_batch_relex(
                 texts,
                 labels,
                 relations,
@@ -445,8 +508,110 @@ class GLiNERServer:
                 multi_label,
                 adapter_ids,
             )
-        else:
-            return self._run_batch_ner(texts, labels, threshold, flat_ner, multi_label, adapter_ids)
+            return entities[:num_texts], found_relations[:num_texts]
+        return self._run_batch_ner(texts, labels, threshold, flat_ner, multi_label, adapter_ids)[:num_texts]
+
+    def _run_batch_per_adapter(
+        self, texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
+    ):
+        """Run a mixed-adapter batch as one sub-batch per adapter, in the original order."""
+        (_, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids) = (
+            self._per_text_inputs(  # one value per text, no padding (compilation is checked below)
+                texts,
+                labels,
+                relations,
+                threshold,
+                relation_threshold,
+                flat_ner,
+                multi_label,
+                adapter_ids,
+                pad=False,
+            )
+        )
+        groups: Dict[Any, List[int]] = {}
+        for index, adapter_id in enumerate(adapter_ids):
+            groups.setdefault(adapter_id, []).append(index)
+
+        entities: List[Any] = [None] * len(texts)
+        found_relations: List[Any] = [None] * len(texts)
+        for adapter_id, indices in groups.items():
+
+            def pick(values, indices=indices):
+                return None if values is None else [values[i] for i in indices]
+
+            result = self._run_batch_internal(
+                pick(texts),
+                pick(labels),
+                pick(relations),
+                pick(threshold),
+                pick(relation_threshold),
+                pick(flat_ner),
+                pick(multi_label),
+                adapter_id,
+            )
+            group_entities, group_relations = result if self._supports_relations else (result, None)
+            for position, index in enumerate(indices):
+                entities[index] = group_entities[position]
+                if group_relations is not None:
+                    found_relations[index] = group_relations[position]
+        if self._supports_relations:
+            return entities, found_relations
+        return entities
+
+    def _compiled_batch_padding(self, num_texts: int) -> int:
+        """Filler rows that round a batch up to the next precompiled batch size."""
+        if not self.config.enable_compilation:
+            return 0
+        for size in self.config.precompiled_batch_sizes:
+            if size >= num_texts:
+                return size - num_texts
+        return 0
+
+    def _per_text_inputs(
+        self, texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids, pad=True
+    ) -> tuple:
+        """Give every argument one value per text, and pad compiled batches.
+
+        All callers (warmup, memory calibration, ``predict`` and Ray's batcher) then
+        reach the compiled model with inputs of the same structure, so warmup compiles
+        what requests use. With compilation on, the batch is padded with one-word filler
+        texts up to the next precompiled batch size, so request batches of any size reuse
+        the warmed-up graphs instead of recompiling. Callers drop the filler outputs.
+        """
+        num_texts = len(texts)
+
+        def per_text(value):
+            if isinstance(value, list):
+                if len(value) != num_texts:
+                    raise ValueError(f"Per-text values must have length {num_texts}, got {len(value)}")
+                return list(value)
+            return [value] * num_texts
+
+        labels = list(_labels_for_texts(labels, num_texts))
+        if relations is not None:
+            relations = (
+                per_text(relations)
+                if relations and isinstance(relations[0], (list, type(None)))
+                else [relations] * num_texts
+            )
+        threshold = per_text(threshold)
+        relation_threshold = per_text(relation_threshold)
+        flat_ner = per_text(flat_ner)
+        multi_label = per_text(multi_label)
+        adapter_ids = per_text(adapter_ids)
+
+        padding = self._compiled_batch_padding(num_texts) if pad else 0
+        if padding:
+            texts = list(texts) + [_FILLER_TEXT] * padding
+            labels += [labels[0]] * padding
+            if relations is not None:
+                relations += [relations[0]] * padding
+            threshold += [threshold[0]] * padding
+            relation_threshold += [relation_threshold[0]] * padding
+            flat_ner += [flat_ner[0]] * padding
+            multi_label += [multi_label[0]] * padding
+            adapter_ids += [None] * padding  # filler rows run on the base model
+        return texts, labels, relations, threshold, relation_threshold, flat_ner, multi_label, adapter_ids
 
     def _run_batch_ner(
         self,
@@ -472,9 +637,7 @@ class GLiNERServer:
             label_names=prepared["label_names"],
         )
 
-        run_kwargs: Dict[str, Any] = {}
-        if resolved_adapter_ids is not None:
-            run_kwargs["adapter_ids"] = resolved_adapter_ids
+        run_kwargs = self._adapter_run_kwargs(resolved_adapter_ids)
 
         model_output = self.model.run_batch(
             batch,
@@ -532,9 +695,7 @@ class GLiNERServer:
             label_names=prepared["label_names"],
         )
 
-        run_kwargs: Dict[str, Any] = {}
-        if resolved_adapter_ids is not None:
-            run_kwargs["adapter_ids"] = resolved_adapter_ids
+        run_kwargs = self._adapter_run_kwargs(resolved_adapter_ids)
 
         model_output = self.model.run_batch(
             batch,
@@ -611,7 +772,35 @@ class GLiNERServer:
         if relation_threshold is None:
             relation_threshold = self.config.default_relation_threshold
 
+        return self.run_rows_batch(
+            texts,
+            labels,
+            relations,
+            threshold,
+            relation_threshold,
+            flat_ner,
+            multi_label,
+            adapter_id,
+        )
+
+    def run_rows_batch(
+        self,
+        texts: List[str],
+        labels: Labels,
+        relations: List[str] | List[List[str] | None] | None,
+        threshold: float | List[float],
+        relation_threshold: float | List[float],
+        flat_ner: bool | List[bool],
+        multi_label: bool | List[bool],
+        adapter_ids: str | List[str | None] | None,
+    ) -> List[Dict[str, Any]]:
+        """Run one model batch and return ``{"entities", "relations"?}`` per text.
+
+        Every argument is either shared by all texts or a list with one value
+        per text. ``"relations"`` is present when relations were requested.
+        """
         labels = self._filter_labels(labels)
+        relations = _normalize_relation_lists(relations)
 
         if self._supports_relations and relations:
             entities, rels = self._run_batch_internal(
@@ -622,21 +811,117 @@ class GLiNERServer:
                 relation_threshold=relation_threshold,
                 flat_ner=flat_ner,
                 multi_label=multi_label,
-                adapter_ids=adapter_id,
+                adapter_ids=adapter_ids,
             )
-            results = [{"entities": ents, "relations": r} for ents, r in zip(entities, rels, strict=False)]
-        else:
-            entities = self._run_batch_internal(
-                texts,
-                labels,
-                threshold=threshold,
-                flat_ner=flat_ner,
-                multi_label=multi_label,
-                adapter_ids=adapter_id,
-            )
-            results = [{"entities": ents} for ents in entities]
+            return [{"entities": ents, "relations": r} for ents, r in zip(entities, rels, strict=False)]
 
-        return results
+        result = self._run_batch_internal(
+            texts,
+            labels,
+            threshold=threshold,
+            flat_ner=flat_ner,
+            multi_label=multi_label,
+            adapter_ids=adapter_ids,
+        )
+        # Relation models return (entities, relations) even when no relations were asked for.
+        entities = result[0] if self._supports_relations else result
+        return [{"entities": ents} for ents in entities]
+
+    # -- process API -------------------------------------------------------------
+
+    @property
+    def process_engine(self) -> ProcessEngine:
+        """Request planner and result assembler of ``/v1/process``."""
+        engine = getattr(self, "_process_engine", None)
+        if engine is None:
+            words_splitter = self.model.data_processor.words_splitter
+            max_words = min(
+                int(getattr(self.model.config, "max_len", self.config.max_model_len)), self.config.max_model_len
+            )
+            engine = self._process_engine = ProcessEngine(
+                capabilities_from_config(self.config, supports_relations=self._supports_relations),
+                max_words=max_words,
+                split_words=lambda text: [(start, end) for _, start, end in words_splitter(text)],
+                resolve_adapter=self.ensure_adapter_loaded,
+                window_overlap=self.config.process_window_overlap,
+            )
+        return engine
+
+    def run_rows(self, rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Run process rows in memory-safe chunks (in-process, without Ray's batcher)."""
+        outputs: List[Dict[str, Any]] = []
+        chunk = max(1, self.config.max_batch_size)
+        index = 0
+        while index < len(rows):
+            part = rows[index : index + chunk]
+            fitting = self.batch_size_fn(
+                seq_len=self.observed_seq_len(
+                    [row["text"] for row in part],
+                    labels=[row["labels"] for row in part],
+                    relations=[row["relations"] for row in part],
+                )
+            )
+            part = part[: max(1, fitting)]
+            outputs.extend(
+                self.run_rows_batch(
+                    [row["text"] for row in part],
+                    [row["labels"] for row in part],
+                    [row["relations"] for row in part],
+                    [row["threshold"] for row in part],
+                    [row["relation_threshold"] for row in part],
+                    [row["flat_ner"] for row in part],
+                    [row["multi_label"] for row in part],
+                    [row["adapter_id"] for row in part],
+                )
+            )
+            index += len(part)
+        return outputs
+
+    def process(self, body: Any) -> Dict[str, Any]:
+        """``POST /v1/process`` in-process. Raises ``APIError`` for a rejected request."""
+        return self.process_engine.process(body, self.run_rows)
+
+    def process_batch(self, body: Any) -> Dict[str, Any]:
+        """``POST /v1/process/batch`` in-process. Raises ``APIError`` for a bad envelope."""
+        return self.process_engine.process_batch(body, self.run_rows)
+
+    def capabilities(self, model_id: str | None = None) -> Dict[str, Any]:
+        info = self.process_engine.capabilities
+        if model_id is not None and model_id not in info.model_ids():
+            raise APIError("MODEL_NOT_FOUND", f"Model {model_id!r} is not served here", "/model")
+        return info.to_dict()
+
+    def models(self) -> Dict[str, Any]:
+        info = self.process_engine.capabilities
+        return {"data": [{"id": info.model, "aliases": list(info.aliases)}]}
+
+    def health(self) -> Dict[str, Any]:
+        return {
+            "status": "ok",
+            "model": self.process_engine.capabilities.model,
+            "device": self.config.device,
+            "cuda_available": torch.cuda.is_available(),
+            "polylora": self.config.enable_polylora,
+            "sequence_packing": self.packing_config is not None,
+            "max_batch_size": self.batch_size_fn(),
+            "task_types": list(self.process_engine.capabilities.task_types),
+        }
+
+
+async def _read_json_body(request, max_bytes: int) -> Any:
+    """Parse a JSON request body, refusing bodies over ``max_bytes`` (``PAYLOAD_TOO_LARGE``)."""
+    content_length = request.headers.get("content-length")
+    if max_bytes > 0 and content_length and content_length.isdigit() and int(content_length) > max_bytes:
+        raise APIError("PAYLOAD_TOO_LARGE", f"Request body exceeds {max_bytes} bytes")
+    body = bytearray()
+    async for chunk in request.stream():
+        body.extend(chunk)
+        if 0 < max_bytes < len(body):
+            raise APIError("PAYLOAD_TOO_LARGE", f"Request body exceeds {max_bytes} bytes")
+    try:
+        return json.loads(bytes(body))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise APIError("INVALID_REQUEST", f"Request body is not valid JSON: {exc}", "") from exc
 
 
 def _build_deployment(config: GLiNERServeConfig):
@@ -703,31 +988,99 @@ def _build_deployment(config: GLiNERServeConfig):
             )
             self._infer_batch.set_max_batch_size(next_max_batch)
 
-            labels_list = self.server._filter_labels(labels_list)
-            relations = _normalize_relation_lists(relations_list)
-
-            if self.server._supports_relations and relations:
-                entities, rels = self.server._run_batch_internal(
-                    texts,
-                    labels_list,
-                    relations=relations,
-                    threshold=thresholds,
-                    relation_threshold=relation_thresholds,
-                    flat_ner=flat_ner_list,
-                    multi_label=multi_label_list,
-                    adapter_ids=adapter_ids,
-                )
-                return [{"entities": ents, "relations": r} for ents, r in zip(entities, rels, strict=False)]
-
-            entities = self.server._run_batch_internal(
+            return self.server.run_rows_batch(
                 texts,
                 labels_list,
-                threshold=thresholds,
-                flat_ner=flat_ner_list,
-                multi_label=multi_label_list,
-                adapter_ids=adapter_ids,
+                relations_list,
+                thresholds,
+                relation_thresholds,
+                flat_ner_list,
+                multi_label_list,
+                adapter_ids,
             )
-            return [{"entities": ents} for ents in entities]
+
+        async def _run_process_row(self, row: Dict[str, Any]) -> Dict[str, Any]:
+            """One process row through the dynamic batcher, shared with ``predict``."""
+            return await self._infer_batch(
+                row["text"],
+                row["labels"],
+                row["relations"],
+                row["threshold"],
+                row["relation_threshold"],
+                row["flat_ner"],
+                row["multi_label"],
+                row["adapter_id"],
+            )
+
+        async def process(self, body: Any) -> Dict[str, Any]:
+            """``/v1/process``: the response, or an ``{"error": ...}`` object."""
+            engine = self.server.process_engine
+            outcome = (await engine.process_many_async([body], self._run_process_row))[0]
+            return outcome.to_dict() if isinstance(outcome, APIError) else outcome
+
+        async def process_batch(self, body: Any) -> Dict[str, Any]:
+            """``/v1/process/batch``: the response, or an ``{"error": ...}`` object."""
+            try:
+                return await self.server.process_engine.process_batch_async(body, self._run_process_row)
+            except APIError as exc:
+                return exc.to_dict()
+
+        def capabilities(self, model_id: str | None = None) -> Dict[str, Any]:
+            try:
+                return self.server.capabilities(model_id)
+            except APIError as exc:
+                return exc.to_dict()
+
+        def models(self) -> Dict[str, Any]:
+            return self.server.models()
+
+        def health(self) -> Dict[str, Any]:
+            return self.server.health()
+
+        def batch_stats(self, reset: bool = False) -> Dict[str, Any]:
+            """Forward passes by batch size; ``reset`` starts a new count."""
+            stats = self.server.batch_stats.to_dict()
+            if reset:
+                self.server.batch_stats.reset()
+            return stats
+
+        async def _handle_v1(self, request, path: str):  # noqa: PLR0911
+            """Routes of the process API (``{route_prefix}/v1/...``)."""
+            from starlette.responses import JSONResponse  # noqa: PLC0415
+
+            def respond(payload: Dict[str, Any]) -> JSONResponse:
+                status = APIError.from_dict(payload).status if is_error_payload(payload) else 200
+                return JSONResponse(payload, status_code=status)
+
+            route = path[path.find("/v1/") :]
+            method = request.method
+            if route in ("/v1/process", "/v1/process/batch"):
+                if method != "POST":
+                    return respond(APIError("INVALID_REQUEST", f"Use POST for {route}").to_dict())
+                try:
+                    body = await _read_json_body(request, self.server.config.max_request_bytes)
+                except APIError as exc:
+                    return respond(exc.to_dict())
+                if route == "/v1/process":
+                    return respond(await self.process(body))
+                return respond(await self.process_batch(body))
+            capabilities_match = re.fullmatch(r"/v1/models/(.+)/capabilities", route)
+            if route not in ("/v1/health", "/v1/ready", "/v1/models", "/v1/adapter-cache") and not capabilities_match:
+                return JSONResponse(
+                    {"error": {"code": "INVALID_REQUEST", "message": f"Unknown route {route}"}}, status_code=404
+                )
+            if method != "GET":
+                return respond(APIError("INVALID_REQUEST", f"Use GET for {route}").to_dict())
+            if route in ("/v1/health", "/v1/ready"):
+                return respond(self.health())
+            if route == "/v1/models":
+                return respond(self.models())
+            if route == "/v1/adapter-cache":
+                try:
+                    return respond(self.server.adapter_cache_status(request.query_params.get("adapter_id")))
+                except ValueError as exc:
+                    return respond(APIError("INVALID_REQUEST", str(exc), "/adapter_id").to_dict())
+            return respond(self.capabilities(capabilities_match.group(1)))
 
         async def predict(
             self,
@@ -745,6 +1098,9 @@ def _build_deployment(config: GLiNERServeConfig):
                 threshold = self.server.config.default_threshold
             if relation_threshold is None:
                 relation_threshold = self.server.config.default_relation_threshold
+            # Reject unknown adapters before batching: inside the batch, the error would fail
+            # every request batched with this one.
+            self.server.ensure_adapter_loaded(adapter_id)
 
             results = await self._infer_batch(
                 text,
@@ -763,6 +1119,8 @@ def _build_deployment(config: GLiNERServeConfig):
             from starlette.responses import JSONResponse  # noqa: PLC0415
 
             path = request.url.path.rstrip("/")
+            if "/v1/" in path:
+                return await self._handle_v1(request, path)
             if path.endswith("/adapter-cache"):
                 adapter_id = request.query_params.get("adapter_id")
                 try:
@@ -940,6 +1298,94 @@ class GLiNERFactory:
         ]
         results = [ref.result() for ref in refs]
         return results[0] if single else results
+
+    # -- process API ---------------------------------------------------------------
+
+    @property
+    def model_id(self) -> str:
+        return self.config.model_id or self.config.model
+
+    def _process_body(self, input: Any, tasks, defaults, options, model, body) -> Dict[str, Any]:
+        if body is not None:
+            return body
+        request: Dict[str, Any] = {"model": model or self.model_id, "input": input, "tasks": tasks}
+        if defaults is not None:
+            request["defaults"] = defaults
+        if options is not None:
+            request["options"] = options
+        return request
+
+    def _batch_body(self, items: List[Dict[str, Any]], defaults, options, model) -> Dict[str, Any]:
+        body: Dict[str, Any] = {"model": model or self.model_id, "items": items}
+        if defaults is not None:
+            body["defaults"] = defaults
+        if options is not None:
+            body["options"] = options
+        return body
+
+    @staticmethod
+    def _unwrap(payload: Dict[str, Any]) -> Dict[str, Any]:
+        if is_error_payload(payload):
+            raise APIError.from_dict(payload)
+        return payload
+
+    def process(
+        self,
+        input: Any = None,
+        tasks: Dict[str, Any] | None = None,
+        *,
+        defaults: Dict[str, Any] | None = None,
+        options: Dict[str, Any] | None = None,
+        model: str | None = None,
+        body: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """Run one ``/v1/process`` request; raises ``APIError`` when it is rejected.
+
+        Pass ``input`` and ``tasks`` (``model`` defaults to the served model), or a
+        complete request as ``body``. ``defaults`` holds settings shared by the tasks.
+        """
+        request = self._process_body(input, tasks, defaults, options, model, body)
+        return self._unwrap(self._handle.process.remote(request).result())
+
+    def process_batch(
+        self,
+        items: List[Dict[str, Any]],
+        *,
+        defaults: Dict[str, Any] | None = None,
+        options: Dict[str, Any] | None = None,
+        model: str | None = None,
+    ) -> Dict[str, Any]:
+        """Run a ``/v1/process/batch`` request; item errors are returned per item."""
+        request = self._batch_body(items, defaults, options, model)
+        return self._unwrap(self._handle.process_batch.remote(request).result())
+
+    async def process_async(
+        self,
+        input: Any = None,
+        tasks: Dict[str, Any] | None = None,
+        *,
+        defaults: Dict[str, Any] | None = None,
+        options: Dict[str, Any] | None = None,
+        model: str | None = None,
+        body: Dict[str, Any] | None = None,
+    ) -> Dict[str, Any]:
+        """Async ``process``. Concurrent calls share model batches."""
+        request = self._process_body(input, tasks, defaults, options, model, body)
+        return self._unwrap(await self._handle.process.remote(request))
+
+    async def process_batch_async(
+        self,
+        items: List[Dict[str, Any]],
+        *,
+        defaults: Dict[str, Any] | None = None,
+        options: Dict[str, Any] | None = None,
+        model: str | None = None,
+    ) -> Dict[str, Any]:
+        request = self._batch_body(items, defaults, options, model)
+        return self._unwrap(await self._handle.process_batch.remote(request))
+
+    def capabilities(self, model_id: str | None = None) -> Dict[str, Any]:
+        return self._unwrap(self._handle.capabilities.remote(model_id).result())
 
     async def predict_async(
         self,
