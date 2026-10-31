@@ -157,6 +157,10 @@ class BaseGLiNERConfig(PretrainedConfig):
         neg_spans_ratio: float = 1.0,
         precomputed_prompts_mode: bool | None = None,
         id_to_classes: dict | None = None,
+        logit_temperature: float = 1.0,
+        logit_bias: float = 0.0,
+        rel_logit_temperature: float = 1.0,
+        rel_logit_bias: float = 0.0,
         **kwargs,
     ):
         """Initialize BaseGLiNERConfig.
@@ -195,6 +199,12 @@ class BaseGLiNERConfig(PretrainedConfig):
             neg_spans_ratio (float, optional): Ratio of negative spans. Defaults to 1.0.
             precomputed_prompts_mode (Optional[bool]): Whether to use precomputed prompts. Defaults to None.
             id_to_classes (Optional[dict]): Mapping from class IDs to class names. Defaults to None.
+            logit_temperature (float, optional): Post-hoc calibration temperature for entity
+                logits; probabilities are ``sigmoid(logit / T + b)``. Defaults to 1.0.
+            logit_bias (float, optional): Post-hoc calibration bias for entity logits. Defaults to 0.0.
+            rel_logit_temperature (float, optional): Calibration temperature for relation logits.
+                Defaults to 1.0.
+            rel_logit_bias (float, optional): Calibration bias for relation logits. Defaults to 0.0.
             **kwargs: Additional keyword arguments passed to parent class.
         """
         super().__init__(**kwargs)
@@ -241,6 +251,10 @@ class BaseGLiNERConfig(PretrainedConfig):
         self.neg_spans_ratio = neg_spans_ratio
         self.precomputed_prompts_mode = precomputed_prompts_mode
         self.id_to_classes = id_to_classes
+        self.logit_temperature = logit_temperature
+        self.logit_bias = logit_bias
+        self.rel_logit_temperature = rel_logit_temperature
+        self.rel_logit_bias = rel_logit_bias
 
 
 class UniEncoderConfig(BaseGLiNERConfig):

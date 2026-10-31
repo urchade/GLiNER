@@ -45,7 +45,14 @@ from .outputs import (
 )
 from .scorers import Scorer
 from .span_rep import SpanRepLayer
-from .loss_functions import span_dice_loss, cross_entropy_loss, focal_loss_with_logits
+from ..calibration import calibrated_sigmoid, apply_logit_calibration
+from .loss_functions import (
+    CE_LOSS_TYPES,
+    span_dice_loss,
+    cross_entropy_loss,
+    focal_loss_with_logits,
+    calibrated_ce_with_logits,
+)
 from .multitask.triples_layers import TriplesScoreLayer
 from .multitask.relations_layers import RelationsRepLayer
 
@@ -280,6 +287,119 @@ class BaseModel(ABC, nn.Module):
         all_losses = all_losses * mask_neg
 
         return all_losses
+
+    def _ce_loss(
+        self,
+        logits: torch.Tensor,
+        labels: torch.Tensor,
+        class_mask: torch.Tensor | None = None,
+        row_mask: torch.Tensor | None = None,
+        reduction: str = "sum",
+        negatives: float = 1.0,
+        masking: str = "none",
+        loss_type: str = "ce_calibrated",
+        ce_calib_weight: float = 0.5,
+        pos_weight: torch.Tensor | None = None,
+        alpha: float = -1.0,
+        gamma: float = 0.0,
+        prob_margin: float = 0.0,
+        label_smoothing: float = 0.0,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Reduce the calibrated cross-entropy loss over rows (spans, tokens or pairs).
+
+        Classes must be on the last dimension. Unlike the elementwise losses,
+        padded classes are excluded *inside* the softmax, so they are passed in
+        as ``class_mask`` instead of being multiplied in afterwards.
+
+        Args:
+            logits: Logits of shape (B, ..., C).
+            labels: Labels of shape (B, ..., C).
+            class_mask: Mask broadcastable to ``logits`` marking valid classes.
+            row_mask: Mask broadcastable to ``logits.shape[:-1]`` marking valid rows.
+            reduction: 'sum' or 'mean' (mean over valid rows).
+            negatives: Keep probability for negatives under ``masking``.
+            masking: Negative sampling strategy: 'none', 'global', 'label' or 'span'.
+            loss_type: 'ce' (no calibration term) or 'ce_calibrated'.
+            ce_calib_weight: Weight of the BCE calibration term for 'ce_calibrated'.
+            pos_weight: Optional weights broadcastable to ``logits`` for positive terms.
+            alpha: Focal-loss alpha; ignored (warns if set).
+            gamma: Focal-loss gamma; ignored (warns if set).
+            prob_margin: Probability margin; ignored (warns if set).
+            label_smoothing: Label smoothing; ignored (warns if set).
+            **kwargs: Unused.
+
+        Returns:
+            Scalar loss tensor.
+        """
+        if gamma > 0 or alpha >= 0 or prob_margin > 0 or label_smoothing > 0:
+            warnings.warn(
+                f"loss_type='{loss_type}' ignores focal alpha/gamma, prob_margin and label_smoothing.",
+                stacklevel=2,
+            )
+
+        valid = torch.ones_like(logits, dtype=torch.bool)
+        if class_mask is not None:
+            valid = valid & class_mask.bool()
+        if row_mask is not None:
+            valid = valid & row_mask.bool().unsqueeze(-1)
+
+        if negatives < 1.0 and masking in ("global", "label", "span"):
+            is_pos = labels > 0.5
+            if masking == "global":
+                drop = ~is_pos & (torch.rand_like(logits, dtype=torch.float) >= negatives)
+            elif masking == "label":
+                # Classes with no positive anywhere in the sample.
+                neg_cls = ~is_pos.flatten(1, -2).any(dim=1)  # (B, C)
+                neg_cls = neg_cls.view(neg_cls.size(0), *([1] * (logits.dim() - 2)), neg_cls.size(-1))
+                drop = neg_cls.expand_as(is_pos) & (torch.rand_like(neg_cls, dtype=torch.float) >= negatives)
+            else:
+                # Rows (spans) with no positive class.
+                neg_row = ~is_pos.any(dim=-1, keepdim=True)
+                drop = neg_row & (torch.rand_like(neg_row, dtype=torch.float) >= negatives)
+            valid = valid & ~drop
+
+        calib_weight = ce_calib_weight if loss_type == "ce_calibrated" else 0.0
+        row_losses = calibrated_ce_with_logits(
+            logits, labels, valid_mask=valid, calib_weight=calib_weight, pos_weight=pos_weight
+        )
+
+        if row_mask is not None:
+            row_losses = row_losses * row_mask.float()
+
+        if reduction == "mean":
+            num_valid = row_mask.float().sum() if row_mask is not None else torch.tensor(row_losses.numel())
+            return row_losses.sum() / num_valid if num_valid > 0 else torch.tensor(0.0, device=logits.device)
+        if reduction != "sum":
+            warnings.warn(
+                f"Invalid Value for config 'loss_reduction': '{reduction}' \n Supported reduction modes:"
+                f" 'none', 'mean', 'sum'. It will be used 'sum' instead.",
+                stacklevel=2,
+            )
+        return row_losses.sum()
+
+    def _token_ce_loss(
+        self,
+        scores: torch.Tensor,
+        labels: torch.Tensor,
+        prompts_embedding_mask: torch.Tensor,
+        word_mask: torch.Tensor,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Calibrated CE for token-level scores (B, W, C, 3) or span scores (B, N, C).
+
+        For token-level scores each (word, start/end/inside) position is a row
+        and the softmax runs over entity classes.
+        """
+        if scores.dim() == 4:
+            scores = scores.permute(0, 1, 3, 2)  # (B, W, 3, C)
+            labels = labels.permute(0, 1, 3, 2)
+            class_mask = prompts_embedding_mask[:, None, None, :]
+            row_mask = word_mask[:, :, None].expand(scores.shape[:-1])
+        else:
+            class_mask = prompts_embedding_mask[:, None, :]
+            row_mask = word_mask
+        return self._ce_loss(scores, labels, class_mask=class_mask, row_mask=row_mask, **kwargs)
 
     @abstractmethod
     def loss(self, x: Any) -> torch.Tensor:
@@ -601,7 +721,7 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             reduction: Loss reduction method ('sum' or 'mean').
             negatives: Negative sampling probability.
             masking: Masking strategy for negative sampling.
-            loss_type: Loss function — 'focal' (default), 'bce', or 'dice'.
+            loss_type: Loss function — 'focal' (default), 'bce', 'dice', 'ce' or 'ce_calibrated'.
             use_span_width_weight: If True, scale positive-span losses by
                 w(k) = 1 + log(k+1) where k is the 1-indexed span width.
                 Zero inference overhead; applied before final reduction.
@@ -623,7 +743,8 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             width_weight = 1.0 + torch.log(k_idx)  # (K,)
             # Broadcast to (B, L, K, C); boost positives only, leave negatives at 1.0
             w = width_weight.view(1, 1, K, 1)
-            label_clamped = labels.clamp(min=0.0)
+            # Labels come from the collator as (B, L*K, C); view them as (B, L, K, C).
+            label_clamped = labels.view(BS, _L, K, CL).clamp(min=0.0)
             # weight tensor: 1 everywhere, boosted by w where label=1
             pos_boost = 1.0 + (w - 1.0) * label_clamped  # (B, L, K, C)
         else:
@@ -631,6 +752,24 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
 
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
+
+        if loss_type in CE_LOSS_TYPES:
+            return self._ce_loss(
+                scores,
+                labels,
+                class_mask=prompts_embedding_mask.unsqueeze(1),
+                row_mask=span_mask.view(BS, -1),
+                reduction=reduction,
+                negatives=negatives,
+                masking=masking,
+                loss_type=loss_type,
+                pos_weight=None if pos_boost is None else pos_boost.view(BS, -1, CL),
+                alpha=alpha,
+                gamma=gamma,
+                prob_margin=prob_margin,
+                label_smoothing=label_smoothing,
+                **kwargs,
+            )
 
         all_losses = self._loss(
             scores,
@@ -1157,7 +1296,9 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
 
     def get_span_representations(self, scores, span_idx, span_mask, words_embedding, labels, threshold):
         if span_idx is None:
-            span_idx, span_mask = extract_spans_from_tokens(scores, labels, threshold)
+            span_idx, span_mask = extract_spans_from_tokens(
+                apply_logit_calibration(scores, self.config), labels, threshold
+            )
             span_idx = span_idx * span_mask.unsqueeze(-1).long()
 
         if getattr(self.config, "represent_spans", False):
@@ -1305,6 +1446,21 @@ class UniEncoderTokenModel(BaseUniEncoderModel):
         Returns:
             A scalar tensor representing the aggregated loss value.
         """
+        if kwargs.get("loss_type") in CE_LOSS_TYPES:
+            return self._token_ce_loss(
+                scores,
+                labels,
+                prompts_embedding_mask,
+                word_mask,
+                alpha=alpha,
+                gamma=gamma,
+                prob_margin=prob_margin,
+                label_smoothing=label_smoothing,
+                reduction=reduction,
+                negatives=negatives,
+                **kwargs,
+            )
+
         all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
         # Base mask: (B, W/N, C)
@@ -1639,6 +1795,8 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         reduction: str = "sum",
         negatives: float = 1.0,
         masking: str = "none",
+        loss_type: str = "focal",
+        dice_gamma: float = 1.0,
         **kwargs: Any,
     ) -> torch.Tensor:
         """Compute span classification loss for bi-encoder.
@@ -1654,7 +1812,9 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
             reduction: Loss reduction method ('sum' or 'mean').
             negatives: Negative sampling probability.
             masking: Masking strategy for negative sampling.
-            **kwargs: Additional arguments.
+            loss_type: 'focal' (default), 'bce', 'dice', 'ce' or 'ce_calibrated'.
+            dice_gamma: Self-adjustment exponent for Dice loss.
+            **kwargs: Additional arguments (e.g. ``ce_calib_weight``).
 
         Returns:
             Scalar loss tensor.
@@ -1668,7 +1828,33 @@ class BiEncoderSpanModel(BaseBiEncoderModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives=negatives, masking=masking)
+        if loss_type in CE_LOSS_TYPES:
+            return self._ce_loss(
+                scores,
+                labels,
+                class_mask=prompts_embedding_mask.unsqueeze(1),
+                row_mask=mask_label.view(BS, -1),
+                reduction=reduction,
+                negatives=negatives,
+                masking=masking,
+                loss_type=loss_type,
+                alpha=alpha,
+                gamma=gamma,
+                label_smoothing=label_smoothing,
+                **kwargs,
+            )
+
+        all_losses = self._loss(
+            scores,
+            labels,
+            alpha,
+            gamma,
+            label_smoothing=label_smoothing,
+            negatives=negatives,
+            masking=masking,
+            loss_type=loss_type,
+            dice_gamma=dice_gamma,
+        )
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -2093,7 +2279,7 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             flat_prob = span_labels.max(-1).values.view(B, L * K)
             keep = (flat_prob == 1) & flat_mask.bool()
         else:
-            flat_prob = torch.sigmoid(span_scores).max(-1).values.view(B, L * K)
+            flat_prob = calibrated_sigmoid(span_scores, self.config).max(-1).values.view(B, L * K)
             keep = (flat_prob > threshold) & flat_mask.bool()
 
         if top_k:
@@ -2287,6 +2473,8 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         negatives: float = 1.0,
         masking: str = "none",
         decoder_loss: torch.Tensor | None = None,
+        loss_type: str = "focal",
+        dice_gamma: float = 1.0,
         **kwargs: Any,
     ) -> torch.Tensor:
         """Compute combined loss for span classification and decoder.
@@ -2303,7 +2491,9 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
             negatives: Negative sampling probability.
             masking: Masking strategy for negative sampling.
             decoder_loss: Optional decoder loss to combine with span loss.
-            **kwargs: Additional arguments.
+            loss_type: 'focal' (default), 'bce', 'dice', 'ce' or 'ce_calibrated'.
+            dice_gamma: Self-adjustment exponent for Dice loss.
+            **kwargs: Additional arguments (e.g. ``ce_calib_weight``).
 
         Returns:
             Scalar combined loss tensor.
@@ -2316,7 +2506,36 @@ class UniEncoderSpanDecoderModel(UniEncoderSpanModel):
         scores = scores.view(BS, -1, CL)
         labels = labels.view(BS, -1, CL)
 
-        all_losses = self._loss(scores, labels, alpha, gamma, label_smoothing, negatives=negatives, masking=masking)
+        if loss_type in CE_LOSS_TYPES:
+            loss = self._ce_loss(
+                scores,
+                labels,
+                class_mask=prompts_embedding_mask.unsqueeze(1),
+                row_mask=mask_label.view(BS, -1),
+                reduction=reduction,
+                negatives=negatives,
+                masking=masking,
+                loss_type=loss_type,
+                alpha=alpha,
+                gamma=gamma,
+                label_smoothing=label_smoothing,
+                **kwargs,
+            )
+            if decoder_loss is not None:
+                loss = decoder_loss * self.config.decoder_loss_coef + loss * self.config.span_loss_coef
+            return loss
+
+        all_losses = self._loss(
+            scores,
+            labels,
+            alpha,
+            gamma,
+            label_smoothing=label_smoothing,
+            negatives=negatives,
+            masking=masking,
+            loss_type=loss_type,
+            dice_gamma=dice_gamma,
+        )
 
         masked_loss = all_losses.view(batch_size, -1, num_classes) * prompts_embedding_mask.unsqueeze(1)
         all_losses = masked_loss.view(-1, num_classes)
@@ -2428,7 +2647,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
         if self.config.decoder_mode == "prompt":
             return self.select_decoder_embedding(prompts_embedding, prompts_embedding_mask)[:3]
 
-        span_scores = torch.sigmoid(span_logits)
+        span_scores = calibrated_sigmoid(span_logits, self.config)
 
         # Flatten span representations for selection
         B = span_rep.size(0)
@@ -2439,7 +2658,7 @@ class UniEncoderTokenDecoderModel(UniEncoderTokenModel, UniEncoderSpanDecoderMod
             keep = (span_prob == 1) & span_mask.bool()
         else:
             # During inference: use predicted scores
-            span_scores = torch.sigmoid(span_logits).max(-1).values  # (B, S)
+            span_scores = calibrated_sigmoid(span_logits, self.config).max(-1).values  # (B, S)
             keep = (span_scores > 0.5) & span_mask.bool()
 
         if top_k:
@@ -2819,7 +3038,7 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
             span_prob_flat = span_labels.max(dim=-1).values.view(B, -1)
             keep = (span_prob_flat == 1).bool()
         elif span_scores is not None and span_scores.size(-1) > 0:
-            span_prob = torch.sigmoid(span_scores)
+            span_prob = calibrated_sigmoid(span_scores, self.config)
             if class_mask is not None:
                 span_prob = span_prob * class_mask[:, None, None, : span_prob.size(-1)].to(span_prob.dtype)
             span_prob_flat = span_prob.max(dim=-1).values.view(B, -1)
@@ -3278,6 +3497,23 @@ class UniEncoderSpanRelexModel(UniEncoderSpanModel):
         """
         B, _, C = logits.shape
 
+        if kwargs.get("loss_type") in CE_LOSS_TYPES:
+            # Multi-label over relation classes per entity pair; adjacency loss stays BCE.
+            return self._ce_loss(
+                logits,
+                labels,
+                class_mask=class_mask.view(B, -1, C),
+                row_mask=pair_mask.view(B, -1, C)[..., 0],
+                reduction=reduction,
+                negatives=negatives,
+                masking=masking,
+                alpha=alpha,
+                gamma=gamma,
+                prob_margin=prob_margin,
+                label_smoothing=label_smoothing,
+                **kwargs,
+            )
+
         all_losses = self._loss(
             logits, labels, alpha, gamma, prob_margin, label_smoothing, negatives=negatives, masking=masking
         )
@@ -3367,6 +3603,21 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
         Returns:
             Scalar loss tensor.
         """
+        if kwargs.get("loss_type") in CE_LOSS_TYPES:
+            return self._token_ce_loss(
+                scores,
+                labels,
+                prompts_embedding_mask,
+                word_mask,
+                alpha=alpha,
+                gamma=gamma,
+                prob_margin=prob_margin,
+                label_smoothing=label_smoothing,
+                reduction=reduction,
+                negatives=negatives,
+                **kwargs,
+            )
+
         all_losses = self._loss(scores, labels, alpha, gamma, prob_margin, label_smoothing, negatives)
 
         masked_loss = all_losses * (word_mask.unsqueeze(-1) * prompts_embedding_mask.unsqueeze(1)).unsqueeze(-1)
@@ -3401,7 +3652,11 @@ class UniEncoderTokenRelexModel(UniEncoderSpanRelexModel):
 
         if span_idx is None:
             span_idx, span_mask = extract_spans_from_tokens(
-                scores, labels, threshold, word_mask=words_mask, class_mask=prompts_mask
+                apply_logit_calibration(scores, self.config),
+                labels,
+                threshold,
+                word_mask=words_mask,
+                class_mask=prompts_mask,
             )
             span_idx = span_idx * span_mask.unsqueeze(-1).long()
         target_span_rep = self.span_rep_layer(words_embeddings, span_idx)

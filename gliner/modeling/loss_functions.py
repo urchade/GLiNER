@@ -1,6 +1,9 @@
 import torch
 import torch.nn.functional as F
 
+# Loss types handled by calibrated_ce_with_logits.
+CE_LOSS_TYPES = ("ce", "ce_calibrated")
+
 
 def span_dice_loss(
     inputs: torch.Tensor,
@@ -232,5 +235,74 @@ def cross_entropy_loss(
     loss = F.cross_entropy(
         inputs, targets, ignore_index=ignore_index, label_smoothing=label_smoothing, reduction=reduction
     )
+
+    return loss
+
+
+def calibrated_ce_with_logits(
+    inputs: torch.Tensor,
+    targets: torch.Tensor,
+    valid_mask: torch.Tensor | None = None,
+    anchor: float = 0.0,
+    calib_weight: float = 0.0,
+    pos_weight: torch.Tensor | None = None,
+    ignore_index: int = -100,
+) -> torch.Tensor:
+    """Multi-label cross-entropy against a fixed "no entity" anchor, plus a BCE calibration term.
+
+    Each row (e.g. one span) holds C class logits. A virtual "no entity" logit
+    fixed at ``anchor`` is added to the row, and the loss enforces
+    positives > anchor > negatives (the adaptive-threshold loss from ATLOP,
+    Zhou et al. 2021, with the threshold held constant):
+
+        L_pos   = sum_{p in P} -log(e^{s_p} / (e^{s_p} + e^{a}))   = sum_p softplus(a - s_p)
+        L_neg   = logsumexp([a, s_N]) - a
+        L_calib = mean_c BCE(s_c, y_c)
+        L       = L_pos + L_neg + calib_weight * L_calib
+
+    With ``anchor=0`` the decision rule ``sigmoid(s) > 0.5`` used by GLiNER
+    decoders stays valid. ``L_neg`` only pushes down the strongest negatives,
+    so the BCE term keeps every per-class sigmoid probability calibrated.
+
+    Args:
+        inputs: Logits of shape (..., C).
+        targets: Labels of shape (..., C) with values in {0, 1} or ``ignore_index``.
+        valid_mask: Optional mask broadcastable to ``inputs``. Entries that are 0
+            (padded classes, sampled-out negatives) are excluded from every term.
+        anchor: Logit of the virtual "no entity" class. Defaults to 0.0.
+        calib_weight: Weight of the per-class BCE term. 0 gives plain CE.
+        pos_weight: Optional weights broadcastable to ``inputs``, applied to
+            positive terms of ``L_pos``.
+        ignore_index: Target value excluded from the loss. Defaults to -100.
+
+    Returns:
+        Per-row loss of shape ``inputs.shape[:-1]`` (float32).
+    """
+    logits = inputs.float()
+    valid = targets != ignore_index
+    if valid_mask is not None:
+        valid = valid & valid_mask.bool()
+    y = targets.float().clamp(min=0.0)
+
+    pos = valid & (y > 0.5)
+    neg = valid & ~pos
+
+    # L_pos: each positive must beat the anchor.
+    pos_terms = F.softplus(anchor - logits) * y
+    if pos_weight is not None:
+        pos_terms = pos_terms * pos_weight.float()
+    l_pos = (pos_terms * pos).sum(-1)
+
+    # L_neg: the anchor must beat all negatives (one softmax per row).
+    min_val = torch.finfo(logits.dtype).min
+    neg_logits = logits.masked_fill(~neg, min_val)
+    anchor_col = torch.full_like(neg_logits[..., :1], anchor)
+    l_neg = torch.logsumexp(torch.cat([anchor_col, neg_logits], dim=-1), dim=-1) - anchor
+
+    loss = l_pos + l_neg
+
+    if calib_weight > 0:
+        bce = F.binary_cross_entropy_with_logits(logits, y, reduction="none") * valid
+        loss = loss + calib_weight * bce.sum(-1) / valid.sum(-1).clamp(min=1)
 
     return loss

@@ -2493,7 +2493,8 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             bf16: Whether to use bfloat16.
             dataloader_num_workers: Number of dataloader workers.
             report_to: Where to report metrics.
-            **kwargs: Additional training arguments.
+            **kwargs: Additional training arguments, e.g. ``loss_type``
+                ('focal', 'bce', 'dice', 'ce', 'ce_calibrated') and ``ce_calib_weight``.
 
         Returns:
             TrainingArguments instance.
