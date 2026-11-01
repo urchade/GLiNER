@@ -417,6 +417,7 @@ class StanzaWordsSplitter(TokenSplitterBase):
         default_lang: str = "en",
         download_on_missing: bool = True,
         logging: bool = False,
+        min_words_for_detection: int = 3,
     ):
         """Initialize the Stanza token splitter.
 
@@ -427,6 +428,9 @@ class StanzaWordsSplitter(TokenSplitterBase):
                 language models (default: True).
             logging: Whether to print download and processing information
                 (default: False).
+            min_words_for_detection: Minimum number of words required to run
+                automatic language detection (default: 3). Short inputs use
+                default_lang to avoid false-positive misdetections.
 
         Raises:
             ModuleNotFoundError: If stanza or langdetect is not installed.
@@ -448,6 +452,7 @@ class StanzaWordsSplitter(TokenSplitterBase):
         self.default_lang = default_lang
         self.download_on_missing = download_on_missing
         self.logging = logging
+        self.min_words_for_detection = min_words_for_detection
 
         self._pipelines: dict[str, stanza.Pipeline | None] = {}
         self._ensure_pipeline(default_lang)
@@ -499,12 +504,18 @@ class StanzaWordsSplitter(TokenSplitterBase):
             RuntimeError: If neither the detected language nor the default
                 language pipeline could be loaded.
         """
-        try:
-            lang = self._detect(text)
-            if lang == "zh-cn":
-                lang = "zh"
-        except self._LangDetectException:
+        words = text.strip().split()
+        if len(words) < self.min_words_for_detection:
+            # Short inputs frequently cause erratic language misdetection in langdetect,
+            # triggering multi-minute blocking model downloads. Default directly.
             lang = self.default_lang
+        else:
+            try:
+                lang = self._detect(text)
+                if lang == "zh-cn":
+                    lang = "zh"
+            except self._LangDetectException:
+                lang = self.default_lang
 
         pipeline = self._ensure_pipeline(lang) or self._ensure_pipeline(self.default_lang)
         if pipeline is None:
