@@ -1,0 +1,141 @@
+{
+  "hardware": "Apple Silicon arm64 laptop, ONNX Runtime 1.31.1 CPU provider, torch 2.15.0; machine was shared with other jobs, so treat latency as indicative.",
+  "runs": [
+    {
+      "model": "urchade/gliner_small-v2.1",
+      "n_texts": 200,
+      "threshold": 0.5,
+      "latency_rounds": 3,
+      "dataset": "ai4privacy/pii-masking-300k, data/validation/1english_openpii_8k.jsonl (first n rows)",
+      "labels": [
+        "city",
+        "date of birth",
+        "driver license number",
+        "email",
+        "id card number",
+        "ip address",
+        "passport number",
+        "password",
+        "phone number",
+        "postal code",
+        "social security number",
+        "username"
+      ],
+      "results": {
+        "fp32": {
+          "size_mb": 611.3,
+          "median_latency_ms": 27.2,
+          "entities": 482,
+          "agreement_with_fp32": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "vs_gold": {
+            "precision": 0.3797,
+            "recall": 0.2683,
+            "f1": 0.3144
+          }
+        },
+        "int8_uint8_per_tensor": {
+          "size_mb": 183.4,
+          "median_latency_ms": 22.7,
+          "entities": 143,
+          "agreement_with_fp32": {
+            "precision": 0.8322,
+            "recall": 0.2469,
+            "f1": 0.3808
+          },
+          "vs_gold": {
+            "precision": 0.4126,
+            "recall": 0.0865,
+            "f1": 0.143
+          }
+        },
+        "int8_int8_per_channel": {
+          "size_mb": 183.7,
+          "median_latency_ms": 22.8,
+          "entities": 499,
+          "agreement_with_fp32": {
+            "precision": 0.8918,
+            "recall": 0.9232,
+            "f1": 0.9072
+          },
+          "vs_gold": {
+            "precision": 0.3848,
+            "recall": 0.2815,
+            "f1": 0.3251
+          }
+        }
+      }
+    },
+    {
+      "model": "urchade/gliner_multi_pii-v1",
+      "n_texts": 200,
+      "threshold": 0.5,
+      "latency_rounds": 2,
+      "dataset": "ai4privacy/pii-masking-300k, data/validation/1english_openpii_8k.jsonl (first n rows)",
+      "labels": [
+        "city",
+        "date of birth",
+        "driver license number",
+        "email",
+        "id card number",
+        "ip address",
+        "passport number",
+        "password",
+        "phone number",
+        "postal code",
+        "social security number",
+        "username"
+      ],
+      "results": {
+        "fp32": {
+          "size_mb": 1157.1,
+          "median_latency_ms": 46.8,
+          "entities": 539,
+          "agreement_with_fp32": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0
+          },
+          "vs_gold": {
+            "precision": 0.7922,
+            "recall": 0.6261,
+            "f1": 0.6994
+          }
+        },
+        "int8_uint8_per_tensor": {
+          "size_mb": 349.1,
+          "median_latency_ms": 39.8,
+          "entities": 51,
+          "agreement_with_fp32": {
+            "precision": 0.8235,
+            "recall": 0.0779,
+            "f1": 0.1424
+          },
+          "vs_gold": {
+            "precision": 0.8235,
+            "recall": 0.0616,
+            "f1": 0.1146
+          }
+        },
+        "int8_int8_per_channel": {
+          "size_mb": 349.6,
+          "median_latency_ms": 39.4,
+          "entities": 505,
+          "agreement_with_fp32": {
+            "precision": 0.9545,
+            "recall": 0.8942,
+            "f1": 0.9234
+          },
+          "vs_gold": {
+            "precision": 0.8079,
+            "recall": 0.5982,
+            "f1": 0.6874
+          }
+        }
+      }
+    }
+  ]
+}

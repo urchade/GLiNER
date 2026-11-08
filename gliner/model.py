@@ -2269,10 +2269,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             return None
 
         try:
+            # Signed, per-channel weights. Unsigned per-tensor weights (the
+            # previous setting) drop most entities on DeBERTa-based GLiNER
+            # models (issue #218); see benchmarks/bench_onnx_int8.py.
             quantize_dynamic(
                 model_input=str(onnx_path),
                 model_output=str(quantized_path),
-                weight_type=QuantType.QUInt8,
+                weight_type=QuantType.QInt8,
+                per_channel=True,
             )
             return quantized_path
         except Exception as e:
