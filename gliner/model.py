@@ -3548,31 +3548,31 @@ class BaseEncoderGLiNER(BaseGLiNER):
             )
             self.eval()
 
-    @staticmethod
-    def _predictions_to_word_level(text: str, preds: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Convert char-offset predictions to whitespace-word-level NER format."""
-        words = text.split()
-        char_starts, char_ends = [], []
-        cursor = 0
-        remaining = text
-        for w in words:
-            idx = remaining.find(w)
-            abs_start = cursor + idx
-            char_starts.append(abs_start)
-            char_ends.append(abs_start + len(w))
-            cursor = abs_start + len(w)
-            remaining = text[cursor:]
-        start_to_widx = {s: i for i, s in enumerate(char_starts)}
-        end_to_widx = {e: i for i, e in enumerate(char_ends)}
+    def _predictions_to_word_level(self, text: str, preds: List[Dict[str, Any]]) -> Dict[str, Any]:
+        """Convert char-offset predictions to the model's word-level NER format.
+
+        Word boundaries come from the same splitter used at inference. Splitting
+        on whitespace keeps punctuation attached to the previous word, so a
+        predicted span such as ``Honolulu`` in ``Honolulu,`` matches neither
+        word and is dropped from the distillation set.
+        """
+        pieces = list(self.data_processor.words_splitter(text))
+        words = [token for token, _, _ in pieces]
+        start_to_widx = {}
+        end_to_widx = {}
+        for index, (_, start, end) in enumerate(pieces):
+            start_to_widx.setdefault(start, index)
+            end_to_widx.setdefault(end, index)
         ner = []
-        for p in preds:
-            s, e, cls = p["start"], p["end"], p["label"].lower()
-            span_text = text[s:e]
-            ls = len(span_text) - len(span_text.lstrip())
-            le = len(span_text) - len(span_text.rstrip())
-            s2, e2 = s + ls, e - le
-            if s2 in start_to_widx and e2 in end_to_widx:
-                ner.append((start_to_widx[s2], end_to_widx[e2], cls))
+        for pred in preds:
+            start, end, label = pred["start"], pred["end"], pred["label"].lower()
+            span_text = text[start:end]
+            start += len(span_text) - len(span_text.lstrip())
+            end -= len(span_text) - len(span_text.rstrip())
+            word_start = start_to_widx.get(start)
+            word_end = end_to_widx.get(end)
+            if word_start is not None and word_end is not None and word_end >= word_start:
+                ner.append((word_start, word_end, label))
         return {"tokenized_text": words, "ner": ner}
 
     @torch.no_grad()
