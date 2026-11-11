@@ -12,6 +12,11 @@ from .utils import make_mapping, get_negatives, pad_2d_tensor, prepare_span_idx,
 from .tokenizer import WordsSplitter
 
 
+def _types_with_explicit_negatives(predefined, negatives):
+    """Keep a predefined label set, then append explicit negatives once each."""
+    return list(dict.fromkeys([*predefined, *negatives]))
+
+
 class BaseProcessor(ABC):
     """Abstract base class for data processors.
 
@@ -351,7 +356,10 @@ class BaseProcessor(ABC):
                 negs_i = negatives[: len(b[key]) * neg_type_ratio] if neg_type_ratio else []
 
             if f"{key}_labels" in b:  # labels are predefined
-                types = b[f"{key}_labels"]
+                # ner_labels replaces sampled negatives, but explicit ner_negatives
+                # are additional candidates (see the training data format).
+                explicit_negatives = b.get(f"{key}_negatives", [])
+                types = _types_with_explicit_negatives(b[f"{key}_labels"], explicit_negatives)
             else:
                 types = list(set([el[-1] for el in b[key]] + negs_i))
                 random.shuffle(types)
@@ -1142,10 +1150,18 @@ class BaseBiEncoderProcessor(BaseProcessor):
             else:  # in-batch negative types
                 negs_i = []
 
-            types = list(set([el[-1] for el in b["ner"]] + negs_i))
+            # Documented key is ner_labels. ner_label is accepted for older configs.
+            if "ner_labels" in b:
+                predefined = b["ner_labels"]
+            elif "ner_label" in b:
+                predefined = b["ner_label"]
+            else:
+                predefined = None
 
-            if "ner_label" in b:  # labels are predefined
-                types = b["ner_label"]
+            if predefined is not None:
+                types = _types_with_explicit_negatives(predefined, negs_i)
+            else:
+                types = list(set([el[-1] for el in b["ner"]] + negs_i))
 
             classes.extend(types)
         random.shuffle(classes)
@@ -1734,7 +1750,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 negs_i = ner_negatives[: len(b["ner"]) * neg_type_ratio] if neg_type_ratio else []
 
             if "ner_labels" in b:
-                types = b["ner_labels"]
+                explicit_negatives = b.get("ner_negatives", [])
+                types = _types_with_explicit_negatives(b["ner_labels"], explicit_negatives)
             else:
                 # Exclude dropped entity types ("other" replacements are already in ner)
                 ent_types = [el[-1] for el in b["ner"] if el[-1] not in dropped_ent_types]
@@ -1758,7 +1775,8 @@ class RelationExtractionSpanProcessor(UniEncoderSpanProcessor):
                 rel_negs_i = rel_negatives[: len(b.get("relations", [])) * neg_type_ratio] if neg_type_ratio else []
 
             if "rel_labels" in b:
-                rel_types = b["rel_labels"]
+                explicit_rel_negatives = b.get("rel_negatives", [])
+                rel_types = _types_with_explicit_negatives(b["rel_labels"], explicit_rel_negatives)
             else:
                 # Exclude dropped relation types
                 active_rel_types = [el[-1] for el in b.get("relations", []) if el[-1] not in dropped_rel_types]
