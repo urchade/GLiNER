@@ -95,6 +95,24 @@ paths = model.export_to_onnx(
 print(paths["quantized_path"])
 ```
 
+The quantized model uses ONNX Runtime dynamic quantization with signed int8,
+per-channel weights. Earlier versions used unsigned per-tensor weights, which
+dropped most entities on DeBERTa-based checkpoints
+([#218](https://github.com/urchade/GLiNER/issues/218)). On 200 English texts from
+`ai4privacy/pii-masking-300k` ([`benchmarks/bench_onnx_int8.py`](../benchmarks/bench_onnx_int8.py)):
+
+| Model | Variant | Size | Entities found | Agreement with fp32 (F1) | Gold F1 |
+| --- | --- | --- | --- | --- | --- |
+| `urchade/gliner_small-v2.1` | fp32 | 611 MB | 482 | 1.000 | 0.314 |
+| | int8, unsigned per-tensor (old) | 183 MB | 143 | 0.381 | 0.143 |
+| | int8, signed per-channel (now) | 184 MB | 499 | 0.907 | 0.325 |
+| `urchade/gliner_multi_pii-v1` | fp32 | 1157 MB | 539 | 1.000 | 0.699 |
+| | int8, unsigned per-tensor (old) | 349 MB | 51 | 0.142 | 0.115 |
+| | int8, signed per-channel (now) | 350 MB | 505 | 0.923 | 0.687 |
+
+Int8 still changes some predictions, so check it on your own data before
+swapping it in.
+
 Quantization is best-effort. If ONNX Runtime quantization is unavailable or
 conversion fails, GLiNER emits a warning and returns `None` for
 `quantized_path`; the regular ONNX model is still retained.

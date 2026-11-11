@@ -6,6 +6,7 @@ import numpy as np
 import torch
 import pytest
 
+import gliner.model as gliner_model
 import gliner.runtime.onnx as onnx_runtime
 import gliner.runtime.openvino as openvino_runtime
 from gliner.model import BaseGLiNER
@@ -550,3 +551,58 @@ def test_base_gliner_rejects_torch_only_options_for_external_runtime():
 def test_base_gliner_rejects_runtime_unsupported_architectures(runtime, config):
     with pytest.raises(NotImplementedError, match="does not support"):
         BaseGLiNER._validate_runtime_architecture(config, runtime)
+
+
+class _QuantizingModel:
+    _maybe_quantize_onnx = BaseGLiNER._maybe_quantize_onnx
+
+
+def test_onnx_quantization_uses_signed_per_channel_weights(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(gliner_model, "quantize_dynamic", lambda **kwargs: calls.append(kwargs))
+
+    out = _QuantizingModel()._maybe_quantize_onnx(tmp_path / "model.onnx", tmp_path / "model_int8.onnx", True)
+
+    assert out == tmp_path / "model_int8.onnx"
+    assert len(calls) == 1
+    # Unsigned per-tensor weights drop most entities on DeBERTa-based GLiNER (#218).
+    assert calls[0]["weight_type"] == gliner_model.QuantType.QInt8
+    assert calls[0]["per_channel"] is True
+
+
+def test_onnx_quantization_writes_per_channel_int8_weights(tmp_path):
+    onnx = pytest.importorskip("onnx")
+    ort = pytest.importorskip("onnxruntime")
+    pytest.importorskip("onnxruntime.quantization")
+
+    torch.manual_seed(0)
+    module = torch.nn.Sequential(torch.nn.Linear(16, 32), torch.nn.GELU(), torch.nn.Linear(32, 8)).eval()
+    example = torch.randn(2, 5, 16)
+    fp32_path = tmp_path / "model.onnx"
+    torch.onnx.export(
+        module,
+        (example,),
+        str(fp32_path),
+        input_names=["x"],
+        output_names=["y"],
+        dynamic_axes={"x": {0: "batch", 1: "seq"}},
+        opset_version=19,
+        dynamo=False,
+    )
+
+    int8_path = _QuantizingModel()._maybe_quantize_onnx(fp32_path, tmp_path / "model_int8.onnx", True)
+
+    graph = onnx.load(str(int8_path)).graph
+    initializers = {init.name: init for init in graph.initializer}
+    quantized = [init for init in graph.initializer if init.name.endswith("_quantized")]
+    assert quantized, "expected quantized weight initializers"
+    assert {init.data_type for init in quantized} == {onnx.TensorProto.INT8}
+    for weight in quantized:
+        scale = initializers[weight.name.replace("_quantized", "_scale")]
+        # Per-channel: one scale per output channel rather than a single scalar.
+        assert int(np.prod(scale.dims)) == weight.dims[-1] > 1
+
+    x = example.numpy()
+    reference = ort.InferenceSession(str(fp32_path)).run(None, {"x": x})[0]
+    quantized_out = ort.InferenceSession(str(int8_path)).run(None, {"x": x})[0]
+    np.testing.assert_allclose(quantized_out, reference, atol=0.05)
