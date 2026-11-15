@@ -9,6 +9,7 @@ def main(args):
                                 onnx_filename=args.file_name, 
                                 quantized_filename=args.quantized_file_name,
                                 quantize=args.quantize,
+                                quantize_per_channel=args.quantize_per_channel,
                                 opset=args.opset)
     
 if __name__ == "__main__":
@@ -19,6 +20,8 @@ if __name__ == "__main__":
     parser.add_argument('--quantized_file_name', type=str, default = 'models_quantized.onnx')
     parser.add_argument('--opset', type=int, default = 19)
     parser.add_argument('--quantize', type=bool, default = True)
+    parser.add_argument('--quantize_per_channel', action=argparse.BooleanOptionalAction, default=True,
+                        help='Per-channel int8 weights (default). Use --no-quantize_per_channel for per-tensor.')
     args = parser.parse_args()
     
     if not os.path.exists(args.save_path):

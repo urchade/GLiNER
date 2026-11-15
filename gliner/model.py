@@ -2260,6 +2260,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         onnx_path: Path,
         quantized_path: Path,
         quantize: bool,
+        per_channel: bool = True,
     ) -> Path | None:
         if not quantize:
             return None
@@ -2269,10 +2270,14 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             return None
 
         try:
+            # Signed int8 weights, per-channel by default. Unsigned per-tensor
+            # weights (the previous setting) drop most entities on DeBERTa-based
+            # GLiNER models (issue #218); see benchmarks/bench_onnx_int8.py.
             quantize_dynamic(
                 model_input=str(onnx_path),
                 model_output=str(quantized_path),
-                weight_type=QuantType.QUInt8,
+                weight_type=QuantType.QInt8,
+                per_channel=per_channel,
             )
             return quantized_path
         except Exception as e:
@@ -2361,6 +2366,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         quantized_filename: str = "model_quantized.onnx",
         quantize: bool = False,
         opset: int = 19,
+        quantize_per_channel: bool = True,
         **export_kwargs,
     ) -> dict[str, str | None]:
         """Unified ONNX export method using specifications from child classes.
@@ -2371,6 +2377,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             quantized_filename: Name of the quantized model file.
             quantize: Whether to create a quantized version.
             opset: ONNX opset version.
+            quantize_per_channel: Quantize weights with one scale per output
+                channel (default) instead of one scale per tensor. Only used
+                when ``quantize=True``.
             **export_kwargs: Additional export arguments (model-specific).
 
         Returns:
@@ -2402,7 +2411,9 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
         self.data_processor.transformer_tokenizer.save_pretrained(save_dir)
 
         # Quantize if requested
-        q_path = self._maybe_quantize_onnx(onnx_path, save_dir / quantized_filename, quantize)
+        q_path = self._maybe_quantize_onnx(
+            onnx_path, save_dir / quantized_filename, quantize, per_channel=quantize_per_channel
+        )
 
         return {
             "onnx_path": str(onnx_path),
@@ -5918,6 +5929,7 @@ class UniEncoderSpanDecoderGLiNER(BaseEncoderGLiNER):
         quantized_filename: str = "model_quantized.onnx",
         quantize: bool = False,
         opset: int = 19,
+        quantize_per_channel: bool = True,
     ) -> dict[str, str | None]:
         """
         ONNX export not supported for encoder-decoder models.
