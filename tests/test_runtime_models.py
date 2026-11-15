@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import torch
@@ -568,6 +569,48 @@ def test_onnx_quantization_uses_signed_per_channel_weights(monkeypatch, tmp_path
     # Unsigned per-tensor weights drop most entities on DeBERTa-based GLiNER (#218).
     assert calls[0]["weight_type"] == gliner_model.QuantType.QInt8
     assert calls[0]["per_channel"] is True
+
+
+def test_onnx_quantization_per_channel_can_be_disabled(monkeypatch, tmp_path):
+    calls = []
+    monkeypatch.setattr(gliner_model, "quantize_dynamic", lambda **kwargs: calls.append(kwargs))
+
+    _QuantizingModel()._maybe_quantize_onnx(
+        tmp_path / "model.onnx", tmp_path / "model_int8.onnx", True, per_channel=False
+    )
+
+    assert len(calls) == 1
+    assert calls[0]["weight_type"] == gliner_model.QuantType.QInt8
+    assert calls[0]["per_channel"] is False
+
+
+@pytest.mark.parametrize("per_channel", [True, False])
+def test_export_to_onnx_passes_quantize_per_channel(tmp_path, per_channel):
+    calls = []
+
+    class _Exporter:
+        export_to_onnx = BaseGLiNER.export_to_onnx
+
+        def _check_export_preconditions(self):
+            pass
+
+        def _prepare_export_graph(self, **kwargs):
+            return None, None, {"input_names": [], "output_names": [], "dynamic_axes": {}}
+
+        def _run_torch_onnx_export(self, *args):
+            pass
+
+        def _maybe_quantize_onnx(self, onnx_path, quantized_path, quantize, per_channel=True):
+            calls.append((quantize, per_channel))
+            return quantized_path
+
+    exporter = _Exporter()
+    exporter.config = SimpleNamespace(to_json_file=lambda path: None)
+    exporter.data_processor = SimpleNamespace(transformer_tokenizer=SimpleNamespace(save_pretrained=lambda path: None))
+
+    exporter.export_to_onnx(tmp_path, quantize=True, quantize_per_channel=per_channel)
+
+    assert calls == [(True, per_channel)]
 
 
 def test_onnx_quantization_writes_per_channel_int8_weights(tmp_path):

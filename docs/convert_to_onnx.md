@@ -96,7 +96,9 @@ print(paths["quantized_path"])
 ```
 
 The quantized model uses ONNX Runtime dynamic quantization with signed int8,
-per-channel weights. Earlier versions used unsigned per-tensor weights, which
+per-channel weights. Pass `quantize_per_channel=False` (or
+`--no-quantize_per_channel` to `scripts/convert_to_onnx.py`) for one scale per
+weight tensor instead. Earlier versions used unsigned per-tensor weights, which
 dropped most entities on DeBERTa-based checkpoints
 ([#218](https://github.com/urchade/GLiNER/issues/218)). On 200 English texts from
 `ai4privacy/pii-masking-300k` ([`benchmarks/bench_onnx_int8.py`](../benchmarks/bench_onnx_int8.py)):
