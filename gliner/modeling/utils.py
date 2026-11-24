@@ -13,11 +13,12 @@ def extract_first_word_embeddings(
     embed_dim: int,
 ) -> torch.Tensor:
     """Select the first marked subtoken representation for each word."""
-    words_embedding = token_embeds.new_zeros((batch_size, max_text_length, embed_dim))
-    batch_indices, token_indices = torch.where(words_mask > 0)
-    target_word_indices = words_mask[batch_indices, token_indices] - 1
-    words_embedding[batch_indices, target_word_indices] = token_embeds[batch_indices, token_indices]
-    return words_embedding
+    # Unmarked subtokens scatter into an extra trailing slot that is dropped, keeping shapes static for export.
+    valid = (words_mask > 0) & (words_mask <= max_text_length)
+    target_word_indices = torch.where(valid, words_mask - 1, max_text_length)
+    words_embedding = token_embeds.new_zeros((batch_size, max_text_length + 1, embed_dim))
+    words_embedding.scatter_(1, target_word_indices.unsqueeze(-1).expand(-1, -1, embed_dim), token_embeds)
+    return words_embedding[:, :-1]
 
 
 def extract_last_word_embeddings(
@@ -28,11 +29,11 @@ def extract_last_word_embeddings(
     embed_dim: int,
 ) -> torch.Tensor:
     """Select the last marked subtoken representation for each word."""
-    words_embedding = token_embeds.new_zeros((batch_size, max_text_length, embed_dim))
-    batch_indices, token_indices = torch.where(words_mask > 0)
-    target_word_indices = words_mask[batch_indices, token_indices] - 1
-    words_embedding[batch_indices, target_word_indices] = token_embeds[batch_indices, token_indices]
-    return words_embedding
+    valid = (words_mask > 0) & (words_mask <= max_text_length)
+    target_word_indices = torch.where(valid, words_mask - 1, max_text_length)
+    words_embedding = token_embeds.new_zeros((batch_size, max_text_length + 1, embed_dim))
+    words_embedding.scatter_(1, target_word_indices.unsqueeze(-1).expand(-1, -1, embed_dim), token_embeds)
+    return words_embedding[:, :-1]
 
 
 def extract_mean_word_embeddings(
@@ -45,11 +46,12 @@ def extract_mean_word_embeddings(
 ) -> torch.Tensor:
     """Mean-pool all attended subtoken representations for each word."""
     valid_subtokens = (words_mask > 0) & attention_mask.bool() & (words_mask <= max_text_length)
-    batch_indices, token_indices = torch.where(valid_subtokens)
-    flat_word_indices = batch_indices * max_text_length + words_mask[batch_indices, token_indices] - 1
-    selected_embeddings = token_embeds[batch_indices, token_indices]
-    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    batch_offsets = torch.arange(batch_size, device=words_mask.device).unsqueeze(-1) * max_text_length
     flat_output_size = batch_size * max_text_length
+    flat_word_indices = torch.where(valid_subtokens, batch_offsets + words_mask - 1, flat_output_size).reshape(-1)
+    selected_embeddings = token_embeds.reshape(-1, embed_dim)
+    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    flat_output_size = flat_output_size + 1
 
     words_embedding = token_embeds.new_zeros((flat_output_size, embed_dim))
     if torch.onnx.is_in_onnx_export():
@@ -80,7 +82,7 @@ def extract_mean_word_embeddings(
             include_self=False,
         )
 
-    return words_embedding.reshape(batch_size, max_text_length, embed_dim)
+    return words_embedding[:-1].reshape(batch_size, max_text_length, embed_dim)
 
 
 def extract_max_word_embeddings(
@@ -93,11 +95,12 @@ def extract_max_word_embeddings(
 ) -> torch.Tensor:
     """Element-wise max-pool all attended subtoken representations for each word."""
     valid_subtokens = (words_mask > 0) & attention_mask.bool() & (words_mask <= max_text_length)
-    batch_indices, token_indices = torch.where(valid_subtokens)
-    flat_word_indices = batch_indices * max_text_length + words_mask[batch_indices, token_indices] - 1
-    selected_embeddings = token_embeds[batch_indices, token_indices]
-    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    batch_offsets = torch.arange(batch_size, device=words_mask.device).unsqueeze(-1) * max_text_length
     flat_output_size = batch_size * max_text_length
+    flat_word_indices = torch.where(valid_subtokens, batch_offsets + words_mask - 1, flat_output_size).reshape(-1)
+    selected_embeddings = token_embeds.reshape(-1, embed_dim)
+    expanded_indices = flat_word_indices.unsqueeze(-1).expand(-1, embed_dim)
+    flat_output_size = flat_output_size + 1
 
     if torch.onnx.is_in_onnx_export():
         # include_self=False is unsupported by the legacy ONNX exporter. Start
@@ -129,7 +132,7 @@ def extract_max_word_embeddings(
             include_self=False,
         )
 
-    return words_embedding.reshape(batch_size, max_text_length, embed_dim)
+    return words_embedding[:-1].reshape(batch_size, max_text_length, embed_dim)
 
 
 def extract_word_embeddings(
@@ -180,6 +183,7 @@ def extract_prompt_features(
     batch_size: int,
     embed_dim: int,
     embed_ent_token: bool = True,
+    prompts_mask: torch.Tensor | None = None,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Extract prompt/entity type embeddings from special class tokens.
 
@@ -207,6 +211,8 @@ def extract_prompt_features(
         embed_ent_token: If True, use the [ENT] token embedding itself.
             If False, use the embedding of the token immediately after [ENT]
             (i.e., the entity type name token). Default: True.
+        prompts_mask: Optional output of ``extract_prompts_mask``. Its width sets the number of
+            prompts, so exported graphs take it from an input shape instead of input values.
 
     Returns:
         Tuple containing:
@@ -223,31 +229,32 @@ def extract_prompt_features(
     num_class_tokens = torch.sum(class_token_mask, dim=-1, keepdim=True)
 
     # Maximum number of class tokens across batch
-    max_embed_dim = num_class_tokens.max()
+    max_embed_dim = num_class_tokens.max() if prompts_mask is None else prompts_mask.size(1)
     aranged_class_idx = torch.arange(max_embed_dim, dtype=attention_mask.dtype, device=token_embeds.device).expand(
         batch_size, -1
     )
 
-    # Find valid positions (not padding)
-    batch_indices, target_class_idx = torch.where(aranged_class_idx < num_class_tokens)
-    _, class_indices = torch.where(class_token_mask)
-
     # Optionally shift to token after [ENT] (the entity type name)
     if not embed_ent_token:
-        class_indices += 1
+        token_embeds = token_embeds.roll(-1, dims=1)
 
-    # Initialize prompt embeddings tensor
-    prompts_embedding = torch.zeros(
-        batch_size, max_embed_dim, embed_dim, dtype=token_embeds.dtype, device=token_embeds.device
-    )
+    # Class tokens scatter to their rank in the row; other tokens go to a dropped trailing slot
+    target_class_idx = torch.where(class_token_mask, class_token_mask.long().cumsum(-1) - 1, max_embed_dim)
+    prompts_embedding = token_embeds.new_zeros((batch_size, max_embed_dim + 1, embed_dim))
+    prompts_embedding.scatter_(1, target_class_idx.unsqueeze(-1).expand(-1, -1, embed_dim), token_embeds)
+    prompts_embedding = prompts_embedding[:, :-1]
 
     # Create mask for valid (non-padded) positions
     prompts_embedding_mask = (aranged_class_idx < num_class_tokens).to(attention_mask.dtype)
 
-    # Extract embeddings at class token positions
-    prompts_embedding[batch_indices, target_class_idx] = token_embeds[batch_indices, class_indices]
-
     return prompts_embedding, prompts_embedding_mask
+
+
+def extract_prompts_mask(input_ids: torch.Tensor, attention_mask: torch.Tensor, class_token_index: int) -> torch.Tensor:
+    """Mask of shape (batch_size, max_num_types) marking the prompts each row holds."""
+    num_class_tokens = (input_ids.eq(class_token_index) & attention_mask.gt(0)).sum(-1, keepdim=True)
+    aranged_class_idx = torch.arange(num_class_tokens.max(), device=input_ids.device)
+    return (aranged_class_idx < num_class_tokens).to(attention_mask.dtype)
 
 
 def extract_prompt_features_and_word_embeddings(
@@ -259,6 +266,7 @@ def extract_prompt_features_and_word_embeddings(
     words_mask: torch.Tensor,
     embed_ent_token: bool = True,
     subtoken_pooling: str = "first",
+    max_text_length: int | torch.Tensor | None = None,
     **kwargs,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Extract both prompt embeddings and word embeddings in one call.
@@ -287,6 +295,7 @@ def extract_prompt_features_and_word_embeddings(
             use the token after [ENT] (the entity type name). Default: True.
         subtoken_pooling: Reduction applied to subtokens belonging to the same
             word. One of ``first``, ``last``, ``mean``, or ``max``.
+        max_text_length: Number of word slots. Defaults to ``text_lengths.max()``.
         **kwargs: Additional keyword arguments passed to extract_prompt_features.
 
     Returns:
@@ -301,7 +310,8 @@ def extract_prompt_features_and_word_embeddings(
               Shape: (batch_size, max_text_length)
     """
     batch_size, _, embed_dim = token_embeds.shape
-    max_text_length = text_lengths.max()
+    if max_text_length is None:
+        max_text_length = text_lengths.max()
 
     # Extract prompt/entity type embeddings
     prompts_embedding, prompts_embedding_mask = extract_prompt_features(
