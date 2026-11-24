@@ -14,7 +14,8 @@ def extract_first_word_embeddings(
 ) -> torch.Tensor:
     """Select the first marked subtoken representation for each word."""
     # Unmarked subtokens scatter into an extra trailing slot that is dropped, keeping shapes static for export.
-    target_word_indices = torch.where(words_mask > 0, words_mask - 1, max_text_length)
+    valid = (words_mask > 0) & (words_mask <= max_text_length)
+    target_word_indices = torch.where(valid, words_mask - 1, max_text_length)
     words_embedding = token_embeds.new_zeros((batch_size, max_text_length + 1, embed_dim))
     words_embedding.scatter_(1, target_word_indices.unsqueeze(-1).expand(-1, -1, embed_dim), token_embeds)
     return words_embedding[:, :-1]
@@ -28,7 +29,8 @@ def extract_last_word_embeddings(
     embed_dim: int,
 ) -> torch.Tensor:
     """Select the last marked subtoken representation for each word."""
-    target_word_indices = torch.where(words_mask > 0, words_mask - 1, max_text_length)
+    valid = (words_mask > 0) & (words_mask <= max_text_length)
+    target_word_indices = torch.where(valid, words_mask - 1, max_text_length)
     words_embedding = token_embeds.new_zeros((batch_size, max_text_length + 1, embed_dim))
     words_embedding.scatter_(1, target_word_indices.unsqueeze(-1).expand(-1, -1, embed_dim), token_embeds)
     return words_embedding[:, :-1]
@@ -181,6 +183,7 @@ def extract_prompt_features(
     batch_size: int,
     embed_dim: int,
     embed_ent_token: bool = True,
+    prompts_mask: torch.Tensor | None = None,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Extract prompt/entity type embeddings from special class tokens.
 
@@ -208,6 +211,8 @@ def extract_prompt_features(
         embed_ent_token: If True, use the [ENT] token embedding itself.
             If False, use the embedding of the token immediately after [ENT]
             (i.e., the entity type name token). Default: True.
+        prompts_mask: Optional output of ``extract_prompts_mask``. Its width sets the number of
+            prompts, so exported graphs take it from an input shape instead of input values.
 
     Returns:
         Tuple containing:
@@ -224,7 +229,7 @@ def extract_prompt_features(
     num_class_tokens = torch.sum(class_token_mask, dim=-1, keepdim=True)
 
     # Maximum number of class tokens across batch
-    max_embed_dim = num_class_tokens.max()
+    max_embed_dim = num_class_tokens.max() if prompts_mask is None else prompts_mask.size(1)
     aranged_class_idx = torch.arange(max_embed_dim, dtype=attention_mask.dtype, device=token_embeds.device).expand(
         batch_size, -1
     )
@@ -245,6 +250,13 @@ def extract_prompt_features(
     return prompts_embedding, prompts_embedding_mask
 
 
+def extract_prompts_mask(input_ids: torch.Tensor, attention_mask: torch.Tensor, class_token_index: int) -> torch.Tensor:
+    """Mask of shape (batch_size, max_num_types) marking the prompts each row holds."""
+    num_class_tokens = (input_ids.eq(class_token_index) & attention_mask.gt(0)).sum(-1, keepdim=True)
+    aranged_class_idx = torch.arange(num_class_tokens.max(), device=input_ids.device)
+    return (aranged_class_idx < num_class_tokens).to(attention_mask.dtype)
+
+
 def extract_prompt_features_and_word_embeddings(
     class_token_index: int,
     token_embeds: torch.Tensor,
@@ -254,6 +266,7 @@ def extract_prompt_features_and_word_embeddings(
     words_mask: torch.Tensor,
     embed_ent_token: bool = True,
     subtoken_pooling: str = "first",
+    max_text_length: int | torch.Tensor | None = None,
     **kwargs,
 ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
     """Extract both prompt embeddings and word embeddings in one call.
@@ -282,6 +295,7 @@ def extract_prompt_features_and_word_embeddings(
             use the token after [ENT] (the entity type name). Default: True.
         subtoken_pooling: Reduction applied to subtokens belonging to the same
             word. One of ``first``, ``last``, ``mean``, or ``max``.
+        max_text_length: Number of word slots. Defaults to ``text_lengths.max()``.
         **kwargs: Additional keyword arguments passed to extract_prompt_features.
 
     Returns:
@@ -296,7 +310,8 @@ def extract_prompt_features_and_word_embeddings(
               Shape: (batch_size, max_text_length)
     """
     batch_size, _, embed_dim = token_embeds.shape
-    max_text_length = text_lengths.max()
+    if max_text_length is None:
+        max_text_length = text_lengths.max()
 
     # Extract prompt/entity type embeddings
     prompts_embedding, prompts_embedding_mask = extract_prompt_features(

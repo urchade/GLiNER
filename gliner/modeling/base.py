@@ -483,6 +483,7 @@ class BaseUniEncoderModel(BaseModel):
         attention_mask: torch.Tensor,
         text_lengths: torch.Tensor,
         words_mask: torch.Tensor,
+        **kwargs: Any,
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
         """Extract entity label prompts and word embeddings from token embeddings.
 
@@ -492,6 +493,7 @@ class BaseUniEncoderModel(BaseModel):
             attention_mask: Attention mask of shape (B, L).
             text_lengths: Length of each text sequence in batch.
             words_mask: Mask indicating word boundaries.
+            **kwargs: ``max_text_length`` and ``prompts_mask`` for extract_prompt_features_and_word_embeddings.
 
         Returns:
             Tuple containing:
@@ -509,6 +511,7 @@ class BaseUniEncoderModel(BaseModel):
             words_mask,
             self.config.embed_ent_token,
             subtoken_pooling=getattr(self.config, "subtoken_pooling", "first"),
+            **kwargs,
         )
         return prompts_embedding, prompts_embedding_mask, words_embedding, mask
 
@@ -533,6 +536,8 @@ class BaseUniEncoderModel(BaseModel):
             Structured prompt and word representations.
         """
         word_lengths = kwargs.pop("word_lengths", None)
+        shape_kwargs = {key: kwargs.pop(key, None) for key in ("max_text_length", "prompts_mask")}
+        shape_kwargs = {key: value for key, value in shape_kwargs.items() if value is not None}
         token_embeds = self.token_rep_layer(input_ids, attention_mask, **kwargs)
 
         use_precomputed = (
@@ -541,7 +546,7 @@ class BaseUniEncoderModel(BaseModel):
         )
         if use_precomputed:
             batch_size, _, embed_dim = token_embeds.shape
-            max_text_length = text_lengths.max()
+            max_text_length = shape_kwargs.get("max_text_length", text_lengths.max())
             words_embedding, mask = extract_word_embeddings(
                 token_embeds,
                 words_mask,
@@ -558,7 +563,7 @@ class BaseUniEncoderModel(BaseModel):
         else:
             prompts_embedding, prompts_embedding_mask, words_embedding, mask = (
                 self._extract_prompt_features_and_word_embeddings(
-                    token_embeds, input_ids, attention_mask, text_lengths, words_mask
+                    token_embeds, input_ids, attention_mask, text_lengths, words_mask, **shape_kwargs
                 )
             )
 
@@ -647,16 +652,22 @@ class UniEncoderSpanModel(BaseUniEncoderModel):
             GLiNERBaseOutput containing logits, loss, and intermediate representations.
         """
         encoder_kwargs = {key: kwargs[key] for key in ENCODER_KWARGS if key in kwargs}
+        target_W = span_idx.size(1) // self.config.max_width
 
         representations = self.get_representations(
-            input_ids, attention_mask, text_lengths, words_mask, **encoder_kwargs
+            input_ids,
+            attention_mask,
+            text_lengths,
+            words_mask,
+            max_text_length=target_W,
+            prompts_mask=kwargs.get("prompts_mask"),
+            **encoder_kwargs,
         )
         prompts_embedding = representations.prompts_embedding
         prompts_embedding_mask = representations.prompts_embedding_mask
         words_embedding = representations.words_embedding
         mask = representations.mask
 
-        target_W = span_idx.size(1) // self.config.max_width
         words_embedding, mask = self._fit_length(words_embedding, mask, target_W)
 
         span_idx = span_idx * span_mask.unsqueeze(-1)

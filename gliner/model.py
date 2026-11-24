@@ -78,7 +78,7 @@ from .modeling.cache import (
     split_past_key_values,
     stack_past_key_values,
 )
-from .modeling.utils import extract_prompt_features
+from .modeling.utils import extract_prompts_mask, extract_prompt_features
 from .data_processing import (
     BaseProcessor,
     BiEncoderSpanProcessor,
@@ -681,8 +681,17 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
     def _forward_inputs(self, batch: Dict[str, Any]) -> Dict[str, Any]:
         """The entries of a collated batch that the model forward takes."""
         if self.is_runtime_model:
-            return dict(batch)
+            return self._runtime_inputs(batch, self.model.input_names)
         return {key: value for key, value in batch.items() if key not in self._DECODE_ONLY_KEYS}
+
+    def _runtime_inputs(self, batch: Dict[str, Any], input_names: List[str]) -> Dict[str, Any]:
+        """The batch entries an exported graph takes, adding ``prompts_mask`` when the graph declares it."""
+        inputs = dict(batch)
+        if "prompts_mask" in input_names and "prompts_mask" not in inputs:
+            inputs["prompts_mask"] = extract_prompts_mask(
+                batch["input_ids"], batch["attention_mask"], self.config.class_token_index
+            )
+        return inputs
 
     _PRECISION_ALIASES = {"fp16", "float16", "half", "bf16", "bfloat16"}
 
@@ -2342,6 +2351,7 @@ class BaseGLiNER(ABC, nn.Module, PyTorchModelHubMixin):
             inputs to pass to the wrapper and updated_spec may have modified input_names/dynamic_axes
         """
         spec = self._get_onnx_input_spec()
+        batch = self._runtime_inputs(batch, spec["input_names"])
         all_inputs = tuple(batch[name] for name in spec["input_names"])
         return all_inputs, spec
 
@@ -3980,6 +3990,7 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
                 "text_lengths",
                 "span_idx",
                 "span_mask",
+                "prompts_mask",
             ],
             "output_names": ["logits"],
             "dynamic_axes": {
@@ -3989,6 +4000,7 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
                 "text_lengths": {0: "batch_size", 1: "value"},
                 "span_idx": {0: "batch_size", 1: "num_spans", 2: "idx"},
                 "span_mask": {0: "batch_size", 1: "num_spans"},
+                "prompts_mask": {0: "batch_size", 1: "num_classes"},
                 "logits": {
                     0: "batch_size",
                     1: "sequence_length",
@@ -4014,6 +4026,7 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
                 text_lengths,
                 span_idx,
                 span_mask,
+                prompts_mask,
             ):
                 out = self.core(
                     input_ids=input_ids,
@@ -4022,6 +4035,7 @@ class UniEncoderSpanGLiNER(BaseEncoderGLiNER):
                     text_lengths=text_lengths,
                     span_idx=span_idx,
                     span_mask=span_mask,
+                    prompts_mask=prompts_mask,
                 )
                 return out.logits if hasattr(out, "logits") else out[0]
 

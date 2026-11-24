@@ -6,8 +6,16 @@ import onnx
 import torch
 import pytest
 import onnxruntime as ort
+from tokenizers import Tokenizer
+from transformers import BertConfig, PreTrainedTokenizerFast
+from tokenizers.models import WordPiece
+from tokenizers.processors import BertProcessing
+from tokenizers.pre_tokenizers import WhitespaceSplit
 
+from gliner.model import UniEncoderSpanGLiNER
+from gliner.config import UniEncoderSpanConfig
 from gliner.modeling.utils import extract_prompt_features, extract_word_embeddings
+from gliner.data_processing.processor import UniEncoderSpanProcessor
 
 CLASS_TOKEN = 7
 
@@ -136,3 +144,87 @@ def test_onnx_export_has_no_nonzero_and_matches_eager(pooling):
     want = _Extractor(pooling)(*inputs)
     for g, w in zip(got, want, strict=True):
         torch.testing.assert_close(torch.from_numpy(g), w)
+
+
+SHAPE_INPUTS = {
+    "ConstantOfShape": [0],
+    "Range": [0, 1, 2],
+    "Expand": [1],
+    "Reshape": [1],
+    "Slice": [1, 2, 3, 4],
+    "Tile": [1],
+}
+
+
+def value_dependent_shape_ops(graph):
+    """Return nodes whose output shape depends on graph input values rather than input shapes."""
+    depends = {i.name for i in graph.input}
+    found = []
+    for node in graph.node:
+        if node.op_type == "Shape":
+            continue
+        found += [
+            node.op_type
+            for k in SHAPE_INPUTS.get(node.op_type, [])
+            if node.input[k : k + 1] and node.input[k] in depends
+        ]
+        if node.op_type == "NonZero" or any(name in depends for name in node.input):
+            depends.update(node.output)
+        if node.op_type == "NonZero":
+            found.append(node.op_type)
+    return found
+
+
+@pytest.fixture
+def tiny_span_gliner():
+    words = ["Alice", "Bob", "joined", "Acme", "in", "Paris", "person", "org", "city", "date", "yesterday"]
+    vocab = {w: i for i, w in enumerate(["[PAD]", "[UNK]", "[CLS]", "[SEP]", "<<ENT>>", "<<SEP>>", *words])}
+    backend = Tokenizer(WordPiece(vocab, unk_token="[UNK]"))
+    backend.pre_tokenizer = WhitespaceSplit()
+    backend.post_processor = BertProcessing(("[SEP]", vocab["[SEP]"]), ("[CLS]", vocab["[CLS]"]))
+    tokenizer = PreTrainedTokenizerFast(
+        tokenizer_object=backend,
+        unk_token="[UNK]",
+        pad_token="[PAD]",
+        cls_token="[CLS]",
+        sep_token="[SEP]",
+        model_max_length=64,
+        additional_special_tokens=["<<ENT>>", "<<SEP>>"],
+    )
+    encoder_config = BertConfig(
+        vocab_size=len(tokenizer), hidden_size=16, num_hidden_layers=1, num_attention_heads=2, intermediate_size=32
+    ).to_dict()
+    config = UniEncoderSpanConfig(
+        model_name="local-bert",
+        encoder_config=encoder_config,
+        hidden_size=16,
+        vocab_size=len(tokenizer),
+        class_token_index=vocab["<<ENT>>"],
+        num_rnn_layers=1,
+        max_width=3,
+        dropout=0.0,
+    )
+    torch.manual_seed(0)
+    processor = UniEncoderSpanProcessor(config, tokenizer, None)
+    return UniEncoderSpanGLiNER(config, tokenizer=tokenizer, data_processor=processor).eval()
+
+
+def test_span_model_export_has_static_shapes_and_matches_eager(tiny_span_gliner, tmp_path):
+    tiny_span_gliner.export_to_onnx(tmp_path, labels=["person", "org"], text="Alice joined Acme")
+    graph = onnx.load(str(tmp_path / "model.onnx")).graph
+    assert value_dependent_shape_ops(graph) == []
+
+    texts = ["Alice joined Acme in Paris yesterday", "Bob joined"]
+    labels = ["person", "org", "city", "date"]
+    tokens, _, _ = tiny_span_gliner.prepare_inputs(texts)
+    collator = tiny_span_gliner.data_collator_class(
+        tiny_span_gliner.config, data_processor=tiny_span_gliner.data_processor, prepare_labels=False
+    )
+    batch = collator(tiny_span_gliner.prepare_base_input(tokens), entity_types=labels)
+    with torch.no_grad():
+        want = tiny_span_gliner.model(**tiny_span_gliner._forward_inputs(batch)).logits
+    session = ort.InferenceSession(str(tmp_path / "model.onnx"), providers=["CPUExecutionProvider"])
+    names = [i.name for i in session.get_inputs()]
+    feed = tiny_span_gliner._runtime_inputs(batch, names)
+    got = session.run(None, {name: feed[name].numpy() for name in names})[0]
+    torch.testing.assert_close(torch.from_numpy(got), want, rtol=1e-4, atol=1e-5)
