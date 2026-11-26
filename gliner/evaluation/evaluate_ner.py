@@ -30,16 +30,17 @@ def open_content(path):
     paths = glob.glob(os.path.join(path, "*.json"))
     train, dev, test, labels = None, None, None, None
     for p in paths:
-        if "train" in p:
+        name = os.path.basename(p)
+        if "train" in name:
             with open(p, encoding="utf-8") as f:
                 train = json.load(f)
-        elif "dev" in p:
+        elif "dev" in name:
             with open(p, encoding="utf-8") as f:
                 dev = json.load(f)
-        elif "test" in p:
+        elif "test" in name:
             with open(p, encoding="utf-8") as f:
                 test = json.load(f)
-        elif "labels" in p:
+        elif "labels" in name:
             with open(p, encoding="utf-8") as f:
                 labels = json.load(f)
     return train, dev, test, labels
@@ -174,6 +175,13 @@ def get_for_one_path(path, model):
     return data_name, results, f1
 
 
+def _format_table(results):
+    """Format per-dataset F1 scores and their average as a text table."""
+    table = "".join(f"{name:20}: {f1:.1%}\n" for name, f1 in results.items())
+    average = sum(results.values()) / len(results)
+    return table + f"{'Average':20}: {average:.1%}"
+
+
 def get_for_all_path(model, steps, log_dir, data_paths):
     """Evaluate a model across multiple datasets and log results.
 
@@ -243,32 +251,18 @@ def get_for_all_path(model, steps, log_dir, data_paths):
             else:
                 all_results[data_name] = f1
 
-    avg_all = sum(all_results.values()) / len(all_results)
-    avg_zs = sum(zero_shot_benc_results.values()) / len(zero_shot_benc_results)
-
     save_path_table = os.path.join(log_dir, "tables.txt")
 
-    # results for all datasets except crossNER
-    table_bench_all = ""
-    for k, v in all_results.items():
-        table_bench_all += f"{k:20}: {v:.1%}\n"
-    # (20 size aswell for average i.e. :20)
-    table_bench_all += f"{'Average':20}: {avg_all:.1%}"
-
-    # results for zero-shot benchmark
-    table_bench_zeroshot = ""
-    for k, v in zero_shot_benc_results.items():
-        table_bench_zeroshot += f"{k:20}: {v:.1%}\n"
-    table_bench_zeroshot += f"{'Average':20}: {avg_zs:.1%}"
-
-    # write to file
+    # write to file, skipping a table when none of its datasets were evaluated
     with open(save_path_table, "a") as f:
         f.write("##############################################\n")
         f.write("step: " + str(steps) + "\n")
-        f.write("Table for all datasets except crossNER\n")
-        f.write(table_bench_all + "\n\n")
-        f.write("Table for zero-shot benchmark\n")
-        f.write(table_bench_zeroshot + "\n")
+        if all_results:
+            f.write("Table for all datasets except crossNER\n")
+            f.write(_format_table(all_results) + "\n\n")
+        if zero_shot_benc_results:
+            f.write("Table for zero-shot benchmark\n")
+            f.write(_format_table(zero_shot_benc_results) + "\n")
         f.write("##############################################\n\n")
 
 
