@@ -181,10 +181,10 @@ class JiebaTokenSplitter(TokenSplitterBase):
         """Initialize the Jieba Chinese token splitter.
 
         Raises:
-            ModuleNotFoundError: If jieba is not installed.
+            ModuleNotFoundError: If jieba3 is not installed.
         """
-        if not is_module_available("jieba"):
-            raise ModuleNotFoundError("Please install jieba with: `pip install jieba`")
+        if not is_module_available("jieba3"):
+            raise ModuleNotFoundError("Please install jieba3 with: `pip install jieba3`")
         import jieba3  # noqa: PLC0415
 
         self.tagger = jieba3.jieba3()
