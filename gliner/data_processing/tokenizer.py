@@ -6,11 +6,19 @@ universal multi-language splitters.
 """
 
 import re
+import sys
+import unicodedata
 
 from ..utils import is_module_available
 
 if is_module_available("langdetect"):
     from langdetect.lang_detect_exception import LangDetectException
+
+_COMBINING_MARKS = "".join(
+    chr(code) for code in range(sys.maxunicode + 1) if unicodedata.category(chr(code)).startswith("M")
+)
+_WORD_CHAR = rf"[\w{_COMBINING_MARKS}\u200c\u200d]"
+_WHITESPACE_PATTERN = re.compile(rf"{_WORD_CHAR}+(?:[-_]{_WORD_CHAR}+)*|\S")
 
 
 class TokenSplitterBase:
@@ -46,7 +54,7 @@ class WhitespaceTokenSplitter(TokenSplitterBase):
 
     def __init__(self):
         """Initialize the whitespace token splitter with regex pattern."""
-        self.whitespace_pattern = re.compile(r"\w+(?:[-_]\w+)*|\S")
+        self.whitespace_pattern = _WHITESPACE_PATTERN
 
     def __call__(self, text):
         """Split text into tokens based on whitespace.
@@ -239,6 +247,8 @@ class CamelArabicSplitter:
         last_idx = 0
         for token in tokens:
             start_idx = text.find(token, last_idx)
+            if start_idx == -1:
+                continue
             end_idx = start_idx + len(token)
             last_idx = end_idx
             yield token, start_idx, end_idx
