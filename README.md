@@ -222,6 +222,7 @@ GLiNER has a rich ecosystem of community projects and integrations:
 | [gline-rs](https://github.com/fbilhaut/gline-rs) | Rust implementation of GLiNER |
 | [vllm-factory](https://github.com/ddickmann/vllm-factory) | vLLM integration for scalable GLiNER serving |
 | [gliner-spacy](https://github.com/theirstory/gliner-spacy) | spaCy integration for GLiNER |
+| [gliner-neuro-symbolic-extractor](https://huggingface.co/ypipe/gliner-neuro-symbolic-extractor) | INT8 ONNX joint NER and relation extraction models with Java 17+ and Python inference examples |
 
 ## Documentation
 
